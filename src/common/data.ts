@@ -1,7 +1,13 @@
 import { diff } from 'deep-diff';
 import * as _ from 'lodash';
 
-export function applyDefault(obj: any, def: any) {
+/**
+ * Applies values from `def` to `obj` if they don't exist. Works with nested
+ * objects and arrays
+ * @param obj Object to apply diff to
+ * @param def Default object
+ */
+export function applyDefault<T>(obj: any, def: T): T {
   const newObj = { ...obj };
   const diffObj = diff(obj, def);
   for (const prop of diffObj ?? []) {

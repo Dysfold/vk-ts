@@ -6,9 +6,8 @@ import {
   AsyncPlayerPreLoginEvent,
 } from 'org.bukkit.event.player';
 import { readJSON, writeJSON } from '../json';
-
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface PlayerData {}
+import { applyDefault } from '../data';
+import { defaultPlayerData, PlayerData } from '../types';
 
 const indexFile = config.DATA_FOLDER.resolve('players').resolve('index.json');
 
@@ -36,7 +35,7 @@ export class Players {
     return config.DATA_FOLDER.resolve('players').resolve(`${uuid}.json`);
   }
 
-  private static load(uuid: string, name?: string) {
+  private static load(uuid: string, name?: string): PlayerData {
     console.log(`Loading ${uuid}`);
 
     if (name) {
@@ -47,7 +46,7 @@ export class Players {
       return this.loaded[uuid];
     }
     const file = this.getFile(uuid);
-    this.loaded[uuid] = readJSON(file);
+    this.loaded[uuid] = applyDefault(readJSON(file), defaultPlayerData);
     return this.loaded[uuid];
   }
 
