@@ -1,7 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface PlayerData {
-  counter: number;
+  // TODO
 }
 
-export const defaultPlayerData: PlayerData = {
-  counter: 0,
-};
+export const defaultPlayerData: PlayerData = {};
