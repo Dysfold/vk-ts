@@ -5,7 +5,8 @@
     "@types/lodash": "^4.14.157",
     "deep-diff": "^1.0.2",
     "jshashes": "^1.0.8",
-    "lodash": "^4.17.19"
+    "lodash": "^4.17.19",
+    "zora": "^4.0.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.30.0",
