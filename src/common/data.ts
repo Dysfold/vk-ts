@@ -43,6 +43,8 @@ export function getErrorneousPaths(value: any, schema: yup.Schema<any>) {
  * objects and arrays
  * @param obj Object to apply diff to
  * @param def Default object
+ * @param schema If provided, used to validate the object supplied and replace invalid
+ * fields with default ones
  */
 export function applyDefault<T>(obj: any, def: T, schema?: yup.Schema<T>): T {
   const newObj = { ...obj };

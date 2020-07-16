@@ -5,6 +5,6 @@ export interface PlayerData {
   // TODO
 }
 
-export const PlayerDataSchema = yup.object({});
+export const playerDataSchema = yup.object({}) as yup.Schema<PlayerData>;
 
 export const defaultPlayerData: PlayerData = {};

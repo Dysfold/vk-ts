@@ -7,7 +7,7 @@ import {
 } from 'org.bukkit.event.player';
 import { readJSON, writeJSON } from '../json';
 import { applyDefault } from '../data';
-import { defaultPlayerData, PlayerData } from '../types';
+import { defaultPlayerData, PlayerData, playerDataSchema } from '../types';
 
 const indexFile = config.DATA_FOLDER.resolve('players').resolve('index.json');
 
@@ -46,7 +46,11 @@ export class Players {
       return this.loaded[uuid];
     }
     const file = this.getFile(uuid);
-    this.loaded[uuid] = applyDefault(readJSON(file), defaultPlayerData);
+    this.loaded[uuid] = applyDefault(
+      readJSON(file),
+      defaultPlayerData,
+      playerDataSchema,
+    );
     return this.loaded[uuid];
   }
 
