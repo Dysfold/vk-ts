@@ -5,7 +5,7 @@ import * as yup from 'yup';
 /**
  * Set the value of `obj` at `path` to `value`
  */
-function set(obj: any, path: string[], value: any) {
+export function set(obj: any, path: string[], value: any) {
   const subObjPath = path.slice(0, -1) ?? [];
   const finalKey = _.last(path);
   const subObj = subObjPath.reduce((obj, key) => obj[key], obj);
@@ -17,7 +17,7 @@ function set(obj: any, path: string[], value: any) {
 /**
  * Get the value of obj at `path`
  */
-function get(obj: any, path: string[]) {
+export function get(obj: any, path: string[]) {
   return path.reduce((obj, key) => obj[key], obj);
 }
 

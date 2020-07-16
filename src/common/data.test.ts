@@ -1,5 +1,5 @@
 import { test } from 'zora';
-import { applyDefault, getErrorneousPaths } from './data';
+import { applyDefault, getErrorneousPaths, set, get } from './data';
 import * as yup from 'yup';
 
 test('getErrorneusPaths', (t) => {
@@ -148,4 +148,32 @@ test('applyDefault', (t) => {
     },
     'Invalid fields based on schema should be replaced with default values',
   );
+});
+
+test('set() and get()', (t) => {
+  const a = {};
+  set(a, ['a'], 10);
+  t.deepEqual(
+    a,
+    {
+      a: 10,
+    },
+    'set() on a shallow object works',
+  );
+
+  const b = {
+    a: {},
+  };
+  set(b, ['a', 'a'], 10);
+  t.deepEqual(
+    b,
+    {
+      a: {
+        a: 10,
+      },
+    },
+    'set() on a deep object works',
+  );
+
+  t.eq(get(b, ['a', 'a']), 10, 'get() works');
 });
