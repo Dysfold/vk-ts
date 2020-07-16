@@ -1,11 +1,11 @@
 import { Player } from 'org.bukkit.entity';
 import { Paths, Files } from 'java.nio.file';
-import { config } from './config';
+import { config } from '../config';
 import {
   PlayerJoinEvent,
   AsyncPlayerPreLoginEvent,
 } from 'org.bukkit.event.player';
-import { readJSON, writeJSON } from './json';
+import { readJSON, writeJSON } from '../json';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface PlayerData {}
