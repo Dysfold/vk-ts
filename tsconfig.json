@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
     "target": "es2017",
+    "lib": [
+      "DOM",
+      "esnext"
+    ],
     "outDir": "./dist",
     "inlineSourceMap": true,
     "module": "commonJS",

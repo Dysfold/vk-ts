@@ -1,5 +1,10 @@
 {
   "main": "dist/index.js",
+  "scripts": {
+    "start": "tsc --watch",
+    "typecheck": "tsc --noemit",
+    "lint": "eslint './src/**/*'"
+  },
   "dependencies": {
     "@types/deep-diff": "^1.0.0",
     "@types/lodash": "^4.14.157",
@@ -24,7 +29,8 @@
   },
   "husky": {
     "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+      "pre-push": "npm run lint & npm run typecheck"
     }
   }
 }
