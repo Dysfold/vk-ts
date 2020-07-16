@@ -20,6 +20,10 @@ function set(obj: any, path: string[], value: any) {
   }
 }
 
+function get(obj: any, paths: string[]) {
+  return paths.reduce((obj, key) => obj[key], obj);
+}
+
 export function getErrorneousPaths(value: any, schema: yup.Schema<any>) {
   try {
     schema.validateSync(value, {
@@ -48,6 +52,10 @@ export function applyDefault<T>(obj: any, def: T, schema?: yup.Schema<T>): T {
       continue;
     }
     set(newObj, prop.path ?? [], prop.rhs);
+  }
+  if (schema) {
+    const errPaths = getErrorneousPaths(obj, schema);
+    errPaths.forEach((path) => set(newObj, path, get(def, path)));
   }
   return newObj;
 }

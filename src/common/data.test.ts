@@ -94,4 +94,58 @@ test('applyDefault', (t) => {
     },
     'Applying defaults to partial objects should fill in the missing properties',
   );
+
+  const schema = yup.object({
+    a: yup.number().required(),
+    b: yup.object({
+      a: yup.number().required(),
+    }),
+  });
+
+  const def2 = {
+    a: 0,
+    b: {
+      a: 0,
+    },
+  };
+
+  t.deepEqual(
+    applyDefault(
+      {
+        a: 5,
+        b: {
+          a: 10,
+        },
+      },
+      def2,
+      schema,
+    ),
+    {
+      a: 5,
+      b: {
+        a: 10,
+      },
+    },
+    'Applying defaults to valid object should not change object',
+  );
+
+  t.deepEqual(
+    applyDefault(
+      {
+        a: 'foo',
+        b: {
+          a: 5,
+        },
+      },
+      def2,
+      schema,
+    ),
+    {
+      a: 0,
+      b: {
+        a: 5,
+      },
+    },
+    'Invalid fields based on schema should be replaced with default values',
+  );
 });
