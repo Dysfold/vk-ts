@@ -8,6 +8,8 @@ import {
 import { readJSON, writeJSON } from '../json';
 import { applyDefault } from '../data';
 import { defaultPlayerData, PlayerData, playerDataSchema } from '../types';
+import { UUID } from 'java.util';
+import { OfflinePlayer } from 'org.bukkit';
 
 const indexFile = config.DATA_FOLDER.resolve('players').resolve('index.json');
 
@@ -72,9 +74,36 @@ export class Players {
     Files.writeString(file, JSON.stringify(this.loaded[uuid]) as any);
   }
 
-  static get(player: Player) {
-    const uuid = player.uniqueId.toString();
-    return this.load(uuid, player.name);
+  /**
+   * Get a player's custom data
+   * @param player Either a player object or a uuid as a string
+   * @throws Will throw an error if `player` is not a valid uuid
+   */
+  static get(player: Player | OfflinePlayer | string) {
+    if (typeof player === 'string') {
+      // Test if the uuid is valid, throw an error if not
+      UUID.fromString(player);
+    }
+
+    const [uuid, name] =
+      typeof player === 'string'
+        ? [player, undefined]
+        : [player.uniqueId.toString(), player.name];
+
+    return this.load(uuid, name ?? undefined);
+  }
+
+  /**
+   * Get player data from a name, online or offline
+   * @param name name of the player
+   * @returns The player's data, or undefined if the name could not be found
+   */
+  static fromName(name: string) {
+    const uuid = this.index[name];
+    if (!uuid) {
+      return undefined;
+    }
+    return this.get(uuid);
   }
 }
 
