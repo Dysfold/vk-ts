@@ -1,5 +1,46 @@
 import { test } from 'zora';
-import { applyDefault } from './data';
+import { applyDefault, getErrorneousPaths } from './data';
+import * as yup from 'yup';
+
+test('getErrorneusPaths', (t) => {
+  const schema = yup.object({
+    a: yup.number().required(),
+    b: yup.object({
+      a: yup.string().required(),
+    }),
+  });
+
+  t.deepEqual(getErrorneousPaths({}, schema), [['a'], ['b', 'a']]);
+
+  t.deepEqual(getErrorneousPaths({ a: 'hello world' }, schema), [
+    ['a'],
+    ['b', 'a'],
+  ]);
+
+  t.deepEqual(
+    getErrorneousPaths(
+      {
+        a: 0,
+        b: 'asd',
+      },
+      schema,
+    ),
+    [['b']],
+  );
+
+  t.deepEqual(
+    getErrorneousPaths(
+      {
+        a: 0,
+        b: {
+          a: 5,
+        },
+      },
+      schema,
+    ),
+    [],
+  );
+});
 
 test('applyDefault', (t) => {
   const def = {
