@@ -1,9 +1,7 @@
 import * as _ from 'lodash';
 import { persist } from './common/persist';
-import './common/players';
+import { Players } from './common/players';
 
-//Players.get(server.onlinePlayers[0]);
+const data = Players.get(server.onlinePlayers[0]);
 
-server.broadcastMessage('VK plugin loaded!');
-server.broadcastMessage('Jei !');
-server.broadcastMessage(_.sum([1, 2, 3]).toString());
+server.broadcastMessage(JSON.stringify(data));
