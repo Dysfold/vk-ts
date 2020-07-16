@@ -1,11 +1,8 @@
 import * as _ from 'lodash';
 import { persist } from './common/persist';
+import './common/players';
 
-const list = persist({
-  counter: 0,
-});
-list.counter++;
-console.log(list.counter);
+//Players.get(server.onlinePlayers[0]);
 
 server.broadcastMessage('VK plugin loaded!');
 server.broadcastMessage('Jei !');
