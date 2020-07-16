@@ -2,15 +2,9 @@ import { diff } from 'deep-diff';
 import * as _ from 'lodash';
 import * as yup from 'yup';
 
-const testSchema = yup.object({
-  deep: yup.object({
-    counter: yup.number().required(),
-  }),
-  deep2: yup.object({
-    counter: yup.number().required(),
-  }),
-});
-
+/**
+ * Set the value of `obj` at `path` to `value`
+ */
 function set(obj: any, path: string[], value: any) {
   const subObjPath = path.slice(0, -1) ?? [];
   const finalKey = _.last(path);
@@ -20,10 +14,18 @@ function set(obj: any, path: string[], value: any) {
   }
 }
 
-function get(obj: any, paths: string[]) {
-  return paths.reduce((obj, key) => obj[key], obj);
+/**
+ * Get the value of obj at `path`
+ */
+function get(obj: any, path: string[]) {
+  return path.reduce((obj, key) => obj[key], obj);
 }
 
+/**
+ * Get invalid paths of an object based on a Yup schema
+ * @param value the object to check
+ * @param schema the schema to use to validate the object
+ */
 export function getErrorneousPaths(value: any, schema: yup.Schema<any>) {
   try {
     schema.validateSync(value, {

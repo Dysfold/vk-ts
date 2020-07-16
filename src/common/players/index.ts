@@ -11,6 +11,9 @@ import { defaultPlayerData, PlayerData, playerDataSchema } from '../types';
 
 const indexFile = config.DATA_FOLDER.resolve('players').resolve('index.json');
 
+/**
+ * Singleton providing access to custom player data
+ */
 export class Players {
   private static loaded: Record<string, any> = {};
   /**
