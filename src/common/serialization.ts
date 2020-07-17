@@ -55,12 +55,37 @@ export function objectToSerializable(obj: any) {
 export function serialize(obj: any) {
   const newObj = {};
   walk(obj, (value, key, path) => {
-    if (value instanceof JObject) {
+    if (
+      value instanceof JObject &&
+      (typeof value === 'object' || typeof value === 'function')
+    ) {
       if (!(value instanceof ConfigurationSerializable)) {
         return;
       }
       _.set(newObj, path, serializableToObject(value));
       return;
     }
+    if (typeof value === 'function') {
+      return;
+    }
+    _.set(newObj, path, value);
   });
+  return newObj;
+}
+
+export function deserialize(obj: any) {
+  const newObj = {};
+  walk(obj, (value, key, path) => {
+    if (key === '__class') {
+      const parentPath = path.slice(0, -1);
+      const parent = _.get(obj, parentPath);
+      _.set(newObj, parentPath, objectToSerializable(parent));
+      return;
+    }
+    if (path.includes('__data')) {
+      return;
+    }
+    _.set(newObj, path, value);
+  });
+  return newObj;
 }
