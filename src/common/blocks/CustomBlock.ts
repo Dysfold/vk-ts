@@ -2,33 +2,15 @@ import { Block, TileState } from 'org.bukkit.block';
 import { Location } from 'org.bukkit';
 import { serialize } from '../serialization';
 import { applyDefault } from '../data';
+import { onChange } from '../utils/onChange';
 
 type Newable<T> = new (...args: any[]) => T;
 
-export abstract class CustomBlock<T> {
+export abstract class CustomBlock {
   block: Block;
-  data: T;
 
-  abstract defaultData: T;
-
-  constructor(block: Block, data: T) {
+  constructor(block: Block) {
     this.block = block;
-    this.data = data;
-    this.init(data);
-  }
-
-  private init(data: T) {
-    this.data = applyDefault(data, this.defaultData);
-  }
-
-  get(key: keyof T) {
-    return this.data[key];
-  }
-
-  set<Key extends keyof T>(key: Key, accessor: (prev: T[Key]) => T[Key]) {
-    const newValue = accessor(this.data[key]);
-    this.data[key] = newValue;
-    return this.data[key];
   }
 
   abstract check(): boolean;
@@ -55,14 +37,22 @@ export class Blocks {
     return this.data[key];
   }
 
-  static get<T extends CustomBlock<any>>(block: Block, type: Newable<T>): T;
-  static get<T extends CustomBlock<any>>(loc: Location, type: Newable<T>): T;
-  static get<T extends CustomBlock<any>>(
-    arg0: Block | Location,
-    Clazz: Newable<T>,
-  ) {
+  private static save(data: CustomBlock) {
+    const key = this.serializeLocation(data.block.location);
+    this.data[key] = data;
+  }
+
+  static get<T extends CustomBlock>(block: Block, type: Newable<T>): T;
+  static get<T extends CustomBlock>(loc: Location, type: Newable<T>): T;
+  static get<T extends CustomBlock>(arg0: Block | Location, Clazz: Newable<T>) {
     const block = arg0 instanceof Block ? arg0 : arg0.getBlock();
     const data = this.load(block.location);
-    return new Clazz(block, data);
+    const customBlock = new Clazz(block);
+    for (const key in data) {
+      customBlock[key as keyof T] = data[key];
+    }
+    return onChange(customBlock, () => {
+      this.save(customBlock);
+    });
   }
 }

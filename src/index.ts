@@ -9,16 +9,12 @@ import { Blocks } from './common/blocks/CustomBlock';
 
 interface CauldronData {
   temperature: number;
+  ingredients: string[];
 }
 
-class Cauldron extends CustomBlock<CauldronData> {
-  defaultData: CauldronData = {
-    temperature: 0,
-  };
-
-  getHeat() {
-    return this.data.temperature * 12;
-  }
+class Cauldron extends CustomBlock {
+  temperature = 0;
+  ingredients: string[] = [];
 
   check() {
     return true;
@@ -27,9 +23,8 @@ class Cauldron extends CustomBlock<CauldronData> {
 
 const b = server.getWorlds()[0].getBlockAt(0, 100, 0);
 
-let data = Blocks.get(b, Cauldron);
+const data = Blocks.get(b, Cauldron);
 data.temperature++;
-console.log(JSON.stringify(data));
+data.ingredients.push('cookie');
 
-data = Blocks.get(b, Cauldron);
-console.log(JSON.stringify(data));
+console.log(JSON.stringify(Blocks.get(b, Cauldron)));
