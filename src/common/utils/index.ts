@@ -1,1 +1,0 @@
-export { onChange } from './onChange';

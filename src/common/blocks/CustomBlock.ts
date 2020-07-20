@@ -2,7 +2,7 @@ import { Block, TileState } from 'org.bukkit.block';
 import { Location } from 'org.bukkit';
 import { serialize } from '../serialization';
 import { applyDefault } from '../data';
-import { onChange } from '../utils/onChange';
+import { onChange } from '../onChange';
 
 type Newable<T> = new (...args: any[]) => T;
 
@@ -17,42 +17,56 @@ export abstract class CustomBlock {
 }
 
 export class Blocks {
-  private static data: Record<string, any> = {};
+  private static data: Record<string, Record<string, any>> = {};
 
   private static serializeLocation({
     blockX,
     blockY,
     blockZ,
     world,
+    chunk,
   }: Location) {
+    const regionName = [chunk.x, chunk.z].join(';');
     return [world.name, blockX, blockY, blockZ].join(';');
   }
 
-  static load(location: Location): Record<string, any> {
-    const key = this.serializeLocation(location);
-    const data = this.data[key];
+  static load(customBlock: CustomBlock): Record<string, any> {
+    const key = this.serializeLocation(customBlock.block.location);
+    const data = this.data[customBlock.constructor.name][key];
     if (!data) {
       this.data[key] = {};
     }
     return this.data[key];
   }
 
-  private static save(data: CustomBlock) {
+  private static set(data: CustomBlock) {
     const key = this.serializeLocation(data.block.location);
-    this.data[key] = data;
+    this.data[key] = serialize(data);
   }
 
-  static get<T extends CustomBlock>(block: Block, type: Newable<T>): T;
-  static get<T extends CustomBlock>(loc: Location, type: Newable<T>): T;
+  static get<T extends CustomBlock>(
+    block: Block,
+    type: Newable<T>,
+  ): T | undefined;
+  static get<T extends CustomBlock>(
+    loc: Location,
+    type: Newable<T>,
+  ): T | undefined;
   static get<T extends CustomBlock>(arg0: Block | Location, Clazz: Newable<T>) {
     const block = arg0 instanceof Block ? arg0 : arg0.getBlock();
-    const data = this.load(block.location);
     const customBlock = new Clazz(block);
-    for (const key in data) {
+    if (!customBlock.check()) {
+      return undefined;
+    }
+    const data = this.load(customBlock);
+    for (const key in customBlock) {
+      if (!data[key]) {
+        continue;
+      }
       customBlock[key as keyof T] = data[key];
     }
     return onChange(customBlock, () => {
-      this.save(customBlock);
-    });
+      this.set(customBlock);
+    }) as T;
   }
 }
