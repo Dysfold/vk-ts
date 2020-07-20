@@ -24,7 +24,8 @@ class Cauldron extends CustomBlock {
 const b = server.getWorlds()[0].getBlockAt(100, 100, 0);
 
 const data = Blocks.get(b, Cauldron);
-data?.ingredients.push('cookie');
+if (data) {
+  data.ingredients = [];
+}
 
 console.log(JSON.stringify(Blocks.get(b, Cauldron)));
-console.log(JSON.stringify(Blocks['regions']));

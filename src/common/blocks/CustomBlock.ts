@@ -3,6 +3,9 @@ import { Location } from 'org.bukkit';
 import { serialize } from '../serialization';
 import { applyDefault } from '../data';
 import { onChange } from '../onChange';
+import { config } from '../config';
+import { Files, Path } from 'java.nio.file';
+import { readJSON, writeJSON } from '../json';
 
 type Newable<T> = new (...args: any[]) => T;
 
@@ -20,10 +23,13 @@ interface Region {
   world: string;
   x: number;
   z: number;
+  hash: number;
+  lastSavedHash: number;
   blocks: { [type: string]: { [location: string]: any } };
 }
 
 export class Blocks {
+  private static REGIONS_FOLDER = config.DATA_FOLDER.resolve('./regions');
   private static regions: Region[] = [];
 
   private static serializeLocation({
@@ -52,12 +58,34 @@ export class Blocks {
         world: location.world.name,
         x,
         z,
+        hash: 0,
+        lastSavedHash: -1,
         blocks: {},
       } as Region;
+      this.updateHash(newRegion);
       this.regions.push(newRegion);
       return newRegion;
     }
     return region;
+  }
+
+  private static updateHash(region: Region) {
+    region.hash = (JSON.stringify(region.blocks) as any).hashCode();
+  }
+
+  static init() {
+    if (!Files.exists(this.REGIONS_FOLDER)) {
+      Files.createDirectories(this.REGIONS_FOLDER);
+    }
+    const regionFiles = Files.list(this.REGIONS_FOLDER).toArray() as JArray<
+      Path
+    >;
+    for (const file of regionFiles) {
+      const region = readJSON(file);
+      this.regions.push(region);
+    }
+
+    addUnloadHandler(() => this.save());
   }
 
   static load(customBlock: CustomBlock): Record<string, any> {
@@ -75,10 +103,26 @@ export class Blocks {
     return dict[key];
   }
 
+  static save() {
+    const changedRegions = this.regions.filter((region) => {
+      const hasChanged = region.hash !== region.lastSavedHash;
+      region.lastSavedHash = region.hash;
+      return hasChanged;
+    });
+    console.log(`${changedRegions.length} regions changed`);
+    for (const region of changedRegions) {
+      const path = this.REGIONS_FOLDER.resolve(
+        `./${[region.world, region.x, region.z]}.json`,
+      );
+      writeJSON(path, region);
+    }
+  }
+
   private static set(data: CustomBlock) {
     const key = this.serializeLocation(data.block.location);
     const region = this.getRegion(data.block.location);
     region.blocks[data.constructor.name][key] = serialize(data);
+    this.updateHash(region);
   }
 
   static get<T extends CustomBlock>(
@@ -107,3 +151,5 @@ export class Blocks {
     }) as T;
   }
 }
+
+Blocks.init();
