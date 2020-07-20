@@ -1,5 +1,5 @@
 import { Block, TileState } from 'org.bukkit.block';
-import { Location } from 'org.bukkit';
+import { Location, Chunk } from 'org.bukkit';
 import { serialize } from '../serialization';
 import { applyDefault } from '../data';
 import { onChange } from '../onChange';
@@ -37,7 +37,6 @@ export class Blocks {
     blockY,
     blockZ,
     world,
-    chunk,
   }: Location) {
     return [world.name, blockX, blockY, blockZ].join(';');
   }
@@ -48,8 +47,12 @@ export class Blocks {
     return { x: regX, z: regZ };
   }
 
-  private static getRegion(location: Location) {
-    const { x, z } = this.getRegionCoordinates(location);
+  private static getRegion(location: Location | Chunk) {
+    const { x, z } = this.getRegionCoordinates(
+      location instanceof Chunk
+        ? new Location(location.world, location.x * 16, 0, location.z * 16)
+        : location,
+    );
     const region = this.regions.find(
       (r) => r.x === x && r.z === z && r.world === location.world.name,
     );
@@ -86,6 +89,12 @@ export class Blocks {
     }
 
     addUnloadHandler(() => this.save());
+
+    setTimeout(() => {
+      console.time('save');
+      this.save();
+      console.timeEnd('save');
+    }, 1000);
   }
 
   static load(customBlock: CustomBlock): Record<string, any> {

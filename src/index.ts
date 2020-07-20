@@ -25,7 +25,8 @@ const b = server.getWorlds()[0].getBlockAt(100, 100, 0);
 
 const data = Blocks.get(b, Cauldron);
 if (data) {
-  data.ingredients = [];
+  data.temperature++;
+  //data.ingredients = [];
 }
 
 console.log(JSON.stringify(Blocks.get(b, Cauldron)));

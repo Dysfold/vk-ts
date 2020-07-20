@@ -8,12 +8,14 @@ export function onChange(object: any, callback: () => void) {
       }
     },
     defineProperty(target, property, descriptor) {
+      const success = Reflect.defineProperty(target, property, descriptor);
       callback();
-      return Reflect.defineProperty(target, property, descriptor);
+      return success;
     },
     deleteProperty(target, property) {
+      const success = Reflect.deleteProperty(target, property);
       callback();
-      return Reflect.deleteProperty(target, property);
+      return success;
     },
   };
 
