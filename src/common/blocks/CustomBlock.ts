@@ -26,7 +26,7 @@ interface Region {
   z: number;
   hash: number;
   lastSavedHash: number;
-  blocks: { [type: string]: { [location: string]: any } };
+  blocks: { [type: string]: Record<string, CustomBlock> };
 }
 
 export class Blocks {
@@ -40,6 +40,12 @@ export class Blocks {
     world,
   }: Location) {
     return [world.name, blockX, blockY, blockZ].join(';');
+  }
+
+  private static deserializeLocation(serialized: string) {
+    const [worldName, x, y, z] = serialized.split(';');
+    const world = server.getWorld(worldName);
+    return world?.getBlockAt(Number(x), Number(y), Number(z));
   }
 
   private static getRegionCoordinates(location: Location) {
@@ -110,7 +116,7 @@ export class Blocks {
     const dict = region.blocks[blockName];
     const data = dict[key];
     if (!data) {
-      dict[key] = {};
+      dict[key] = {} as any;
     }
     return dict[key];
   }
@@ -133,14 +139,58 @@ export class Blocks {
   private static set(data: CustomBlock) {
     const key = this.serializeLocation(data.block.location);
     const region = this.getRegion(data.block.location);
-    region.blocks[data.constructor.name][key] = serialize(data);
+    region.blocks[data.constructor.name][key] = serialize(data) as any;
     this.updateHash(region);
   }
 
+  private static getProxy(block: CustomBlock) {
+    return onChange(block, () => {
+      this.set(block);
+    });
+  }
+
+  static forEach<T extends CustomBlock>(
+    clazz: Newable<T>,
+    callback: (block: T) => void,
+  ) {
+    const name = clazz.prototype.constructor.name;
+    for (let i = 0; i < this.regions.length; i++) {
+      const region = this.regions[i];
+      if (!(name in region.blocks)) {
+        continue;
+      }
+      const blocks = region.blocks[name];
+      for (const key in blocks) {
+        const block = this.deserializeLocation(key);
+        if (!block) {
+          continue;
+        }
+        setTimeout(() => {
+          const cb = this.get(block, clazz);
+          if (!cb) {
+            return;
+          }
+          callback(cb);
+        }, 0);
+      }
+    }
+  }
+  /**
+   * Get the custom block data of type `type` at the specified block, or undefined if the
+   * `block` does not satisfy the requirements of the custom block
+   * @param block The block to check. If falsy, function will return undefined
+   * @param type The custom block to use to check the block and get the data
+   */
   static get<T extends CustomBlock>(
     block: Block | null | undefined,
     type: Newable<T>,
   ): T | undefined;
+  /**
+   * Get the custom block data of type `type` at the specified block, or undefined if the
+   * block at `loc` does not satisfy the requirements of the custom block
+   * @param loc The location to check
+   * @param type The custom block to use to check the block and get the data
+   */
   static get<T extends CustomBlock>(
     loc: Location,
     type: Newable<T>,
@@ -164,9 +214,7 @@ export class Blocks {
       }
       customBlock[key as keyof T] = data[key];
     }
-    return onChange(customBlock, () => {
-      this.set(customBlock);
-    }) as T;
+    return this.getProxy(customBlock) as T;
   }
 }
 

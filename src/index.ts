@@ -22,12 +22,6 @@ class Cauldron extends CustomBlock {
   }
 }
 
-console.time('100');
-for (let i = 0; i < 100; i++) {
-  const b = server.getWorlds()[0].getBlockAt(i * 100, i * 20, 0);
-  const data = Blocks.get(b, Cauldron);
-  if (data) {
-    data.temperature++;
-  }
-}
-console.timeEnd('100');
+Blocks.forEach(Cauldron, (b) => {
+  b.temperature++;
+});
