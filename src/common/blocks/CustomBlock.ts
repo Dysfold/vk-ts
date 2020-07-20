@@ -6,6 +6,7 @@ import { onChange } from '../onChange';
 import { config } from '../config';
 import { Files, Path } from 'java.nio.file';
 import { readJSON, writeJSON } from '../json';
+import * as fnv from 'fnv-plus';
 
 type Newable<T> = new (...args: any[]) => T;
 
@@ -73,7 +74,7 @@ export class Blocks {
   }
 
   private static updateHash(region: Region) {
-    region.hash = (JSON.stringify(region.blocks) as any).hashCode();
+    region.hash = fnv.fast1a32(JSON.stringify(region.blocks));
   }
 
   static init() {
@@ -83,10 +84,12 @@ export class Blocks {
     const regionFiles = Files.list(this.REGIONS_FOLDER).toArray() as JArray<
       Path
     >;
+    console.time('files');
     for (const file of regionFiles) {
       const region = readJSON(file);
       this.regions.push(region);
     }
+    console.timeEnd('files');
 
     addUnloadHandler(() => this.save());
 
@@ -135,14 +138,20 @@ export class Blocks {
   }
 
   static get<T extends CustomBlock>(
-    block: Block,
+    block: Block | null | undefined,
     type: Newable<T>,
   ): T | undefined;
   static get<T extends CustomBlock>(
     loc: Location,
     type: Newable<T>,
   ): T | undefined;
-  static get<T extends CustomBlock>(arg0: Block | Location, Clazz: Newable<T>) {
+  static get<T extends CustomBlock>(
+    arg0: Block | null | undefined | Location,
+    Clazz: Newable<T>,
+  ) {
+    if (!arg0) {
+      return undefined;
+    }
     const block = arg0 instanceof Block ? arg0 : arg0.getBlock();
     const customBlock = new Clazz(block);
     if (!customBlock.check()) {
