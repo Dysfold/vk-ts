@@ -33,6 +33,10 @@ export class Blocks {
   private static REGIONS_FOLDER = config.DATA_FOLDER.resolve('./regions');
   private static regions: Region[] = [];
 
+  /**
+   * Converts a location into a key to be used as a dictionary index
+   * @param loc location to convert
+   */
   private static serializeLocation({
     blockX,
     blockY,
@@ -42,18 +46,30 @@ export class Blocks {
     return [world.name, blockX, blockY, blockZ].join(';');
   }
 
+  /**
+   * Converts a key serialized by `this.serializeLocation` into the original location
+   * @param serialized the serialized key as a string
+   */
   private static deserializeLocation(serialized: string) {
     const [worldName, x, y, z] = serialized.split(';');
     const world = server.getWorld(worldName);
     return world?.getBlockAt(Number(x), Number(y), Number(z));
   }
 
+  /**
+   * Get the coordinates of the region at `location`
+   * @param location
+   */
   private static getRegionCoordinates(location: Location) {
     const { x, z } = location.chunk;
     const [regX, regZ] = [Math.floor(x / 32), Math.floor(z / 32)];
     return { x: regX, z: regZ };
   }
 
+  /**
+   * Get the `Region`-object at `location`
+   * @param location Either a `Location` or a `Chunk`
+   */
   private static getRegion(location: Location | Chunk) {
     const { x, z } = this.getRegionCoordinates(
       location instanceof Chunk
@@ -79,10 +95,17 @@ export class Blocks {
     return region;
   }
 
+  /**
+   * Calculates and sets the hash of a `Region`, mutating the object directly
+   * @param region the `Region` to update
+   */
   private static updateHash(region: Region) {
     region.hash = fnv.fast1a32(JSON.stringify(region.blocks));
   }
 
+  /**
+   * Initializes the `Blocks`-singleton. Should only be called once.
+   */
   static init() {
     if (!Files.exists(this.REGIONS_FOLDER)) {
       Files.createDirectories(this.REGIONS_FOLDER);
@@ -106,7 +129,11 @@ export class Blocks {
     }, 1000);
   }
 
-  static load(customBlock: CustomBlock): Record<string, any> {
+  /**
+   * Load the data for a `CustomBlock`
+   * @param customBlock the block of which the data should be loaded for
+   */
+  private static load(customBlock: CustomBlock): Record<string, any> {
     const key = this.serializeLocation(customBlock.block.location);
     const region = this.getRegion(customBlock.block.location);
     const blockName = customBlock.constructor.name;
@@ -121,6 +148,9 @@ export class Blocks {
     return dict[key];
   }
 
+  /**
+   * Saves changed regions into the disk
+   */
   static save() {
     const changedRegions = this.regions.filter((region) => {
       const hasChanged = region.hash !== region.lastSavedHash;
@@ -136,19 +166,32 @@ export class Blocks {
     }
   }
 
-  private static set(data: CustomBlock) {
-    const key = this.serializeLocation(data.block.location);
-    const region = this.getRegion(data.block.location);
-    region.blocks[data.constructor.name][key] = serialize(data) as any;
+  /**
+   * Update the data of a certain block
+   * @param cb The updated `CustomBlock` object
+   */
+  private static set(cb: CustomBlock) {
+    const key = this.serializeLocation(cb.block.location);
+    const region = this.getRegion(cb.block.location);
+    region.blocks[cb.constructor.name][key] = serialize(cb) as any;
     this.updateHash(region);
   }
 
+  /**
+   * Get a proxy for `block` that calls `this.set` when the object changes
+   * @param block The `CustomBlock` to watch
+   */
   private static getProxy(block: CustomBlock) {
     return onChange(block, () => {
       this.set(block);
     });
   }
 
+  /**
+   * Loop all blocks of a type. Note that the `callback` is called asynchronously.
+   * @param clazz The class of the `CustomBlock` of which to loop
+   * @param callback The callback function to call on each block
+   */
   static forEach<T extends CustomBlock>(
     clazz: Newable<T>,
     callback: (block: T) => void,
