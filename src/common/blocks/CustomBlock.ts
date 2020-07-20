@@ -16,8 +16,15 @@ export abstract class CustomBlock {
   abstract check(): boolean;
 }
 
+interface Region {
+  world: string;
+  x: number;
+  z: number;
+  blocks: { [type: string]: { [location: string]: any } };
+}
+
 export class Blocks {
-  private static data: Record<string, Record<string, any>> = {};
+  private static regions: Region[] = [];
 
   private static serializeLocation({
     blockX,
@@ -26,22 +33,52 @@ export class Blocks {
     world,
     chunk,
   }: Location) {
-    const regionName = [chunk.x, chunk.z].join(';');
     return [world.name, blockX, blockY, blockZ].join(';');
+  }
+
+  private static getRegionCoordinates(location: Location) {
+    const { x, z } = location.chunk;
+    const [regX, regZ] = [Math.floor(x / 32), Math.floor(z / 32)];
+    return { x: regX, z: regZ };
+  }
+
+  private static getRegion(location: Location) {
+    const { x, z } = this.getRegionCoordinates(location);
+    const region = this.regions.find(
+      (r) => r.x === x && r.z === z && r.world === location.world.name,
+    );
+    if (!region) {
+      const newRegion = {
+        world: location.world.name,
+        x,
+        z,
+        blocks: {},
+      } as Region;
+      this.regions.push(newRegion);
+      return newRegion;
+    }
+    return region;
   }
 
   static load(customBlock: CustomBlock): Record<string, any> {
     const key = this.serializeLocation(customBlock.block.location);
-    const data = this.data[customBlock.constructor.name][key];
-    if (!data) {
-      this.data[key] = {};
+    const region = this.getRegion(customBlock.block.location);
+    const blockName = customBlock.constructor.name;
+    if (!(blockName in region.blocks)) {
+      region.blocks[blockName] = {};
     }
-    return this.data[key];
+    const dict = region.blocks[blockName];
+    const data = dict[key];
+    if (!data) {
+      dict[key] = {};
+    }
+    return dict[key];
   }
 
   private static set(data: CustomBlock) {
     const key = this.serializeLocation(data.block.location);
-    this.data[key] = serialize(data);
+    const region = this.getRegion(data.block.location);
+    region.blocks[data.constructor.name][key] = serialize(data);
   }
 
   static get<T extends CustomBlock>(
