@@ -8,6 +8,7 @@ import { CustomBlock } from './common/blocks';
 import { Blocks } from './common/blocks/CustomBlock';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import * as yup from 'yup';
+import { BlockBreakEvent } from 'org.bukkit.event.block';
 
 interface CauldronData {
   temperature: number;
@@ -19,11 +20,10 @@ class Cauldron extends CustomBlock {
   ingredients: number[] = [];
 
   check() {
-    return true;
+    return this.block.type === Material.CAULDRON;
   }
 }
 
-Blocks.forEach(Cauldron, (b) => {
-  b.temperature++;
-  console.log(b.temperature, b.ingredients);
+registerEvent(BlockBreakEvent, (e) => {
+  Blocks.get(e.block, Cauldron)?.remove();
 });

@@ -20,6 +20,10 @@ export abstract class CustomBlock {
     this.block = block;
   }
 
+  remove() {
+    Blocks.remove(this);
+  }
+
   abstract check(): boolean;
 }
 
@@ -286,6 +290,17 @@ export class Blocks {
       customBlock[key as keyof T] = data[key];
     }
     return this.getProxy(customBlock) as T;
+  }
+
+  static remove(cb: CustomBlock) {
+    const { location } = cb.block;
+    const key = this.serializeLocation(location);
+    const name = cb.constructor.name;
+    const region = this.getRegion(location);
+    if (!region.blocks[name]) {
+      return;
+    }
+    delete region.blocks[name][key];
   }
 }
 
