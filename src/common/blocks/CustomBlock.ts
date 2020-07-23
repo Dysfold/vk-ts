@@ -100,7 +100,7 @@ export class Blocks {
    * @param region the `Region` to update
    */
   private static updateHash(region: Region) {
-    region.hash = fnv.fast1a32(JSON.stringify(region.blocks));
+    region.hash = fnv.fast1a32utf(JSON.stringify(region.blocks));
   }
 
   /**
