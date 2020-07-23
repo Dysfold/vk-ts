@@ -148,21 +148,42 @@ export class Blocks {
     return dict[key];
   }
 
+  private static getRegionFile(region: Region) {
+    return this.REGIONS_FOLDER.resolve(
+      `./${[region.world, region.x, region.z]}.json`,
+    );
+  }
+
   /**
    * Saves changed regions into the disk
    */
   static save() {
+    // This entire function could be optimized to a single loop
+
+    const emptyRegions: Region[] = [];
+    this.regions = this.regions.filter((r) => {
+      const isEmpty = Object.keys(r.blocks).length === 0;
+      if (isEmpty) {
+        emptyRegions.push(r);
+      }
+      return !isEmpty;
+    });
+
     const changedRegions = this.regions.filter((region) => {
       const hasChanged = region.hash !== region.lastSavedHash;
       region.lastSavedHash = region.hash;
       return hasChanged;
     });
-    console.log(`${changedRegions.length} regions changed`);
+    console.log(
+      `${changedRegions.length} regions changed, ${emptyRegions.length} empty regions will be deleted`,
+    );
+
+    for (const region of emptyRegions) {
+      const f = this.getRegionFile(region);
+      Files.deleteIfExists(f);
+    }
     for (const region of changedRegions) {
-      const path = this.REGIONS_FOLDER.resolve(
-        `./${[region.world, region.x, region.z]}.json`,
-      );
-      writeJSON(path, region);
+      writeJSON(this.getRegionFile(region), region);
     }
   }
 

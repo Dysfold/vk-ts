@@ -1,5 +1,6 @@
 import { test, fail } from 'zora';
 import { CustomBlock, Blocks } from './CustomBlock';
+import { Location } from 'org.bukkit';
 
 class TestBlock1 extends CustomBlock {
   counter = 0;
@@ -43,5 +44,26 @@ test('Blocks.get', (t) => {
   t.ok(
     data3 instanceof TestBlock1,
     'The returned object should be instanceof the CustomBlock class',
+  );
+});
+
+test('Blocks', (t) => {
+  const rand = () => Math.floor(Math.random() * 10000);
+  const loc = new Location(server.worlds[0], rand(), 100, rand());
+  const chunk = loc.getChunk();
+  const regionCoords = Blocks['getRegionCoordinates'](loc);
+  const [a, b] = [Blocks['getRegion'](loc), Blocks['getRegion'](chunk)];
+  t.eq(
+    a,
+    b,
+    `Getting a region with a location and the chunk should return the same region`,
+  );
+  t.deepEqual(
+    {
+      x: a.x,
+      z: a.z,
+    },
+    regionCoords,
+    `The region coordinates should match what getRegionCoordinates returns`,
   );
 });
