@@ -67,3 +67,17 @@ test('Blocks', (t) => {
     `The region coordinates should match what getRegionCoordinates returns`,
   );
 });
+
+test('Blocks.remove', (t) => {
+  const b = server.worlds[0].getBlockAt(112, 20, 112);
+  const b1 = Blocks.get(b, TestBlock1);
+  if (!b1) {
+    fail();
+    return;
+  }
+  b1.counter = 15;
+
+  b1.remove();
+  const b2 = Blocks.get(b, TestBlock1);
+  t.eq(b2?.counter, 0, `Block.remove() should set data to initial values`);
+});

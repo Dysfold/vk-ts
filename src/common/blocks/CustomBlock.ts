@@ -15,9 +15,11 @@ type Newable<T> = new (...args: any[]) => T;
 export abstract class CustomBlock {
   block: Block;
   schema: yup.Schema<any> = yup.object();
+  location: Location;
 
   constructor(block: Block) {
     this.block = block;
+    this.location = block.location.clone() as Location;
   }
 
   remove() {
@@ -33,7 +35,7 @@ interface Region {
   z: number;
   hash: number;
   lastSavedHash: number;
-  blocks: { [type: string]: Record<string, CustomBlock> };
+  blocks: { [type: string]: Record<string, CustomBlock | {}> };
 }
 
 export class Blocks {
@@ -44,12 +46,8 @@ export class Blocks {
    * Converts a location into a key to be used as a dictionary index
    * @param loc location to convert
    */
-  private static serializeLocation({
-    blockX,
-    blockY,
-    blockZ,
-    world,
-  }: Location) {
+  private static serializeLocation(loc: Location) {
+    const { blockX, blockY, blockZ, world } = loc.clone() as Location;
     return [world.name, blockX, blockY, blockZ].join(';');
   }
 
@@ -199,11 +197,15 @@ export class Blocks {
    * @param cb The updated `CustomBlock` object
    */
   private static set(cb: CustomBlock) {
-    const key = this.serializeLocation(cb.block.location);
-    const region = this.getRegion(cb.block.location);
+    const key = this.serializeLocation(cb.location.clone() as Location);
+    const region = this.getRegion(cb.location.clone() as Location);
     region.blocks[cb.constructor.name][key] = {
-      ...serialize(cb),
-      schema: undefined,
+      ...serialize({
+        ...cb,
+        schema: undefined,
+        block: undefined,
+        location: undefined,
+      }),
     } as any;
     this.updateHash(region);
   }
@@ -293,14 +295,15 @@ export class Blocks {
   }
 
   static remove(cb: CustomBlock) {
-    const { location } = cb.block;
+    const location = cb.location.clone() as Location;
     const key = this.serializeLocation(location);
     const name = cb.constructor.name;
     const region = this.getRegion(location);
     if (!region.blocks[name]) {
       return;
     }
-    delete region.blocks[name][key];
+    region.blocks[name][key] = {};
+    this.updateHash(region);
   }
 }
 
