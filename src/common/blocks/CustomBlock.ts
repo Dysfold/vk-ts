@@ -7,11 +7,14 @@ import { config } from '../config';
 import { Files, Path } from 'java.nio.file';
 import { readJSON, writeJSON } from '../json';
 import * as fnv from 'fnv-plus';
+import * as yup from 'yup';
+import * as _ from 'lodash';
 
 type Newable<T> = new (...args: any[]) => T;
 
 export abstract class CustomBlock {
   block: Block;
+  schema: yup.Schema<any> = yup.object();
 
   constructor(block: Block) {
     this.block = block;
@@ -194,7 +197,10 @@ export class Blocks {
   private static set(cb: CustomBlock) {
     const key = this.serializeLocation(cb.block.location);
     const region = this.getRegion(cb.block.location);
-    region.blocks[cb.constructor.name][key] = serialize(cb) as any;
+    region.blocks[cb.constructor.name][key] = {
+      ...serialize(cb),
+      schema: undefined,
+    } as any;
     this.updateHash(region);
   }
 
@@ -271,7 +277,8 @@ export class Blocks {
     if (!customBlock.check()) {
       return undefined;
     }
-    const data = this.load(customBlock);
+    const schema = customBlock.schema;
+    const data = applyDefault(this.load(customBlock), customBlock, schema);
     for (const key in customBlock) {
       if (!data[key]) {
         continue;
