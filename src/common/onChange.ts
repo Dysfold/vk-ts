@@ -1,7 +1,12 @@
+const JObject = java.lang.Object;
+
 export function onChange(object: any, callback: () => void) {
   const handler: ProxyHandler<any> = {
     get(target, property, receiver) {
       try {
+        if (target[property] instanceof JObject) {
+          throw Error();
+        }
         return new Proxy(target[property], handler);
       } catch (err) {
         return Reflect.get(target, property, receiver);

@@ -111,6 +111,14 @@ export class Blocks {
     return region;
   }
 
+  private static getLoadedRegions() {
+    const loadedChunks = [...server.worlds]
+      .map((w) => w.loadedChunks)
+      .reduce((arr, cur) => [...arr, ...cur], []) as Chunk[];
+    const regions = loadedChunks.map((c) => this.getRegion(c));
+    return _.uniqBy(regions, (r) => `${r.world};${r.x};${r.z}`);
+  }
+
   /**
    * Calculates and sets the hash of a `Region`, mutating the object directly
    * @param region the `Region` to update
@@ -242,31 +250,29 @@ export class Blocks {
   ) {
     const promises: Promise<void>[] = [];
     const name = clazz.prototype.constructor.name;
-    for (let i = 0; i < this.regions.length; i++) {
-      const region = this.regions[i];
+    const loadedRegions = this.getLoadedRegions();
+    for (let i = 0; i < loadedRegions.length; i++) {
+      const region = loadedRegions[i];
       if (!(name in region.blocks)) {
         continue;
       }
       const blocks = region.blocks[name];
       const keys = Object.keys(blocks);
       for (let j = 0; j < keys.length; j++) {
-        const isLast = j === keys.length - 1 && i === this.regions.length - 1;
         const key = keys[j];
         const block = this.deserializeLocation(key);
         if (!block) {
           continue;
         }
         const promise = new Promise<void>((resolve) => {
-          setTimeout(() => {
-            const cb = this.get(block, clazz);
-            if (!cb) {
-              resolve();
-              return;
-            }
-            callback(cb);
+          const cb = this.get(block, clazz);
+          if (!cb) {
             resolve();
-          }, 0);
-        });
+            return;
+          }
+          callback(cb);
+          resolve();
+        }).catch((e) => console.error(e));
         promises.push(promise);
       }
     }
