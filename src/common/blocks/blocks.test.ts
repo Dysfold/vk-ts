@@ -1,6 +1,7 @@
 import { test, fail } from 'zora';
 import { CustomBlock, Blocks } from './CustomBlock';
 import { Location } from 'org.bukkit';
+import * as _ from 'lodash';
 
 class TestBlock1 extends CustomBlock {
   counter = 0;
@@ -47,7 +48,7 @@ test('Blocks.get', (t) => {
   );
 });
 
-test('Blocks', (t) => {
+test('Blocks region handling', (t) => {
   const rand = () => Math.floor(Math.random() * 10000);
   const loc = new Location(server.worlds[0], rand(), 100, rand());
   const chunk = loc.getChunk();
@@ -80,4 +81,22 @@ test('Blocks.remove', (t) => {
   b1.remove();
   const b2 = Blocks.get(b, TestBlock1);
   t.eq(b2?.counter, 0, `Block.remove() should set data to initial values`);
+  b2?.remove();
+});
+
+test('Blocks.forEach', async (t) => {
+  const blocks = _.range(10).map((i) => server.worlds[0].getBlockAt(i, 0, 0));
+  blocks.forEach((b) => Blocks.get(b, TestBlock1));
+
+  const prom = Blocks.forEach(TestBlock1, (b) => {
+    b.counter = 5;
+  });
+  t.ok(prom instanceof Promise, 'Blocks.forEach should return a promise');
+  await prom;
+  const newBlocks = blocks.map((b) => Blocks.get(b, TestBlock1));
+  t.ok(
+    newBlocks.every((b) => b?.counter === 5),
+    'Blocks.forEach should loop through all the blocks',
+  );
+  newBlocks.forEach((b) => b?.remove());
 });

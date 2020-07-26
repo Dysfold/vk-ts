@@ -25,15 +25,6 @@ class Cauldron extends CustomBlock {
   }
 }
 
-const b = server.worlds[0].getBlockAt(50, 100, 50);
-b.type = Material.CAULDRON;
-const c = Blocks.get(b, Cauldron);
-if (c) {
-  c.temperature = 15;
-}
-c?.remove();
-console.log(JSON.stringify(Blocks.get(b, Cauldron)?.temperature));
-
 onClick({
   block: Cauldron,
   type: 'right',
@@ -41,6 +32,10 @@ onClick({
     b.temperature++;
     e.player.sendMessage(`${b.temperature}`);
   },
+});
+
+Blocks.forEach(Cauldron, (b) => {
+  //
 });
 
 registerEvent(BlockBreakEvent, (e) => {

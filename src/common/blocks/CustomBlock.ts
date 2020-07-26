@@ -22,10 +22,17 @@ export abstract class CustomBlock {
     this.location = block.location.clone() as Location;
   }
 
+  /**
+   * Removes this block's data
+   */
   remove() {
     Blocks.remove(this);
   }
 
+  /**
+   * Check whether or not a given block is a valid instance of this
+   * custom block
+   */
   abstract check(): boolean;
 }
 
@@ -225,10 +232,11 @@ export class Blocks {
    * @param clazz The class of the `CustomBlock` of which to loop
    * @param callback The callback function to call on each block
    */
-  static forEach<T extends CustomBlock>(
+  static async forEach<T extends CustomBlock>(
     clazz: Newable<T>,
     callback: (block: T) => void,
   ) {
+    const promises: Promise<void>[] = [];
     const name = clazz.prototype.constructor.name;
     for (let i = 0; i < this.regions.length; i++) {
       const region = this.regions[i];
@@ -236,20 +244,29 @@ export class Blocks {
         continue;
       }
       const blocks = region.blocks[name];
-      for (const key in blocks) {
+      const keys = Object.keys(blocks);
+      for (let j = 0; j < keys.length; j++) {
+        const isLast = j === keys.length - 1 && i === this.regions.length - 1;
+        const key = keys[j];
         const block = this.deserializeLocation(key);
         if (!block) {
           continue;
         }
-        setTimeout(() => {
-          const cb = this.get(block, clazz);
-          if (!cb) {
-            return;
-          }
-          callback(cb);
-        }, 0);
+        const promise = new Promise<void>((resolve) => {
+          setTimeout(() => {
+            const cb = this.get(block, clazz);
+            if (!cb) {
+              resolve();
+              return;
+            }
+            callback(cb);
+            resolve();
+          }, 0);
+        });
+        promises.push(promise);
       }
     }
+    await Promise.all(promises);
   }
   /**
    * Get the custom block data of type `type` at the specified block, or undefined if the
