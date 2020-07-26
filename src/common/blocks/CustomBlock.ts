@@ -14,6 +14,10 @@ type Newable<T> = new (...args: any[]) => T;
 
 export abstract class CustomBlock {
   block: Block;
+  /**
+   * Schema to use for validating this block's data.
+   * Invalid entries will be replaced with default ones
+   */
   schema: yup.Schema<any> = yup.object();
   location: Location;
 

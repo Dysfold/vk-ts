@@ -2,6 +2,7 @@ import { test, fail } from 'zora';
 import { CustomBlock, Blocks } from './CustomBlock';
 import { Location } from 'org.bukkit';
 import * as _ from 'lodash';
+import * as yup from 'yup';
 
 class TestBlock1 extends CustomBlock {
   counter = 0;
@@ -15,6 +16,12 @@ class TestBlock2 extends TestBlock1 {
   check() {
     return false;
   }
+}
+
+class TestBlock3 extends TestBlock1 {
+  schema = yup.object({
+    counter: yup.number(),
+  });
 }
 
 test('Blocks.get', (t) => {
@@ -99,4 +106,25 @@ test('Blocks.forEach', async (t) => {
     'Blocks.forEach should loop through all the blocks',
   );
   newBlocks.forEach((b) => b?.remove());
+});
+
+test('Blocks data validation', (t) => {
+  const b = server.worlds[0].getBlockAt(124, 40, 124);
+  let data = Blocks.get(b, TestBlock3);
+  if (!data) {
+    fail();
+    return;
+  }
+  data.counter = 'hello world' as any;
+  t.eq(
+    data.counter,
+    'hello world' as any,
+    'Setting a field to invalid value should work',
+  );
+  data = Blocks.get(b, TestBlock3);
+  t.eq(
+    data?.counter,
+    0,
+    'Getting the block again should reset the value to default',
+  );
 });
