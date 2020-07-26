@@ -9,6 +9,8 @@
     "inlineSourceMap": true,
     "module": "commonJS",
     "strict": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": [
     "src/**/*",
