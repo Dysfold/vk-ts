@@ -25,14 +25,17 @@ class Cauldron extends CustomBlock {
   }
 }
 
-onClick({
-  block: Cauldron,
-  type: 'right',
-  callback: (e, b) => {
+onClick(
+  {
+    block: Cauldron,
+    type: 'right',
+    hand: 'main',
+  },
+  (e, b) => {
     b.temperature++;
     e.player.sendMessage(`${b.temperature}`);
   },
-});
+);
 
 Blocks.forEach(Cauldron, (b) => {
   //
