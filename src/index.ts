@@ -9,7 +9,7 @@ import { Blocks } from './common/blocks/CustomBlock';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import * as yup from 'yup';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
-import { onClick } from './common/events';
+import { onClick, event } from './common/events';
 
 interface CauldronData {
   temperature: number;
@@ -36,6 +36,14 @@ onClick(
     e.player.sendMessage(`${b.temperature}`);
   },
 );
+
+(async function () {
+  const { player } = await event(
+    PlayerInteractEvent,
+    (e) => e.item?.type === Material.STICK,
+  );
+  player.sendMessage('Clicked with stick');
+})();
 
 Blocks.forEach(Cauldron, (b) => {
   //
