@@ -41,7 +41,7 @@ export abstract class CustomBlock {
   abstract check(): boolean;
 }
 
-interface Region {
+export interface Region {
   world: string;
   x: number;
   z: number;
@@ -112,7 +112,7 @@ export class Blocks {
     return region;
   }
 
-  private static getLoadedRegions() {
+  static getLoadedRegions() {
     const loadedChunks = [...server.worlds]
       .map((w) => w.loadedChunks)
       .reduce((arr, cur) => [...arr, ...cur], []) as Chunk[];
@@ -206,6 +206,7 @@ export class Blocks {
     for (const region of emptyRegions) {
       const f = this.getRegionFile(region);
       Files.deleteIfExists(f);
+      this.regions = this.regions.filter((r) => r !== region);
     }
     for (const region of changedRegions) {
       writeJSON(this.getRegionFile(region), region);
@@ -248,11 +249,11 @@ export class Blocks {
   static async forEach<T extends CustomBlock>(
     clazz: Newable<T>,
     callback: (block: T) => void,
+    regions?: Region[],
   ) {
-    console.time('foreach');
     const promises: Promise<void>[] = [];
     const name = clazz.prototype.constructor.name;
-    const loadedRegions = this.getLoadedRegions();
+    const loadedRegions = regions ?? this.getLoadedRegions();
     let totalAmount = 0;
     for (let i = 0; i < loadedRegions.length; i++) {
       const region = loadedRegions[i];
@@ -263,25 +264,28 @@ export class Blocks {
       const keys = Object.keys(blocks);
       totalAmount += keys.length;
 
-      const promise = runTask(() => {
-        for (let j = 0; j < keys.length; j++) {
-          const key = keys[j];
-          const block = this.deserializeLocation(key);
-          if (!block) {
-            continue;
+      const chunkedKeys = _.chunk(keys, 5);
+
+      for (const chunk of chunkedKeys) {
+        const promise = runTask(() => {
+          for (let j = 0; j < chunk.length; j++) {
+            const key = chunk[j];
+            const block = this.deserializeLocation(key);
+            if (!block) {
+              continue;
+            }
+            const cb = this.get(block, clazz);
+            if (!cb) {
+              continue;
+            }
+            callback(cb);
           }
-          const cb = this.get(block, clazz);
-          if (!cb) {
-            continue;
-          }
-          callback(cb);
-        }
-      });
-      promises.push(promise);
+        });
+        await promise;
+        promises.push(promise);
+      }
     }
-    console.log(`Total: ${totalAmount} in ${loadedRegions.length} regions`);
-    console.timeEnd('foreach');
-    await Promise.all(promises);
+    //await Promise.all(promises);
   }
   /**
    * Get the custom block data of type `type` at the specified block, or undefined if the

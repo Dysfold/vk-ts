@@ -30,14 +30,13 @@ export const OnLeftClick = () => OnClick((e) => isLeftClick(e));
 export function Tick(interval = 20): MethodDecorator {
   return function (target, propertyKey, descriptor) {
     const func = Reflect.get(target, propertyKey);
-    let lastRun = Date.now();
-    setInterval(() => {
-      const delta = Date.now() - lastRun;
-      Blocks.forEach(target.constructor as any, (block) =>
-        func.apply(block, [delta / 1000, block]),
-      );
-      lastRun = Date.now();
-    }, interval * 50);
+    Scheduler.addHandler(
+      target.constructor as any,
+      (delta, block) => {
+        func.apply(block, [delta / 1000, block]);
+      },
+      interval,
+    );
   };
 }
 

@@ -37,7 +37,6 @@ class Cauldron extends CustomBlock {
   }
 
   getLiquid() {
-    const blockData = this.block.blockData as Levelled;
     return this.waterLevel > 0 ? 'WATER' : 'NONE';
   }
 
@@ -71,15 +70,16 @@ class Cauldron extends CustomBlock {
     );
     if (this.temperature > 95 && this.getLiquid() !== 'NONE') {
       this.waterLevel = Math.max(0, this.waterLevel - 0.01 * delta);
-      const loc = this.block.location.add(0.5, 0.5, 0.5);
-      loc.world.spawnParticle(Particle.SMOKE_LARGE, loc, 1, 0, 0, 0, 0.01);
+      //const loc = this.block.location.add(0.5, 0.5, 0.5);
+      //loc.world.spawnParticle(Particle.SMOKE_LARGE, loc, 1, 0, 0, 0, 0.01);
     }
-
-    const blockdata = this.block.blockData as Levelled;
-    if (blockdata.level !== Math.ceil(this.waterLevel)) {
-      blockdata.level = Math.ceil(this.waterLevel);
-      this.block.blockData = blockdata;
-    }
+    /*if (Math.random() < 0.1) {
+      const blockdata = this.block.blockData as Levelled;
+      if (blockdata.level !== Math.ceil(this.waterLevel)) {
+        blockdata.level = Math.ceil(this.waterLevel);
+        this.block.blockData = blockdata;
+      }
+    }*/
   }
 }
 
