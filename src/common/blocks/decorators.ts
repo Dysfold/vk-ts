@@ -4,6 +4,7 @@ import { isRightClick, isLeftClick } from '../events';
 import { Scheduler } from './scheduler';
 import { Event as JEvent } from 'org.bukkit.event';
 import { Block } from 'org.bukkit.block';
+import { BlockEvent } from 'org.bukkit.event.block';
 
 export function OnClick(
   predicate?: (event: PlayerInteractEvent) => boolean,
@@ -40,9 +41,18 @@ export function Tick(interval = 20): MethodDecorator {
   };
 }
 
+export function Event<T extends BlockEvent>(
+  event: new (...args: any[]) => T,
+  predicate?: (event: T) => Block | undefined | null,
+): MethodDecorator;
 export function Event<T extends JEvent>(
   event: new (...args: any[]) => T,
   predicate: (event: T) => Block | undefined | null,
+): MethodDecorator;
+export function Event<T extends JEvent>(
+  event: new (...args: any[]) => T,
+  predicate: (event: T) => Block | undefined | null = (e) =>
+    e instanceof BlockEvent ? e.block : undefined,
 ): MethodDecorator {
   return function (target, propertyKey, descriptor) {
     const func = Reflect.get(target, propertyKey) as Function;

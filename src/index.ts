@@ -44,12 +44,12 @@ class Cauldron extends CustomBlock {
     return this.block.getRelative(0, -1, 0).type === Material.FIRE;
   }
 
-  @Event(BlockPlaceEvent, (e) => e.block)
+  @Event(BlockPlaceEvent)
   onPlace(event: BlockPlaceEvent) {
     event.player.sendMessage('Place');
   }
 
-  @Event(CauldronLevelChangeEvent, (e) => e.block)
+  @Event(CauldronLevelChangeEvent)
   onLevelChange(event: CauldronLevelChangeEvent) {
     this.waterLevel = event.newLevel;
   }
