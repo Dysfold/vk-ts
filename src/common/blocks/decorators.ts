@@ -27,14 +27,17 @@ export function OnClick(
 export const OnRightClick = () => OnClick((e) => isRightClick(e));
 export const OnLeftClick = () => OnClick((e) => isLeftClick(e));
 
-export function Tick(interval?: number): MethodDecorator {
+export function Tick(interval = 20): MethodDecorator {
   return function (target, propertyKey, descriptor) {
     const func = Reflect.get(target, propertyKey);
-    Scheduler.addHandler((delta) => {
+    let lastRun = Date.now();
+    setInterval(() => {
+      const delta = Date.now() - lastRun;
       Blocks.forEach(target.constructor as any, (block) =>
         func.apply(block, [delta / 1000, block]),
       );
-    }, interval ?? 1);
+      lastRun = Date.now();
+    }, interval * 50);
   };
 }
 
@@ -50,6 +53,9 @@ export function Event<T extends JEvent>(
         return;
       }
       const cb = Blocks.get(block, target.constructor as any);
+      if (!cb) {
+        return;
+      }
       func.apply(cb, [e, cb]);
     });
   };

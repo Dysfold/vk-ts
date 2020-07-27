@@ -14,7 +14,11 @@ import {
 import { Blocks } from './common/blocks/CustomBlock';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import * as yup from 'yup';
-import { BlockBreakEvent, BlockPlaceEvent } from 'org.bukkit.event.block';
+import {
+  BlockBreakEvent,
+  BlockPlaceEvent,
+  CauldronLevelChangeEvent,
+} from 'org.bukkit.event.block';
 import { event, isRightClick } from './common/events';
 import { Levelled } from 'org.bukkit.block.data';
 
@@ -25,6 +29,7 @@ interface CauldronData {
 
 class Cauldron extends CustomBlock {
   temperature = 0;
+  waterLevel = 0;
   ingredients: number[] = [];
 
   check() {
@@ -33,7 +38,7 @@ class Cauldron extends CustomBlock {
 
   getLiquid() {
     const blockData = this.block.blockData as Levelled;
-    return blockData.level > 0 ? 'WATER' : 'NONE';
+    return this.waterLevel > 0 ? 'WATER' : 'NONE';
   }
 
   isHeated() {
@@ -45,23 +50,35 @@ class Cauldron extends CustomBlock {
     event.player.sendMessage('Place');
   }
 
+  @Event(CauldronLevelChangeEvent, (e) => e.block)
+  onLevelChange(event: CauldronLevelChangeEvent) {
+    this.waterLevel = event.newLevel;
+  }
+
   @OnRightClick()
   onClick(event: PlayerInteractEvent) {
     if (event.hand !== EquipmentSlot.HAND) {
       return;
     }
-    event.player.sendActionBar(`${this.temperature} C`);
+    event.player.sendActionBar(`${this.waterLevel}, ${this.temperature} C`);
   }
 
-  @Tick(20)
+  @Tick(60)
   tick(delta: number) {
     this.temperature = Math.min(
       this.isHeated() ? this.temperature + 0.5 * delta : this.temperature,
       100,
     );
     if (this.temperature > 95 && this.getLiquid() !== 'NONE') {
+      this.waterLevel = Math.max(0, this.waterLevel - 0.01 * delta);
       const loc = this.block.location.add(0.5, 0.5, 0.5);
       loc.world.spawnParticle(Particle.SMOKE_LARGE, loc, 1, 0, 0, 0, 0.01);
+    }
+
+    const blockdata = this.block.blockData as Levelled;
+    if (blockdata.level !== Math.ceil(this.waterLevel)) {
+      blockdata.level = Math.ceil(this.waterLevel);
+      this.block.blockData = blockdata;
     }
   }
 }

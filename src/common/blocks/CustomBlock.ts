@@ -9,6 +9,7 @@ import { readJSON, writeJSON } from '../json';
 import * as fnv from 'fnv-plus';
 import * as yup from 'yup';
 import * as _ from 'lodash';
+import { runTask } from '../scheduling';
 
 type Newable<T> = new (...args: any[]) => T;
 
@@ -248,9 +249,11 @@ export class Blocks {
     clazz: Newable<T>,
     callback: (block: T) => void,
   ) {
+    console.time('foreach');
     const promises: Promise<void>[] = [];
     const name = clazz.prototype.constructor.name;
     const loadedRegions = this.getLoadedRegions();
+    let totalAmount = 0;
     for (let i = 0; i < loadedRegions.length; i++) {
       const region = loadedRegions[i];
       if (!(name in region.blocks)) {
@@ -258,24 +261,26 @@ export class Blocks {
       }
       const blocks = region.blocks[name];
       const keys = Object.keys(blocks);
-      for (let j = 0; j < keys.length; j++) {
-        const key = keys[j];
-        const block = this.deserializeLocation(key);
-        if (!block) {
-          continue;
-        }
-        const promise = new Promise<void>((resolve) => {
+      totalAmount += keys.length;
+
+      const promise = runTask(() => {
+        for (let j = 0; j < keys.length; j++) {
+          const key = keys[j];
+          const block = this.deserializeLocation(key);
+          if (!block) {
+            continue;
+          }
           const cb = this.get(block, clazz);
           if (!cb) {
-            resolve();
-            return;
+            continue;
           }
           callback(cb);
-          resolve();
-        }).catch((e) => console.error(e));
-        promises.push(promise);
-      }
+        }
+      });
+      promises.push(promise);
     }
+    console.log(`Total: ${totalAmount} in ${loadedRegions.length} regions`);
+    console.timeEnd('foreach');
     await Promise.all(promises);
   }
   /**
