@@ -6,6 +6,10 @@ import { Event as JEvent } from 'org.bukkit.event';
 import { Block } from 'org.bukkit.block';
 import { BlockEvent } from 'org.bukkit.event.block';
 
+/**
+ * Shorthand decorator for registering click events for classes extending `CustomBlock`.
+ * @param predicate Optional predicate that determines whether the subseding method should be called
+ */
 export function OnClick(
   predicate?: (event: PlayerInteractEvent) => boolean,
 ): MethodDecorator {
@@ -28,6 +32,12 @@ export function OnClick(
 export const OnRightClick = () => OnClick((e) => isRightClick(e));
 export const OnLeftClick = () => OnClick((e) => isLeftClick(e));
 
+/**
+ * Registers a method to be called on all of this block's currently loaded instances.
+ * The method will receive the time since the last call in seconds as an argument.
+ * @param interval Optional interval between which this method should be run. Note that
+ * this is not guaranteed, and for optimization reasons the actual time may differ.
+ */
 export function Tick(interval = 20): MethodDecorator {
   return function (target, propertyKey, descriptor) {
     const func = Reflect.get(target, propertyKey);
@@ -41,6 +51,12 @@ export function Tick(interval = 20): MethodDecorator {
   };
 }
 
+/**
+ * A decorator to be used inside a class extending `CustomBlock`.
+ * Registers the decorated method as a event
+ * @param event The type of event to register
+ * @param predicate A function to extract the block from the event, defaults to `(e) => e.block`
+ */
 export function Event<T extends BlockEvent>(
   event: new (...args: any[]) => T,
   predicate?: (event: T) => Block | undefined | null,
