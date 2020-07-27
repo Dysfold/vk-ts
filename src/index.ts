@@ -62,7 +62,7 @@ class Cauldron extends CustomBlock {
     event.player.sendActionBar(`${this.waterLevel}, ${this.temperature} C`);
   }
 
-  @Tick(60)
+  @Tick(20)
   tick(delta: number) {
     this.temperature = Math.min(
       this.isHeated() ? this.temperature + 0.5 * delta : this.temperature,
@@ -70,16 +70,24 @@ class Cauldron extends CustomBlock {
     );
     if (this.temperature > 95 && this.getLiquid() !== 'NONE') {
       this.waterLevel = Math.max(0, this.waterLevel - 0.01 * delta);
-      //const loc = this.block.location.add(0.5, 0.5, 0.5);
-      //loc.world.spawnParticle(Particle.SMOKE_LARGE, loc, 1, 0, 0, 0, 0.01);
+      const loc = this.block.location.add(0.5, 0.5, 0.5);
+      loc.world.spawnParticle(
+        Particle.CAMPFIRE_COSY_SMOKE,
+        loc,
+        2,
+        0,
+        0,
+        0,
+        0.07,
+      );
     }
-    /*if (Math.random() < 0.1) {
+    if (Math.random() < 0.1) {
       const blockdata = this.block.blockData as Levelled;
       if (blockdata.level !== Math.ceil(this.waterLevel)) {
         blockdata.level = Math.ceil(this.waterLevel);
         this.block.blockData = blockdata;
       }
-    }*/
+    }
   }
 }
 
