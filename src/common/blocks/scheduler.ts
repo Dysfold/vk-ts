@@ -92,5 +92,3 @@ export class Scheduler {
     setTimeout(() => Scheduler.run(), delay * 50);
   }
 }
-
-Scheduler.run();

@@ -1,31 +1,15 @@
 import * as _ from 'lodash';
-import { persist } from './common/persist';
-import { Players } from './common/players';
-import * as s from './common/serialization';
-import { ItemStack, EquipmentSlot } from 'org.bukkit.inventory';
+import { EquipmentSlot } from 'org.bukkit.inventory';
 import { Material, Particle } from 'org.bukkit';
-import {
-  CustomBlock,
-  OnClick,
-  OnRightClick,
-  Tick,
-  Event,
-} from './common/blocks';
+import { CustomBlock, OnRightClick, Event, Tick } from './common/blocks';
 import { Blocks } from './common/blocks/CustomBlock';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
-import * as yup from 'yup';
 import {
   BlockBreakEvent,
   BlockPlaceEvent,
   CauldronLevelChangeEvent,
 } from 'org.bukkit.event.block';
-import { event, isRightClick } from './common/events';
 import { Levelled } from 'org.bukkit.block.data';
-
-interface CauldronData {
-  temperature: number;
-  ingredients: string[];
-}
 
 class Cauldron extends CustomBlock {
   temperature = 0;

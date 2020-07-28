@@ -47,6 +47,7 @@ export interface Region {
   z: number;
   hash: number;
   lastSavedHash: number;
+  hasChanged: boolean;
   blocks: { [type: string]: Record<string, CustomBlock | {}> };
 }
 
@@ -104,8 +105,8 @@ export class Blocks {
         hash: 0,
         lastSavedHash: -1,
         blocks: {},
+        hasChanged: false,
       } as Region;
-      this.updateHash(newRegion);
       this.regions.push(newRegion);
       return newRegion;
     }
@@ -118,14 +119,6 @@ export class Blocks {
       .reduce((arr, cur) => [...arr, ...cur], []) as Chunk[];
     const regions = loadedChunks.map((c) => this.getRegion(c));
     return _.uniqBy(regions, (r) => `${r.world};${r.x};${r.z}`);
-  }
-
-  /**
-   * Calculates and sets the hash of a `Region`, mutating the object directly
-   * @param region the `Region` to update
-   */
-  private static updateHash(region: Region) {
-    region.hash = fnv.fast1a32utf(JSON.stringify(region.blocks));
   }
 
   /**
@@ -194,11 +187,10 @@ export class Blocks {
       return !isEmpty;
     });
 
-    const changedRegions = this.regions.filter((region) => {
-      const hasChanged = region.hash !== region.lastSavedHash;
-      region.lastSavedHash = region.hash;
-      return hasChanged;
-    });
+    const changedRegions = this.regions.filter((region) => region.hasChanged);
+
+    console.log(emptyRegions.map((r) => r.x + ';' + r.z));
+
     console.log(
       `${changedRegions.length} regions changed, ${emptyRegions.length} empty regions will be deleted`,
     );
@@ -206,7 +198,6 @@ export class Blocks {
     for (const region of emptyRegions) {
       const f = this.getRegionFile(region);
       Files.deleteIfExists(f);
-      this.regions = this.regions.filter((r) => r !== region);
     }
     for (const region of changedRegions) {
       writeJSON(this.getRegionFile(region), region);
@@ -228,7 +219,7 @@ export class Blocks {
         location: undefined,
       }),
     } as any;
-    this.updateHash(region);
+    region.hasChanged = true;
   }
 
   /**
@@ -339,7 +330,6 @@ export class Blocks {
       return;
     }
     region.blocks[name][key] = {};
-    this.updateHash(region);
   }
 }
 
