@@ -2,6 +2,7 @@ import { ItemStack } from 'org.bukkit.inventory';
 import { NBT } from './NBT';
 import { Newable } from '../types';
 import { Material } from 'org.bukkit';
+import { onChange } from '../onChange';
 const DATA_KEY = '__data';
 
 type CustomItemOptions<T> = {
@@ -11,7 +12,7 @@ type CustomItemOptions<T> = {
   descriptor?: T;
 } & ({} | { defaultData: T; create?: (data: T) => ItemStack });
 
-class CustomItem<T extends {} | undefined = undefined> {
+export class CustomItem<T extends {} | undefined = undefined> {
   options: CustomItemOptions<T>;
   defaultData: T | undefined;
 
@@ -32,12 +33,21 @@ class CustomItem<T extends {} | undefined = undefined> {
     return item;
   }
 
+  private getProxy(item: ItemStack, data: T) {
+    return onChange(data, () => {
+      NBT.set(item, DATA_KEY, data);
+    });
+  }
+
   get(item: ItemStack | null | undefined) {
     if (!item || !this.check(item)) {
       return undefined;
     }
     const data = NBT.get(item, DATA_KEY);
-    return data as T;
+    if (!data) {
+      return undefined;
+    }
+    return this.getProxy(item, data) as T;
   }
 
   set(item: ItemStack | null | undefined, data: T): void;
