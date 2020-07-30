@@ -59,12 +59,16 @@ export class CustomItem<T extends {} | undefined = undefined> {
 
   /**
    * Create an itemstack described by this CustomItem instance.
+   * @param data If specified, this is the data that the created item
+   * will have. If not, the default data will be used.
    */
-  create() {
+  create(data?: Partial<T>) {
     const item = new ItemStack(this.options.type);
-    const data = this.createData();
-    if (data) {
-      NBT.set(item, DATA_KEY, data);
+    const itemData = data
+      ? { ...this.createData(), ...data }
+      : this.createData();
+    if (itemData) {
+      NBT.set(item, DATA_KEY, itemData);
     }
     const meta = item.itemMeta;
     if (this.options.damage && meta instanceof Damageable) {
