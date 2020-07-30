@@ -21,6 +21,10 @@ const TestItem3 = new CustomItem({
   create(item) {
     return new ItemStack(item.type, 3);
   },
+
+  check() {
+    return false;
+  },
 });
 
 test('CustomItems workflow', (t) => {
@@ -110,4 +114,6 @@ test('CustomItem method overriding', (t) => {
     3,
     'CustomItem.create() overloading changes the output of CustomItem.create()',
   );
+
+  t.notOk(TestItem3.check(item), 'CustomItem.check() overloading should work');
 });
