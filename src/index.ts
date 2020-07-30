@@ -10,6 +10,15 @@ import {
   CauldronLevelChangeEvent,
 } from 'org.bukkit.event.block';
 import { Levelled } from 'org.bukkit.block.data';
+import { CustomItem } from './common/items/CustomItem';
+
+const Guitar = new CustomItem({
+  type: Material.DIAMOND_PICKAXE,
+  damage: 100,
+  defaultData: {
+    lastClick: Date.now(),
+  },
+});
 
 class Cauldron extends CustomBlock {
   temperature = 0;

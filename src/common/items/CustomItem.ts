@@ -11,11 +11,17 @@ type CustomItemOptions<T> = {
   damage?: number;
   create?: (item: ItemStack, data: T | undefined) => ItemStack;
   check?: (item: ItemStack) => boolean;
-} & ({} | { defaultData: T; create?: (item: ItemStack, data: T) => ItemStack });
+} & (
+  | {}
+  | {
+      defaultData: T | (() => T);
+      create?: (item: ItemStack, data: T) => ItemStack;
+    }
+);
 
 export class CustomItem<T extends {} | undefined = undefined> {
   options: CustomItemOptions<T>;
-  defaultData: T | undefined;
+  defaultData: T | (() => T) | undefined;
 
   constructor(options: CustomItemOptions<T>) {
     this.options = { check: () => true, ...options };
@@ -23,10 +29,18 @@ export class CustomItem<T extends {} | undefined = undefined> {
       'defaultData' in options ? options.defaultData : undefined;
   }
 
+  private createData(): T | undefined {
+    if (typeof this.defaultData === 'function' && 'apply' in this.defaultData) {
+      return this.defaultData();
+    }
+    return this.defaultData;
+  }
+
   create() {
     const item = new ItemStack(this.options.type);
-    if (this.defaultData) {
-      NBT.set(item, DATA_KEY, this.defaultData);
+    const data = this.createData();
+    if (data) {
+      NBT.set(item, DATA_KEY, data);
     }
     const meta = item.itemMeta;
     if (this.options.damage && meta instanceof Damageable) {
@@ -34,7 +48,7 @@ export class CustomItem<T extends {} | undefined = undefined> {
     }
     item.itemMeta = meta;
     if (this.options.create) {
-      return this.options.create(item, this.defaultData);
+      return this.options.create(item, this.createData());
     }
     return item;
   }
