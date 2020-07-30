@@ -11,7 +11,6 @@ type CustomItemOptions<T> = {
   damage?: number;
   create?: (item: ItemStack, data: T | undefined) => ItemStack;
   check?: (item: ItemStack) => boolean;
-  descriptor?: T;
 } & ({} | { defaultData: T; create?: (item: ItemStack, data: T) => ItemStack });
 
 export class CustomItem<T extends {} | undefined = undefined> {
@@ -87,13 +86,3 @@ export class CustomItem<T extends {} | undefined = undefined> {
     );
   }
 }
-
-const TestItem = new CustomItem({
-  type: Material.STICK,
-  defaultData: {
-    counter: 0,
-  },
-});
-
-const item = TestItem.create();
-TestItem.set(item, (data) => data.counter++);
