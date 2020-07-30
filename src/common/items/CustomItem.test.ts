@@ -37,4 +37,25 @@ test('CustomItems workflow', (t) => {
     1,
     `Mutating object returned by CustomItem.get() should mutate the item's data`,
   );
+
+  try {
+    TestItem.set(invalidItem, { counter: 10 });
+    t.ok('CustomItem.set() on an invalid item should not throw error');
+  } catch (e) {
+    t.fail(e);
+  }
+
+  TestItem.set(test1, { counter: 5 });
+  t.eq(
+    TestItem.get(test1)?.counter,
+    5,
+    'CustomItem.set() with complete data should set the data',
+  );
+
+  TestItem.set(test1, (data) => (data.counter = 12));
+  t.eq(
+    TestItem.get(test1)?.counter,
+    12,
+    `A function supplied to CustomItem.set() should be able to mutate the item's data`,
+  );
 });
