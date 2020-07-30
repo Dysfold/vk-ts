@@ -7,14 +7,35 @@ import { Damageable } from 'org.bukkit.inventory.meta';
 const DATA_KEY = '__data';
 
 type CustomItemOptions<T> = {
+  /**
+   * The type of a item
+   */
   type: Material;
+  /**
+   * The damage of a item represented by this configuration.
+   */
   damage?: number;
+  /**
+   * If specified, this will be called with the default created item, alongside
+   * with the data associated with the item that is being created
+   */
   create?: (item: ItemStack, data: T | undefined) => ItemStack;
+  /**
+   * If specified, this overrides the method for checking whether or not
+   * a given itemstack is valid for this type of custom item
+   */
   check?: (item: ItemStack) => boolean;
 } & (
   | {}
   | {
+      /**
+       * The default data that is applied to new items when they are created
+       */
       defaultData: T | (() => T);
+      /**
+       * If specified, this will be called with the default created item, alongside
+       * with the data associated with the item that is being created
+       */
       create?: (item: ItemStack, data: T) => ItemStack;
     }
 );
