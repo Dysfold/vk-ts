@@ -16,6 +16,13 @@ const TestItem2 = new CustomItem({
   damage: 12,
 });
 
+const TestItem3 = new CustomItem({
+  type: Material.DIRT,
+  create(item) {
+    return new ItemStack(item.type, 3);
+  },
+});
+
 test('CustomItems workflow', (t) => {
   const test1 = TestItem.create();
   t.eq(
@@ -88,5 +95,19 @@ test('CustomItem options', (t) => {
     meta2.damage,
     12,
     'Items created with CustomItem.create() should have correct damage',
+  );
+});
+
+test('CustomItem method overriding', (t) => {
+  const item = TestItem3.create();
+  t.eq(
+    item.type,
+    Material.DIRT,
+    'CustomItem.create() overload receives the default created itemstack',
+  );
+  t.eq(
+    item.amount,
+    3,
+    'CustomItem.create() overloading changes the output of CustomItem.create()',
   );
 });

@@ -9,10 +9,10 @@ const DATA_KEY = '__data';
 type CustomItemOptions<T> = {
   type: Material;
   damage?: number;
-  create?: (data: T | undefined) => ItemStack;
+  create?: (item: ItemStack, data: T | undefined) => ItemStack;
   check?: (item: ItemStack) => boolean;
   descriptor?: T;
-} & ({} | { defaultData: T; create?: (data: T) => ItemStack });
+} & ({} | { defaultData: T; create?: (item: ItemStack, data: T) => ItemStack });
 
 export class CustomItem<T extends {} | undefined = undefined> {
   options: CustomItemOptions<T>;
@@ -25,9 +25,6 @@ export class CustomItem<T extends {} | undefined = undefined> {
   }
 
   create() {
-    if (this.options.create) {
-      return this.options.create(this.defaultData);
-    }
     const item = new ItemStack(this.options.type);
     if (this.defaultData) {
       NBT.set(item, DATA_KEY, this.defaultData);
@@ -37,6 +34,9 @@ export class CustomItem<T extends {} | undefined = undefined> {
       meta.damage = this.options.damage;
     }
     item.itemMeta = meta;
+    if (this.options.create) {
+      return this.options.create(item, this.defaultData);
+    }
     return item;
   }
 
