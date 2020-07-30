@@ -27,6 +27,13 @@ const TestItem3 = new CustomItem({
   },
 });
 
+const TestItem4 = new CustomItem({
+  type: Material.BEEF,
+  defaultData: () => ({
+    rand: Math.random(),
+  }),
+});
+
 test('CustomItems workflow', (t) => {
   const test1 = TestItem.create();
   t.eq(
@@ -99,6 +106,14 @@ test('CustomItem options', (t) => {
     meta2.damage,
     12,
     'Items created with CustomItem.create() should have correct damage',
+  );
+
+  const [a, b] = [TestItem4.create(), TestItem4.create()];
+  const [dataA, dataB] = [TestItem4.get(a), TestItem4.get(b)];
+  t.notEq(
+    dataA?.rand,
+    dataB?.rand,
+    'Passing a function as defaultData should run the function on creation and generate the data',
   );
 });
 
