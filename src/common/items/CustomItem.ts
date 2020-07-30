@@ -11,7 +11,7 @@ type CustomItemOptions<T> = {
   descriptor?: T;
 } & ({} | { defaultData: T; create?: (data: T) => ItemStack });
 
-class CustomItem<T = undefined> {
+class CustomItem<T extends {} | undefined = undefined> {
   options: CustomItemOptions<T>;
   defaultData: T | undefined;
 
@@ -40,6 +40,24 @@ class CustomItem<T = undefined> {
     return data as T;
   }
 
+  set(item: ItemStack | null | undefined, data: T): void;
+  set(item: ItemStack | null | undefined, setter: (data: T) => void): void;
+  set(item: ItemStack | null | undefined, arg1: T | ((data: T) => void)) {
+    if (!item) {
+      return;
+    }
+    const currentData = this.get(item);
+    if (!currentData) {
+      return;
+    }
+    if (typeof arg1 === 'function' && 'call' in arg1) {
+      arg1(currentData);
+      NBT.set(item, DATA_KEY, currentData);
+    } else {
+      NBT.set(item, DATA_KEY, arg1);
+    }
+  }
+
   check(item: ItemStack) {
     return (
       item.type === this.options.type &&
@@ -55,18 +73,5 @@ const TestItem = new CustomItem({
   },
 });
 
-export class Items {
-  static get<T extends CustomItem<any>>(
-    clazz: Newable<CustomItem<T>>,
-    item: ItemStack,
-  ) {
-    const data = NBT.get(item, DATA_KEY);
-    const customItem = new clazz(item, data);
-    return customItem;
-  }
-
-  static create<T>(clazz: Newable<CustomItem<T>>) {}
-}
-
 const item = TestItem.create();
-TestItem.get(item)?.counter++;
+TestItem.set(item, (data) => data.counter++);
