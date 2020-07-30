@@ -2,12 +2,18 @@ import { test } from 'zora';
 import { CustomItem } from './CustomItem';
 import { Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
+import { Damageable, ItemMeta } from 'org.bukkit.inventory.meta';
 
 const TestItem = new CustomItem({
   type: Material.STICK,
   defaultData: {
     counter: 0,
   },
+});
+
+const TestItem2 = new CustomItem({
+  type: Material.DIAMOND_PICKAXE,
+  damage: 12,
 });
 
 test('CustomItems workflow', (t) => {
@@ -57,5 +63,30 @@ test('CustomItems workflow', (t) => {
     TestItem.get(test1)?.counter,
     12,
     `A function supplied to CustomItem.set() should be able to mutate the item's data`,
+  );
+});
+
+test('CustomItem options', (t) => {
+  const item2 = new ItemStack(Material.DIAMOND_PICKAXE);
+  const meta = item2.itemMeta as ItemMeta & Damageable;
+  meta.damage = 12;
+  item2.itemMeta = meta;
+  t.ok(
+    TestItem2.check(item2),
+    'CustomItem.check() should take into account item damage if specified',
+  );
+  meta.damage = 13;
+  item2.itemMeta = meta;
+  t.notOk(
+    TestItem2.check(item2),
+    'CustomItem.check() should fail for items with wrong damage',
+  );
+
+  const item = TestItem2.create();
+  const meta2 = item.itemMeta as ItemMeta & Damageable;
+  t.eq(
+    meta2.damage,
+    12,
+    'Items created with CustomItem.create() should have correct damage',
   );
 });

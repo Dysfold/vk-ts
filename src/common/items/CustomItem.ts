@@ -32,6 +32,11 @@ export class CustomItem<T extends {} | undefined = undefined> {
     if (this.defaultData) {
       NBT.set(item, DATA_KEY, this.defaultData);
     }
+    const meta = item.itemMeta;
+    if (this.options.damage && meta instanceof Damageable) {
+      meta.damage = this.options.damage;
+    }
+    item.itemMeta = meta;
     return item;
   }
 
