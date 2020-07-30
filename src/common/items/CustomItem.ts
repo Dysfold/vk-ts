@@ -36,6 +36,9 @@ export class CustomItem<T extends {} | undefined = undefined> {
     return this.defaultData;
   }
 
+  /**
+   * Create an itemstack described by this CustomItem instance.
+   */
   create() {
     const item = new ItemStack(this.options.type);
     const data = this.createData();
@@ -59,6 +62,12 @@ export class CustomItem<T extends {} | undefined = undefined> {
     });
   }
 
+  /**
+   * Get the data described by this CustomItem instance from `item`.
+   * @param item The itemstack to fetch data from. If this is falsy, the method will return `undefined`.
+   * @returns If `item` is valid item for this CustomItem instance (i.e. `this.check(item)` returns true), the method will return it's data.
+   * Otherwise `undefined` will be returned.
+   */
   get(item: ItemStack | null | undefined) {
     if (!item || !this.check(item)) {
       return undefined;
@@ -70,9 +79,32 @@ export class CustomItem<T extends {} | undefined = undefined> {
     return this.getProxy(item, data) as T;
   }
 
-  set(item: ItemStack | null | undefined, data: T): void;
-  set(item: ItemStack | null | undefined, setter: (data: T) => void): void;
-  set(item: ItemStack | null | undefined, arg1: T | ((data: T) => void)) {
+  /**
+   * Set the data of an itemstack
+   * @param item The itemstack whose data will be modified
+   * @param data The new data, or part of it.
+   *
+   * @example
+   * CustomItem.set(item, { counter: 5 })
+   */
+  set(item: ItemStack | null | undefined, data: Partial<T>): void;
+  /**
+   * Set the data of an itemstack
+   * @param item The itemstack whose data will be modified
+   * @param setter A function that takes in the previous data as an argument and
+   * returns the new data
+   *
+   * @example
+   * CustomItem.set(item, data => ({ counter: data.counter++ }));
+   */
+  set(
+    item: ItemStack | null | undefined,
+    setter: (data: T) => Partial<T>,
+  ): void;
+  set(
+    item: ItemStack | null | undefined,
+    arg1: Partial<T> | ((data: T) => Partial<T>),
+  ) {
     if (!item) {
       return;
     }
@@ -81,10 +113,10 @@ export class CustomItem<T extends {} | undefined = undefined> {
       return;
     }
     if (typeof arg1 === 'function' && 'call' in arg1) {
-      arg1(currentData);
-      NBT.set(item, DATA_KEY, currentData);
+      const newData = arg1(currentData);
+      NBT.set(item, DATA_KEY, { ...currentData, newData });
     } else {
-      NBT.set(item, DATA_KEY, arg1);
+      NBT.set(item, DATA_KEY, { ...currentData, arg1 });
     }
   }
 
