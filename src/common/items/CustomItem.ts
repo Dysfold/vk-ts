@@ -3,10 +3,12 @@ import { NBT } from './NBT';
 import { Newable } from '../types';
 import { Material } from 'org.bukkit';
 import { onChange } from '../onChange';
+import { Damageable } from 'org.bukkit.inventory.meta';
 const DATA_KEY = '__data';
 
 type CustomItemOptions<T> = {
   type: Material;
+  damage?: number;
   create?: (data: T | undefined) => ItemStack;
   check?: (item: ItemStack) => boolean;
   descriptor?: T;
@@ -69,7 +71,12 @@ export class CustomItem<T extends {} | undefined = undefined> {
   }
 
   check(item: ItemStack) {
+    const { itemMeta: meta } = item;
+    const damage = meta instanceof Damageable ? meta.damage : undefined;
+    const isDamageValid =
+      !this.options.damage || damage === this.options.damage;
     return (
+      isDamageValid &&
       item.type === this.options.type &&
       (!this.options.check || this.options.check(item))
     );
