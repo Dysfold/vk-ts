@@ -112,12 +112,10 @@ export class CustomItem<T extends {} | undefined = undefined> {
     if (!currentData) {
       return;
     }
-    if (typeof arg1 === 'function' && 'call' in arg1) {
-      const newData = arg1(currentData);
-      NBT.set(item, DATA_KEY, { ...currentData, newData });
-    } else {
-      NBT.set(item, DATA_KEY, { ...currentData, arg1 });
-    }
+
+    const newData =
+      typeof arg1 === 'function' && 'apply' in arg1 ? arg1(currentData) : arg1;
+    NBT.set(item, DATA_KEY, { ...currentData, ...newData });
   }
 
   check(item: ItemStack) {

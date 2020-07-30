@@ -76,7 +76,7 @@ test('CustomItems workflow', (t) => {
     'CustomItem.set() with complete data should set the data',
   );
 
-  TestItem.set(test1, (data) => (data.counter = 12));
+  TestItem.set(test1, (data) => ({ counter: 12 }));
   t.eq(
     TestItem.get(test1)?.counter,
     12,
