@@ -10,8 +10,7 @@ import * as fnv from 'fnv-plus';
 import * as yup from 'yup';
 import * as _ from 'lodash';
 import { runTask } from '../scheduling';
-
-type Newable<T> = new (...args: any[]) => T;
+import { Newable } from '../types';
 
 export abstract class CustomBlock {
   block: Block;
