@@ -10,7 +10,7 @@ import {
   CauldronLevelChangeEvent,
 } from 'org.bukkit.event.block';
 import { Levelled } from 'org.bukkit.block.data';
-import { CustomItem } from './common/items/CustomItem';
+import { CustomItem } from './common/items';
 import { isRightClick } from './common/events';
 import { date } from 'yup';
 
