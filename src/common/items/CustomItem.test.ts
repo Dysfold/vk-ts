@@ -34,6 +34,14 @@ const TestItem4 = new CustomItem({
   }),
 });
 
+const TestItem5 = new CustomItem({
+  type: Material.STICK,
+  defaultData: {
+    first: 0,
+    second: 0,
+  },
+});
+
 test('CustomItems workflow', (t) => {
   const test1 = TestItem.create();
   t.eq(
@@ -41,6 +49,22 @@ test('CustomItems workflow', (t) => {
     Material.STICK,
     'CustomItem.create() should create an itemstack with the correct type',
   );
+
+  const test2 = TestItem.create({ counter: -1 });
+  t.eq(
+    TestItem.get(test2)?.counter,
+    -1,
+    'Calling CustomItem.create() with specified data should create an item with the data',
+  );
+
+  const test3 = TestItem5.create({ first: -1 });
+  const test3Data = TestItem5.get(test3);
+  t.eq(
+    { ...test3Data },
+    { first: -1, second: 0 },
+    'CustomItem.create() with partial data should use default data',
+  );
+
   const invalidItem = new ItemStack(Material.DIRT);
   t.notOk(
     TestItem.get(invalidItem),
