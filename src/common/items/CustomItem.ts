@@ -4,6 +4,7 @@ import { Newable } from '../types';
 import { Material } from 'org.bukkit';
 import { onChange } from '../onChange';
 import { Damageable } from 'org.bukkit.inventory.meta';
+import { Event } from 'org.bukkit.event';
 const DATA_KEY = '__data';
 
 type CustomItemOptions<T> = {
@@ -55,6 +56,35 @@ export class CustomItem<T extends {} | undefined = undefined> {
       return this.defaultData();
     }
     return this.defaultData;
+  }
+
+  /**
+   * Registers an event regarding this custom item. The predicate function will be called
+   * to determine the item that should be checked for being valid.
+   * @param event The event type of which to register
+   * @param itemPredicate This function will be called to determine the wanted item in the event
+   * @param callback The callback function to be called if the event is called and the item returned by the predicate
+   * function is valid.
+   *
+   * @example
+   *
+   * CustomItem.registerEvent(PlayerInteractEvent, (e) => e.item, (e) => {
+   *   // This is called when the player clicks with a valid CustomItem
+   *   e.player.sendMessage(`Stack size: ${e.item.amount}`);
+   * });
+   */
+  registerEvent<T extends Event>(
+    event: Newable<T>,
+    itemPredicate: (event: T) => ItemStack | null | undefined,
+    callback: (event: T) => void,
+  ) {
+    registerEvent(event, (event) => {
+      const item = itemPredicate(event);
+      if (!item || !this.check(item)) {
+        return;
+      }
+      callback(event);
+    });
   }
 
   /**
