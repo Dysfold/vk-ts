@@ -10,6 +10,17 @@ import {
   CauldronLevelChangeEvent,
 } from 'org.bukkit.event.block';
 import { Levelled } from 'org.bukkit.block.data';
+import { CustomItem } from './common/items';
+import { isRightClick } from './common/events';
+import { date } from 'yup';
+
+const Guitar = new CustomItem({
+  type: Material.DIAMOND_PICKAXE,
+  damage: 100,
+  defaultData: () => ({
+    lastClick: Date.now(),
+  }),
+});
 
 class Cauldron extends CustomBlock {
   temperature = 0;
@@ -79,3 +90,9 @@ registerEvent(BlockBreakEvent, (e) => {
   console.log(Blocks.get(e.block, Cauldron));
   Blocks.get(e.block, Cauldron)?.remove();
 });
+
+Guitar.registerEvent(
+  PlayerInteractEvent,
+  (e) => e.item,
+  (e, data) => (data.lastClick = Date.now()),
+);
