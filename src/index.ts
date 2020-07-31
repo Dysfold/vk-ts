@@ -94,5 +94,5 @@ registerEvent(BlockBreakEvent, (e) => {
 Guitar.registerEvent(
   PlayerInteractEvent,
   (e) => e.item,
-  (e) => console.log(e.item),
+  (e, data) => (data.lastClick = Date.now()),
 );

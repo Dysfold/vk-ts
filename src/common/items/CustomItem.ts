@@ -67,23 +67,26 @@ export class CustomItem<T extends {} | undefined = undefined> {
    * function is valid.
    *
    * @example
-   *
    * CustomItem.registerEvent(PlayerInteractEvent, (e) => e.item, (e) => {
    *   // This is called when the player clicks with a valid CustomItem
    *   e.player.sendMessage(`Stack size: ${e.item.amount}`);
    * });
    */
-  registerEvent<T extends Event>(
-    event: Newable<T>,
-    itemPredicate: (event: T) => ItemStack | null | undefined,
-    callback: (event: T) => void,
+  registerEvent<E extends Event>(
+    event: Newable<E>,
+    itemPredicate: (event: E) => ItemStack | null | undefined,
+    callback: (event: E, item: T) => void,
   ) {
     registerEvent(event, (event) => {
       const item = itemPredicate(event);
       if (!item || !this.check(item)) {
         return;
       }
-      callback(event);
+      const data = this.get(item);
+      if (!data) {
+        return;
+      }
+      callback(event, data);
     });
   }
 
