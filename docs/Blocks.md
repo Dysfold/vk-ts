@@ -5,7 +5,7 @@ The `CustomBlock` -utility class was created in an effort to make this relativel
 providing easy interfaces for common use cases, while also staying flexible enough for
 easy implementation of complex behaviour.
 
-## Example
+## Examples
 
 Implementing custom block data begins with extending the `CustomBlock` -class from `src/common/blocks` . '
 
@@ -55,6 +55,8 @@ class Cauldron extends CustomBlock {
 ```
 
 We supply the decorator the type of event we want to handle, and also a function that will define the property of the event that we want to check for being an instance of our custom block. In this example, the onClick-method will be called if the player clicks on a cauldron.
+
+## Repeated tasks
 
 It often becomes necessary to run scheduled activities on instances of our custom block. The `Blocks.forEach` -method can be used for looping through all known instances of a certain type of block. By default, the method loops through all blocks in regions (a 32x32 square of chunks) that are currently loaded.
 
