@@ -54,7 +54,24 @@ class Cauldron extends CustomBlock {
 }
 ```
 
-We supply the decorator the type of event we want to handle, and also a function that will define the property of the event that we want to check for being an instance of our custom block. In this example, the onClick-method will be called if the player clicks on a cauldron.
+We supply the decorator the type of event we want to handle, and also a function that will define the property of the event that we want to check for being an instance of our custom block. In this example, the onClick-method will be called if the player clicks on a cauldron. For click events there also exist a couple of shorthands, `@OnClick` , `@OnRightClick` and `@OnLeftClick` . So the above could be written simply as
+
+``` ts
+class Cauldron extends CustomBlock {
+  temperature: number = 0;
+
+  @OnRightClick()
+  onClick(event: PlayerInteractEvent) {
+    event.player.sendMessage( `Temperature: ${this.temperature}` );
+  }  
+
+  check() {
+    return this.block.type === Material.CAULDRON;
+  }
+}
+```
+
+More of these shortcuts may be created for common use cases should they arise.
 
 ## Repeated tasks
 
