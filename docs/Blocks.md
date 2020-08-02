@@ -54,7 +54,7 @@ class Cauldron extends CustomBlock {
 }
 ```
 
-We supply the decorator the type of event we want to handle, and also a function that will define the property of the event that we want to check for being an instance of our custom block. In this example, the onClick-method will only be called if the player clicks on a cauldron, we just don't need to check it manually.
+We supply the decorator the type of event we want to handle, and also a function that will define the property of the event that we want to check for being an instance of our custom block. In this example, the onClick-method will be called if the player clicks on a cauldron.
 
 It often becomes necessary to run scheduled activities on instances of our custom block. The `Blocks.forEach` -method can be used for looping through all known instances of a certain type of block. By default, the method loops through all blocks in regions (a 32x32 square of chunks) that are currently loaded.
 
@@ -89,3 +89,36 @@ class Cauldron extends CustomBlock {
 ```
 
 Here we define a method to be run (approximately) every 20 ticks (1 second, same as in the previous example), and increase the temperature of all the blocks by `0.1 * delta` . The `delta` -parameter is the time elapsed since the last call in seconds. So here we are essentially increasing the temperature by 0.1 every second. The `delta` is passed because it may not be guaranteed that this method is called at exact intervals, and code should not rely on that.
+
+If the above code is executed, you will notice that the temperature won't start rising until a player has clicked on the cauldron. This is because the data for a block will be initialized only after `Blocks.get()` is called on that block. We can fix this easily though, by executing `Blocks.get()` in the `BlockPlaceEvent` .
+
+``` ts
+registerEvent(BlockPlaceEvent, ({ block }) => Blocks.get(block, Cauldron));
+```
+
+Or in the class definition
+
+``` ts
+class Cauldron extends CustomBlock {
+  temperature: number = 0;
+
+  @Event(PlayerInteractEvent, e => e.clickedBlock)
+  onClick(event: PlayerInteractEvent) {
+    event.player.sendMessage( `Temperature: ${this.temperature}` );
+  }
+
+  @Event(BlockPlaceEvent)
+  onPlace() {}
+
+  @Tick(20)
+  tick(delta: number) {
+    this.temperature += 0.1 * delta;
+  }
+
+  check() {
+    return this.block.type === Material.CAULDRON;
+  }
+}
+```
+
+Note that we don't need to specify a predicate function for the block, the `@Event` -decorator will default to `e => e.block` . Also, we don't need to actually do anything in the method, since the `@Event` -decorator will call the `Blocks.get` for us.
