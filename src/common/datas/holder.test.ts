@@ -2,12 +2,19 @@ import { test, Assert } from 'zora';
 import { dataHolder, DataHolder } from './holder';
 import { ItemStack } from 'org.bukkit.inventory';
 import { Material } from 'org.bukkit';
+import * as yup from 'yup';
 
 function assertMsg(context: string, type: string) {
   return `${context}: ${type} persists`;
 }
 
 class TestObj {
+  static schema = yup.object({
+    bool: yup.boolean(),
+    num: yup.number(),
+    str: yup.string(),
+  });
+
   bool = true;
   num = 42;
   str = 'foo';

@@ -5,6 +5,7 @@ import {
   PersistentDataHolder,
 } from 'org.bukkit.persistence';
 import { Integer, Double } from 'java.lang';
+import * as yup from 'yup';
 
 /**
  * A custom data holder.
@@ -14,9 +15,14 @@ export abstract class DataHolder {
    * Gets an object.
    * @param key Key.
    * @param type Type of data.
+   * @param validateSchema If yup schema should be validated before returning.
    * @returns Object of given type or null.
    */
-  abstract get<T>(key: string, type: new () => T): T | null;
+  abstract get<T>(
+    key: string,
+    type: new () => T,
+    validateSchema?: boolean,
+  ): T | null;
 
   /**
    * Gets a boolean.
@@ -48,8 +54,14 @@ export abstract class DataHolder {
    * @param key Key.
    * @param type Object type.
    * @param value New value.
+   * @param validateSchema If yup schema should be validated before setting.
    */
-  abstract set<T>(key: string, type: new () => T, value: T): void;
+  abstract set<T>(
+    key: string,
+    type: new () => T,
+    value: T,
+    validateSchema?: boolean,
+  ): void;
 
   /**
    * Sets a boolean.
@@ -77,27 +89,56 @@ export abstract class DataHolder {
   abstract set(key: string, type: 'string', value: string): void;
 }
 
-export function dataHolder(storage: PersistentDataHolder): DataHolder {
+export type DataHolderSource = PersistentDataHolder;
+
+export function dataHolder(storage: DataHolderSource): DataHolder {
   // TODO other storage types
   return new BukkitHolder(storage.getPersistentDataContainer());
 }
 
-function fromTypedJson<T>(
+function fromJson<T>(
   type: new () => T,
   json: string | null,
-): T | undefined {
+  validateSchema: boolean,
+): T | null {
   if (json == null) {
-    return undefined;
+    return null;
   }
   const data = JSON.parse(json);
-  if (data.t != type.name) {
-    throw new Error(`type in JSON is ${data.t}, ${type.name} expected`);
+
+  // Validate schema if requested
+  if (validateSchema) {
+    const schema: yup.ObjectSchema = (type as any).schema;
+    if (schema != undefined) {
+      schema.validateSync(data);
+    } else {
+      // Asked to validate, but couldn't do that
+      console.warn(`Missing schema for ${type.name}`);
+    }
   }
-  return data.d;
+
+  // Assign data to object (so we have methods etc. available)
+  const obj = new type();
+  Object.assign(obj, data);
+  return obj;
 }
 
-function toTypedJson<T>(type: new () => T, data: T): string {
-  return JSON.stringify({ t: type.name, d: data });
+function toJson<T>(
+  type: new () => T,
+  data: T,
+  validateSchema: boolean,
+): string {
+  // If asked, validate schema before creating JSON
+  if (validateSchema) {
+    const schema: yup.ObjectSchema = (type as any).schema;
+    if (schema != undefined) {
+      schema.validateSync(data);
+    } else {
+      // Asked to validate, but couldn't do that
+      console.warn(`Missing schema for ${type.name}`);
+    }
+  }
+  return JSON.stringify(data);
 }
 
 function intToBoolean(value: Integer | null): boolean | null {
@@ -119,7 +160,7 @@ class BukkitHolder extends DataHolder {
     this.container = container;
   }
 
-  get(key: string, type: any): any {
+  get(key: string, type: any, validateSchema = true): any {
     const containerKey = namespacedKey(key);
     switch (type) {
       case 'boolean':
@@ -133,14 +174,15 @@ class BukkitHolder extends DataHolder {
       case 'string':
         return this.container.get(containerKey, PersistentDataType.STRING);
       default:
-        return fromTypedJson(
+        return fromJson(
           type,
           this.container.get(containerKey, PersistentDataType.STRING),
+          validateSchema,
         );
     }
   }
 
-  set(key: string, type: any, value: any): void {
+  set(key: string, type: any, value: any, validateSchema = true): void {
     const containerKey = namespacedKey(key);
     switch (type) {
       case 'boolean':
@@ -167,7 +209,7 @@ class BukkitHolder extends DataHolder {
         this.container.set(
           containerKey,
           PersistentDataType.STRING,
-          toTypedJson(type, value),
+          toJson(type, value, validateSchema),
         );
     }
   }
