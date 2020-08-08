@@ -1,7 +1,7 @@
 import { test } from 'zora';
 import { ItemStack } from 'org.bukkit.inventory';
 import { Material } from 'org.bukkit';
-import { dataView, saveView } from './view';
+import { dataView, saveView, deleteView } from './view';
 import { dataHolder } from './holder';
 import * as yup from 'yup';
 
@@ -55,6 +55,10 @@ test('DataHolder view works', (t) => {
   t.eq(b2.num, 30, 'B change persisted');
   t.eq(b2.bool, true, 'A did not overlap B');
   t.eq(b2.obj.str, 'inside', 'A obj did not overlap B');
+
+  deleteView(TestA, meta);
+  const a3 = dataView(TestA, meta);
+  t.eq(a3.bool, true, 'A deleted');
 });
 
 test('DataHolder view without autoSave', (t) => {

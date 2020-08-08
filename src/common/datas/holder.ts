@@ -87,6 +87,13 @@ export abstract class DataHolder {
    * @param value New value.
    */
   abstract set(key: string, type: 'string', value: string): void;
+
+  /**
+   * Deletes the value associated with given key. If the value does not exist,
+   * nothing is done.
+   * @param key Key to delete.
+   */
+  abstract delete(key: string): void;
 }
 
 export type DataHolderSource = PersistentDataHolder;
@@ -215,5 +222,9 @@ class BukkitHolder extends DataHolder {
           toJson(type, value, validateSchema),
         );
     }
+  }
+
+  delete(key: string): void {
+    this.container.remove(namespacedKey(key));
   }
 }

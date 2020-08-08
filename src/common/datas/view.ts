@@ -74,3 +74,16 @@ export function saveView(view: any) {
     view._validateOnWrite,
   );
 }
+
+/**
+ * Deletes a view of given type from data holder.
+ * @param Type (constructor) of data.
+ * @param holder Data holder or data holder source.
+ */
+export function deleteView(
+  type: new () => any,
+  source: DataHolder | DataHolderSource,
+) {
+  const holder = source instanceof DataHolder ? source : dataHolder(source);
+  holder.delete(type.name);
+}
