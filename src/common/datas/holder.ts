@@ -193,6 +193,9 @@ class BukkitHolder extends DataHolder {
         );
         break;
       case 'integer':
+        if (Math.floor(value) !== value) {
+          throw new Error(`not an integer: ${value}`);
+        }
         this.container.set(containerKey, PersistentDataType.INTEGER, value);
         break;
       case 'number':
