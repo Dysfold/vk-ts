@@ -6,6 +6,8 @@ import {
 } from 'org.bukkit.persistence';
 import { Integer, Double } from 'java.lang';
 import * as yup from 'yup';
+import { ItemStack } from 'org.bukkit.inventory';
+import { ItemMeta } from 'org.bukkit.inventory.meta';
 
 /**
  * A custom data holder.
@@ -18,9 +20,9 @@ export abstract class DataHolder {
    * @param validateSchema If yup schema should be validated before returning.
    * @returns Object of given type or null.
    */
-  abstract get<T>(
+  abstract get<T extends object>(
     key: string,
-    type: new () => T,
+    type: TypeParam<T>,
     validateSchema?: boolean,
   ): T | null;
 
@@ -55,10 +57,11 @@ export abstract class DataHolder {
    * @param type Object type.
    * @param value New value.
    * @param validateSchema If yup schema should be validated before setting.
+   * Defaults to true.
    */
-  abstract set<T>(
+  abstract set<T extends object>(
     key: string,
-    type: new () => T,
+    type: TypeParam<T>,
     value: T,
     validateSchema?: boolean,
   ): void;
@@ -75,7 +78,7 @@ export abstract class DataHolder {
    * Sets an integer or a number. In this case, an integer is a 32-bit signed
    * integer. A number is standard JavaScript 64-bit floating point number.
    * @param key Key.
-   * @param type 'integer' or 'boolean'.
+   * @param type 'integer' or 'number'.
    * @param value New value.
    */
   abstract set(key: string, type: 'integer' | 'number', value: number): void;
@@ -96,15 +99,42 @@ export abstract class DataHolder {
   abstract delete(key: string): void;
 }
 
-export type DataHolderSource = PersistentDataHolder;
+/**
+ * Describes type of held data, in case it is not a class.
+ */
+export interface DataType<T extends object> {
+  /**
+   * Type name.
+   */
+  name: string;
+
+  /**
+   * Schema for validating data of this type. Should always exist... but
+   * sometimes that is inconvenient during development.
+   */
+  schema?: yup.ObjectSchema<T>;
+
+  /**
+   * Default values for this data type. Mainly used by views.
+   */
+  defaultValues: T;
+}
+
+export type TypeParam<T extends object> = DataType<T> | (new () => T);
+
+export type DataHolderSource = PersistentDataHolder | ItemStack;
 
 export function dataHolder(storage: DataHolderSource): DataHolder {
   // TODO other storage types
-  return new BukkitHolder(storage.getPersistentDataContainer());
+  if (storage instanceof ItemStack) {
+    return new ItemStackHolder(storage, storage.getItemMeta());
+  } else {
+    return new BukkitHolder(storage.getPersistentDataContainer());
+  }
 }
 
-function fromJson<T>(
-  type: new () => T,
+function fromJson<T extends object>(
+  type: TypeParam<T>,
   json: string | null,
   validateSchema: boolean,
 ): T | null {
@@ -125,13 +155,13 @@ function fromJson<T>(
   }
 
   // Assign data to object (so we have methods etc. available)
-  const obj = new type();
+  const obj = 'defaultValues' in type ? type.defaultValues : new type();
   Object.assign(obj, data);
   return obj;
 }
 
-function toJson<T>(
-  type: new () => T,
+function toJson<T extends object>(
+  type: TypeParam<T>,
   data: T,
   validateSchema: boolean,
 ): string {
@@ -226,5 +256,24 @@ class BukkitHolder extends DataHolder {
 
   delete(key: string): void {
     this.container.remove(namespacedKey(key));
+  }
+}
+
+/**
+ * Wraps BukkitHolder to automatically setItemMeta() after modifications.
+ */
+class ItemStackHolder extends BukkitHolder {
+  private stack: ItemStack;
+  private meta: ItemMeta;
+
+  constructor(stack: ItemStack, meta: ItemMeta) {
+    super(meta.getPersistentDataContainer());
+    this.stack = stack;
+    this.meta = meta;
+  }
+
+  set(key: string, type: any, value: any, validateSchema = true): void {
+    super.set(key, type, value, validateSchema); // Set to container
+    this.stack.itemMeta = this.meta; // Re-set ItemMeta
   }
 }

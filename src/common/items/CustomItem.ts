@@ -1,61 +1,115 @@
 import { ItemStack } from 'org.bukkit.inventory';
-import { NBT } from './NBT';
 import { Newable } from '../types';
 import { Material } from 'org.bukkit';
-import { onChange } from '../onChange';
-import { Damageable } from 'org.bukkit.inventory.meta';
 import { Event } from 'org.bukkit.event';
-const DATA_KEY = '__data';
+import { dataHolder, TypeParam } from '../datas/holder';
+import * as yup from 'yup';
+import { dataView, saveView } from '../datas/view';
+import { identity } from 'lodash';
+import { Integer } from 'java.lang';
 
-type CustomItemOptions<T> = {
+const CUSTOM_TYPE_KEY = 'ct';
+const CUSTOM_DATA_KEY = 'cd';
+
+type CustomItemOptions<T extends object> = {
   /**
-   * The type of a item
+   * Unique integer id of this custom item.
+   */
+  id: number;
+
+  /**
+   * The Vanilla type/material used for this item.
    */
   type: Material;
+
   /**
-   * The damage of a item represented by this configuration.
+   * Display name of this item.
    */
-  damage?: number;
+  name?: string;
+
   /**
-   * If specified, this will be called with the default created item, alongside
-   * with the data associated with the item that is being created
+   * CustomModelData model identifier of this item. When set, client selects a
+   * model with matching id from resource pack.
+   */
+  modelId?: number;
+
+  /**
+   * Callback for creating this item.
+   * @param item ItemStack constructed by the default creator.
+   * @param data Item data given to create, or undefined if no data was given.
+   * This item does not have custom data by default.
+   * @returns An ItemStack that is returned from create(...). It can but does
+   * not have to be the item given to this function.
    */
   create?: (item: ItemStack, data: T | undefined) => ItemStack;
+
   /**
-   * If specified, this overrides the method for checking whether or not
-   * a given itemstack is valid for this type of custom item
+   * If specified, overrides the default function for checking if an ItemStack
+   * is an instance of this custom item.
+   * @param item Item stack to check.
+   * @returns If given stack is instance of this custom item.
    */
   check?: (item: ItemStack) => boolean;
 } & (
   | {}
   | {
       /**
-       * The default data that is applied to new items when they are created
+       * Schema for custom data associated with this item.
        */
-      defaultData: T | (() => T);
+      schema?: yup.ObjectSchema<T>;
+
       /**
-       * If specified, this will be called with the default created item, alongside
-       * with the data associated with the item that is being created
+       * Default values of the custom data used by this item.
+       */
+      data: T | (() => T);
+
+      /**
+       * Callback for creating this item.
+       * @param item ItemStack constructed by the default creator.
+       * @param data Item data (always present).
+       * @returns An ItemStack that is returned from create(...). It can but does
+       * not have to be the item given to this function.
        */
       create?: (item: ItemStack, data: T) => ItemStack;
     }
 );
 
-export class CustomItem<T extends {} | undefined = undefined> {
-  options: CustomItemOptions<T>;
-  defaultData: T | (() => T) | undefined;
+export class CustomItem<T extends {}> {
+  /**
+   * Options of this item.
+   */
+  private options: CustomItemOptions<T>;
+
+  /**
+   * Default data to use for new items.
+   */
+  private defaultData: T | (() => T) | undefined;
+
+  /**
+   * Type of data associated with this item.
+   */
+  private dataType: TypeParam<T>;
 
   constructor(options: CustomItemOptions<T>) {
     this.options = { check: () => true, ...options };
-    this.defaultData =
-      'defaultData' in options ? options.defaultData : undefined;
+    this.defaultData = 'data' in options ? options.data : undefined;
+    this.dataType = {
+      name: CUSTOM_DATA_KEY,
+      schema: 'schema' in this.options ? this.options.schema : undefined,
+      defaultValues: this.getDefaultData(),
+    };
   }
 
-  private createData(): T | undefined {
-    if (typeof this.defaultData === 'function' && 'apply' in this.defaultData) {
-      return this.defaultData();
+  private getDefaultData(): T {
+    const data = this.defaultData;
+    if (data === undefined) {
+      return {} as T; // Do default data specified
+    } else if (typeof data === 'function' && 'apply' in data) {
+      // Work around TS bug by cast: https://github.com/microsoft/TypeScript/issues/37663
+      return (data as () => T)();
+    } else {
+      return data;
     }
-    return this.defaultData;
   }
 
   /**
@@ -84,107 +138,104 @@ export class CustomItem<T extends {} | undefined = undefined> {
       }
       const data = this.get(item);
       if (!data) {
-        return;
+        return; // Not (this) custom item
       }
       callback(event, data);
     });
   }
 
   /**
-   * Create an itemstack described by this CustomItem instance.
+   * Create an ItemStack representing this CustomItem instance.
    * @param data If specified, this is the data that the created item
    * will have. If not, the default data will be used.
    */
   create(data?: Partial<T>) {
     const item = new ItemStack(this.options.type);
-    const itemData = data
-      ? { ...this.createData(), ...data }
-      : this.createData();
-    if (itemData) {
-      NBT.set(item, DATA_KEY, itemData);
-    }
     const meta = item.itemMeta;
-    if (this.options.damage && meta instanceof Damageable) {
-      meta.damage = this.options.damage;
+    const holder = dataHolder(meta);
+    // Unique identifier of this custom item
+    holder.set(CUSTOM_TYPE_KEY, 'integer', this.options.id);
+
+    // Data overrides given as parameter or non-stable defaultData
+    if (data != undefined || typeof this.defaultData == 'function') {
+      const defaultData = this.getDefaultData();
+      const allData = data ? { ...defaultData, ...data } : defaultData;
+      holder.set(CUSTOM_DATA_KEY, this.dataType, allData);
+      // Data available later with dataView
+    } // else: don't bother applying default data, can get it later from this.data
+
+    // Set values to meta based on item options
+    if (this.options.name != undefined) {
+      meta.setDisplayName(this.options.name);
     }
-    item.itemMeta = meta;
+    if (this.options.modelId != undefined) {
+      meta.setCustomModelData(Integer.valueOf(this.options.modelId));
+    }
+    item.itemMeta = meta; // Set new meta to item
+
+    // Custom create function can modify/replace item after us
     if (this.options.create) {
-      return this.options.create(item, this.createData());
+      return this.options.create(item, this.getDefaultData());
     }
     return item;
   }
 
-  private getProxy(item: ItemStack, data: T) {
-    return onChange(data, () => {
-      NBT.set(item, DATA_KEY, data);
-    });
-  }
-
   /**
-   * Get the data described by this CustomItem instance from `item`.
-   * @param item The itemstack to fetch data from. If this is falsy, the method will return `undefined`.
-   * @returns If `item` is valid item for this CustomItem instance (i.e. `this.check(item)` returns true), the method will return it's data.
-   * Otherwise `undefined` will be returned.
+   * Gets data of this CustomItem from given stack. If the stack is not a
+   * custom item (null, undefined, Vanilla items) or is a custom item of
+   * different type, undefined is returned.
+   *
+   * Changes to the returned data are immediately saved to the item.
+   * This involves setting ItemMeta to the stack; manipulating ItemMeta
+   * yourself while a view to custom data of same item is alive is
+   * a BAD IDEA.
+   * @param item The itemstack to fetch data from.
+   * @returns Custom item data or undefined.
    */
-  get(item: ItemStack | null | undefined) {
+  get(item: ItemStack | null | undefined): T | undefined {
     if (!item || !this.check(item)) {
-      return undefined;
+      return undefined; // Not a custom item, or wrong custom item
     }
-    const data = NBT.get(item, DATA_KEY);
-    if (!data) {
-      return undefined;
-    }
-    return this.getProxy(item, data) as T;
+    return dataView(this.dataType, item);
   }
 
   /**
-   * Set the data of an itemstack
-   * @param item The itemstack whose data will be modified
-   * @param data The new data, or part of it.
-   *
-   * @example
-   * CustomItem.set(item, { counter: 5 })
-   */
-  set(item: ItemStack | null | undefined, data: Partial<T>): void;
-  /**
-   * Set the data of an itemstack
-   * @param item The itemstack whose data will be modified
-   * @param setter A function that takes in the previous data as an argument and
-   * returns the new data
-   *
-   * @example
-   * CustomItem.set(item, data => ({ counter: data.counter++ }));
+   * Adds (or overwrites) data of this custom item in given stack.
+   * If the stack is not a custom item (null, undefined, Vanilla items) or
+   * is a custom item of different type, nothing is done.
+   * @param item Item stack to modify.
+   * @param data Data to add.
+   * @returns Whether data was modified or not.
    */
   set(
     item: ItemStack | null | undefined,
-    setter: (data: T) => Partial<T>,
-  ): void;
-  set(
-    item: ItemStack | null | undefined,
-    arg1: Partial<T> | ((data: T) => Partial<T>),
-  ) {
+    data: Partial<T> | ((data: T) => Partial<T>),
+  ): boolean {
     if (!item) {
-      return;
+      return false; // Not going to set anything to null
     }
-    const currentData = this.get(item);
-    if (!currentData) {
-      return;
-    }
+    const holder = dataHolder(item);
+    // This should be usable for fixing invalid data, so validate only on set
+    // (it might also be a tiny bit faster)
+    const objData =
+      holder.get(CUSTOM_DATA_KEY, this.dataType, false) ??
+      this.getDefaultData();
 
-    const newData =
-      typeof arg1 === 'function' && 'apply' in arg1 ? arg1(currentData) : arg1;
-    NBT.set(item, DATA_KEY, { ...currentData, ...newData });
+    // Overwrite with given data
+    Object.assign(objData, typeof data == 'function' ? data(objData) : data);
+    holder.set(CUSTOM_DATA_KEY, this.dataType, objData);
+    return true;
   }
 
-  check(item: ItemStack) {
-    const { itemMeta: meta } = item;
-    const damage = meta instanceof Damageable ? meta.damage : undefined;
-    const isDamageValid =
-      !this.options.damage || damage === this.options.damage;
-    return (
-      isDamageValid &&
-      item.type === this.options.type &&
-      (!this.options.check || this.options.check(item))
+  /**
+   * Checks if given stack is an instance of this custom item.
+   * @param item Item stack.
+   */
+  check(item: ItemStack): boolean {
+    const itemId = dataHolder(item.getItemMeta()).get(
+      CUSTOM_TYPE_KEY,
+      'integer',
     );
+    return itemId == this.options.id;
   }
 }

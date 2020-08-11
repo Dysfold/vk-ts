@@ -1,4 +1,7 @@
-import { DataHolder, DataHolderSource, dataHolder } from './holder';
+import { DataHolder, DataHolderSource, dataHolder, TypeParam } from './holder';
+
+// TODO need dataView where type is NOT constructor
+// i.e. custom item type has schema, but cannot be instantiated
 
 /**
  * Creates a typed view into a data holder. The view contains values that were
@@ -17,8 +20,8 @@ import { DataHolder, DataHolderSource, dataHolder } from './holder';
  * the changes. With autoSave enabled, this causes frequent validations.
  * @returns Typed view into the data holder.
  */
-export function dataView<T>(
-  type: new () => T,
+export function dataView<T extends object>(
+  type: TypeParam<T>,
   source: DataHolder | DataHolderSource,
   autoSave = true,
   validateRead = true,
@@ -28,14 +31,7 @@ export function dataView<T>(
   let obj: any = holder.get(type.name, type, validateRead);
   if (obj == null) {
     // Unlike holder API, we'll just return with default values
-    obj = new type();
-  }
-
-  // If autosave is disabled, don't create proxy
-  if (!autoSave) {
-    obj._holder = holder;
-    obj._validateOnWrite = validateWrite; // Used by saveView
-    return obj;
+    obj = 'defaultValues' in type ? type.defaultValues : new type();
   }
 
   // Define proxy handler
@@ -49,28 +45,52 @@ export function dataView<T>(
       return val;
     }
   };
-  handler['set'] = function (target, property, value) {
-    target[property] = value; // Set BEFORE saving
-    holder.set(type.name, type, obj);
-    return true; // We'll just have to save twice, returning false is an error
-  };
-
-  // Proxy everything
-  return (new Proxy(obj, handler) as unknown) as T;
+  if (autoSave) {
+    // Save on change
+    handler['set'] = function (target, property, value) {
+      target[property] = value; // Set BEFORE saving
+      holder.set(type.name, type, obj, validateWrite);
+      return true; // We'll just have to save twice, returning false is an error
+    };
+  } else {
+    // Save data to view for saveView
+    obj._self = obj;
+    obj._type = type;
+    obj._holder = holder;
+    obj._validateOnWrite = validateWrite;
+    // Just mark changed if anything changes
+    handler['set'] = function (target, property, value) {
+      target[property] = value;
+      obj._changed = true;
+      return true;
+    };
+  }
+  return new Proxy(obj, handler);
 }
 
 /**
- * Saves a data view that does not have autoSave enabled.
+ * Saves a data view. If a view has auto save enabled, has not been changed,
+ * or was saved after last changed, this has no effect.
  * @param view Data view to save.
  */
 export function saveView(view: any) {
-  if (view._holder == undefined) {
-    throw new Error('not a data view');
+  if (!view._changed) {
+    return; // Already saved
   }
+  delete view._changed; // Saving changes...
+  const saved = { ...view._self }; // Skip proxy
+
+  // Don't serialize view metadata
+  delete saved._self;
+  delete saved._type;
+  delete saved._holder;
+  delete saved._validateOnWrite;
+
+  // Save changes
   (view._holder as DataHolder).set(
-    view.constructor.name,
-    view.constructor,
-    view,
+    view._type.name,
+    view._type,
+    saved,
     view._validateOnWrite,
   );
 }
