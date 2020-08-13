@@ -8,6 +8,7 @@ import { Integer, Double } from 'java.lang';
 import * as yup from 'yup';
 import { ItemStack } from 'org.bukkit.inventory';
 import { ItemMeta } from 'org.bukkit.inventory.meta';
+import * as _ from 'lodash';
 
 /**
  * A custom data holder.
@@ -115,12 +116,29 @@ export interface DataType<T extends object> {
   schema?: yup.ObjectSchema<T>;
 
   /**
-   * Default values for this data type. Mainly used by views.
+   * Default data for this type. Do not access this directly, use
+   * getDefaultData(). Direct access combined with failure to properly deep
+   * clone the default data before assignment leads to bugs VERY difficult to
+   * debug.
    */
-  defaultValues: T;
+  defaultData: T | (() => T);
 }
 
 export type TypeParam<T extends object> = DataType<T> | (new () => T);
+
+export function getDefaultData<T extends object>(type: TypeParam<T>): T {
+  if (typeof type == 'function') {
+    return new type();
+  } else {
+    const data = type.defaultData;
+    if (typeof data === 'function' && 'apply' in data) {
+      // Work around TS bug by cast: https://github.com/microsoft/TypeScript/issues/37663
+      return (data as () => T)();
+    } else {
+      return _.cloneDeep(data);
+    }
+  }
+}
 
 export type DataHolderSource = PersistentDataHolder | ItemStack;
 
@@ -141,22 +159,21 @@ function fromJson<T extends object>(
   if (json == null) {
     return null;
   }
-  const data = JSON.parse(json);
+  // Assign default data to object (for migrations and to get methods)
+  const obj = getDefaultData(type);
+  Object.assign(obj, JSON.parse(json));
 
   // Validate schema if requested
   if (validateSchema) {
     const schema: yup.ObjectSchema = (type as any).schema;
     if (schema != undefined) {
-      schema.validateSync(data);
+      schema.validateSync(obj);
     } else {
       // Asked to validate, but couldn't do that
       console.warn(`Missing schema for ${type.name}`);
     }
   }
 
-  // Assign data to object (so we have methods etc. available)
-  const obj = 'defaultValues' in type ? type.defaultValues : new type();
-  Object.assign(obj, data);
   return obj;
 }
 

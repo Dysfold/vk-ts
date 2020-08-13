@@ -2,11 +2,11 @@ import { ItemStack } from 'org.bukkit.inventory';
 import { Newable } from '../types';
 import { Material } from 'org.bukkit';
 import { Event } from 'org.bukkit.event';
-import { dataHolder, TypeParam } from '../datas/holder';
+import { dataHolder, DataType, getDefaultData } from '../datas/holder';
 import * as yup from 'yup';
-import { dataView, saveView } from '../datas/view';
-import { identity } from 'lodash';
+import { dataView } from '../datas/view';
 import { Integer } from 'java.lang';
+import * as _ from 'lodash';
 
 const CUSTOM_TYPE_KEY = 'ct';
 const CUSTOM_DATA_KEY = 'cd';
@@ -81,35 +81,17 @@ export class CustomItem<T extends {}> {
   private options: CustomItemOptions<T>;
 
   /**
-   * Default data to use for new items.
-   */
-  private defaultData: T | (() => T) | undefined;
-
-  /**
    * Type of data associated with this item.
    */
-  private dataType: TypeParam<T>;
+  private dataType: DataType<T>;
 
   constructor(options: CustomItemOptions<T>) {
     this.options = { check: () => true, ...options };
-    this.defaultData = 'data' in options ? options.data : undefined;
     this.dataType = {
       name: CUSTOM_DATA_KEY,
       schema: 'schema' in this.options ? this.options.schema : undefined,
-      defaultValues: this.getDefaultData(),
+      defaultData: 'data' in options ? options.data : ({} as T),
     };
-  }
-
-  private getDefaultData(): T {
-    const data = this.defaultData;
-    if (data === undefined) {
-      return {} as T; // Do default data specified
-    } else if (typeof data === 'function' && 'apply' in data) {
-      // Work around TS bug by cast: https://github.com/microsoft/TypeScript/issues/37663
-      return (data as () => T)();
-    } else {
-      return data;
-    }
   }
 
   /**
@@ -157,8 +139,9 @@ export class CustomItem<T extends {}> {
     holder.set(CUSTOM_TYPE_KEY, 'integer', this.options.id);
 
     // Data overrides given as parameter or non-stable defaultData
-    if (data != undefined || typeof this.defaultData == 'function') {
-      const defaultData = this.getDefaultData();
+    let defaultData: T | undefined; // Created only if needed
+    if (data != undefined || typeof this.dataType.defaultData == 'function') {
+      defaultData = getDefaultData(this.dataType);
       const allData = data ? { ...defaultData, ...data } : defaultData;
       holder.set(CUSTOM_DATA_KEY, this.dataType, allData);
       // Data available later with dataView
@@ -175,7 +158,11 @@ export class CustomItem<T extends {}> {
 
     // Custom create function can modify/replace item after us
     if (this.options.create) {
-      return this.options.create(item, this.getDefaultData());
+      // Give same default data if possible, generate if we didn't need it before
+      return this.options.create(
+        item,
+        defaultData ?? getDefaultData(this.dataType),
+      );
     }
     return item;
   }
@@ -219,7 +206,7 @@ export class CustomItem<T extends {}> {
     // (it might also be a tiny bit faster)
     const objData =
       holder.get(CUSTOM_DATA_KEY, this.dataType, false) ??
-      this.getDefaultData();
+      getDefaultData(this.dataType);
 
     // Overwrite with given data
     Object.assign(objData, typeof data == 'function' ? data(objData) : data);

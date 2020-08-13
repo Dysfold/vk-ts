@@ -56,12 +56,12 @@ test('CustomItems workflow', (t) => {
     'CustomItem.create() creates an ItemStack with the correct type',
   );
 
-  // const test2 = TestItem.create({ counter: -1 });
-  // t.eq(
-  //   TestItem.get(test2)?.counter,
-  //   -1,
-  //   'Calling CustomItem.create() with specified data creates an item with the data',
-  // );
+  const test2 = TestItem.create({ counter: -1 });
+  t.eq(
+    TestItem.get(test2)?.counter,
+    -1,
+    'Calling CustomItem.create() with specified data creates an item with the data',
+  );
 
   const test3 = TestItem5.create({ first: -1 });
   const test3Data = TestItem5.get(test3);

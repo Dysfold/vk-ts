@@ -1,7 +1,11 @@
-import { DataHolder, DataHolderSource, dataHolder, TypeParam } from './holder';
-
-// TODO need dataView where type is NOT constructor
-// i.e. custom item type has schema, but cannot be instantiated
+import {
+  DataHolder,
+  DataHolderSource,
+  dataHolder,
+  TypeParam,
+  getDefaultData,
+} from './holder';
+import * as _ from 'lodash';
 
 /**
  * Creates a typed view into a data holder. The view contains values that were
@@ -28,11 +32,8 @@ export function dataView<T extends object>(
   validateWrite = false,
 ): T {
   const holder = source instanceof DataHolder ? source : dataHolder(source);
-  let obj: any = holder.get(type.name, type, validateRead);
-  if (obj == null) {
-    // Unlike holder API, we'll just return with default values
-    obj = 'defaultValues' in type ? type.defaultValues : new type();
-  }
+  const obj: any =
+    holder.get(type.name, type, validateRead) ?? getDefaultData(type);
 
   // Define proxy handler
   const handler: ProxyHandler<any> = {} as ProxyHandler<any>;
