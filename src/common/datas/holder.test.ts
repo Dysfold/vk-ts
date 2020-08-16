@@ -3,6 +3,7 @@ import { dataHolder, DataHolder, DataType } from './holder';
 import { ItemStack } from 'org.bukkit.inventory';
 import { Material } from 'org.bukkit';
 import * as yup from 'yup';
+import { DatabaseEntry } from './database';
 
 function persistMsg(context: string, type: string) {
   return `${context}: ${type} persists`;
@@ -110,4 +111,12 @@ test('ItemStack serialization', (t) => {
   checkData(holder, t, 'same holder');
   checkData(dataHolder(stack), t, 'same ItemStack');
   checkDelete(holder, t);
+});
+
+test('Database serialization', (t) => {
+  const entry = new DatabaseEntry('test', 'foo');
+  const holder = dataHolder(entry);
+  setData(holder);
+  checkData(holder, t, 'same holder');
+  checkData(dataHolder(entry), t, 'same database');
 });

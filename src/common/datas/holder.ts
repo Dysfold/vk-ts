@@ -9,6 +9,7 @@ import * as yup from 'yup';
 import { ItemStack } from 'org.bukkit.inventory';
 import { ItemMeta } from 'org.bukkit.inventory.meta';
 import * as _ from 'lodash';
+import { DatabaseEntry, getTable, Table } from './database';
 
 /**
  * A custom data holder.
@@ -140,14 +141,17 @@ export function getDefaultData<T extends object>(type: TypeParam<T>): T {
   }
 }
 
-export type DataHolderSource = PersistentDataHolder | ItemStack;
+export type DataHolderSource = PersistentDataHolder | DatabaseEntry | ItemStack;
 
 export function dataHolder(storage: DataHolderSource): DataHolder {
-  // TODO other storage types
-  if (storage instanceof ItemStack) {
+  if (storage instanceof PersistentDataHolder) {
+    return new BukkitHolder(storage.getPersistentDataContainer());
+  } else if (storage instanceof DatabaseEntry) {
+    return new DatabaseHolder(storage);
+  } else if (storage instanceof ItemStack) {
     return new ItemStackHolder(storage, storage.getItemMeta());
   } else {
-    return new BukkitHolder(storage.getPersistentDataContainer());
+    throw new Error('unknown dataHolder storage');
   }
 }
 
@@ -276,6 +280,54 @@ class BukkitHolder extends DataHolder {
   }
 }
 
+function checkType(value: any, type: any) {
+  if (type == 'integer') {
+    if (typeof value != 'number' || value != Math.floor(value)) {
+      throw new Error(`type of ${value} is not integer`);
+    }
+  } else if (typeof value != type) {
+    throw new Error(`type of ${value} is not ${type}`);
+  }
+}
+
+/**
+ * Stores data by prefix in database.
+ */
+class DatabaseHolder extends DataHolder {
+  table: Table;
+  prefix: string;
+
+  constructor(entry: DatabaseEntry) {
+    super();
+    this.table = getTable(entry.table);
+    this.prefix = entry.key + '.';
+  }
+
+  get(key: string, type: any, validateSchema = true): any {
+    const value = this.table.get(this.prefix + key);
+    if (typeof type == 'string') {
+      checkType(value, type); // boolean, integer, number or string
+      return value;
+    } else {
+      checkType(value, 'string'); // JSON string
+      return fromJson(type, value, validateSchema);
+    }
+  }
+
+  set(key: string, type: any, value: any, validateSchema = true): void {
+    const fullKey = this.prefix + key;
+    if (typeof type == 'string') {
+      this.table.put(fullKey, value); // boolean, integer, number or string
+    } else {
+      this.table.put(fullKey, toJson(type, value, validateSchema));
+    }
+  }
+
+  delete(key: string): void {
+    this.table.remove(key);
+  }
+}
+
 /**
  * Wraps BukkitHolder to automatically setItemMeta() after modifications.
  */
@@ -292,5 +344,10 @@ class ItemStackHolder extends BukkitHolder {
   set(key: string, type: any, value: any, validateSchema = true): void {
     super.set(key, type, value, validateSchema); // Set to container
     this.stack.itemMeta = this.meta; // Re-set ItemMeta
+  }
+
+  delete(key: string): void {
+    super.delete(key);
+    this.stack.itemMeta = this.meta;
   }
 }
