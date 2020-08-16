@@ -4,7 +4,7 @@ import { Material } from 'org.bukkit';
 import { Event } from 'org.bukkit.event';
 import { dataHolder, DataType, getDefaultData } from '../datas/holder';
 import * as yup from 'yup';
-import { dataView } from '../datas/view';
+import { dataView, saveView } from '../datas/view';
 import { Integer } from 'java.lang';
 
 const CUSTOM_TYPE_KEY = 'ct';
@@ -94,15 +94,15 @@ export class CustomItem<T extends {}> {
   }
 
   /**
-   * Registers an event regarding this custom item. The predicate function will be called
-   * to determine the item that should be checked for being valid.
-   * @param event The event type of which to register
-   * @param itemPredicate This function will be called to determine the wanted item in the event
-   * @param callback The callback function to be called if the event is called and the item returned by the predicate
-   * function is valid.
+   * Registers an event for this custom item. Changes made to data of the item
+   * are applied once the event callback has finished (including async code).
+   * If you need to save earlier, use saveView(item).
+   * @param event Event type to listen for.
+   * @param itemPredicate Function that retrieves an ItemStack from the event.
+   * @param callback Asynchronous event handler.
    *
    * @example
-   * CustomItem.registerEvent(PlayerInteractEvent, (e) => e.item, (e) => {
+   * CustomItem.registerEvent(PlayerInteractEvent, (e) => e.item, async (e) => {
    *   // This is called when the player clicks with a valid CustomItem
    *   e.player.sendMessage(`Stack size: ${e.item.amount}`);
    * });
@@ -110,18 +110,20 @@ export class CustomItem<T extends {}> {
   registerEvent<E extends Event>(
     event: Newable<E>,
     itemPredicate: (event: E) => ItemStack | null | undefined,
-    callback: (event: E, item: T) => void,
+    callback: (event: E, item: T) => Promise<void>,
   ) {
-    registerEvent(event, (event) => {
-      const item = itemPredicate(event);
+    registerEvent(event, async (event) => {
+      const item = itemPredicate(event); // Get ItemStack
       if (!item || !this.check(item)) {
-        return;
+        return; // No item found or not this custom item
       }
-      const data = this.get(item);
-      if (!data) {
-        return; // Not (this) custom item
-      }
-      callback(event, data);
+
+      // this.get(item), but...
+      // - No auto-save (saved at most once AFTER event has passed)
+      // - No validation on load (because we'll probably save and validate then)
+      const data = dataView(this.dataType, item, false, false, true);
+      await callback(event, data);
+      saveView(data); // Save if modified, AFTER event has passed
     });
   }
 

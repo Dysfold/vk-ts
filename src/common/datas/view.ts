@@ -5,7 +5,6 @@ import {
   TypeParam,
   getDefaultData,
 } from './holder';
-import * as _ from 'lodash';
 
 /**
  * Creates a typed view into a data holder. The view contains values that were
