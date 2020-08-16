@@ -6,7 +6,6 @@ import { dataHolder, DataType, getDefaultData } from '../datas/holder';
 import * as yup from 'yup';
 import { dataView } from '../datas/view';
 import { Integer } from 'java.lang';
-import * as _ from 'lodash';
 
 const CUSTOM_TYPE_KEY = 'ct';
 const CUSTOM_DATA_KEY = 'cd';

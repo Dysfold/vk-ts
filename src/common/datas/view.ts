@@ -1,6 +1,6 @@
 import {
   DataHolder,
-  DataHolderSource,
+  DataHolderStorage,
   dataHolder,
   TypeParam,
   getDefaultData,
@@ -26,7 +26,7 @@ import * as _ from 'lodash';
  */
 export function dataView<T extends object>(
   type: TypeParam<T>,
-  source: DataHolder | DataHolderSource,
+  source: DataHolder | DataHolderStorage,
   autoSave = true,
   validateRead = true,
   validateWrite = false,
@@ -103,7 +103,7 @@ export function saveView(view: any) {
  */
 export function deleteView(
   type: new () => any,
-  source: DataHolder | DataHolderSource,
+  source: DataHolder | DataHolderStorage,
 ) {
   const holder = source instanceof DataHolder ? source : dataHolder(source);
   holder.delete(type.name);

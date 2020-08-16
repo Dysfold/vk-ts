@@ -1,4 +1,4 @@
-import { NamespacedKey } from 'org.bukkit';
+import { NamespacedKey, OfflinePlayer } from 'org.bukkit';
 import {
   PersistentDataType,
   PersistentDataContainer,
@@ -117,16 +117,20 @@ export interface DataType<T extends object> {
   schema?: yup.ObjectSchema<T>;
 
   /**
-   * Default data for this type. Do not access this directly, use
-   * getDefaultData(). Direct access combined with failure to properly deep
-   * clone the default data before assignment leads to bugs VERY difficult to
-   * debug.
+   * Default data for this type. Try not to access this directly and use
+   * getDefaultData() instead. Direct access combined with failure to properly
+   * deep clone the default data before assignment leads to bugs VERY difficult
+   * to debug.
    */
   defaultData: T | (() => T);
 }
 
 export type TypeParam<T extends object> = DataType<T> | (new () => T);
 
+/**
+ * Gets default data of an object type.
+ * @param type Stored object type.
+ */
 export function getDefaultData<T extends object>(type: TypeParam<T>): T {
   if (typeof type == 'function') {
     return new type();
@@ -136,20 +140,39 @@ export function getDefaultData<T extends object>(type: TypeParam<T>): T {
       // Work around TS bug by cast: https://github.com/microsoft/TypeScript/issues/37663
       return (data as () => T)();
     } else {
+      // Remember to do a DEEP clone to avoid polluting default data
       return _.cloneDeep(data);
     }
   }
 }
 
-export type DataHolderSource = PersistentDataHolder | DatabaseEntry | ItemStack;
+/**
+ * Types that can be used as DataHolder storages.
+ */
+export type DataHolderStorage =
+  | PersistentDataHolder
+  | DatabaseEntry
+  | ItemStack;
 
-export function dataHolder(storage: DataHolderSource): DataHolder {
-  if (storage instanceof PersistentDataHolder) {
-    return new BukkitHolder(storage.getPersistentDataContainer());
+/**
+ * Creates a persistent data holder backed by given storage.
+ * @param storage Where data should be stored.
+ * @returns A new data holder.
+ */
+export function dataHolder(storage: DataHolderStorage): DataHolder {
+  if (storage instanceof OfflinePlayer) {
+    // Store ALL player data in DB so it is accessible when player is offline
+    // For other entities, default PersistentDataHolder is fine
+    return new DatabaseHolder(
+      new DatabaseEntry('players', storage.uniqueId.toString()),
+    );
+  } else if (storage instanceof ItemStack) {
+    // Use wrapper that automatically sets ItemMeta on changes
+    return new ItemStackHolder(storage, storage.getItemMeta());
   } else if (storage instanceof DatabaseEntry) {
     return new DatabaseHolder(storage);
-  } else if (storage instanceof ItemStack) {
-    return new ItemStackHolder(storage, storage.getItemMeta());
+  } else if (storage instanceof PersistentDataHolder) {
+    return new BukkitHolder(storage.getPersistentDataContainer());
   } else {
     throw new Error('unknown dataHolder storage');
   }
