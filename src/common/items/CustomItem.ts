@@ -2,7 +2,7 @@ import { ItemStack } from 'org.bukkit.inventory';
 import { Newable } from '../types';
 import { Material } from 'org.bukkit';
 import { Event } from 'org.bukkit.event';
-import { dataHolder, DataType, getDefaultData } from '../datas/holder';
+import { dataHolder, DataType, dataType } from '../datas/holder';
 import * as yup from 'yup';
 import { dataView, saveView } from '../datas/view';
 import { Integer } from 'java.lang';
@@ -10,7 +10,7 @@ import { Integer } from 'java.lang';
 const CUSTOM_TYPE_KEY = 'ct';
 const CUSTOM_DATA_KEY = 'cd';
 
-type CustomItemOptions<T extends object> = {
+type CustomItemOptions<T extends {} | undefined> = {
   /**
    * Unique integer id of this custom item.
    */
@@ -33,14 +33,19 @@ type CustomItemOptions<T extends object> = {
   modelId?: number;
 
   /**
+   * Schema definition for custom data associated with this item.
+   * If not present, this item does not have custom data.
+   */
+  data?: yup.ObjectSchemaDefinition<T>;
+
+  /**
    * Callback for creating this item.
    * @param item ItemStack constructed by the default creator.
-   * @param data Item data given to create, or undefined if no data was given.
-   * This item does not have custom data by default.
+   * @param data Custom data the item was created with.
    * @returns An ItemStack that is returned from create(...). It can but does
    * not have to be the item given to this function.
    */
-  create?: (item: ItemStack, data: T | undefined) => ItemStack;
+  create?: (item: ItemStack, data: T) => ItemStack;
 
   /**
    * If specified, overrides the default function for checking if an ItemStack
@@ -49,29 +54,7 @@ type CustomItemOptions<T extends object> = {
    * @returns If given stack is instance of this custom item.
    */
   check?: (item: ItemStack) => boolean;
-} & (
-  | {}
-  | {
-      /**
-       * Schema for custom data associated with this item.
-       */
-      schema?: yup.ObjectSchema<T>;
-
-      /**
-       * Default values of the custom data used by this item.
-       */
-      data: T | (() => T);
-
-      /**
-       * Callback for creating this item.
-       * @param item ItemStack constructed by the default creator.
-       * @param data Item data (always present).
-       * @returns An ItemStack that is returned from create(...). It can but does
-       * not have to be the item given to this function.
-       */
-      create?: (item: ItemStack, data: T) => ItemStack;
-    }
-);
+};
 
 export class CustomItem<T extends {}> {
   /**
@@ -86,11 +69,12 @@ export class CustomItem<T extends {}> {
 
   constructor(options: CustomItemOptions<T>) {
     this.options = { check: () => true, ...options };
-    this.dataType = {
-      name: CUSTOM_DATA_KEY,
-      schema: 'schema' in this.options ? this.options.schema : undefined,
-      defaultData: 'data' in options ? options.data : ({} as T),
-    };
+    this.dataType = dataType(
+      CUSTOM_DATA_KEY,
+      this.options.data
+        ? this.options.data
+        : ({} as yup.ObjectSchemaDefinition<T>),
+    );
   }
 
   /**
@@ -121,9 +105,14 @@ export class CustomItem<T extends {}> {
       // this.get(item), but...
       // - No auto-save (saved at most once AFTER event has passed)
       // - No validation on load (because we'll probably save and validate then)
-      const data = dataView(this.dataType, item, false, false, true);
-      await callback(event, data);
-      saveView(data); // Save if modified, AFTER event has passed
+      if (this.dataType == undefined) {
+        // TS compiler doesn't know that !this.dataType implies T == undefined
+        callback(event, {} as T);
+      } else {
+        const data = dataView(this.dataType, item, false, false, true);
+        await callback(event, data);
+        saveView(data); // Save if modified, AFTER event has passed
+      }
     });
   }
 
@@ -141,8 +130,8 @@ export class CustomItem<T extends {}> {
 
     // Data overrides given as parameter or non-stable defaultData
     let defaultData: T | undefined; // Created only if needed
-    if (data != undefined || typeof this.dataType.defaultData == 'function') {
-      defaultData = getDefaultData(this.dataType);
+    if (data != undefined) {
+      defaultData = this.dataType.schema.default();
       const allData = data ? { ...defaultData, ...data } : defaultData;
       holder.set(CUSTOM_DATA_KEY, this.dataType, allData);
       // Data available later with dataView
@@ -162,7 +151,7 @@ export class CustomItem<T extends {}> {
       // Give same default data if possible, generate if we didn't need it before
       return this.options.create(
         item,
-        defaultData ?? getDefaultData(this.dataType),
+        defaultData ?? this.dataType.schema.default(),
       );
     }
     return item;
@@ -207,7 +196,7 @@ export class CustomItem<T extends {}> {
     // (it might also be a tiny bit faster)
     const objData =
       holder.get(CUSTOM_DATA_KEY, this.dataType, false) ??
-      getDefaultData(this.dataType);
+      this.dataType.schema.default();
 
     // Overwrite with given data
     Object.assign(objData, typeof data == 'function' ? data(objData) : data);

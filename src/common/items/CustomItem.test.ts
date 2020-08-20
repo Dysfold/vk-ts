@@ -2,21 +2,15 @@ import { test } from 'zora';
 import { CustomItem } from './CustomItem';
 import { Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
-import { ItemMeta } from 'org.bukkit.inventory.meta';
+import * as yup from 'yup';
 
 const TestItem = new CustomItem({
   id: 0,
   type: Material.STICK,
   name: 'Test 1',
   data: {
-    counter: 0,
+    counter: yup.number().default(0).required(),
   },
-});
-
-const TestItem2 = new CustomItem({
-  id: 1,
-  type: Material.DIAMOND_PICKAXE,
-  name: 'Test 2',
 });
 
 const TestItem3 = new CustomItem({
@@ -31,20 +25,12 @@ const TestItem3 = new CustomItem({
   },
 });
 
-const TestItem4 = new CustomItem({
-  id: 4,
-  type: Material.BEEF,
-  data: () => ({
-    rand: Math.random(),
-  }),
-});
-
 const TestItem5 = new CustomItem({
   id: 5,
   type: Material.STICK,
   data: {
-    first: 0,
-    second: 0,
+    first: yup.number().default(0).required(),
+    second: yup.number().default(0).required(),
   },
 });
 
@@ -115,21 +101,6 @@ test('CustomItems workflow', (t) => {
   t.truthy(
     'data' in (TestItem.get(test1) as object),
     'A function supplied to CustomItem.set() should receive existing/default data',
-  );
-});
-
-test('CustomItem options', (t) => {
-  const item2 = new ItemStack(Material.DIAMOND_PICKAXE);
-  const meta = item2.itemMeta as ItemMeta;
-
-  // TODO test display name, CustomModelData
-
-  const [a, b] = [TestItem4.create(), TestItem4.create()];
-  const [dataA, dataB] = [TestItem4.get(a), TestItem4.get(b)];
-  t.notEq(
-    dataA?.rand,
-    dataB?.rand,
-    'Passing a function as defaultData runs the function on creation and generate the data',
   );
 });
 

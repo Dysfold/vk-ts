@@ -1,5 +1,5 @@
 import { test, Assert } from 'zora';
-import { dataHolder, DataHolder, DataType } from './holder';
+import { dataHolder, DataHolder, DataType, dataType } from './holder';
 import { ItemStack } from 'org.bukkit.inventory';
 import { Material } from 'org.bukkit';
 import * as yup from 'yup';
@@ -13,31 +13,11 @@ function deleteMsg(type: string) {
   return `${type} deleted`;
 }
 
-class TestObj {
-  static schema = yup.object({
-    bool: yup.boolean(),
-    num: yup.number(),
-    str: yup.string(),
-  });
-
-  bool = true;
-  num = 42;
-  str = 'foo';
-}
-
-const TestType: DataType<any> = {
-  name: 'typename',
-  defaultData: {
-    bool: true,
-    num: 42,
-    str: 'foo',
-  },
-  schema: yup.object({
-    bool: yup.boolean(),
-    num: yup.number(),
-    str: yup.string(),
-  }),
-};
+const TestType = dataType('TestType', {
+  bool: yup.boolean().default(true),
+  num: yup.number().default(42),
+  str: yup.string().default('foo'),
+});
 
 function setData(holder: DataHolder) {
   holder.set('bool', 'boolean', true);
@@ -46,14 +26,12 @@ function setData(holder: DataHolder) {
   holder.set('double', 'number', 100.1);
   holder.set('text', 'string', 'foo');
 
-  const obj = new TestObj();
-  obj.bool = false;
-  holder.set('obj', TestObj, obj);
-
   const obj2 = {
     bool: false,
+    num: 42,
+    str: 'foo',
   };
-  holder.set('obj2', TestType, obj2);
+  holder.set('obj', TestType, obj2);
 }
 
 function checkData(holder: DataHolder, t: Assert, ctx: string) {
@@ -67,12 +45,7 @@ function checkData(holder: DataHolder, t: Assert, ctx: string) {
   );
   t.eq(holder.get('text', 'string'), 'foo', persistMsg(ctx, 'string'));
 
-  const obj = holder.get('obj', TestObj);
-  t.eq(obj?.bool, false, persistMsg(ctx, 'object boolean'));
-  t.eq(obj?.num, 42, persistMsg(ctx, 'object number'));
-  t.eq(obj?.str, 'foo', persistMsg(ctx, 'object string'));
-
-  const obj2 = holder.get('obj2', TestType);
+  const obj2 = holder.get('obj', TestType);
   t.eq(obj2?.bool, false, persistMsg(ctx, 'DataType boolean'));
   t.eq(obj2?.num, 42, persistMsg(ctx, 'DataType number'));
   t.eq(obj2?.str, 'foo', persistMsg(ctx, 'DataType string'));
@@ -88,7 +61,6 @@ function checkDelete(holder: DataHolder, t: Assert) {
   holder.delete('text');
   t.eq(holder.get('text', 'string'), null, deleteMsg('text'));
   holder.delete('obj');
-  t.eq(holder.get('obj', TestObj), null, deleteMsg('object'));
   t.eq(holder.get('obj', 'boolean'), null, deleteMsg('object/boolean'));
 }
 

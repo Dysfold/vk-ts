@@ -8,7 +8,6 @@ import { Integer, Double } from 'java.lang';
 import * as yup from 'yup';
 import { ItemStack } from 'org.bukkit.inventory';
 import { ItemMeta } from 'org.bukkit.inventory.meta';
-import * as _ from 'lodash';
 import { DatabaseEntry, getTable, Table } from './database';
 
 /**
@@ -24,7 +23,7 @@ export abstract class DataHolder {
    */
   abstract get<T extends object>(
     key: string,
-    type: TypeParam<T>,
+    type: DataType<T>,
     validateSchema?: boolean,
   ): T | null;
 
@@ -63,7 +62,7 @@ export abstract class DataHolder {
    */
   abstract set<T extends object>(
     key: string,
-    type: TypeParam<T>,
+    type: DataType<T>,
     value: T,
     validateSchema?: boolean,
   ): void;
@@ -111,39 +110,16 @@ export interface DataType<T extends object> {
   name: string;
 
   /**
-   * Schema for validating data of this type. Should always exist... but
-   * sometimes that is inconvenient during development.
+   * Schema for validating data of this type. May contain default values.
    */
-  schema?: yup.ObjectSchema<T>;
-
-  /**
-   * Default data for this type. Try not to access this directly and use
-   * getDefaultData() instead. Direct access combined with failure to properly
-   * deep clone the default data before assignment leads to bugs VERY difficult
-   * to debug.
-   */
-  defaultData: T | (() => T);
+  schema: yup.ObjectSchema<T>;
 }
 
-export type TypeParam<T extends object> = DataType<T> | (new () => T);
-
-/**
- * Gets default data of an object type.
- * @param type Stored object type.
- */
-export function getDefaultData<T extends object>(type: TypeParam<T>): T {
-  if (typeof type == 'function') {
-    return new type();
-  } else {
-    const data = type.defaultData;
-    if (typeof data === 'function' && 'apply' in data) {
-      // Work around TS bug by cast: https://github.com/microsoft/TypeScript/issues/37663
-      return (data as () => T)();
-    } else {
-      // Remember to do a DEEP clone to avoid polluting default data
-      return _.cloneDeep(data);
-    }
-  }
+export function dataType<T extends object>(
+  name: string,
+  schema: yup.ObjectSchemaDefinition<T>,
+): DataType<T> {
+  return { name: name, schema: yup.object(schema) as yup.ObjectSchema<T> };
 }
 
 /**
@@ -179,15 +155,16 @@ export function dataHolder(storage: DataHolderStorage): DataHolder {
 }
 
 function fromJson<T extends object>(
-  type: TypeParam<T>,
+  type: DataType<T>,
   json: string | null,
   validateSchema: boolean,
 ): T | null {
   if (json == null) {
     return null;
   }
-  // Assign default data to object (for migrations and to get methods)
-  const obj = getDefaultData(type);
+  // Assign to default data from schema
+  const schema = type.schema;
+  const obj = schema.default();
   Object.assign(obj, JSON.parse(json));
 
   // Validate schema if requested
@@ -205,13 +182,13 @@ function fromJson<T extends object>(
 }
 
 function toJson<T extends object>(
-  type: TypeParam<T>,
+  type: DataType<T>,
   data: T,
   validateSchema: boolean,
 ): string {
   // If asked, validate schema before creating JSON
   if (validateSchema) {
-    const schema: yup.ObjectSchema = (type as any).schema;
+    const schema = type.schema;
     if (schema != undefined) {
       schema.validateSync(data);
     } else {

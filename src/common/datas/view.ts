@@ -1,10 +1,4 @@
-import {
-  DataHolder,
-  DataHolderStorage,
-  dataHolder,
-  TypeParam,
-  getDefaultData,
-} from './holder';
+import { DataHolder, DataHolderStorage, dataHolder, DataType } from './holder';
 
 /**
  * Creates a typed view into a data holder. The view contains values that were
@@ -24,7 +18,7 @@ import {
  * @returns Typed view into the data holder.
  */
 export function dataView<T extends object>(
-  type: TypeParam<T>,
+  type: DataType<T>,
   source: DataHolder | DataHolderStorage,
   autoSave = true,
   validateRead = true,
@@ -32,7 +26,7 @@ export function dataView<T extends object>(
 ): T {
   const holder = source instanceof DataHolder ? source : dataHolder(source);
   const obj: any =
-    holder.get(type.name, type, validateRead) ?? getDefaultData(type);
+    holder.get(type.name, type, validateRead) ?? type.schema.default();
 
   // Define proxy handler
   const handler: ProxyHandler<any> = {} as ProxyHandler<any>;
@@ -101,7 +95,7 @@ export function saveView(view: any) {
  * @param holder Data holder or data holder source.
  */
 export function deleteView(
-  type: new () => any,
+  type: DataType<any>,
   source: DataHolder | DataHolderStorage,
 ) {
   const holder = source instanceof DataHolder ? source : dataHolder(source);

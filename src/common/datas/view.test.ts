@@ -2,40 +2,30 @@ import { test } from 'zora';
 import { ItemStack } from 'org.bukkit.inventory';
 import { Material } from 'org.bukkit';
 import { dataView, saveView, deleteView } from './view';
-import { dataHolder } from './holder';
+import { dataHolder, dataType } from './holder';
 import * as yup from 'yup';
 
-class TestA {
-  static schema = yup.object({
-    bool: yup.boolean(),
-    num: yup.number(),
-    str: yup.string(),
-    obj: yup.object({
-      str: yup.string(),
-    }),
-  });
+const TestA = dataType('TestA', {
+  bool: yup.boolean().default(true).required(),
+  num: yup.number().default(42).required(),
+  str: yup.string().default('foo').required(),
+  obj: yup
+    .object({
+      str: yup.string().default('inside').required(),
+    })
+    .required(),
+});
 
-  bool = true;
-  num = 42;
-  str = 'foo';
-  obj = { str: 'inside' };
-}
-
-class TestB {
-  static schema = yup.object({
-    bool: yup.boolean(),
-    num: yup.number(),
-    str: yup.string(),
-    obj: yup.object({
-      str: yup.string(),
-    }),
-  });
-
-  bool = true;
-  num = 42;
-  str = 'foo';
-  obj = { str: 'inside' };
-}
+const TestB = dataType('TestB', {
+  bool: yup.boolean().default(true).required(),
+  num: yup.number().default(42).required(),
+  str: yup.string().default('foo').required(),
+  obj: yup
+    .object({
+      str: yup.string().default('inside').required(),
+    })
+    .required(),
+});
 
 test('DataHolder view works', (t) => {
   const item = new ItemStack(Material.STONE, 1);
