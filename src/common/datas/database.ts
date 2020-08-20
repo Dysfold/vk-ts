@@ -1,7 +1,7 @@
 /**
  * Names of all databases.
  */
-const TABLE_NAMES = ['players', 'test'];
+const TABLE_NAMES = ['players', 'blocks', 'test'];
 
 /**
  * An entry in database.

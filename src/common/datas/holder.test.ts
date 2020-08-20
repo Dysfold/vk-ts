@@ -1,9 +1,10 @@
 import { test, Assert } from 'zora';
 import { dataHolder, DataHolder, DataType, dataType } from './holder';
 import { ItemStack } from 'org.bukkit.inventory';
-import { Material } from 'org.bukkit';
+import { Material, Bukkit } from 'org.bukkit';
 import * as yup from 'yup';
 import { DatabaseEntry } from './database';
+import { Block } from 'org.bukkit.block';
 
 function persistMsg(context: string, type: string) {
   return `${context}: ${type} persists`;
@@ -91,4 +92,12 @@ test('Database serialization', (t) => {
   setData(holder);
   checkData(holder, t, 'same holder');
   checkData(dataHolder(entry), t, 'same database');
+});
+
+test('Block serialization', (t) => {
+  const block = Bukkit.worlds[0].getBlockAt(0, 0, 0);
+  const holder = dataHolder(block);
+  setData(holder);
+  checkData(holder, t, 'same holder');
+  checkData(dataHolder(block), t, 'same block');
 });

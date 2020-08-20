@@ -1,4 +1,4 @@
-import { NamespacedKey, OfflinePlayer } from 'org.bukkit';
+import { NamespacedKey, OfflinePlayer, Location } from 'org.bukkit';
 import {
   PersistentDataType,
   PersistentDataContainer,
@@ -9,6 +9,7 @@ import * as yup from 'yup';
 import { ItemStack } from 'org.bukkit.inventory';
 import { ItemMeta } from 'org.bukkit.inventory.meta';
 import { DatabaseEntry, getTable, Table } from './database';
+import { Block } from 'org.bukkit.block';
 
 /**
  * A custom data holder.
@@ -128,7 +129,8 @@ export function dataType<T extends object>(
 export type DataHolderStorage =
   | PersistentDataHolder
   | DatabaseEntry
-  | ItemStack;
+  | ItemStack
+  | Block;
 
 /**
  * Creates a persistent data holder backed by given storage.
@@ -145,6 +147,12 @@ export function dataHolder(storage: DataHolderStorage): DataHolder {
   } else if (storage instanceof ItemStack) {
     // Use wrapper that automatically sets ItemMeta on changes
     return new ItemStackHolder(storage, storage.getItemMeta());
+  } else if (storage instanceof Block) {
+    // Storage custom block data in database by location
+    // Custom building materials etc. won't have data, so this is fine
+    return new DatabaseHolder(
+      new DatabaseEntry('blocks', locationToString(storage.location)),
+    );
   } else if (storage instanceof DatabaseEntry) {
     return new DatabaseHolder(storage);
   } else if (storage instanceof PersistentDataHolder) {
@@ -152,6 +160,10 @@ export function dataHolder(storage: DataHolderStorage): DataHolder {
   } else {
     throw new Error('unknown dataHolder storage');
   }
+}
+
+function locationToString(location: Location) {
+  return `${location.x},${location.y},${location.z}`;
 }
 
 function fromJson<T extends object>(
