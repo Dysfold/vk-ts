@@ -293,7 +293,9 @@ class BukkitHolder extends DataHolder {
 }
 
 function checkType(value: any, type: any) {
-  if (type == 'integer') {
+  if (value == null) {
+    return; // Null can be any type (annoying, but consistent)
+  } else if (type == 'integer') {
     if (typeof value != 'number' || value != Math.floor(value)) {
       throw new Error(`type of ${value} is not integer`);
     }
@@ -336,7 +338,7 @@ class DatabaseHolder extends DataHolder {
   }
 
   delete(key: string): void {
-    this.table.remove(key);
+    this.table.remove(this.prefix + key);
   }
 }
 

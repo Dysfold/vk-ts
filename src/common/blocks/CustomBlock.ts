@@ -1,335 +1,335 @@
-import { Block, TileState } from 'org.bukkit.block';
-import { Location, Chunk } from 'org.bukkit';
-import { serialize } from '../serialization';
-import { applyDefault } from '../data';
-import { onChange } from '../onChange';
-import { config } from '../config';
-import { Files, Path } from 'java.nio.file';
-import { readJSON, writeJSON } from '../json';
-import * as fnv from 'fnv-plus';
-import * as yup from 'yup';
-import * as _ from 'lodash';
-import { runTask } from '../scheduling';
 import { Newable } from '../types';
+import { Material, Bukkit } from 'org.bukkit';
+import { Event } from 'org.bukkit.event';
+import { dataHolder, DataType, dataType } from '../datas/holder';
+import * as yup from 'yup';
+import { dataView, saveView } from '../datas/view';
+import { Block } from 'org.bukkit.block';
+import { BlockData } from 'org.bukkit.block.data';
+import { setBlock } from './blocks';
+import { PlayerInteractEvent } from 'org.bukkit.event.player';
+import { Action, BlockBreakEvent } from 'org.bukkit.event.block';
 
-export abstract class CustomBlock {
-  block: Block;
+const CUSTOM_DATA_KEY = 'cd';
+
+type CustomBlockOptions<T extends {}> = {
   /**
-   * Schema to use for validating this block's data.
-   * Invalid entries will be replaced with default ones
+   * The Vanilla type/material used for this block.
    */
-  schema: yup.Schema<any> = yup.object();
-  location: Location;
-
-  constructor(block: Block) {
-    this.block = block;
-    this.location = block.location.clone() as Location;
-  }
-
-  /**
-   * Removes this block's data
-   */
-  remove() {
-    Blocks.remove(this);
-  }
+  type: Material;
 
   /**
-   * Check whether or not a given block is a valid instance of this
-   * custom block
+   * Block data in Vanilla string format.
    */
-  abstract check(): boolean;
-}
-
-export interface Region {
-  world: string;
-  x: number;
-  z: number;
-  hash: number;
-  lastSavedHash: number;
-  hasChanged: boolean;
-  blocks: { [type: string]: Record<string, CustomBlock | {}> };
-}
-
-export class Blocks {
-  private static REGIONS_FOLDER = config.DATA_FOLDER.resolve('./regions');
-  private static regions: Region[] = [];
+  state?: string;
 
   /**
-   * Converts a location into a key to be used as a dictionary index
-   * @param loc location to convert
+   * Schema definition for custom data associated with this block.
+   * If not present, this block does not have custom data.
    */
-  private static serializeLocation(loc: Location) {
-    const { blockX, blockY, blockZ, world } = loc.clone() as Location;
-    return [world.name, blockX, blockY, blockZ].join(';');
-  }
+  data?: yup.ObjectSchemaDefinition<T>;
 
   /**
-   * Converts a key serialized by `this.serializeLocation` into the original location
-   * @param serialized the serialized key as a string
+   * Callback for modifying this block after it has been created.
+   * Unlike with items, the changes are visible in the world as soon as this
+   * returns; returning a completely different block is not an option.
+   * @param block Block with default changes applied.
+   * @param data Custom data the block was created with.
    */
-  private static deserializeLocation(serialized: string) {
-    const [worldName, x, y, z] = serialized.split(';');
-    const world = server.getWorld(worldName);
-    return world?.getBlockAt(Number(x), Number(y), Number(z));
-  }
+  create?: (item: Block, data: T) => void;
 
   /**
-   * Get the coordinates of the region at `location`
-   * @param location
+   * If specified, overrides the default function for checking if a block is
+   * an instance of this custom block.
+   * @param block Block to check.
+   * @returns If given block is instance of this custom block.
    */
-  private static getRegionCoordinates(location: Location) {
-    const { x, z } = location.chunk;
-    const [regX, regZ] = [Math.floor(x / 32), Math.floor(z / 32)];
-    return { x: regX, z: regZ };
-  }
+  check?: (block: Block) => boolean;
+};
+
+export class CustomBlock<T extends {}> {
+  /**
+   * Options of this block.
+   */
+  private options: CustomBlockOptions<T>;
 
   /**
-   * Get the `Region`-object at `location`
-   * @param location Either a `Location` or a `Chunk`
+   * Vanilla block states to set for this block.
    */
-  private static getRegion(location: Location | Chunk) {
-    const { x, z } = this.getRegionCoordinates(
-      location instanceof Chunk
-        ? new Location(location.world, location.x * 16, 0, location.z * 16)
-        : location,
-    );
-    const region = this.regions.find(
-      (r) => r.x === x && r.z === z && r.world === location.world.name,
-    );
-    if (!region) {
-      const newRegion = {
-        world: location.world.name,
-        x,
-        z,
-        hash: 0,
-        lastSavedHash: -1,
-        blocks: {},
-        hasChanged: false,
-      } as Region;
-      this.regions.push(newRegion);
-      return newRegion;
-    }
-    return region;
-  }
-
-  static getLoadedRegions() {
-    const loadedChunks = [...server.worlds]
-      .map((w) => w.loadedChunks)
-      .reduce((arr, cur) => [...arr, ...cur], []) as Chunk[];
-    const regions = loadedChunks.map((c) => this.getRegion(c));
-    return _.uniqBy(regions, (r) => `${r.world};${r.x};${r.z}`);
-  }
+  private blockData?: BlockData;
 
   /**
-   * Initializes the `Blocks`-singleton. Should only be called once.
+   * Type of data associated with this block.
    */
-  static init() {
-    if (!Files.exists(this.REGIONS_FOLDER)) {
-      Files.createDirectories(this.REGIONS_FOLDER);
-    }
-    const regionFiles = Files.list(this.REGIONS_FOLDER).toArray() as JArray<
-      Path
-    >;
-    console.time('files');
-    for (const file of regionFiles) {
-      const region = readJSON(file);
-      this.regions.push(region);
-    }
-    console.timeEnd('files');
-
-    addUnloadHandler(() => this.save());
-
-    setTimeout(() => {
-      console.time('save');
-      this.save();
-      console.timeEnd('save');
-    }, 1000);
-  }
+  private dataType: DataType<T>;
 
   /**
-   * Load the data for a `CustomBlock`
-   * @param customBlock the block of which the data should be loaded for
+   * Tick rate in milliseconds (no ticks).
    */
-  private static load(customBlock: CustomBlock): Record<string, any> {
-    const key = this.serializeLocation(customBlock.block.location);
-    const region = this.getRegion(customBlock.block.location);
-    const blockName = customBlock.constructor.name;
-    if (!(blockName in region.blocks)) {
-      region.blocks[blockName] = {};
-    }
-    const dict = region.blocks[blockName];
-    const data = dict[key];
-    if (!data) {
-      dict[key] = {} as any;
-    }
-    return dict[key];
-  }
+  private tickRate?: number;
 
-  private static getRegionFile(region: Region) {
-    return this.REGIONS_FOLDER.resolve(
-      `./${[region.world, region.x, region.z]}.json`,
+  /**
+   * Tick handler for this block.
+   */
+  private tickHandler?: (block: T) => Promise<boolean>;
+
+  /**
+   * Tick handler task id.
+   */
+  private tickerId?: number;
+
+  constructor(options: CustomBlockOptions<T>) {
+    this.options = options;
+    // Parse block states once only
+    this.blockData = options.state
+      ? Bukkit.createBlockData(options.type, options.state)
+      : undefined;
+    this.dataType = dataType(
+      CUSTOM_DATA_KEY,
+      this.options.data
+        ? this.options.data
+        : ({} as yup.ObjectSchemaDefinition<T>),
     );
   }
 
   /**
-   * Saves changed regions into the disk
+   * Registers a click event for this custom block. Changes made to data of
+   * the block are applied once the event callback has finished
+   * (including async code).
+   * If you need to save earlier, use saveView(block).
+   * @param event Event type to listen for.
+   * @param blockPredicate Function that retrieves a Block from the event.
+   * @param callback Asynchronous event handler.
+   *
+   * @example
+   * CustomBlock.registerEvent(PlayerInteractEvent, (e) => e.clickedBlock, async (e) => {
+   *   // This is called when the player clicks a valid CustomBlock
+   *   e.player.sendMessage(`Block: ${e.clickedBlock}`);
+   * });
    */
-  static save() {
-    // This entire function could be optimized to a single loop
-
-    const emptyRegions: Region[] = [];
-    this.regions = this.regions.filter((r) => {
-      const isEmpty = Object.keys(r.blocks).length === 0;
-      if (isEmpty) {
-        emptyRegions.push(r);
+  event<E extends Event>(
+    event: Newable<E>,
+    blockPredicate: (event: E) => Block | null | undefined,
+    callback: (event: E, block: T) => Promise<void>,
+  ) {
+    registerEvent(event, async (event) => {
+      const block = blockPredicate(event); // Get Block
+      if (!block || !this.check(block)) {
+        return; // No block found or not this custom block
       }
-      return !isEmpty;
-    });
 
-    const changedRegions = this.regions.filter((region) => region.hasChanged);
-
-    console.log(emptyRegions.map((r) => r.x + ';' + r.z));
-
-    console.log(
-      `${changedRegions.length} regions changed, ${emptyRegions.length} empty regions will be deleted`,
-    );
-
-    for (const region of emptyRegions) {
-      const f = this.getRegionFile(region);
-      Files.deleteIfExists(f);
-    }
-    for (const region of changedRegions) {
-      writeJSON(this.getRegionFile(region), region);
-    }
-  }
-
-  /**
-   * Update the data of a certain block
-   * @param cb The updated `CustomBlock` object
-   */
-  private static set(cb: CustomBlock) {
-    const key = this.serializeLocation(cb.location.clone() as Location);
-    const region = this.getRegion(cb.location.clone() as Location);
-    region.blocks[cb.constructor.name][key] = {
-      ...serialize({
-        ...cb,
-        schema: undefined,
-        block: undefined,
-        location: undefined,
-      }),
-    } as any;
-    region.hasChanged = true;
-  }
-
-  /**
-   * Get a proxy for `block` that calls `this.set` when the object changes
-   * @param block The `CustomBlock` to watch
-   */
-  private static getProxy(block: CustomBlock) {
-    return onChange(block, () => {
-      this.set(block);
+      // this.get(block), but...
+      // - No auto-save (saved at most once AFTER event has passed)
+      // - No validation on load (because we'll probably save and validate then)
+      if (this.dataType == undefined) {
+        // TS compiler doesn't know that !this.dataType implies T == undefined
+        callback(event, {} as T);
+      } else {
+        const data = dataView(this.dataType, block, false, false, true);
+        await callback(event, data);
+        saveView(data); // Save if modified, AFTER event has passed
+      }
     });
   }
 
   /**
-   * Loop all blocks of a type. Note that the `callback` is called asynchronously.
-   * @param clazz The class of the `CustomBlock` of which to loop
-   * @param callback The callback function to call on each block
+   * Registers a click event handler for this custom block.
+   * @param type Click type.
+   * @param callback Event handler.
    */
-  static async forEach<T extends CustomBlock>(
-    clazz: Newable<T>,
-    callback: (block: T) => void,
-    regions?: Region[],
+  onClick(
+    type: 'right' | 'left',
+    callback: (event: PlayerInteractEvent, block: T) => Promise<void>,
   ) {
-    const promises: Promise<void>[] = [];
-    const name = clazz.prototype.constructor.name;
-    const loadedRegions = regions ?? this.getLoadedRegions();
-    let totalAmount = 0;
-    for (let i = 0; i < loadedRegions.length; i++) {
-      const region = loadedRegions[i];
-      if (!(name in region.blocks)) {
-        continue;
-      }
-      const blocks = region.blocks[name];
-      const keys = Object.keys(blocks);
-      totalAmount += keys.length;
-
-      const chunkedKeys = _.chunk(keys, 5);
-
-      for (const chunk of chunkedKeys) {
-        const promise = runTask(() => {
-          for (let j = 0; j < chunk.length; j++) {
-            const key = chunk[j];
-            const block = this.deserializeLocation(key);
-            if (!block) {
-              continue;
-            }
-            const cb = this.get(block, clazz);
-            if (!cb) {
-              continue;
-            }
-            callback(cb);
-          }
-        });
-        await promise;
-        promises.push(promise);
-      }
-    }
-    //await Promise.all(promises);
-  }
-  /**
-   * Get the custom block data of type `type` at the specified block, or undefined if the
-   * `block` does not satisfy the requirements of the custom block
-   * @param block The block to check. If falsy, function will return undefined
-   * @param type The custom block to use to check the block and get the data
-   */
-  static get<T extends CustomBlock>(
-    block: Block | null | undefined,
-    type: Newable<T>,
-  ): T | undefined;
-  /**
-   * Get the custom block data of type `type` at the specified block, or undefined if the
-   * block at `loc` does not satisfy the requirements of the custom block
-   * @param loc The location to check
-   * @param type The custom block to use to check the block and get the data
-   */
-  static get<T extends CustomBlock>(
-    loc: Location,
-    type: Newable<T>,
-  ): T | undefined;
-  static get<T extends CustomBlock>(
-    arg0: Block | null | undefined | Location,
-    Clazz: Newable<T>,
-  ) {
-    if (!arg0) {
-      return undefined;
-    }
-    const block = arg0 instanceof Block ? arg0 : arg0.getBlock();
-    const customBlock = new Clazz(block);
-    if (!customBlock.check()) {
-      return undefined;
-    }
-    const schema = customBlock.schema;
-    const data = applyDefault(this.load(customBlock), customBlock, schema);
-    for (const key in customBlock) {
-      if (!data[key]) {
-        continue;
-      }
-      customBlock[key as keyof T] = data[key];
-    }
-    return this.getProxy(customBlock) as T;
+    this.event(
+      PlayerInteractEvent,
+      (event) => event.clickedBlock,
+      async (event, block) => {
+        const action = event.action;
+        if (type == 'right' && action == Action.RIGHT_CLICK_BLOCK) {
+          await callback(event, block);
+        } else if (type == 'left' && action == Action.LEFT_CLICK_BLOCK) {
+          await callback(event, block);
+        }
+      },
+    );
   }
 
-  static remove(cb: CustomBlock) {
-    const location = cb.location.clone() as Location;
-    const key = this.serializeLocation(location);
-    const name = cb.constructor.name;
-    const region = this.getRegion(location);
-    if (!region.blocks[name]) {
+  /**
+   * Registers a block break event handler for this custom block.
+   * The handler returns true/false to indicate whether or not breaking
+   * the block is allowed.
+   * @param callback Event handler.
+   */
+  onBreak(callback: (block: T) => Promise<boolean>) {
+    // TODO are there ways to break blocks that do not trigger this? EXPLOSIONS?
+    this.event(
+      BlockBreakEvent,
+      (event) => event.block,
+      async (event, block) => {
+        const allowBreak = await callback(block);
+        if (!allowBreak) {
+          event.setCancelled(true); // Don't let player break this block
+        }
+      },
+    );
+  }
+
+  /**
+   * Registers a callback to run periodically on all active instances of this
+   * custom block.
+   *
+   * Blocks are activated when
+   * * Custom event handlers for them are called
+   * * Manually, by using this.activate(block)
+   *
+   * They stay active until their tick handler returns false. Blocks without
+   * tick handlers are immediately deactivated.
+   * @param interval Delay between ticks.
+   * @param unit Time unit of interval.
+   * @param callback Callback to run periodically. Should return true to keep
+   * block active, false to stop it from being active.
+   */
+  tick(
+    interval: number,
+    unit: TimeUnit = 'ticks',
+    callback: (block: T) => Promise<boolean>,
+  ) {
+    switch (unit) {
+      case 'millis':
+        this.tickRate = interval;
+        break;
+      case 'ticks':
+        this.tickRate = interval * 50;
+        break;
+      case 'seconds':
+        this.tickRate = interval * 1000;
+        break;
+      case 'minutes':
+        this.tickRate = interval * 1000 * 60;
+        break;
+    }
+    this.tickHandler = callback;
+  }
+
+  /**
+   * Activates a block if it is a custom block of this type.
+   * @param block Block to activate.
+   */
+  activate(block: Block) {
+    if (this.tickerId) {
+      return; // Already active
+    } else if (!this.check(block)) {
       return;
     }
-    region.blocks[name][key] = {};
+    const handler = this.tickHandler;
+    if (handler) {
+      this.tickerId = setInterval(async () => {
+        // Refetch data each time we tick, it might have changed
+        // TODO consider disabling auto save like with events
+        const data = this.get(block);
+        if (!data) {
+          // No custom block there anymore, it seems
+          clearInterval(this.tickerId);
+          this.tickerId = undefined;
+          return;
+        }
+
+        // Trigger tick handler
+        if (!(await handler(data))) {
+          // Deactivating this block
+          clearInterval(this.tickerId);
+          this.tickerId = undefined;
+        }
+      }, this.tickRate);
+    }
+  }
+
+  /**
+   * Makes given block an instance of this custom block.
+   * @param location Location of block.
+   * @param data If specified, overrides parts of the default custom data.
+   */
+  create(block: Block, data?: Partial<T>) {
+    setBlock(block, this.options.type, this.blockData); // Set Vanilla block
+
+    const holder = dataHolder(block);
+
+    // Data overrides given as parameter
+    let defaultData: T | undefined; // Created only if needed
+    if (data) {
+      defaultData = this.dataType.schema.default();
+      const allData = data ? { ...defaultData, ...data } : defaultData;
+      holder.set(CUSTOM_DATA_KEY, this.dataType, allData);
+      // Data available later with dataView
+    } // else: don't bother applying default data, can get it later from this.data
+
+    // Custom create function can modify/replace block after us
+    if (this.options.create) {
+      // Give same default data if possible, generate if we didn't need it before
+      return this.options.create(
+        block,
+        defaultData ?? this.dataType.schema.default(),
+      );
+    }
+    return block;
+  }
+
+  /**
+   * Gets data of this CustomBlock from given block. If the stack is not a
+   * custom block (null, undefined, Vanilla blocks) or is a custom block of
+   * different type, undefined is returned.
+   *
+   * Changes to the returned data are immediately saved to the block.
+   * @param block The block to fetch data from.
+   * @returns Custom block data or undefined.
+   */
+  get(block: Block | null | undefined): T | undefined {
+    if (!block || !this.check(block)) {
+      return undefined; // Not a custom block, or wrong custom block
+    }
+    return dataView(this.dataType, block);
+  }
+
+  /**
+   * Adds (or overwrites) data of this custom block in world.
+   * If the stack is not a custom block (null, undefined, Vanilla block) or
+   * is a custom block of different type, nothing is done.
+   * @param block Block in world to modify.
+   * @param data Data to add.
+   * @returns Whether data was modified or not.
+   */
+  set(
+    block: Block | null | undefined,
+    data: Partial<T> | ((data: T) => Partial<T>),
+  ): boolean {
+    if (!block) {
+      return false; // Not going to set anything to null
+    }
+    const holder = dataHolder(block);
+    // This should be usable for fixing invalid data, so validate only on set
+    // (it might also be a tiny bit faster)
+    const objData =
+      holder.get(CUSTOM_DATA_KEY, this.dataType, false) ??
+      this.dataType.schema.default();
+
+    // Overwrite with given data
+    Object.assign(objData, typeof data == 'function' ? data(objData) : data);
+    holder.set(CUSTOM_DATA_KEY, this.dataType, objData);
+    return true;
+  }
+
+  /**
+   * Checks if given block is an instance of this custom block.
+   * @param block Block to check.
+   */
+  check(block: Block): boolean {
+    if (this.blockData) {
+      // Check explicitly set block states and type
+      return this.blockData.matches(block.blockData) as boolean;
+    } else {
+      // Just check type
+      return this.options.type == block.type;
+    }
   }
 }
-
-Blocks.init();

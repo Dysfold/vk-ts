@@ -10,7 +10,7 @@ import { Integer } from 'java.lang';
 const CUSTOM_TYPE_KEY = 'ct';
 const CUSTOM_DATA_KEY = 'cd';
 
-type CustomItemOptions<T extends {} | undefined> = {
+type CustomItemOptions<T extends {}> = {
   /**
    * Unique integer id of this custom item.
    */
@@ -68,7 +68,7 @@ export class CustomItem<T extends {}> {
   private dataType: DataType<T>;
 
   constructor(options: CustomItemOptions<T>) {
-    this.options = { check: () => true, ...options };
+    this.options = options;
     this.dataType = dataType(
       CUSTOM_DATA_KEY,
       this.options.data
@@ -91,7 +91,7 @@ export class CustomItem<T extends {}> {
    *   e.player.sendMessage(`Stack size: ${e.item.amount}`);
    * });
    */
-  registerEvent<E extends Event>(
+  event<E extends Event>(
     event: Newable<E>,
     itemPredicate: (event: E) => ItemStack | null | undefined,
     callback: (event: E, item: T) => Promise<void>,
@@ -128,9 +128,9 @@ export class CustomItem<T extends {}> {
     // Unique identifier of this custom item
     holder.set(CUSTOM_TYPE_KEY, 'integer', this.options.id);
 
-    // Data overrides given as parameter or non-stable defaultData
+    // Data overrides given as parameter
     let defaultData: T | undefined; // Created only if needed
-    if (data != undefined) {
+    if (data) {
       defaultData = this.dataType.schema.default();
       const allData = data ? { ...defaultData, ...data } : defaultData;
       holder.set(CUSTOM_DATA_KEY, this.dataType, allData);
@@ -209,6 +209,9 @@ export class CustomItem<T extends {}> {
    * @param item Item stack.
    */
   check(item: ItemStack): boolean {
+    if (this.options.check) {
+      return this.options.check(item);
+    }
     const itemId = dataHolder(item.getItemMeta()).get(
       CUSTOM_TYPE_KEY,
       'integer',
