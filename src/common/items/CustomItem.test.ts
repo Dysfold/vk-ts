@@ -2,21 +2,19 @@ import { test } from 'zora';
 import { CustomItem } from './CustomItem';
 import { Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
-import { Damageable, ItemMeta } from 'org.bukkit.inventory.meta';
+import * as yup from 'yup';
 
 const TestItem = new CustomItem({
+  id: 0,
   type: Material.STICK,
-  defaultData: {
-    counter: 0,
+  name: 'Test 1',
+  data: {
+    counter: yup.number().default(0).required(),
   },
 });
 
-const TestItem2 = new CustomItem({
-  type: Material.DIAMOND_PICKAXE,
-  damage: 12,
-});
-
 const TestItem3 = new CustomItem({
+  id: 3,
   type: Material.DIRT,
   create(item) {
     return new ItemStack(item.type, 3);
@@ -27,18 +25,12 @@ const TestItem3 = new CustomItem({
   },
 });
 
-const TestItem4 = new CustomItem({
-  type: Material.BEEF,
-  defaultData: () => ({
-    rand: Math.random(),
-  }),
-});
-
 const TestItem5 = new CustomItem({
+  id: 5,
   type: Material.STICK,
-  defaultData: {
-    first: 0,
-    second: 0,
+  data: {
+    first: yup.number().default(0).required(),
+    second: yup.number().default(0).required(),
   },
 });
 
@@ -47,14 +39,14 @@ test('CustomItems workflow', (t) => {
   t.eq(
     test1.type,
     Material.STICK,
-    'CustomItem.create() should create an itemstack with the correct type',
+    'CustomItem.create() creates an ItemStack with the correct type',
   );
 
   const test2 = TestItem.create({ counter: -1 });
   t.eq(
     TestItem.get(test2)?.counter,
     -1,
-    'Calling CustomItem.create() with specified data should create an item with the data',
+    'Calling CustomItem.create() with specified data creates an item with the data',
   );
 
   const test3 = TestItem5.create({ first: -1 });
@@ -62,18 +54,18 @@ test('CustomItems workflow', (t) => {
   t.eq(
     { ...test3Data },
     { first: -1, second: 0 },
-    'CustomItem.create() with partial data should use default data',
+    'CustomItem.create() with partial data falls back to default data',
   );
 
   const invalidItem = new ItemStack(Material.DIRT);
   t.notOk(
     TestItem.get(invalidItem),
-    'CustomItem.get() on an invalid item should return undefined',
+    'CustomItem.get() on an invalid item returns undefined',
   );
   t.deepEqual(
     TestItem.get(test1)?.counter,
     0,
-    `CustomItem.get() on a just created item should return it's default data`,
+    `CustomItem.get() on unmodified item returns it's default data`,
   );
 
   const data = TestItem.get(test1);
@@ -83,12 +75,12 @@ test('CustomItems workflow', (t) => {
   t.eq(
     TestItem.get(test1)?.counter,
     1,
-    `Mutating object returned by CustomItem.get() should mutate the item's data`,
+    `Mutating object returned by CustomItem.get() mutates the item's data`,
   );
 
   try {
     TestItem.set(invalidItem, { counter: 10 });
-    t.ok('CustomItem.set() on an invalid item should not throw error');
+    t.ok('CustomItem.set() on an invalid item does not throw error');
   } catch (e) {
     t.fail(e);
   }
@@ -97,47 +89,18 @@ test('CustomItems workflow', (t) => {
   t.eq(
     TestItem.get(test1)?.counter,
     5,
-    'CustomItem.set() with complete data should set the data',
+    'CustomItem.set() with complete data sets the data',
   );
 
-  TestItem.set(test1, (data) => ({ counter: 12 }));
+  TestItem.set(test1, (data) => ({ data: data.counter, counter: 12 }));
   t.eq(
     TestItem.get(test1)?.counter,
     12,
     `A function supplied to CustomItem.set() should be able to mutate the item's data`,
   );
-});
-
-test('CustomItem options', (t) => {
-  const item2 = new ItemStack(Material.DIAMOND_PICKAXE);
-  const meta = item2.itemMeta as ItemMeta & Damageable;
-  meta.damage = 12;
-  item2.itemMeta = meta;
-  t.ok(
-    TestItem2.check(item2),
-    'CustomItem.check() should take into account item damage if specified',
-  );
-  meta.damage = 13;
-  item2.itemMeta = meta;
-  t.notOk(
-    TestItem2.check(item2),
-    'CustomItem.check() should fail for items with wrong damage',
-  );
-
-  const item = TestItem2.create();
-  const meta2 = item.itemMeta as ItemMeta & Damageable;
-  t.eq(
-    meta2.damage,
-    12,
-    'Items created with CustomItem.create() should have correct damage',
-  );
-
-  const [a, b] = [TestItem4.create(), TestItem4.create()];
-  const [dataA, dataB] = [TestItem4.get(a), TestItem4.get(b)];
-  t.notEq(
-    dataA?.rand,
-    dataB?.rand,
-    'Passing a function as defaultData should run the function on creation and generate the data',
+  t.truthy(
+    'data' in (TestItem.get(test1) as object),
+    'A function supplied to CustomItem.set() should receive existing/default data',
   );
 });
 
