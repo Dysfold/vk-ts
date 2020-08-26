@@ -4,6 +4,8 @@ import { test } from 'zora';
 import { setBlock } from './blocks';
 import { dataHolder } from '../datas/holder';
 import * as yup from 'yup';
+import { Directional } from 'org.bukkit.material';
+import { BlockFace } from 'org.bukkit.block';
 
 const TestBlock1 = new CustomBlock({
   type: Material.STRUCTURE_BLOCK,
@@ -16,9 +18,20 @@ const TestBlock2 = new CustomBlock({
   },
 });
 
+const TestBlock3 = new CustomBlock({
+  type: Material.BARREL,
+  state: {
+    facing: ['north', 'south', 'east', 'west'],
+  },
+});
+
+const TestBlock4 = new CustomBlock(TestBlock3, {
+  state: { facing: 'south' },
+});
+
 const block = Bukkit.server.worlds[0].getBlockAt(0, 0, 0);
 
-test('Simple custom block works', (t) => {
+test('Simple custom block', (t) => {
   t.falsy(
     TestBlock1.check(block),
     'Vanilla block not detected as custom block',
@@ -34,7 +47,7 @@ test('Simple custom block works', (t) => {
   t.falsy(TestBlock1.check(block), 'simple custom block deleted');
 });
 
-test('Custom block with data works', (t) => {
+test('Custom block with custom data', (t) => {
   TestBlock2.create(block);
   t.eq(
     TestBlock2.get(block)?.str,
@@ -51,4 +64,23 @@ test('Custom block with data works', (t) => {
 
   setBlock(block, Material.AIR);
   t.falsy(dataHolder(block).get('cd', 'string'), 'block data deleted properly');
+});
+
+test('Custom block with block states', (t) => {
+  TestBlock3.create(block);
+  t.truthy(TestBlock3.check(block), 'custom block with block states created');
+  const facing = ((block.getBlockData() as unknown) as Directional).getFacing();
+  t.notSame(facing, BlockFace.UP, 'block facing is valid #1');
+  t.notSame(facing, BlockFace.DOWN, 'block facing is valid #2');
+});
+
+test('Custom block variant', (t) => {
+  TestBlock4.create(block);
+  t.truthy(TestBlock4.check(block), 'custom block variant created');
+  t.truthy(TestBlock3.check(block), 'custom block variant matches parent');
+  t.same(
+    ((block.getBlockData() as unknown) as Directional).getFacing(),
+    BlockFace.SOUTH,
+    'custom block variant override works',
+  );
 });

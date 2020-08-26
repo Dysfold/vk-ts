@@ -15,15 +15,24 @@ function purgeCustomData(block: Block) {
  * world.
  * @param block Block to change.
  * @param type New type.
- * @param data New Vanilla block data.
+ * @param data New Vanilla block state/data.
  */
-export function setBlock(block: Block, type: Material, data?: BlockData) {
+export function setBlock(
+  block: Block,
+  type: Material,
+  data?: BlockData | BlockData[],
+) {
   purgeCustomData(block); // Delete previous maybe-custom block
 
   // Replace Vanilla block
   block.setType(type);
   if (data) {
-    block.setBlockData(data);
+    if (Array.isArray(data)) {
+      const index = Math.floor(Math.random() * data.length); // Select used block state randomly
+      block.setBlockData(data[index]);
+    } else {
+      block.setBlockData(data);
+    }
   }
 }
 
