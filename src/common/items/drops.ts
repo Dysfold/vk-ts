@@ -67,6 +67,11 @@ export function generateLoot<T>(data: T, loot: LootDrop<T>[]): ItemStack[] {
   return items;
 }
 
+/**
+ * Sets drops (loot table) of a custom block.
+ * @param block Custom block.
+ * @param loot Loot table of the block.
+ */
 export function setBlockDrops<T>(block: CustomBlock<T>, loot: LootDrop<T>[]) {
   block.onBreak(async (event, data) => {
     const block = event.block;
@@ -94,6 +99,11 @@ export function setBlockDrops<T>(block: CustomBlock<T>, loot: LootDrop<T>[]) {
   });
 }
 
+/**
+ * Sets block form of given custom item.
+ * @param item Custom item.
+ * @param block Custom block.
+ */
 export function setBlockForm(item: CustomItem<any>, block: CustomBlock<any>) {
   item.event(
     BlockPlaceEvent,
@@ -105,6 +115,12 @@ export function setBlockForm(item: CustomItem<any>, block: CustomBlock<any>) {
   );
 }
 
+/**
+ * Binds given item and block. Placing the item in world creates custom block.
+ * Breaking the block drops one custom item.
+ * @param item Custom item.
+ * @param block Custom block.
+ */
 export function bindItemBlock(item: CustomItem<any>, block: CustomBlock<any>) {
   setBlockDrops(block, [{ item: item, rarity: 1, count: 1 }]);
   setBlockForm(item, block);
