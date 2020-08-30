@@ -8,7 +8,7 @@ import { Block } from 'org.bukkit.block';
 import { BlockData } from 'org.bukkit.block.data';
 import { setBlock } from './blocks';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
-import { Action, BlockBreakEvent } from 'org.bukkit.event.block';
+import { Action, BlockBreakEvent, BlockEvent } from 'org.bukkit.event.block';
 
 const CUSTOM_DATA_KEY = 'cd';
 
@@ -212,14 +212,9 @@ export class CustomBlock<T extends {}> {
       // this.get(block), but...
       // - No auto-save (saved at most once AFTER event has passed)
       // - No validation on load (because we'll probably save and validate then)
-      if (this.dataType == undefined) {
-        // TS compiler doesn't know that !this.dataType implies T == undefined
-        callback(event, {} as T);
-      } else {
-        const data = dataView(this.dataType, block, false, false, true);
-        await callback(event, data);
-        saveView(data); // Save if modified, AFTER event has passed
-      }
+      const data = dataView(this.dataType, block, false, false, true);
+      await callback(event, data);
+      saveView(data); // Save if modified, AFTER event has passed
     });
   }
 
@@ -252,13 +247,13 @@ export class CustomBlock<T extends {}> {
    * the block is allowed.
    * @param callback Event handler.
    */
-  onBreak(callback: (block: T) => Promise<boolean>) {
+  onBreak(callback: (event: BlockEvent, data: T) => Promise<boolean>) {
     // TODO are there ways to break blocks that do not trigger this? EXPLOSIONS?
     this.event(
       BlockBreakEvent,
       (event) => event.block,
       async (event, block) => {
-        const allowBreak = await callback(block);
+        const allowBreak = await callback(event, block);
         if (!allowBreak) {
           event.setCancelled(true); // Don't let player break this block
         }
@@ -415,7 +410,7 @@ export class CustomBlock<T extends {}> {
    * @param block Block to check.
    */
   check(block: Block): boolean {
-    if (this.options.type != block.type) {
+    if (!this.options.type.equals(block.type)) {
       return false;
     } else if (this.blockDatas) {
       for (const candidate of this.blockDatas) {

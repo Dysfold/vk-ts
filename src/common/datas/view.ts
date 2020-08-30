@@ -26,7 +26,7 @@ export function dataView<T extends object>(
 ): T {
   const holder = source instanceof DataHolder ? source : dataHolder(source);
   const obj: any =
-    holder.get(type.name, type, validateRead) ?? type.schema.default();
+    holder.get(type.name, type, validateRead) ?? type.schema.default() ?? {};
 
   // Define proxy handler
   const handler: ProxyHandler<any> = {} as ProxyHandler<any>;

@@ -12,7 +12,7 @@ const CUSTOM_DATA_KEY = 'cd';
 
 type CustomItemOptions<T extends {}> = {
   /**
-   * Unique integer id of this custom item.
+   * Id of this custom item. Unique per Vanilla type/material.
    */
   id: number;
 
@@ -56,6 +56,20 @@ type CustomItemOptions<T extends {}> = {
   check?: (item: ItemStack) => boolean;
 };
 
+/**
+ * Used for tracking already used item ids to generate errors on collisions.
+ */
+const usedIds: Set<string> = new Set();
+
+function checkItemId(type: Material, id: number) {
+  const hash = type + '-' + id;
+  if (usedIds.has(hash)) {
+    console.error(`Found item id collision with id ${id} for ${type}`);
+  } else {
+    usedIds.add(hash);
+  }
+}
+
 export class CustomItem<T extends {}> {
   /**
    * Options of this item.
@@ -69,6 +83,7 @@ export class CustomItem<T extends {}> {
 
   constructor(options: CustomItemOptions<T>) {
     this.options = options;
+    checkItemId(options.type, options.id);
     this.dataType = dataType(
       CUSTOM_DATA_KEY,
       this.options.data
@@ -86,7 +101,7 @@ export class CustomItem<T extends {}> {
    * @param callback Asynchronous event handler.
    *
    * @example
-   * CustomItem.registerEvent(PlayerInteractEvent, (e) => e.item, async (e) => {
+   * CustomItem.event(PlayerInteractEvent, (e) => e.item, async (e) => {
    *   // This is called when the player clicks with a valid CustomItem
    *   e.player.sendMessage(`Stack size: ${e.item.amount}`);
    * });
@@ -211,6 +226,9 @@ export class CustomItem<T extends {}> {
   check(item: ItemStack): boolean {
     if (this.options.check) {
       return this.options.check(item);
+    }
+    if (!this.options.type.equals(item.type)) {
+      return false; // Item id is per Vanilla material
     }
     const itemId = dataHolder(item.getItemMeta()).get(
       CUSTOM_TYPE_KEY,

@@ -1,6 +1,9 @@
 import { CustomItem } from './CustomItem';
-import { Material } from 'org.bukkit';
+import { Material, GameMode } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
+import { Container } from 'org.bukkit.block';
+import { BlockPlaceEvent, BlockBreakEvent } from 'org.bukkit.event.block';
+import { CustomBlock } from '../blocks/CustomBlock';
 
 type LootItem = CustomItem<any> | Material | ItemStack;
 
@@ -62,4 +65,47 @@ export function generateLoot<T>(data: T, loot: LootDrop<T>[]): ItemStack[] {
     }
   }
   return items;
+}
+
+export function setBlockDrops<T>(block: CustomBlock<T>, loot: LootDrop<T>[]) {
+  block.onBreak(async (event, data) => {
+    const block = event.block;
+    // Drop contents if block is container
+    if (block.state instanceof Container) {
+      for (const item of block.state.inventory.contents) {
+        if (item) {
+          block.world.dropItemNaturally(block.location, item);
+        }
+      }
+    }
+    // Drop the custom item (if not in creative mode)
+    if (
+      !(
+        event instanceof BlockBreakEvent &&
+        event.player.gameMode.equals(GameMode.CREATIVE)
+      )
+    ) {
+      for (const item of generateLoot(data, loot)) {
+        block.world.dropItemNaturally(block.location, item);
+      }
+    }
+    block.setType(Material.AIR); // 'Break' the block
+    return false; // We did the breaking
+  });
+}
+
+export function setBlockForm(item: CustomItem<any>, block: CustomBlock<any>) {
+  item.event(
+    BlockPlaceEvent,
+    (event) => event.itemInHand,
+    async (event) => {
+      // Place custom block over Vanilla one
+      block.create(event.block);
+    },
+  );
+}
+
+export function bindItemBlock(item: CustomItem<any>, block: CustomBlock<any>) {
+  setBlockDrops(block, [{ item: item, rarity: 1, count: 1 }]);
+  setBlockForm(item, block);
 }
