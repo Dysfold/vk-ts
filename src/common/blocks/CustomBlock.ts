@@ -8,9 +8,84 @@ import { Block } from 'org.bukkit.block';
 import { BlockData } from 'org.bukkit.block.data';
 import { setBlock } from './blocks';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
-import { Action, BlockBreakEvent } from 'org.bukkit.event.block';
+import { Action, BlockBreakEvent, BlockEvent } from 'org.bukkit.event.block';
 
 const CUSTOM_DATA_KEY = 'cd';
+
+interface BlockStates {
+  [state: string]: string | string[];
+}
+
+interface StateEntry {
+  key: string;
+  values: string[];
+  current: number;
+}
+
+interface Combination {
+  index: number;
+  max: number;
+}
+
+function blockStateStr(states: StateEntry[]): string {
+  return (
+    '[' +
+    states
+      .map((value) => value.key + '=' + value.values[value.current])
+      .join(',') +
+    ']'
+  );
+}
+
+/**
+ * Creates and parses all possible block state combinations.
+ */
+function parseBlockStates(type: Material, states: BlockStates) {
+  // Parse entries and remember selections
+  const list: StateEntry[] = [];
+  const selections: Combination[] = [];
+  for (const [name, values] of Object.entries(states)) {
+    list.push({
+      key: name,
+      values: Array.isArray(values) ? values : [values],
+      current: 0,
+    });
+    if (Array.isArray(values)) {
+      selections.push({ index: list.length - 1, max: values.length });
+    }
+  }
+
+  // Skip combination generation if there are no selections
+  if (selections.length == 0) {
+    return [Bukkit.createBlockData(type, blockStateStr(list))];
+  }
+
+  // Generate combinations
+  const blockDatas: BlockData[] = [];
+  // eslint-disable-next-line no-constant-condition
+  outer: while (true) {
+    // Generate block state string and parse it
+    blockDatas.push(Bukkit.createBlockData(type, blockStateStr(list)));
+
+    // Prepare selections for next combination
+    for (let i = 0; i < selections.length; i++) {
+      const selection = selections[i];
+      const state = list[selection.index];
+      state.current++; // Next combination
+      if (state.current == selection.max) {
+        if (i == selections.length - 1) {
+          break outer; // All combinations found
+        } else {
+          state.current = 0; // Wrap around
+          continue; // Change next selection for next combination
+        }
+      }
+      break; // Found new combination, no need to loop more
+    }
+  }
+
+  return blockDatas;
+}
 
 type CustomBlockOptions<T extends {}> = {
   /**
@@ -21,7 +96,7 @@ type CustomBlockOptions<T extends {}> = {
   /**
    * Block data in Vanilla string format.
    */
-  state?: string;
+  state?: BlockStates;
 
   /**
    * Schema definition for custom data associated with this block.
@@ -54,9 +129,9 @@ export class CustomBlock<T extends {}> {
   private options: CustomBlockOptions<T>;
 
   /**
-   * Vanilla block states to set for this block.
+   * Vanilla block states that match this block.
    */
-  private blockData?: BlockData;
+  private blockDatas?: BlockData[];
 
   /**
    * Type of data associated with this block.
@@ -78,12 +153,28 @@ export class CustomBlock<T extends {}> {
    */
   private tickerId?: number;
 
-  constructor(options: CustomBlockOptions<T>) {
-    this.options = options;
+  constructor(options: CustomBlockOptions<T>);
+  constructor(
+    parent: CustomBlock<T>,
+    overrides: Partial<CustomBlockOptions<T>>,
+  );
+
+  constructor(
+    options: CustomBlock<T> | CustomBlockOptions<T>,
+    overrides?: Partial<CustomBlockOptions<T>>,
+  ) {
+    // Get options and apply overrides if given
+    this.options =
+      options instanceof CustomBlock
+        ? { ...options.options, ...overrides }
+        : options;
+
     // Parse block states once only
-    this.blockData = options.state
-      ? Bukkit.createBlockData(options.type, options.state)
+    this.blockDatas = this.options.state
+      ? parseBlockStates(this.options.type, this.options.state)
       : undefined;
+
+    // Create dataHolder data type
     this.dataType = dataType(
       CUSTOM_DATA_KEY,
       this.options.data
@@ -121,14 +212,9 @@ export class CustomBlock<T extends {}> {
       // this.get(block), but...
       // - No auto-save (saved at most once AFTER event has passed)
       // - No validation on load (because we'll probably save and validate then)
-      if (this.dataType == undefined) {
-        // TS compiler doesn't know that !this.dataType implies T == undefined
-        callback(event, {} as T);
-      } else {
-        const data = dataView(this.dataType, block, false, false, true);
-        await callback(event, data);
-        saveView(data); // Save if modified, AFTER event has passed
-      }
+      const data = dataView(this.dataType, block, false, false, true);
+      await callback(event, data);
+      saveView(data); // Save if modified, AFTER event has passed
     });
   }
 
@@ -161,13 +247,13 @@ export class CustomBlock<T extends {}> {
    * the block is allowed.
    * @param callback Event handler.
    */
-  onBreak(callback: (block: T) => Promise<boolean>) {
+  onBreak(callback: (event: BlockEvent, data: T) => Promise<boolean>) {
     // TODO are there ways to break blocks that do not trigger this? EXPLOSIONS?
     this.event(
       BlockBreakEvent,
       (event) => event.block,
       async (event, block) => {
-        const allowBreak = await callback(block);
+        const allowBreak = await callback(event, block);
         if (!allowBreak) {
           event.setCancelled(true); // Don't let player break this block
         }
@@ -251,7 +337,7 @@ export class CustomBlock<T extends {}> {
    * @param data If specified, overrides parts of the default custom data.
    */
   create(block: Block, data?: Partial<T>) {
-    setBlock(block, this.options.type, this.blockData); // Set Vanilla block
+    setBlock(block, this.options.type, this.blockDatas); // Set Vanilla block
 
     const holder = dataHolder(block);
 
@@ -324,12 +410,17 @@ export class CustomBlock<T extends {}> {
    * @param block Block to check.
    */
   check(block: Block): boolean {
-    if (this.blockData) {
-      // Check explicitly set block states and type
-      return this.blockData.matches(block.blockData) as boolean;
+    if (!this.options.type.equals(block.type)) {
+      return false;
+    } else if (this.blockDatas) {
+      for (const candidate of this.blockDatas) {
+        if (candidate.matches(block.blockData)) {
+          return true; // Found matching block data
+        }
+      }
+      return false; // None of the block states matched
     } else {
-      // Just check type
-      return this.options.type == block.type;
+      return true;
     }
   }
 }
