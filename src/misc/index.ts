@@ -1,1 +1,2 @@
 require('./barrel');
+require('./knock');
