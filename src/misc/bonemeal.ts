@@ -4,15 +4,14 @@ import { BlockState } from 'org.bukkit.block';
 import { BlockFertilizeEvent } from 'org.bukkit.event.block';
 
 registerEvent(BlockFertilizeEvent, (event) => {
-  const blocks: List<BlockState> = event.getBlocks();
+  const blocks = event.blocks;
   const cancel = !canBeFertilized(blocks);
   event.setCancelled(cancel);
 });
 
 const canBeFertilized = (blocks: List<BlockState>) => {
   for (const block of blocks) {
-    const type = block.getType();
-    switch (type) {
+    switch (block.type) {
       case Material.SEAGRASS:
       case Material.TALL_SEAGRASS:
       case Material.GRASS:
