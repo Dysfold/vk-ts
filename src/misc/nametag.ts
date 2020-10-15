@@ -1,33 +1,28 @@
 import { PlayerJoinEvent } from 'org.bukkit.event.player';
 import { NameTagVisibility } from 'org.bukkit.scoreboard';
 
-const TEAMNAME = 'nametag';
+const TEAM_NAME = 'nametag';
 
-const sm = server.getScoreboardManager();
+const sm = server.scoreboardManager;
+const board = sm.mainScoreboard;
 
-const scoreboard = sm.getMainScoreboard();
-let team = scoreboard.getTeam(TEAMNAME);
+let team = board.getTeam(TEAM_NAME);
 
-const initTeam = () => {
+function initTeam() {
   // Create new team, which hides nametag from the player
-  team = scoreboard.registerNewTeam(TEAMNAME);
+  console.log(`Creating a new team: ${TEAM_NAME}`);
+  team = board.registerNewTeam(TEAM_NAME);
   team.setNameTagVisibility(NameTagVisibility.NEVER);
-};
+}
 
 if (!team) {
   initTeam();
 }
 
 registerEvent(PlayerJoinEvent, (event) => {
-  const player = event.getPlayer();
-
-  try {
-    team?.addPlayer(player);
-  } catch (error) {
-    // Called if the "nametag" group was deleted
-    // and if this script was not reloaded
-    console.log(`Creating a new team: ${TEAMNAME}`);
+  if (!team || !board.getTeam(TEAM_NAME)) {
     initTeam();
-    team?.addPlayer(player);
   }
+
+  team?.addPlayer(event.player);
 });
