@@ -3,8 +3,7 @@ import { NameTagVisibility } from 'org.bukkit.scoreboard';
 
 const TEAM_NAME = 'nametag';
 
-const sm = server.scoreboardManager;
-const board = sm.mainScoreboard;
+const board = server.scoreboardManager.mainScoreboard;
 
 let team = board.getTeam(TEAM_NAME);
 
@@ -13,10 +12,6 @@ function initTeam() {
   console.log(`Creating a new team: ${TEAM_NAME}`);
   team = board.registerNewTeam(TEAM_NAME);
   team.setNameTagVisibility(NameTagVisibility.NEVER);
-}
-
-if (!team) {
-  initTeam();
 }
 
 registerEvent(PlayerJoinEvent, (event) => {
