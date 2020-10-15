@@ -9,7 +9,7 @@ registerEvent(BlockFertilizeEvent, (event) => {
   event.setCancelled(cancel);
 });
 
-const canBeFertilized = (blocks: List<BlockState>) => {
+function canBeFertilized(blocks: List<BlockState>) {
   for (const block of blocks) {
     switch (block.type) {
       case Material.SEAGRASS:
@@ -22,4 +22,4 @@ const canBeFertilized = (blocks: List<BlockState>) => {
   }
   // Only if none of the blocks can be grown with bonemeal
   return false;
-};
+}
