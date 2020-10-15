@@ -1,9 +1,10 @@
 import { Float } from 'java.lang';
+import { GameMode } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 
 // How often players' hydration level is decreased (seconds)
-const THIRST_CYCLE_DURATION = 60;
+const THIRST_CYCLE_DURATION = 1;
 const THIRST_CYCLE_HYDRATION = -0.01;
 // If duration is 60s and hydration -0.1, the bar will last 100 mins
 
@@ -40,19 +41,19 @@ const BLINDNESS1 = new PotionEffect(
   0,
 );
 
-const dehydratedPlayers: Player[] = [];
+const dehydratedPlayers = new Set<Player>();
 
 // Reduce the hydration of the players
 setInterval(() => {
-  const players = server.getOnlinePlayers();
-  for (const player of players) {
-    const barBefore = player.getExp();
-    const bar = limit(barBefore + THIRST_CYCLE_HYDRATION);
-    player.setExp((new Float(bar) as unknown) as number);
+  for (const player of server.onlinePlayers) {
+    if (player.gameMode !== GameMode.SURVIVAL) return;
+
+    const bar = limit(player.exp + THIRST_CYCLE_HYDRATION);
+    player.exp = (new Float(bar) as unknown) as number;
 
     if (bar < DEHYDRATION_LEVEL) {
-      if (dehydratedPlayers.indexOf(player) == -1) {
-        dehydratedPlayers.push(player);
+      if (!dehydratedPlayers.has(player)) {
+        dehydratedPlayers.add(player);
       }
 
       let msg = '';
@@ -71,13 +72,12 @@ setInterval(() => {
 // Dehydration effects
 setInterval(() => {
   // Reverse for-loop because we are deleting
-  for (let i = dehydratedPlayers.length - 1; i >= 0; --i) {
-    const player = dehydratedPlayers[i];
-    if (!player.isOnline()) {
-      dehydratedPlayers.splice(i, 1);
+  dehydratedPlayers.forEach((player) => {
+    if (!player.isOnline || player.gameMode !== GameMode.SURVIVAL) {
+      dehydratedPlayers.delete(player);
     }
 
-    const bar = player.getExp();
+    const bar = player.exp;
     if (bar < SEVERE_DEHYDRATION_LEVEL) {
       // Severe dehydration effects
       player.addPotionEffect(SLOW3);
@@ -92,12 +92,12 @@ setInterval(() => {
       player.addPotionEffect(SLOW1);
     } else {
       // Player is hydrated. Remove from the list
-      dehydratedPlayers.splice(i, 1);
+      dehydratedPlayers.delete(player);
     }
-  }
+  });
 }, DEHYDRATION_CYCLE_DURATION * 1000);
 
-const limit = (x: number) => {
+function limit(x: number) {
   // Limit the exp number between 0 and 0.99 (1 will be new level)
   return Math.min(0.99, Math.max(0, x));
-};
+}

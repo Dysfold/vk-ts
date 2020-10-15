@@ -1,7 +1,5 @@
 import { Float } from 'java.lang';
-import { List } from 'java.util';
 import { Material } from 'org.bukkit';
-import { Block } from 'org.bukkit.block';
 import { Levelled } from 'org.bukkit.block.data';
 import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
@@ -21,10 +19,10 @@ const Hydration = {
 
 // When player drinks (bottles etc)
 registerEvent(PlayerItemConsumeEvent, (event) => {
-  const item = event.getItem();
+  const item = event.item;
 
-  const material = item?.getType();
-  const player = event.getPlayer();
+  const material = item?.type;
+  const player = event.player;
   switch (material) {
     case Material.POTION:
       hydrate(player, Hydration.MEDIUM, material);
@@ -36,24 +34,24 @@ registerEvent(PlayerItemConsumeEvent, (event) => {
 });
 
 // When player drinks from block
-const drinkers: Player[] = [];
+const drinkers = new Set<Player>();
 registerEvent(PlayerInteractEvent, (event) => {
   if (
     (event.action === Action.RIGHT_CLICK_BLOCK ||
       event.action === Action.RIGHT_CLICK_AIR) &&
-    event.getHand() === EquipmentSlot.HAND
+    event.hand === EquipmentSlot.HAND
   ) {
-    const player = event.getPlayer();
-    const material = player.getItemInHand().getType();
+    const player = event.player;
+    const material = event.item?.type;
 
     if (material !== Material.AIR) return;
-    if (drinkers.indexOf(player) !== -1) return;
+    if (!drinkers.has(player)) return;
 
     // Drinking from cauldron
-    const block = event.getClickedBlock();
-    if (block?.getType() === Material.CAULDRON) {
-      const cauldronData: Levelled = block.getBlockData() as Levelled;
-      const waterLevel = cauldronData.getLevel();
+    const block = event.clickedBlock;
+    if (block?.type === Material.CAULDRON) {
+      const cauldronData = block.blockData as Levelled;
+      const waterLevel = cauldronData.level;
       if (waterLevel) {
         cauldronData.setLevel(waterLevel - 1);
         block.setBlockData(cauldronData);
@@ -62,59 +60,52 @@ registerEvent(PlayerInteractEvent, (event) => {
         return;
       }
 
-      drinkers.push(player);
+      drinkers.add(player);
       hydrate(player, Hydration.MEDIUM, Material.CAULDRON);
       playDrinkingSound(player);
-      setTimeout(() => {
-        stopDrinking(player);
-      }, 1000);
+
+      stopDrinking(player, 1);
     }
 
     // Drinking from water block
-    const lineOfSight: List<Block> | null = event
-      .getPlayer()
-      .getLineOfSight(null, 4);
+    const lineOfSight = event.player.getLineOfSight(null, 4);
     if (!lineOfSight) return;
     for (const block of lineOfSight) {
-      if (block.getType() == Material.WATER) {
-        drinkers.push(player);
+      if (block.type == Material.WATER) {
+        drinkers.add(player);
         hydrate(player, Hydration.MEDIUM, Material.WATER);
         playDrinkingSound(player);
-        setTimeout(() => {
-          stopDrinking(player);
-        }, 2000);
+        stopDrinking(player, 2);
         return;
       }
     }
   }
 });
 
-const stopDrinking = (player: Player) => {
-  const idx = drinkers.indexOf(player);
-  if (idx !== -1) {
-    drinkers.splice(idx, 1);
-    playBurpSound(player);
-  }
-};
+async function stopDrinking(player: Player, time: number) {
+  await wait(time, 'seconds');
+  drinkers.delete(player);
+  playBurpSound(player);
+}
 
-const playBurpSound = (player: Player) => {
+function playBurpSound(player: Player) {
   player.world.playSound(player.location, 'entity.player.burp', 1, 1);
-};
+}
 
-const playDrinkingSound = (player: Player) => {
+function playDrinkingSound(player: Player) {
   player.world.playSound(player.location, 'entity.generic.drink', 1, 1);
-};
+}
 
-const hydrate = (player: Player, amount: number, material: Material) => {
-  const barBefore = player.getExp();
-  const barAfter = limit(barBefore + amount);
-  player.setExp((new Float(barAfter) as unknown) as number);
+function hydrate(player: Player, amount: number, material: Material) {
+  const barBefore = player.exp;
+  const bar = limit(barBefore + amount);
+  player.exp = (new Float(bar) as unknown) as number;
 
   // Send title if the hydration was significant enough
   if (amount > Hydration.SMALL) {
     const drink = getName(material);
     let msg = `${drink} helpottaa janoasi`;
-    if (barAfter >= Hydration.MAX) {
+    if (bar >= Hydration.MAX) {
       msg = `${drink} sammuttaa janosi`;
     }
     if (barBefore >= Hydration.MAX) {
@@ -122,9 +113,9 @@ const hydrate = (player: Player, amount: number, material: Material) => {
     }
     player.sendTitle('', msg, 10, 40, 10);
   }
-};
+}
 
-const getName = (material: Material) => {
+function getName(material: Material) {
   switch (material) {
     case Material.POTION:
     case Material.CAULDRON:
@@ -135,9 +126,9 @@ const getName = (material: Material) => {
     default:
       return 'Juoma';
   }
-};
+}
 
-const limit = (x: number) => {
+function limit(x: number) {
   // Limit the exp number between 0 and 0.99 (1 will be new level)
   return Math.min(Hydration.MAX, Math.max(Hydration.MIN, x));
-};
+}
