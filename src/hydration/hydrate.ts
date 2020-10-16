@@ -35,7 +35,7 @@ registerEvent(PlayerItemConsumeEvent, (event) => {
 
 // When player drinks from block
 const drinkers = new Set<Player>();
-registerEvent(PlayerInteractEvent, (event) => {
+registerEvent(PlayerInteractEvent, async (event) => {
   if (
     (event.action === Action.RIGHT_CLICK_BLOCK ||
       event.action === Action.RIGHT_CLICK_AIR) &&
@@ -44,8 +44,8 @@ registerEvent(PlayerInteractEvent, (event) => {
     const player = event.player;
     const material = event.item?.type;
 
-    if (material !== Material.AIR) return;
-    if (!drinkers.has(player)) return;
+    if (material && material !== Material.AIR) return;
+    if (drinkers.has(player)) return;
 
     // Drinking from cauldron
     const block = event.clickedBlock;
@@ -64,7 +64,7 @@ registerEvent(PlayerInteractEvent, (event) => {
       hydrate(player, Hydration.MEDIUM, Material.CAULDRON);
       playDrinkingSound(player);
 
-      stopDrinking(player, 1);
+      await stopDrinking(player, 1);
     }
 
     // Drinking from water block
@@ -75,8 +75,7 @@ registerEvent(PlayerInteractEvent, (event) => {
         drinkers.add(player);
         hydrate(player, Hydration.MEDIUM, Material.WATER);
         playDrinkingSound(player);
-        stopDrinking(player, 2);
-        return;
+        await stopDrinking(player, 2);
       }
     }
   }
