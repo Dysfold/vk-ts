@@ -47,8 +47,8 @@ registerEvent(EntityTargetEvent, (event) => {
   const attacker = event.entity;
 
   if (
-    attacker.getType() === EntityType.PHANTOM &&
-    event.target?.getType() === EntityType.PLAYER
+    attacker.type === EntityType.PHANTOM &&
+    event.target?.type === EntityType.PLAYER
   ) {
     const eagle = attacker as LivingEntity;
 
@@ -59,7 +59,7 @@ registerEvent(EntityTargetEvent, (event) => {
     // More eagle sounds!!
     if (Math.random() < EAGLE_SOUND_CHANGE) {
       eagle.world.playSound(
-        eagle.getLocation(),
+        eagle.location,
         'minecraft:entity.phantom.death',
         3,
         1,
