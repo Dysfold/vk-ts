@@ -4,7 +4,7 @@ import { Player } from 'org.bukkit.entity';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 
 // How often players' hydration level is decreased (seconds)
-const THIRST_CYCLE_DURATION = 0.5;
+const THIRST_CYCLE_DURATION = 60;
 const THIRST_CYCLE_HYDRATION = -0.01;
 // If duration is 60s and hydration -0.1, the bar will last 100 mins
 
