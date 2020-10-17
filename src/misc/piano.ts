@@ -86,8 +86,8 @@ registerEvent(PlayerInteractEvent, (event) => {
   const hor = delta.x * left.x + delta.z * left.z;
   const ver = delta.z * left.x + delta.x * left.z * -1;
 
-  const horizontal = limit(hor);
-  const vertical = limit(ver);
+  const horizontal = limit(hor, 0, 1);
+  const vertical = limit(ver, 0, 1);
 
   if (vertical < KEYS_VERTICAL_MIN) {
     // Did hit behind the keys (wood)
@@ -125,6 +125,6 @@ registerEvent(PlayerInteractEvent, (event) => {
   }
 });
 
-function limit(x: number) {
-  return Math.min(1, Math.max(x, 0));
+function limit(x: number, min: number, max: number) {
+  return Math.min(max, Math.max(x, min));
 }
