@@ -1,8 +1,6 @@
 import { Float } from 'java.lang';
 import { Material } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
-import { Face } from 'org.bukkit.block.data.type.Switch';
-import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot } from 'org.bukkit.inventory';
