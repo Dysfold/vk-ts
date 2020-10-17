@@ -125,7 +125,3 @@ registerEvent(PlayerInteractEvent, (event) => {
     playNote(block, note);
   }
 });
-
-function limit(x: number, min: number, max: number) {
-  return Math.min(max, Math.max(x, min));
-}
