@@ -1,6 +1,7 @@
 import { Float } from 'java.lang';
 import { Material } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
+import { Face } from 'org.bukkit.block.data.type.Switch';
 import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
@@ -86,19 +87,21 @@ registerEvent(PlayerInteractEvent, (event) => {
   const hor = delta.x * left.x + delta.z * left.z;
   const ver = delta.z * left.x + delta.x * left.z * -1;
 
-  const horizontal = limit(hor, 0, 1);
-  const vertical = limit(ver, 0, 1);
+  const horizontal = hor + (hor < 0 ? 1 : 0);
+  const vertical = ver + (ver < 0 ? 1 : 0);
 
   if (vertical < KEYS_VERTICAL_MIN) {
-    // Did hit behind the keys (wood)
+    // Did hit behind the keys (qwood)
     return;
   }
+  event.setCancelled(true);
 
   const isBlack =
     vertical < BLACK_VERTICAL_MAX &&
     BLACK_POSITIONS.some((hor) => horizontal > hor && horizontal < hor + 0.1);
 
   const isChord = action !== Action.RIGHT_CLICK_BLOCK;
+
   const isMinor = player.isSneaking();
   const offsetNotes = pianoIndex * NOTES_PER_BLOCK;
 
