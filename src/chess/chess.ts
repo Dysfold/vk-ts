@@ -2,10 +2,14 @@ import { Integer } from 'java.lang';
 import { Location, Material, World } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Directional } from 'org.bukkit.block.data';
-import { ArmorStand, EntityType } from 'org.bukkit.entity';
+import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { RayTraceResult, Vector } from 'org.bukkit.util';
-import { Game } from './engine';
+import { string } from 'yup';
+import { CustomBlock } from '../common/blocks/CustomBlock';
+import { Game, Piece, Point } from './engine';
+import { Move } from './engine/core/Move';
+
 const engine = new Game(
   'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
 );
@@ -17,14 +21,15 @@ engine.turn; // one of ['w', 'b']
 const BOARD_MATERIAL = Material.GRAY_GLAZED_TERRACOTTA;
 const PIECE_MATERIAL = Material.HEART_OF_THE_SEA;
 
-interface Vec2 {
-  x: number;
-  y: number;
-}
+const Color: { [key: string]: string } = {
+  w: 'Valkoinen',
+  b: 'Musta',
+};
 
 interface PieceItem {
   [key: string]: ItemStack;
 }
+const SELECTION_CUSTOM_MODEL_DATA = 8;
 
 const PieceItems: PieceItem = {
   b: createPiece(2),
@@ -34,7 +39,7 @@ const PieceItems: PieceItem = {
   q: createPiece(6),
   r: createPiece(7),
 
-  selection: createPiece(8),
+  selection: createPiece(SELECTION_CUSTOM_MODEL_DATA),
 
   B: createPiece(9),
   K: createPiece(10),
@@ -52,12 +57,37 @@ function createPiece(customModelData: number) {
   return item;
 }
 
-export function clickBoard(raytrace: RayTraceResult) {
+function isAllied(notation: string) {
+  const sourcePoint = new Point(notation);
+  const piece = engine.getPiece(sourcePoint.x, sourcePoint.y);
+  return piece?.color === engine.turn;
+}
+
+function selectDestination(src: string, dest: string) {
+  const destPoint = new Point(dest);
+  const srcPoint = new Point(src);
+  const srcPiece = engine.getPiece(srcPoint.x, srcPoint.y);
+
+  const moves = srcPiece?.getMoves() || [];
+  const move = new Move(src, dest);
+
+  server.broadcastMessage(moves.length + '0');
+  for (const possibleMove of moves) {
+    server.broadcastMessage(possibleMove.x + ' ' + possibleMove.y);
+    if (possibleMove.x === move.x && possibleMove.y === move.y) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function clickBoard(raytrace: RayTraceResult, player: Player) {
   const block = raytrace.hitBlock;
   if (!block) return;
   if (block.type !== BOARD_MATERIAL) return;
 
-  const selection = getChessCoordinates(block, raytrace.hitPosition);
+  const selection = getChessNotation(block, raytrace.hitPosition);
   const squareCenter = roundToCenter(raytrace.hitPosition);
 
   const world = block.world;
@@ -68,14 +98,142 @@ export function clickBoard(raytrace: RayTraceResult) {
     squareCenter.z,
   );
 
-  server.broadcastMessage(selection);
+  let selectionArmorstand = findSelectionArmorstand(block);
+  const allied = isAllied(selection);
+
+  // Select source
+  if (allied) {
+    selectionArmorstand?.remove();
+    selectionArmorstand = createArmorstand('selection', world);
+    selectionArmorstand.teleport(squareLocation);
+  }
+
+  // Select destination
+  else if (selectionArmorstand) {
+    const destination = selection;
+
+    // Get previously selected source
+    const armorstandLoc = selectionArmorstand.location.toVector();
+    const source = getChessNotation(block, armorstandLoc);
+
+    // Check if we can make the move
+    const valid = selectDestination(source, destination);
+
+    if (valid) {
+      server.broadcastMessage('Siirretään');
+      selectionArmorstand.remove();
+    } else {
+      server.broadcastMessage('Ei voida siirtää');
+    }
+  } else {
+    // cant select
+  }
+
+  return;
+  /*
+  const selectionPoint = new Point(selection);
+  const piece = engine.getPiece(selectionPoint.x, selectionPoint.y);
+
+  if (piece) {
+    // Clicked a chess piece
+    const pieceColor = piece.color;
+    if (pieceColor == engine.turn) {
+      // Clicked allied piece, set the selection on that
+      selectionArmorstand = createArmorstand('selection', world);
+      selectionArmorstand.teleport(squareLocation);
+      server.broadcastMessage(`Selected: ${selection}`);
+    } else {
+      // Clicked enemy square, check if source was selected
+      if (selectionArmorstand) {
+        // Move
+        const source = getChessNotation(
+          block,
+          selectionArmorstand.location.toVector(),
+        );
+        const sourcePoint = new Point(source);
+        const sourcePiece = engine.getPiece(sourcePoint.x, sourcePoint.y);
+
+        server.broadcastMessage(`Move from ${source} to ${selection} ?`);
+        const move = new Move(source, selection);
+
+        const moves = sourcePiece?.getMoves() || [];
+        server.broadcastMessage(moves.length + '0');
+        for (const possibleMove of moves) {
+          server.broadcastMessage(possibleMove.x + ' ' + possibleMove.y);
+          if (possibleMove.x === move.x && possibleMove.y === move.y) {
+            player.sendActionBar('Siirretty');
+            selectionArmorstand.remove();
+          }
+        }
+      } else {
+        player.sendActionBar(Color[engine.turn] + ' siirtää');
+      }
+    }
+  } else {
+    // Clicked an empty square
+    if (selectionArmorstand) {
+      // Move
+      const source = getChessNotation(
+        block,
+        selectionArmorstand.location.toVector(),
+      );
+      server.broadcastMessage(`Move from ${source} to ${selection}`);
+
+      const sourcePoint = new Point(source);
+      const sourcePiece = engine.getPiece(sourcePoint.x, sourcePoint.y);
+
+      server.broadcastMessage(`Move from ${source} to ${selection} ?`);
+      const move = new Move(source, selection);
+
+      const moves = sourcePiece?.getMoves() || [];
+      server.broadcastMessage(moves.length + '0');
+      for (const possibleMove of moves) {
+        server.broadcastMessage(possibleMove.x + ' ' + possibleMove.y);
+        if (possibleMove.x === move.x && possibleMove.y === move.y) {
+          player.sendActionBar('Siirretty');
+          selectionArmorstand.remove();
+        }
+      }
+    } else {
+      player.sendActionBar('Valitse nappula ensin');
+    }
+  }
+
+  // if (!selectionArmorstand) {
+  //   // Select sourc
+  // } else {
+  //   // Source was already selected. Make the move
+  //   const source = getChessNotation(
+  //     block,
+  //     selectionArmorstand.location.toVector(),
+  //   );
+  //   server.broadcastMessage(`From ${source} to ${selection}`);
+
+  //   selectionArmorstand.remove();
+  // }
+  */
+}
+
+function findSelectionArmorstand(block: Block) {
+  const tabletop = block.location.add(new Vector(0.5, 1.2, 0.5));
+  const entities = tabletop.getNearbyEntities(0.4, 0.1, 0.4);
+  for (const entity of entities) {
+    if (entity.type === EntityType.ARMOR_STAND) {
+      if (
+        (entity as ArmorStand).helmet.itemMeta.customModelData ===
+        SELECTION_CUSTOM_MODEL_DATA
+      )
+        return entity as ArmorStand;
+    }
+  }
+  return null;
 }
 
 const BOARD_MODEL_DIRECTION = { x: -1, z: 0 };
 const LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 const CENTERING_VECTOR = new Vector(0.5, 0, 0.5);
 
-function getChessCoordinates(block: Block, position: Vector) {
+function getChessNotation(block: Block, position: Vector) {
   const relative = getRelativeVector(position, block);
 
   // Algebraic notation ("a1", "h6", "b7" etc.)
@@ -117,7 +275,7 @@ function roundToCenter(position: Vector) {
   const x = position.x;
   const z = position.z;
   position.x = (Math.floor(x * 8) + 0.5) / 8;
-  position.y = (Math.floor(z * 8) + 0.5) / 8;
+  position.z = (Math.floor(z * 8) + 0.5) / 8;
 
   return position;
 }
@@ -215,8 +373,8 @@ function moveArmorstand(
 }
 
 export function destroyBoard(block: Block) {
-  const location = block.location.add(new Vector(0.5, 1.2, 0.5));
-  const entities = location.getNearbyEntities(0.4, 0.1, 0.4);
+  const tabletop = block.location.add(new Vector(0.5, 1.2, 0.5));
+  const entities = tabletop.getNearbyEntities(0.4, 0.1, 0.4);
   for (const entity of entities) {
     if (entity.type === EntityType.ARMOR_STAND) {
       entity.remove();

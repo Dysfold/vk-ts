@@ -15,10 +15,17 @@ import { clickBoard, createBoard, destroyBoard } from './chess';
 
 const BOARD_MATERIAL = Material.GRAY_GLAZED_TERRACOTTA;
 
+// Create a board
 registerEvent(BlockPlaceEvent, (event) => {
   if (event.block.type === BOARD_MATERIAL) createBoard(event.block);
 });
 
+// Destroy a board
+registerEvent(BlockBreakEvent, (event) => {
+  if (event.block.type === BOARD_MATERIAL) destroyBoard(event.block);
+});
+
+// Click a board
 registerEvent(PlayerInteractAtEntityEvent, (event) => {
   const entity = event.rightClicked;
   const hand = event.hand;
@@ -33,7 +40,7 @@ registerEvent(PlayerInteractAtEntityEvent, (event) => {
   if (block.type !== BOARD_MATERIAL) return;
   if (raytrace.hitBlockFace !== BlockFace.UP) return;
 
-  clickBoard(raytrace);
+  clickBoard(raytrace, event.player);
 });
 
 registerEvent(PlayerInteractEvent, (event) => {
@@ -54,13 +61,5 @@ registerEvent(PlayerInteractEvent, (event) => {
   if (!raytrace.hitBlock) return;
   if (raytrace.hitBlock.type !== BOARD_MATERIAL) return;
 
-  clickBoard(raytrace);
-});
-
-registerEvent(BlockBreakEvent, (event) => {
-  const block = event.block;
-
-  if (block.type !== BOARD_MATERIAL) return;
-
-  destroyBoard(block);
+  clickBoard(raytrace, event.player);
 });
