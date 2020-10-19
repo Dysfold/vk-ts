@@ -5,8 +5,6 @@ import { Directional } from 'org.bukkit.block.data';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { RayTraceResult, Vector } from 'org.bukkit.util';
-import { string } from 'yup';
-import { CustomBlock } from '../common/blocks/CustomBlock';
 
 import { Chess, Square } from 'chess.js';
 let chess = new Chess();
@@ -40,6 +38,22 @@ const PieceItems: PieceItem = {
   P: createPiece(12),
   Q: createPiece(13),
   R: createPiece(14),
+};
+
+const ModelData: { [key: string]: number } = {
+  b: 2,
+  k: 3,
+  n: 4,
+  p: 5,
+  q: 6,
+  r: 7,
+  selection: 8,
+  B: 9,
+  K: 10,
+  N: 11,
+  P: 12,
+  Q: 13,
+  R: 14,
 };
 
 function createPiece(customModelData: number) {
@@ -82,7 +96,7 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
     squareCenter.z,
   );
 
-  let selectionArmorstand = findSelectionArmorstand(block);
+  let selectionArmorstand = findArmorstand(block, 'selection');
   const allied = isAllied(selection);
 
   // Select source
@@ -101,34 +115,36 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
     const source = getChessNotation(block, armorstandLoc);
 
     // Check if we can make the move
-    const legal = isLegalMove(source, destination);
+    //const legal = isLegalMove(source, destination);
 
-    if (legal) {
-      server.broadcastMessage('Siirretään ' + source + ' -> ' + destination);
+    server.broadcastMessage('Siirretään ' + source + ' -> ' + destination);
 
-      chess.move({ from: source, to: destination });
+    const move = chess.move({ from: source, to: destination });
 
-      server.broadcastMessage('Done');
-      const fenString = chess.fen();
-      selectionArmorstand.remove();
+    //const movedArmorstand = moveArmorstand();
+
+    if (move) {
       destroyBoard(block);
-      createBoard(block, fenString);
+      createBoard(block);
     } else {
       server.broadcastMessage('Ei voida siirtää');
     }
+
+    //const fenString = chess.fen();
+    selectionArmorstand.remove();
   } else {
     // cant select
   }
 }
 
-function findSelectionArmorstand(block: Block) {
+function findArmorstand(block: Block, type: string) {
   const tabletop = block.location.add(new Vector(0.5, 1.2, 0.5));
   const entities = tabletop.getNearbyEntities(0.4, 0.1, 0.4);
   for (const entity of entities) {
     if (entity.type === EntityType.ARMOR_STAND) {
       if (
         (entity as ArmorStand).helmet.itemMeta.customModelData ===
-        SELECTION_CUSTOM_MODEL_DATA
+        ModelData[type]
       )
         return entity as ArmorStand;
     }
@@ -187,11 +203,30 @@ function roundToCenter(position: Vector) {
   return position;
 }
 
+export function createBoard(block: Block) {
+  const board = chess.board();
+
+  for (let i = 0; i < board.length; i++) {
+    for (let j = 0; j < board[0].length; j++) {
+      const square = board[i][j];
+      if (square) {
+        const type =
+          square.color === 'w' ? square.type.toUpperCase() : square.type;
+        const armorstand = createArmorstand(type, block.world);
+        moveArmorstand(armorstand, block, i, j);
+      }
+    }
+  }
+}
+
+function makeChangesToBoard(block: Block) {}
+
+/*
 export function createBoard(
   block: Block,
   fenString: string = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
 ) {
-  // The fenstring start from black rook, which is at [0 7]
+  // The fenstring starts from black rook, which is at [0 7]
   let y = 0;
   let x = 7;
 
@@ -215,6 +250,7 @@ export function createBoard(
     }
   }
 }
+*/
 
 function createArmorstand(type: string, world: World) {
   const armorstand = world.spawnEntity(
@@ -251,7 +287,7 @@ function moveArmorstand(
   y: number,
 ) {
   // Centering the piece
-  x = (x + 0.5) / 8;
+  x = 1 - (x + 0.5) / 8;
   y = (y + 0.5) / 8;
 
   // Calculate the location in the world
