@@ -5,3 +5,4 @@ require('./falling');
 require('./portal');
 require('./day');
 require('./nametag');
+require('./slaughter');
