@@ -7,16 +7,9 @@ import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { RayTraceResult, Vector } from 'org.bukkit.util';
 import { string } from 'yup';
 import { CustomBlock } from '../common/blocks/CustomBlock';
-import { Game, Piece, Point } from './engine';
-import { Move } from './engine/core/Move';
 
-const engine = new Game(
-  'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-);
-
-const fenString = engine.toFen(); // getting fen string
-
-engine.turn; // one of ['w', 'b']
+import { Chess, Square } from 'chess.js';
+let chess = new Chess();
 
 const BOARD_MATERIAL = Material.GRAY_GLAZED_TERRACOTTA;
 const PIECE_MATERIAL = Material.HEART_OF_THE_SEA;
@@ -57,24 +50,15 @@ function createPiece(customModelData: number) {
   return item;
 }
 
-function isAllied(notation: string) {
-  const sourcePoint = new Point(notation);
-  const piece = engine.getPiece(sourcePoint.x, sourcePoint.y);
-  return piece?.color === engine.turn;
+function isAllied(square: Square) {
+  return chess.get(square)?.color == chess.turn();
 }
 
-function selectDestination(src: string, dest: string) {
-  const destPoint = new Point(dest);
-  const srcPoint = new Point(src);
-  const srcPiece = engine.getPiece(srcPoint.x, srcPoint.y);
+function isLegalMove(src: Square, dest: Square) {
+  const moves = chess.moves({ square: src, verbose: true });
 
-  const moves = srcPiece?.getMoves() || [];
-  const move = new Move(src, dest);
-
-  server.broadcastMessage(moves.length + '0');
-  for (const possibleMove of moves) {
-    server.broadcastMessage(possibleMove.x + ' ' + possibleMove.y);
-    if (possibleMove.x === move.x && possibleMove.y === move.y) {
+  for (const move of moves) {
+    if (move.to === dest) {
       return true;
     }
   }
@@ -117,101 +101,24 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
     const source = getChessNotation(block, armorstandLoc);
 
     // Check if we can make the move
-    const valid = selectDestination(source, destination);
+    const legal = isLegalMove(source, destination);
 
-    if (valid) {
-      server.broadcastMessage('Siirretään');
+    if (legal) {
+      server.broadcastMessage('Siirretään ' + source + ' -> ' + destination);
+
+      chess.move({ from: source, to: destination });
+
+      server.broadcastMessage('Done');
+      const fenString = chess.fen();
       selectionArmorstand.remove();
+      destroyBoard(block);
+      createBoard(block, fenString);
     } else {
       server.broadcastMessage('Ei voida siirtää');
     }
   } else {
     // cant select
   }
-
-  return;
-  /*
-  const selectionPoint = new Point(selection);
-  const piece = engine.getPiece(selectionPoint.x, selectionPoint.y);
-
-  if (piece) {
-    // Clicked a chess piece
-    const pieceColor = piece.color;
-    if (pieceColor == engine.turn) {
-      // Clicked allied piece, set the selection on that
-      selectionArmorstand = createArmorstand('selection', world);
-      selectionArmorstand.teleport(squareLocation);
-      server.broadcastMessage(`Selected: ${selection}`);
-    } else {
-      // Clicked enemy square, check if source was selected
-      if (selectionArmorstand) {
-        // Move
-        const source = getChessNotation(
-          block,
-          selectionArmorstand.location.toVector(),
-        );
-        const sourcePoint = new Point(source);
-        const sourcePiece = engine.getPiece(sourcePoint.x, sourcePoint.y);
-
-        server.broadcastMessage(`Move from ${source} to ${selection} ?`);
-        const move = new Move(source, selection);
-
-        const moves = sourcePiece?.getMoves() || [];
-        server.broadcastMessage(moves.length + '0');
-        for (const possibleMove of moves) {
-          server.broadcastMessage(possibleMove.x + ' ' + possibleMove.y);
-          if (possibleMove.x === move.x && possibleMove.y === move.y) {
-            player.sendActionBar('Siirretty');
-            selectionArmorstand.remove();
-          }
-        }
-      } else {
-        player.sendActionBar(Color[engine.turn] + ' siirtää');
-      }
-    }
-  } else {
-    // Clicked an empty square
-    if (selectionArmorstand) {
-      // Move
-      const source = getChessNotation(
-        block,
-        selectionArmorstand.location.toVector(),
-      );
-      server.broadcastMessage(`Move from ${source} to ${selection}`);
-
-      const sourcePoint = new Point(source);
-      const sourcePiece = engine.getPiece(sourcePoint.x, sourcePoint.y);
-
-      server.broadcastMessage(`Move from ${source} to ${selection} ?`);
-      const move = new Move(source, selection);
-
-      const moves = sourcePiece?.getMoves() || [];
-      server.broadcastMessage(moves.length + '0');
-      for (const possibleMove of moves) {
-        server.broadcastMessage(possibleMove.x + ' ' + possibleMove.y);
-        if (possibleMove.x === move.x && possibleMove.y === move.y) {
-          player.sendActionBar('Siirretty');
-          selectionArmorstand.remove();
-        }
-      }
-    } else {
-      player.sendActionBar('Valitse nappula ensin');
-    }
-  }
-
-  // if (!selectionArmorstand) {
-  //   // Select sourc
-  // } else {
-  //   // Source was already selected. Make the move
-  //   const source = getChessNotation(
-  //     block,
-  //     selectionArmorstand.location.toVector(),
-  //   );
-  //   server.broadcastMessage(`From ${source} to ${selection}`);
-
-  //   selectionArmorstand.remove();
-  // }
-  */
 }
 
 function findSelectionArmorstand(block: Block) {
@@ -241,7 +148,7 @@ function getChessNotation(block: Block, position: Vector) {
   const letter = LETTERS[letter_index];
   const number = Math.floor(relative.x * 8) + 1;
 
-  return letter + number;
+  return (letter + number) as Square;
 }
 
 function getRelativeVector(position: Vector, block: Block) {
@@ -280,7 +187,10 @@ function roundToCenter(position: Vector) {
   return position;
 }
 
-export function createBoard(block: Block) {
+export function createBoard(
+  block: Block,
+  fenString: string = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+) {
   // The fenstring start from black rook, which is at [0 7]
   let y = 0;
   let x = 7;
