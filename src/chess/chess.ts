@@ -34,6 +34,12 @@ const ModelData: { [key: string]: number } = {
   selection: 8,
 };
 
+interface Castling {
+  type: string;
+  from: Square;
+  to: Square;
+}
+
 function getToken(char: string, color: 'w' | 'b') {
   return color === 'b' ? char : char.toUpperCase();
 }
@@ -81,14 +87,16 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
 
     ////server.broadcastMessage('Siirretään ' + source + ' -> ' + destination);
 
-    const move = chess.move({ from: source, to: destination });
+    let move =
+      chess.move({ from: source, to: destination }) ||
+      chess.move({ from: source, to: destination, promotion: 'q' });
 
     //const movedArmorstand = moveArmorstand();
 
     if (move) {
       makeChangesToBoard(block, move);
-      // destroyBoard(block);
-      // createBoard(block);
+      //destroyBoard(block);
+      //createBoard(block);
     } else {
       //server.broadcastMessage('Ei voida siirtää');
     }
@@ -246,23 +254,63 @@ export function createBoard(block: Block) {
 }
 
 function makeChangesToBoard(block: Block, move: Move) {
-  const flags = move.flags.split('');
-
-  for (const flag of flags) {
-    server.broadcastMessage(flag);
-  }
   // Capture a piece
   if (move.captured) {
-    //server.broadcastMessage('captured');
+    server.broadcastMessage('captured');
     const victim = getToken(move.captured, invert(move.color));
     const capturedArmorstand = findArmorstandAtSquare(block, victim, move.to);
     capturedArmorstand?.remove();
   }
 
-  // Move the piece
+  // An passant capture
+  if (move.flags.includes('e')) {
+    let row = +move.to.charAt(1);
+    row = row === 6 ? 5 : 4;
+    const square = (move.to.charAt(0) + row) as Square;
+
+    const victim = getToken('p', invert(move.color));
+    const capturedArmorstand = findArmorstandAtSquare(block, victim, square);
+    capturedArmorstand?.remove();
+  }
+
+  // Kingside castling
+  if (move.flags.includes('k')) {
+    const whiteRook: Castling = { type: 'R', from: 'h1', to: 'f1' };
+    const blackRook: Castling = { type: 'r', from: 'h8', to: 'f8' };
+
+    const rook = move.color === 'w' ? whiteRook : blackRook;
+    const rookArmorstand = findArmorstandAtSquare(block, rook.type, rook.from);
+    if (!rookArmorstand) return;
+    const destination = getSquareLocation(block, rook.to);
+    rookArmorstand.setCustomName(rook.to);
+    rookArmorstand.teleport(destination);
+  }
+
+  // Queenside castling
+  if (move.flags.includes('q')) {
+    const whiteRook: Castling = { type: 'R', from: 'a1', to: 'd1' };
+    const blackRook: Castling = { type: 'r', from: 'a8', to: 'd8' };
+
+    const rook = move.color === 'w' ? whiteRook : blackRook;
+    const rookArmorstand = findArmorstandAtSquare(block, rook.type, rook.from);
+    if (!rookArmorstand) return;
+    const destination = getSquareLocation(block, rook.to);
+    rookArmorstand.setCustomName(rook.to);
+    rookArmorstand.teleport(destination);
+  }
+
+  // Get the moved piece
   const type = getToken(move.piece, move.color);
-  const armorstand = findArmorstandAtSquare(block, type, move.from);
+  let armorstand = findArmorstandAtSquare(block, type, move.from);
   if (!armorstand) return;
+
+  // Promotion
+  if (move.promotion) {
+    const promotionType = getToken(move.promotion, move.color);
+    armorstand.helmet.itemMeta.customModelData = ModelData[promotionType];
+  }
+
+  // Move the piece
   const destination = getSquareLocation(block, move.to);
   armorstand.setCustomName(move.to);
   armorstand.teleport(destination);
@@ -300,45 +348,6 @@ function createArmorstand(type: string, world: World, square?: Square) {
   if (square) armorstand.setCustomName(square);
   armorstand.setCustomNameVisible(false);
   return armorstand;
-}
-
-function moveArmorstand(
-  armorstand: ArmorStand,
-  block: Block,
-  x: number,
-  y: number,
-) {
-  // Centering the piece
-
-  x = (x + 0.5) / 8;
-  y = (y + 0.5) / 8;
-
-  // Calculate the location in the world
-  const relative = new Vector(x, 1, y);
-
-  // Get the direction of the block
-  const data = (block.blockData as unknown) as Directional;
-  const facing = data.facing;
-  const forward = facing.direction;
-
-  // Calculate the angle between blocks direction and the direction of the model
-  const x1 = BOARD_MODEL_DIRECTION.x;
-  const x2 = forward.x;
-  const z1 = BOARD_MODEL_DIRECTION.z;
-  const z2 = forward.z;
-  const dot = x1 * x2 + z1 * z2;
-  const det = x1 * z2 - z1 * x2;
-  const angle = Math.atan2(det, dot);
-
-  // Move Y-axis to the center of the block, rotate and move Y-axis back
-  relative
-    .subtract(CENTERING_VECTOR)
-    .rotateAroundY(-angle)
-    .add(CENTERING_VECTOR);
-
-  // Location in the world
-  const location = block.location.add(relative);
-  armorstand.teleport(location);
 }
 
 export function destroyBoard(block: Block) {
