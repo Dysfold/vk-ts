@@ -5,15 +5,28 @@ import { Directional } from 'org.bukkit.block.data';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { RayTraceResult, Vector } from 'org.bukkit.util';
-
-import { Chess, Move, Square } from 'chess.js';
-let chess = new Chess();
+import * as yup from 'yup';
+import { Chess, ChessInstance, Move, Square } from 'chess.js';
+import { dataHolder, DataHolder, dataType } from '../common/datas/holder';
+import { string } from 'yup';
+import { DatabaseEntry } from '../common/datas/database';
+import { dataView } from '../common/datas/view';
+// let chess = new Chess(
+//   'r3kbnr/p1pppqpp/b2n4/1p3pB1/N2PP3/2N3B1/PPP1QPPP/R3K2R w KQkq - 0 1',
+// );
 
 const BOARD_MATERIAL = Material.GRAY_GLAZED_TERRACOTTA;
 const PIECE_MATERIAL = Material.HEART_OF_THE_SEA;
 const BOARD_MODEL_DIRECTION = { x: -1, z: 0 };
-const LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+const LETTERS = 'abcdefgh'.split('');
 const CENTERING_VECTOR = new Vector(0.5, 0, 0.5);
+
+let games = new Map<string, ChessInstance>();
+
+const Colors: { [key: string]: string } = {
+  w: 'Valkoinen',
+  b: 'Musta',
+};
 
 const ModelData: { [key: string]: number } = {
   // Black pieces
@@ -40,18 +53,36 @@ interface Castling {
   to: Square;
 }
 
-function getToken(char: string, color: 'w' | 'b') {
-  return color === 'b' ? char : char.toUpperCase();
+function setBoardData(holder: DataHolder, fen: string) {
+  holder.set('fen', 'string', fen);
 }
 
-function isAllied(square: Square) {
-  return chess.get(square)?.color == chess.turn();
+const ChessDataType = dataType('ChessDataType', {
+  fen: yup.string(),
+});
+
+function createBoardData(location: string, fen: string) {
+  const entry = new DatabaseEntry('chess', 'location');
+  const holder = dataHolder(entry);
+  setBoardData(holder, fen);
+}
+
+function getToken(char: string, color: 'w' | 'b') {
+  return color === 'b' ? char : char.toUpperCase();
 }
 
 export function clickBoard(raytrace: RayTraceResult, player: Player) {
   const block = raytrace.hitBlock;
   if (!block) return;
   if (block.type !== BOARD_MATERIAL) return;
+  //server.broadcastMessage(block.location.toString());
+  let chess = games.get(block.location.toString());
+  //const gameData = dataView(ChessDataType, block);
+  if (!chess) {
+    //server.broadcastMessage('no game ' + games.size);
+    //chess = new Chess(gameData.fen);
+    return;
+  }
 
   const selection = getChessNotation(block, raytrace.hitPosition);
   const squareCenter = roundToCenter(raytrace.hitPosition);
@@ -65,10 +96,11 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
   );
 
   let selectionArmorstand = findArmorstand(block, 'selection');
-  const allied = isAllied(selection);
+  const color = chess.turn();
+  const isAllied = chess.get(selection)?.color == color;
 
   // Select source
-  if (allied) {
+  if (isAllied) {
     selectionArmorstand?.remove();
     selectionArmorstand = createArmorstand('selection', world);
     selectionArmorstand.teleport(squareLocation);
@@ -94,9 +126,19 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
     //const movedArmorstand = moveArmorstand();
 
     if (move) {
-      makeChangesToBoard(block, move);
-      //destroyBoard(block);
-      //createBoard(block);
+      //gameData.fen = chess.fen();
+
+      updateBoard(block, move);
+
+      if (chess.in_checkmate()) {
+        announce(block, 'Shakkimatti', color);
+      } else if (chess.in_check()) {
+        announce(block, 'Shakki');
+      } else if (chess.in_stalemate()) {
+        announce(block, 'Tasapeli');
+      } else if (chess.in_draw()) {
+        announce(block, 'Patti');
+      }
     } else {
       //server.broadcastMessage('Ei voida siirtää');
     }
@@ -105,6 +147,16 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
     selectionArmorstand.remove();
   } else {
     // cant select
+  }
+}
+
+function announce(block: Block, state: string, winner?: 'w' | 'b') {
+  const msg = winner ? `${Colors[winner]} voittaa!` : '';
+  const entities = block.location.getNearbyEntities(3, 2, 3);
+  for (const entity of entities) {
+    if (entity.type === EntityType.PLAYER) {
+      (entity as Player).sendTitle(state, msg, 0, 30, 30);
+    }
   }
 }
 
@@ -154,15 +206,15 @@ function findArmorstandAtSquare(block: Block, type: string, square: Square) {
   const location = getSquareLocation(block, square);
   location.y = location.y + 0.2;
 
-  const entities = location.getNearbyEntities(0.01, 0.1, 0.01);
+  const entities = location.getNearbyEntities(0.06, 0.5, 0.06);
 
   for (const entity of entities) {
     if (entity.type === EntityType.ARMOR_STAND) {
       const armorstand = entity as ArmorStand;
       if (armorstand.helmet.itemMeta.customModelData === ModelData[type]) {
-        if (armorstand.customName === square) {
-          return armorstand;
-        }
+        //if (armorstand.customName === square) {
+        return armorstand;
+        //}
       }
     }
   }
@@ -170,7 +222,7 @@ function findArmorstandAtSquare(block: Block, type: string, square: Square) {
 
 function findArmorstand(block: Block, type: string) {
   const tabletop = block.location.add(new Vector(0.5, 1.2, 0.5));
-  const entities = tabletop.getNearbyEntities(0.4, 0.1, 0.4);
+  const entities = tabletop.getNearbyEntities(0.5, 0.5, 0.5);
   for (const entity of entities) {
     if (entity.type === EntityType.ARMOR_STAND) {
       const armorstand = entity as ArmorStand;
@@ -236,8 +288,11 @@ function getSquare(x: number, y: number) {
 }
 
 export function createBoard(block: Block) {
-  const board = chess.board();
+  const chess = new Chess();
+  games.set(block.location.toString(), chess);
+  //server.broadcastMessage(block.location.toString());
 
+  const board = chess.board();
   for (let i = 0; i < board.length; i++) {
     for (let j = 0; j < board[0].length; j++) {
       const piece = board[i][j];
@@ -253,23 +308,23 @@ export function createBoard(block: Block) {
   }
 }
 
-function makeChangesToBoard(block: Block, move: Move) {
+function updateBoard(board: Block, move: Move) {
   // Capture a piece
   if (move.captured) {
-    server.broadcastMessage('captured');
     const victim = getToken(move.captured, invert(move.color));
-    const capturedArmorstand = findArmorstandAtSquare(block, victim, move.to);
+    const capturedArmorstand = findArmorstandAtSquare(board, victim, move.to);
     capturedArmorstand?.remove();
   }
 
   // An passant capture
   if (move.flags.includes('e')) {
     let row = +move.to.charAt(1);
+    // Row of the captured pawn will always be 5 or 4.
     row = row === 6 ? 5 : 4;
     const square = (move.to.charAt(0) + row) as Square;
 
-    const victim = getToken('p', invert(move.color));
-    const capturedArmorstand = findArmorstandAtSquare(block, victim, square);
+    const enemyPawn = getToken('p', invert(move.color));
+    const capturedArmorstand = findArmorstandAtSquare(board, enemyPawn, square);
     capturedArmorstand?.remove();
   }
 
@@ -279,9 +334,9 @@ function makeChangesToBoard(block: Block, move: Move) {
     const blackRook: Castling = { type: 'r', from: 'h8', to: 'f8' };
 
     const rook = move.color === 'w' ? whiteRook : blackRook;
-    const rookArmorstand = findArmorstandAtSquare(block, rook.type, rook.from);
+    const rookArmorstand = findArmorstandAtSquare(board, rook.type, rook.from);
     if (!rookArmorstand) return;
-    const destination = getSquareLocation(block, rook.to);
+    const destination = getSquareLocation(board, rook.to);
     rookArmorstand.setCustomName(rook.to);
     rookArmorstand.teleport(destination);
   }
@@ -292,16 +347,16 @@ function makeChangesToBoard(block: Block, move: Move) {
     const blackRook: Castling = { type: 'r', from: 'a8', to: 'd8' };
 
     const rook = move.color === 'w' ? whiteRook : blackRook;
-    const rookArmorstand = findArmorstandAtSquare(block, rook.type, rook.from);
+    const rookArmorstand = findArmorstandAtSquare(board, rook.type, rook.from);
     if (!rookArmorstand) return;
-    const destination = getSquareLocation(block, rook.to);
+    const destination = getSquareLocation(board, rook.to);
     rookArmorstand.setCustomName(rook.to);
     rookArmorstand.teleport(destination);
   }
 
   // Get the moved piece
   const type = getToken(move.piece, move.color);
-  let armorstand = findArmorstandAtSquare(block, type, move.from);
+  let armorstand = findArmorstandAtSquare(board, type, move.from);
   if (!armorstand) return;
 
   // Promotion
@@ -311,7 +366,7 @@ function makeChangesToBoard(block: Block, move: Move) {
   }
 
   // Move the piece
-  const destination = getSquareLocation(block, move.to);
+  const destination = getSquareLocation(board, move.to);
   armorstand.setCustomName(move.to);
   armorstand.teleport(destination);
 }
@@ -344,6 +399,7 @@ function createArmorstand(type: string, world: World, square?: Square) {
   armorstand.setCollidable(false);
   armorstand.setCanMove(false);
   armorstand.setCanPickupItems(false);
+  armorstand.setMarker(true);
 
   if (square) armorstand.setCustomName(square);
   armorstand.setCustomNameVisible(false);
@@ -351,8 +407,9 @@ function createArmorstand(type: string, world: World, square?: Square) {
 }
 
 export function destroyBoard(block: Block) {
+  games.delete(block.location.toString());
   const tabletop = block.location.add(new Vector(0.5, 1.2, 0.5));
-  const entities = tabletop.getNearbyEntities(0.4, 0.1, 0.4);
+  const entities = tabletop.getNearbyEntities(0.5, 0.5, 0.5);
   for (const entity of entities) {
     if (entity.type === EntityType.ARMOR_STAND) {
       entity.remove();
