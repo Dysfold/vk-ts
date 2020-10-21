@@ -76,13 +76,13 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
   const block = raytrace.hitBlock;
   if (!block) return;
   if (block.type !== BOARD_MATERIAL) return;
-  //server.broadcastMessage(block.location.toString());
+  const world = block.world;
+
   let chess = games.get(block.location.toString());
-  //const gameData = dataView(ChessDataType, block);
   const engine = getEngineArmorStand(block);
 
   if (!chess) {
-    server.broadcastMessage('Recreating the game');
+    // No active chess instances were found. Creating a new one from backup
     chess = new Chess(engine.customName || DEFAULT_FEN);
     games.set(block.location.toString(), chess);
   }
@@ -90,7 +90,6 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
   const selection = getChessNotation(block, raytrace.hitPosition);
   const squareCenter = roundToCenter(raytrace.hitPosition);
 
-  const world = block.world;
   const squareLocation = new Location(
     world,
     squareCenter.x,
@@ -297,8 +296,8 @@ function getSquare(x: number, y: number) {
 function getEngineArmorStand(block: Block) {
   let engine = findArmorstand(block, 'engine');
   if (!engine) {
+    server.broadcastMessage('creating a engine');
     engine = createArmorstand('engine', block.world);
-    //engine.setDisabledSlots(EquipmentSlot.HEAD);
     const destination = block.location.add(CENTERING_VECTOR);
     engine.teleport(destination);
     engine.customName = DEFAULT_FEN;
@@ -385,7 +384,15 @@ function updateBoard(board: Block, move: Move) {
   // Promotion
   if (move.promotion) {
     const promotionType = getToken(move.promotion, move.color);
-    armorstand.helmet.itemMeta.customModelData = ModelData[promotionType];
+    server.broadcastMessage('promotion ' + promotionType);
+    armorstand.helmet.itemMeta.setCustomModelData(
+      new Integer(ModelData[promotionType]),
+    );
+    const helmet = armorstand.helmet;
+    const meta = helmet.getItemMeta();
+    meta.setCustomModelData(new Integer(ModelData[promotionType]));
+    helmet.setItemMeta(meta);
+    armorstand.helmet = helmet;
   }
 
   // Move the piece
@@ -431,7 +438,7 @@ function createArmorstand(type: string, world: World) {
 
 export function destroyBoard(block: Block) {
   games.delete(block.location.toString());
-  const tabletop = block.location.add(new Vector(0.5, 1.2, 0.5));
+  const tabletop = block.location.add(new Vector(0.5, 0.9, 0.5));
   const entities = tabletop.getNearbyEntities(0.5, 0.5, 0.5);
   for (const entity of entities) {
     if (entity.type === EntityType.ARMOR_STAND) {
