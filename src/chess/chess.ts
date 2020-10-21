@@ -2,7 +2,7 @@ import { Integer } from 'java.lang';
 import { Location, Material, World } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Directional } from 'org.bukkit.block.data';
-import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
+import { ArmorStand, EntityType, Item, Player } from 'org.bukkit.entity';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { RayTraceResult, Vector } from 'org.bukkit.util';
 import * as yup from 'yup';
@@ -11,15 +11,15 @@ import { dataHolder, DataHolder, dataType } from '../common/datas/holder';
 import { string } from 'yup';
 import { DatabaseEntry } from '../common/datas/database';
 import { dataView } from '../common/datas/view';
-// let chess = new Chess(
-//   'r3kbnr/p1pppqpp/b2n4/1p3pB1/N2PP3/2N3B1/PPP1QPPP/R3K2R w KQkq - 0 1',
-// );
+
+const DEFAULT_FEN =
+  'r3kbnr/p1pppqpp/b2n4/1p3pB1/N2PP3/2N3B1/PPP1QPPP/R3K2R w KQkq - 0 1';
 
 const BOARD_MATERIAL = Material.GRAY_GLAZED_TERRACOTTA;
 const PIECE_MATERIAL = Material.HEART_OF_THE_SEA;
 const BOARD_MODEL_DIRECTION = { x: -1, z: 0 };
 const LETTERS = 'abcdefgh'.split('');
-const CENTERING_VECTOR = new Vector(0.5, 0, 0.5);
+const CENTERING_VECTOR = new Vector(0.5, 1, 0.5);
 
 let games = new Map<string, ChessInstance>();
 
@@ -44,7 +44,8 @@ const ModelData: { [key: string]: number } = {
   Q: 13,
   R: 14,
   // Other
-  selection: 8,
+  mark: 8,
+  engine: 15,
 };
 
 interface Castling {
@@ -78,10 +79,12 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
   //server.broadcastMessage(block.location.toString());
   let chess = games.get(block.location.toString());
   //const gameData = dataView(ChessDataType, block);
+  const engine = getEngineArmorStand(block);
+
   if (!chess) {
-    //server.broadcastMessage('no game ' + games.size);
-    //chess = new Chess(gameData.fen);
-    return;
+    server.broadcastMessage('Recreating the game');
+    chess = new Chess(engine.customName || DEFAULT_FEN);
+    games.set(block.location.toString(), chess);
   }
 
   const selection = getChessNotation(block, raytrace.hitPosition);
@@ -95,23 +98,26 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
     squareCenter.z,
   );
 
-  let selectionArmorstand = findArmorstand(block, 'selection');
+  let marker = findArmorstand(block, 'mark');
+
   const color = chess.turn();
   const isAllied = chess.get(selection)?.color == color;
 
   // Select source
   if (isAllied) {
-    selectionArmorstand?.remove();
-    selectionArmorstand = createArmorstand('selection', world);
-    selectionArmorstand.teleport(squareLocation);
+    // marker?.remove();
+    if (!marker) {
+      marker = createArmorstand('mark', world);
+    }
+    marker.teleport(squareLocation);
   }
 
   // Select destination
-  else if (selectionArmorstand) {
+  else if (marker) {
     const destination = selection;
 
     // Get previously selected source
-    const armorstandLoc = selectionArmorstand.location.toVector();
+    const armorstandLoc = marker.location.toVector();
     const source = getChessNotation(block, armorstandLoc);
 
     // Check if we can make the move
@@ -127,6 +133,7 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
 
     if (move) {
       //gameData.fen = chess.fen();
+      engine.customName = chess.fen();
 
       updateBoard(block, move);
 
@@ -144,7 +151,7 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
     }
 
     //const fenString = chess.fen();
-    selectionArmorstand.remove();
+    marker.remove();
   } else {
     // cant select
   }
@@ -287,12 +294,28 @@ function getSquare(x: number, y: number) {
   return (letter + number) as Square;
 }
 
+function getEngineArmorStand(block: Block) {
+  let engine = findArmorstand(block, 'engine');
+  if (!engine) {
+    engine = createArmorstand('engine', block.world);
+    //engine.setDisabledSlots(EquipmentSlot.HEAD);
+    const destination = block.location.add(CENTERING_VECTOR);
+    engine.teleport(destination);
+    engine.customName = DEFAULT_FEN;
+  }
+  return engine;
+}
+
 export function createBoard(block: Block) {
   const chess = new Chess();
   games.set(block.location.toString(), chess);
-  //server.broadcastMessage(block.location.toString());
 
   const board = chess.board();
+
+  // Create engine armorstand
+  getEngineArmorStand(block);
+
+  // Generate pieces
   for (let i = 0; i < board.length; i++) {
     for (let j = 0; j < board[0].length; j++) {
       const piece = board[i][j];
@@ -300,7 +323,7 @@ export function createBoard(block: Block) {
         const x = 7 - i;
         const type = getToken(piece.type, piece.color);
         const square = getSquare(x, j);
-        const armorstand = createArmorstand(type, block.world, square);
+        const armorstand = createArmorstand(type, block.world);
         const destination = getSquareLocation(block, square);
         armorstand.teleport(destination);
       }
@@ -371,7 +394,7 @@ function updateBoard(board: Block, move: Move) {
   armorstand.teleport(destination);
 }
 
-function createArmorstand(type: string, world: World, square?: Square) {
+function createArmorstand(type: string, world: World) {
   const armorstand = world.spawnEntity(
     new Location(world, 0, 0, 0),
     EntityType.ARMOR_STAND,
@@ -386,13 +409,7 @@ function createArmorstand(type: string, world: World, square?: Square) {
   armorstand.setSmall(true);
   armorstand.setVisible(false);
   armorstand.setSilent(true);
-  armorstand.setDisabledSlots(
-    EquipmentSlot.CHEST,
-    EquipmentSlot.FEET,
-    EquipmentSlot.HAND,
-    EquipmentSlot.LEGS,
-    EquipmentSlot.OFF_HAND,
-  );
+
   armorstand.setGravity(false);
   armorstand.setInvulnerable(true);
   armorstand.setSilent(true);
@@ -400,9 +417,15 @@ function createArmorstand(type: string, world: World, square?: Square) {
   armorstand.setCanMove(false);
   armorstand.setCanPickupItems(false);
   armorstand.setMarker(true);
-
-  if (square) armorstand.setCustomName(square);
   armorstand.setCustomNameVisible(false);
+  armorstand.setDisabledSlots(
+    EquipmentSlot.HAND,
+    EquipmentSlot.OFF_HAND,
+    EquipmentSlot.CHEST,
+    EquipmentSlot.LEGS,
+    EquipmentSlot.FEET,
+  );
+
   return armorstand;
 }
 
