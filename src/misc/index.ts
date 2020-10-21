@@ -4,3 +4,4 @@ require('./bonemeal');
 require('./falling');
 require('./portal');
 require('./day');
+require('./nametag');
