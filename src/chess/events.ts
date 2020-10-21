@@ -14,6 +14,7 @@ import { EquipmentSlot } from 'org.bukkit.inventory';
 import { clickBoard, createBoard, destroyBoard } from './chess';
 
 const BOARD_MATERIAL = Material.GRAY_GLAZED_TERRACOTTA;
+const BOARD_INTERACTION_DISTANCE = 2.5;
 
 // Create a board
 registerEvent(BlockPlaceEvent, (event) => {
@@ -33,7 +34,7 @@ registerEvent(PlayerInteractAtEntityEvent, (event) => {
   if (hand !== EquipmentSlot.HAND) return;
   if (entity.type !== EntityType.ARMOR_STAND) return;
 
-  const raytrace = event.player.rayTraceBlocks(2);
+  const raytrace = event.player.rayTraceBlocks(BOARD_INTERACTION_DISTANCE);
   if (!raytrace) return;
   const block = raytrace.hitBlock;
   if (!block) return;
@@ -55,7 +56,7 @@ registerEvent(PlayerInteractEvent, (event) => {
   if (face !== BlockFace.UP) return;
   if (action !== Action.RIGHT_CLICK_BLOCK) return;
 
-  const raytrace = player.rayTraceBlocks(2);
+  const raytrace = player.rayTraceBlocks(BOARD_INTERACTION_DISTANCE);
   if (!raytrace) return;
   if (raytrace.hitBlockFace !== BlockFace.UP) return;
   if (!raytrace.hitBlock) return;

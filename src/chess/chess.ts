@@ -1,19 +1,13 @@
+import { Chess, ChessInstance, Move, Square } from 'chess.js';
 import { Integer } from 'java.lang';
 import { Location, Material, World } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Directional } from 'org.bukkit.block.data';
-import { ArmorStand, EntityType, Item, Player } from 'org.bukkit.entity';
+import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { RayTraceResult, Vector } from 'org.bukkit.util';
-import * as yup from 'yup';
-import { Chess, ChessInstance, Move, Square } from 'chess.js';
-import { dataHolder, DataHolder, dataType } from '../common/datas/holder';
-import { string } from 'yup';
-import { DatabaseEntry } from '../common/datas/database';
-import { dataView } from '../common/datas/view';
 
-const DEFAULT_FEN =
-  'r3kbnr/p1pppqpp/b2n4/1p3pB1/N2PP3/2N3B1/PPP1QPPP/R3K2R w KQkq - 0 1';
+const DEFAULT_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 const BOARD_MATERIAL = Material.GRAY_GLAZED_TERRACOTTA;
 const PIECE_MATERIAL = Material.HEART_OF_THE_SEA;
@@ -28,25 +22,25 @@ const Colors: { [key: string]: string } = {
   b: 'Musta',
 };
 
-const ModelData: { [key: string]: number } = {
-  // Black pieces
-  b: 2,
-  k: 3,
-  n: 4,
-  p: 5,
-  q: 6,
-  r: 7,
-  // White pieces
-  B: 9,
-  K: 10,
-  N: 11,
-  P: 12,
-  Q: 13,
-  R: 14,
+const ModelData = new Map<string, number>([
+  // Black pieces (color "b" + symbol)
+  ['bb', 2],
+  ['bk', 3],
+  ['bn', 4],
+  ['bp', 5],
+  ['bq', 6],
+  ['br', 7],
+  // White pieces (color "w" + symbol)
+  ['wb', 9],
+  ['wk', 10],
+  ['wn', 11],
+  ['wp', 12],
+  ['wq', 13],
+  ['wr', 14],
   // Other
-  mark: 8,
-  engine: 15,
-};
+  ['mark', 8],
+  ['engine', 15],
+]);
 
 interface Castling {
   type: string;
@@ -54,22 +48,8 @@ interface Castling {
   to: Square;
 }
 
-function setBoardData(holder: DataHolder, fen: string) {
-  holder.set('fen', 'string', fen);
-}
-
-const ChessDataType = dataType('ChessDataType', {
-  fen: yup.string(),
-});
-
-function createBoardData(location: string, fen: string) {
-  const entry = new DatabaseEntry('chess', 'location');
-  const holder = dataHolder(entry);
-  setBoardData(holder, fen);
-}
-
 function getToken(char: string, color: 'w' | 'b') {
-  return color === 'b' ? char : char.toUpperCase();
+  return color + char;
 }
 
 export function clickBoard(raytrace: RayTraceResult, player: Player) {
@@ -83,7 +63,7 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
 
   if (!chess) {
     // No active chess instances were found. Creating a new one from backup
-    chess = new Chess(engine.customName || DEFAULT_FEN);
+    chess = new Chess(engine.customName || undefined);
     games.set(block.location.toString(), chess);
   }
 
@@ -104,10 +84,9 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
 
   // Select source
   if (isAllied) {
-    // marker?.remove();
-    if (!marker) {
-      marker = createArmorstand('mark', world);
-    }
+    marker?.remove();
+    marker = createArmorstand('mark', world);
+
     marker.teleport(squareLocation);
   }
 
@@ -119,23 +98,19 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
     const armorstandLoc = marker.location.toVector();
     const source = getChessNotation(block, armorstandLoc);
 
-    // Check if we can make the move
-    //const legal = isLegalMove(source, destination);
-
-    ////server.broadcastMessage('Siirretään ' + source + ' -> ' + destination);
-
     let move =
       chess.move({ from: source, to: destination }) ||
+      // Automatic promotion to a queen
       chess.move({ from: source, to: destination, promotion: 'q' });
 
-    //const movedArmorstand = moveArmorstand();
-
     if (move) {
-      //gameData.fen = chess.fen();
+      // Update storage
       engine.customName = chess.fen();
 
+      // Update pieces on the block
       updateBoard(block, move);
 
+      // Announce if game state changes
       if (chess.in_checkmate()) {
         announce(block, 'Shakkimatti', color);
       } else if (chess.in_check()) {
@@ -146,13 +121,11 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
         announce(block, 'Patti');
       }
     } else {
-      //server.broadcastMessage('Ei voida siirtää');
+      // Wrong move
+      player.sendTitle('§4x', '', 0, 30, 5);
     }
 
-    //const fenString = chess.fen();
     marker.remove();
-  } else {
-    // cant select
   }
 }
 
@@ -161,26 +134,21 @@ function announce(block: Block, state: string, winner?: 'w' | 'b') {
   const entities = block.location.getNearbyEntities(3, 2, 3);
   for (const entity of entities) {
     if (entity.type === EntityType.PLAYER) {
-      (entity as Player).sendTitle(state, msg, 0, 30, 30);
+      (entity as Player).sendTitle('§6' + state, msg, 0, 50, 30);
     }
   }
 }
 
-function notationToXY(square: Square) {
-  const y = LETTERS.indexOf(square.charAt(0));
-  const x = +square.charAt(1) - 1;
-  //server.broadcastMessage(x + ' ' + y);
-  return { x, y };
-}
-
 function getSquareLocation(block: Block, square: Square) {
-  //server.broadcastMessage('finding: ' + square);
-  let { x, y } = notationToXY(square);
-  // Centering the piece
+  // Square index
+  let y = LETTERS.indexOf(square.charAt(0));
+  let x = +square.charAt(1) - 1;
+
+  // Center of the square
   x = (x + 0.5) / 8;
   y = (y + 0.5) / 8;
 
-  // Calculate the location in the world
+  // Location (relative to the board block)
   const relative = new Vector(x, 1, y);
 
   // Get the direction of the block
@@ -188,7 +156,7 @@ function getSquareLocation(block: Block, square: Square) {
   const facing = data.facing;
   const forward = facing.direction;
 
-  // Calculate the angle between blocks direction and the direction of the model
+  // Calculate the angle between block's direction and the direction of the model
   const x1 = BOARD_MODEL_DIRECTION.x;
   const x2 = forward.x;
   const z1 = BOARD_MODEL_DIRECTION.z;
@@ -203,9 +171,8 @@ function getSquareLocation(block: Block, square: Square) {
     .rotateAroundY(-angle)
     .add(CENTERING_VECTOR);
 
-  // Location in the world
-  const location = block.location.add(relative);
-  return location;
+  // Location of the square in the world
+  return block.location.add(relative);
 }
 
 function findArmorstandAtSquare(block: Block, type: string, square: Square) {
@@ -217,10 +184,8 @@ function findArmorstandAtSquare(block: Block, type: string, square: Square) {
   for (const entity of entities) {
     if (entity.type === EntityType.ARMOR_STAND) {
       const armorstand = entity as ArmorStand;
-      if (armorstand.helmet.itemMeta.customModelData === ModelData[type]) {
-        //if (armorstand.customName === square) {
+      if (armorstand.helmet.itemMeta.customModelData === ModelData.get(type)) {
         return armorstand;
-        //}
       }
     }
   }
@@ -232,7 +197,7 @@ function findArmorstand(block: Block, type: string) {
   for (const entity of entities) {
     if (entity.type === EntityType.ARMOR_STAND) {
       const armorstand = entity as ArmorStand;
-      if (armorstand.helmet.itemMeta.customModelData === ModelData[type]) {
+      if (armorstand.helmet.itemMeta.customModelData === ModelData.get(type)) {
         return armorstand;
       }
     }
@@ -296,7 +261,6 @@ function getSquare(x: number, y: number) {
 function getEngineArmorStand(block: Block) {
   let engine = findArmorstand(block, 'engine');
   if (!engine) {
-    server.broadcastMessage('creating a engine');
     engine = createArmorstand('engine', block.world);
     const destination = block.location.add(CENTERING_VECTOR);
     engine.teleport(destination);
@@ -384,13 +348,10 @@ function updateBoard(board: Block, move: Move) {
   // Promotion
   if (move.promotion) {
     const promotionType = getToken(move.promotion, move.color);
-    server.broadcastMessage('promotion ' + promotionType);
-    armorstand.helmet.itemMeta.setCustomModelData(
-      new Integer(ModelData[promotionType]),
-    );
     const helmet = armorstand.helmet;
     const meta = helmet.getItemMeta();
-    meta.setCustomModelData(new Integer(ModelData[promotionType]));
+    const cmd = ModelData.get(promotionType) || 0;
+    meta.setCustomModelData(new Integer(cmd));
     helmet.setItemMeta(meta);
     armorstand.helmet = helmet;
   }
@@ -409,14 +370,13 @@ function createArmorstand(type: string, world: World) {
 
   const helmet = new ItemStack(PIECE_MATERIAL);
   const meta = helmet.getItemMeta();
-  meta.setCustomModelData(new Integer(ModelData[type]));
+  meta.setCustomModelData(new Integer(ModelData.get(type) || 0));
   helmet.setItemMeta(meta);
-
   armorstand.helmet = helmet;
+
   armorstand.setSmall(true);
   armorstand.setVisible(false);
   armorstand.setSilent(true);
-
   armorstand.setGravity(false);
   armorstand.setInvulnerable(true);
   armorstand.setSilent(true);
@@ -440,9 +400,17 @@ export function destroyBoard(block: Block) {
   games.delete(block.location.toString());
   const tabletop = block.location.add(new Vector(0.5, 0.9, 0.5));
   const entities = tabletop.getNearbyEntities(0.5, 0.5, 0.5);
+
+  const cmdValues = [...ModelData.values()];
   for (const entity of entities) {
     if (entity.type === EntityType.ARMOR_STAND) {
-      entity.remove();
+      const armorstand = entity as ArmorStand;
+
+      // Remove only armorstands with proper modeldata
+      const cmd = armorstand.helmet.itemMeta.customModelData;
+      if (cmdValues.includes(cmd)) {
+        entity.remove();
+      }
     }
   }
 }
