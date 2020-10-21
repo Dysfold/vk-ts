@@ -15,7 +15,7 @@ const BOARD_MODEL_DIRECTION = { x: -1, z: 0 };
 const LETTERS = 'abcdefgh'.split('');
 const CENTERING_VECTOR = new Vector(0.5, 1, 0.5);
 
-let games = new Map<string, ChessInstance>();
+const games = new Map<string, ChessInstance>();
 
 const Colors: { [key: string]: string } = {
   w: 'Valkoinen',
@@ -98,7 +98,7 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
     const armorstandLoc = marker.location.toVector();
     const source = getChessNotation(block, armorstandLoc);
 
-    let move =
+    const move =
       chess.move({ from: source, to: destination }) ||
       // Automatic promotion to a queen
       chess.move({ from: source, to: destination, promotion: 'q' });
@@ -209,8 +209,8 @@ function getChessNotation(block: Block, position: Vector) {
   const relative = getRelativeVector(position, block);
 
   // Algebraic notation ("a1", "h6", "b7" etc.)
-  const letter_index = Math.floor(relative.z * 8);
-  const letter = LETTERS[letter_index];
+  const letterIdx = Math.floor(relative.z * 8);
+  const letter = LETTERS[letterIdx];
   const number = Math.floor(relative.x * 8) + 1;
 
   return (letter + number) as Square;
@@ -342,7 +342,7 @@ function updateBoard(board: Block, move: Move) {
 
   // Get the moved piece
   const type = getToken(move.piece, move.color);
-  let armorstand = findArmorstandAtSquare(board, type, move.from);
+  const armorstand = findArmorstandAtSquare(board, type, move.from);
   if (!armorstand) return;
 
   // Promotion
