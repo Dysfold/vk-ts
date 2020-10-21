@@ -53,8 +53,16 @@ registerEvent(PlayerInteractEvent, (event) => {
   if (!block) return;
   if (block.type !== BOARD_MATERIAL) return;
   if (event.hand !== EquipmentSlot.HAND) return;
+
+  // Restart board
+  if (action === Action.LEFT_CLICK_BLOCK) {
+    if (player.isSneaking()) {
+      destroyBoard(block);
+      createBoard(block);
+      return;
+    }
+  }
   if (face !== BlockFace.UP) return;
-  if (action !== Action.RIGHT_CLICK_BLOCK) return;
 
   const raytrace = player.rayTraceBlocks(BOARD_INTERACTION_DISTANCE);
   if (!raytrace) return;
