@@ -1,1 +1,2 @@
 require('./eagle');
+require('./bear');
