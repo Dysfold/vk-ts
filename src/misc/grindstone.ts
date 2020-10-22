@@ -8,9 +8,9 @@ import { EquipmentSlot } from 'org.bukkit.inventory';
 const GRINDSTONE_EFFIENCY = 0.1;
 const GRINDSTONE_DURATION = 1; // Seconds
 
-let grindstoneUsers: Player[] = [];
+const grindstoneUsers: Player[] = [];
 
-let tools: Material[] = [
+const tools: Material[] = [
   Material.IRON_PICKAXE,
   Material.IRON_AXE,
   Material.IRON_SHOVEL,
