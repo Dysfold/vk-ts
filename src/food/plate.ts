@@ -44,7 +44,8 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
     server.pluginManager.callEvent(consumeEvent);
 
     // Empty the plate
-    if (key.toString().includes('SOUP')) item.type = Material.BOWL;
+    if (key.toString().includes('STEW')) item.type = Material.BOWL;
+    else if (key.toString().includes('SOUP')) item.type = Material.BOWL;
     else item.type = Material.AIR;
     itemframe.item = item;
 
