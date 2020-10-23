@@ -20,6 +20,7 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
 
   const type = item.type;
   const player = event.player;
+  if (player.isSneaking()) return;
 
   // Eating
   if (type.isEdible()) {
