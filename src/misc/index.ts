@@ -8,4 +8,4 @@ require('./grindstone');
 require('./nametag');
 require('./respack');
 require('./piano');
-require('./beartrap');
+require('./bear-trap');
