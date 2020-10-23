@@ -1,4 +1,4 @@
-import { Location, Material, Material } from 'org.bukkit';
+import { Location, Material } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 
