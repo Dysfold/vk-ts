@@ -91,11 +91,11 @@ function playBurpSound(player: Player) {
   player.world.playSound(player.location, 'entity.player.burp', 1, 1);
 }
 
-function playDrinkingSound(player: Player) {
+export function playDrinkingSound(player: Player) {
   player.world.playSound(player.location, 'entity.generic.drink', 1, 1);
 }
 
-function hydrate(player: Player, amount: number, material: Material) {
+export function hydrate(player: Player, amount: number, material: Material) {
   const barBefore = player.exp;
   const bar = limit(barBefore + amount);
   player.exp = (new Float(bar) as unknown) as number;
