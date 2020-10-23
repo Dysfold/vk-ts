@@ -1,9 +1,13 @@
 import { Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
-import { EntityType } from 'org.bukkit.entity';
-import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
+import { EntityType, Player } from 'org.bukkit.entity';
+import {
+  PlayerInteractEntityEvent,
+  PlayerItemConsumeEvent,
+} from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
-import { hydrate, playDrinkingSound } from '../hydration/hydrate';
+import { playDrinkingSound } from '../hydration/hydrate';
+import { FoodInfo } from './FoodInfo';
 
 registerEvent(PlayerInteractEntityEvent, (event) => {
   const entity = event.rightClicked;
@@ -17,19 +21,57 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
   const type = item.type;
   const player = event.player;
 
-  if (type === Material.POTION) {
-    // Drink the item
+  // Eating
+  if (type.isEdible()) {
     event.setCancelled(true);
-    hydrate(player, 0.2, type);
+
+    // Black magic, because we can't use FoodInfo.get(type)
+    const key = Material.getMaterial(type.toString());
+    if (!key) return;
+
+    const value = FoodInfo.get(key);
+    if (!value) {
+      return;
+    }
+
+    const maxFoodLevel = 20;
+    player.foodLevel = Math.min(player.foodLevel + value.f, maxFoodLevel);
+
+    const maxSaturation = Math.min(player.foodLevel, 20); // Max saturation is always equal to players foodlevel
+    player.saturation = Math.min(player.saturation + value.s, maxSaturation);
+
+    const consumeEvent = new PlayerItemConsumeEvent(player, item);
+    server.pluginManager.callEvent(consumeEvent);
+
+    // Empty the plate
+    if (key.toString().includes('SOUP')) item.type = Material.BOWL;
+    else item.type = Material.AIR;
+    itemframe.item = item;
+
+    playEatingSounds(player);
+  }
+
+  // Drinking
+  else if (type === Material.POTION) {
+    event.setCancelled(true);
+    const drinkEvent = new PlayerItemConsumeEvent(player, item);
+    server.pluginManager.callEvent(drinkEvent);
     playDrinkingSound(player);
+
+    // Empty the bottle
     item.type = Material.GLASS_BOTTLE;
     itemframe.item = item;
-    ////itemframe.item = new ItemStack(Material.GLASS_BOTTLE, 1);
   }
-  // TODO: Get saturation and foodlevel change somehow
-  //   if (type.isEdible()) {
-  //     // Eat the item
-  //     event.setCancelled(true);
-  //     player.foodLevel += 1;
-  //   }
 });
+
+async function playEatingSounds(player: Player) {
+  for (let i = 0; i < 4; i++) {
+    player.world.playSound(
+      player.location,
+      'minecraft:entity.generic.eat',
+      1,
+      1,
+    );
+    await wait(240, 'millis');
+  }
+}
