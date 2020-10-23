@@ -1,5 +1,6 @@
-import { Location } from 'org.bukkit';
+import { Location, Material, Material } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
+import { PlayerInteractEvent } from 'org.bukkit.event.player';
 
 registerCommand('kompassi', (sender, label, args) => {
   sender.sendMessage('123 ' + label);
@@ -20,4 +21,14 @@ registerCommand('kompassi', (sender, label, args) => {
     player.compassTarget = location;
     player.sendMessage(`Kompassi osoittaa nyt koordinaatteihin x:${x} z:${z}`);
   }
+});
+
+registerEvent(PlayerInteractEvent, (event) => {
+  if (!event.item) return;
+  if (event.item.type !== Material.COMPASS) return;
+  const player = event.player;
+  const loc = player.location;
+  player.sendActionBar(
+    `${loc.x.toFixed(2)} / ${loc.y.toFixed(2)} / ${loc.z.toFixed(2)}`,
+  );
 });
