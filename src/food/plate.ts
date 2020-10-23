@@ -1,4 +1,4 @@
-import { Material } from 'org.bukkit';
+import { Location, Material, Particle } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { EntityType, Player } from 'org.bukkit.entity';
 import {
@@ -48,7 +48,7 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
     else item.type = Material.AIR;
     itemframe.item = item;
 
-    playEatingSounds(player);
+    playEatingEffects(itemframe.location, type);
   }
 
   // Drinking
@@ -64,14 +64,27 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
   }
 });
 
-async function playEatingSounds(player: Player) {
+async function playEatingEffects(location: Location, material: Material) {
+  const data = new ItemStack(material, 1);
   for (let i = 0; i < 4; i++) {
-    player.world.playSound(
-      player.location,
-      'minecraft:entity.generic.eat',
-      1,
-      1,
+    location.world.playSound(location, 'minecraft:entity.generic.eat', 1, 1);
+
+    location.world.spawnParticle(
+      Particle.ITEM_CRACK,
+      location.add(0, 0.15, 0),
+      0,
+      data,
     );
     await wait(240, 'millis');
   }
 }
+
+// function playEatingEffects(location: Location, material: Material) {
+//   const data = new ItemStack(material, 1);
+//   location.world.spawnParticle(
+//     Particle.ITEM_CRACK,
+//     location.add(0, 0.5, 0),
+//     0,
+//     data,
+//   );
+// }
