@@ -3,13 +3,26 @@ import { Player } from 'org.bukkit.entity';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 
 registerCommand('kompassi', (sender, label, args) => {
-  sender.sendMessage('123 ' + label);
-  if (args.length !== 2) {
-    sender.sendMessage('Virheelliset koordinaatit. /kompassi <x> <z>');
-    return;
+  let x, z;
+  switch (args.length) {
+    case 0:
+      x = 0;
+      z = 0;
+      break;
+    case 2:
+      x = Number(args[0]);
+      z = Number(args[1]);
+      break;
+    case 3:
+      x = Number(args[0]);
+      // y is ignored
+      z = Number(args[2]);
+      break;
+    default:
+      sender.sendMessage('Virheelliset koordinaatit. /kompassi <x> <z>');
+      return;
   }
-  const x = Number(args[0]);
-  const z = Number(args[1]);
+
   if (isNaN(x) || isNaN(z)) {
     sender.sendMessage('Virheelliset koordinaatit. /kompassi <x> <z>');
     return;
