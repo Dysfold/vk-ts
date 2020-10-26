@@ -32,7 +32,6 @@ registerEvent(PlayerInteractEvent, (event) => {
   const relative = block.getRelative(event.blockFace);
   if (block.type === Material.WATER || relative.type === Material.WATER) return;
 
-  event.player.sendActionBar('Et voi asettaa venettä tähän');
   event.setCancelled(true);
 });
 
