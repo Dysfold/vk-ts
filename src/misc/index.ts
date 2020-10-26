@@ -6,5 +6,6 @@ require('./portal');
 require('./day');
 require('./grindstone');
 require('./nametag');
+require('./land-boats');
 require('./respack');
 require('./piano');
