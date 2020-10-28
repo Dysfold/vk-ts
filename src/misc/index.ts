@@ -7,4 +7,5 @@ require('./day');
 require('./grindstone');
 require('./nametag');
 require('./respack');
+require('./crawling');
 require('./piano');
