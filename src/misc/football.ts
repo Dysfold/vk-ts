@@ -174,7 +174,7 @@ function bounce(loc: Location) {
 
 registerEvent(ProjectileHitEvent, (event) => {
   if (event.getEntityType() === EntityType.SNOWBALL) {
-    let hitLoc = event.getEntity().getLocation();
+    const hitLoc = event.getEntity().getLocation();
     if (event.getEntity().getVelocity().lengthSquared() > 0.05) {
       bounce(hitLoc);
     }
@@ -521,7 +521,7 @@ registerEvent(BlockBreakEvent, (event) => {
 });
 
 setTimeout(() => {
-  let newBalls = [];
+  const newBalls = [];
   for (const ball of flyingBalls) {
     if (!ball.entity || ball.entity.isDead()) {
       continue;
