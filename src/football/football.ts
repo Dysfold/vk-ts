@@ -142,7 +142,7 @@ function bounceOnBlock(
   ball: Snowball,
 ) {
   const location = ball.location;
-  let bounciness = 0.7;
+  let bounciness = 0.8;
 
   const hitMaterial = hitblock.type;
   const hitMaterialStr = hitMaterial.toString();
