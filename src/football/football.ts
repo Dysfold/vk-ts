@@ -88,7 +88,8 @@ Football.event(
     // Stop bouncing if the ball has been untouched long enough
     const elapsed = Date.now() - num;
     if (elapsed > 1000 * BALL_DESPAWN_SECONDS) {
-      stopBall(ball);
+      stopBall(event.entity);
+      return;
     }
 
     // Hit on block
@@ -233,6 +234,7 @@ function playBounceSound(location: Location, volume: number) {
 
 function stopBall(ball: Entity) {
   ball.world.dropItem(ball.location, FootballItemStack);
+  ball.remove();
   ball.world.playSound(
     ball.location,
     'minecraft:entity.generic.small_fall',
@@ -240,5 +242,4 @@ function stopBall(ball: Entity) {
     1,
     (new Float(0.7) as unknown) as number,
   );
-  ball.remove();
 }
