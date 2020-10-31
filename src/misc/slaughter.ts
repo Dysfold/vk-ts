@@ -1,15 +1,12 @@
 import { Material, Sound, Location, Particle } from 'org.bukkit';
-import {
-  ArmorStand,
-  EntityType,
-  LivingEntity,
-  Player,
-} from 'org.bukkit.entity';
+import { EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import {
   EntityDamageByEntityEvent,
   EntityDeathEvent,
+  EntityPickupItemEvent,
   EntityRegainHealthEvent,
+  ItemDespawnEvent,
 } from 'org.bukkit.event.entity';
 import { ItemStack } from 'org.bukkit.inventory';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
@@ -23,6 +20,7 @@ const CORPSE_NAME = 'Dinnerbone';
 const slaughterableAnimals = new Map<string, Array<LootDrop<undefined>>>();
 const slaughterTools: Material[] = [Material.IRON_SWORD, Material.IRON_AXE];
 const slaugtherSound = Sound.BLOCK_SLIME_BLOCK_STEP;
+const nameHiderItem = new ItemStack(Material.BARRIER, 1);
 
 addSlaughterableAnimal(EntityType.COW, [
   { item: Material.LEATHER, rarity: 0.3, count: 1 },
@@ -50,7 +48,6 @@ function addSlaughterableAnimal(
   drops: LootDrop<any>[],
 ) {
   if (slaughterableAnimals.has(entityType.toString())) return;
-
   slaughterableAnimals.set(entityType.toString(), drops);
 }
 
@@ -74,15 +71,14 @@ function createAnimalCorpse(entity: LivingEntity) {
   entity.setAI(false);
   entity.setCustomName(CORPSE_NAME);
   entity.setSilent(true);
-  // Add armor stand as passenger to hide nametag
+  // Add dropped item as passenger to hide nametag
   if (entity.passenger === null) {
-    const nameHider = entity.world.spawnEntity(
-      entity.location.add(0, 200, 0),
-      EntityType.ARMOR_STAND,
-    ) as ArmorStand;
-    nameHider.setVisible(false);
-    nameHider.setMarker(true);
-    nameHider.setInvulnerable(true);
+    const nameHider = entity.world.dropItemNaturally(
+      entity.location,
+      nameHiderItem,
+    );
+    nameHider.setCanMobPickup(false);
+    nameHider.setPickupDelay(1000000);
     entity.setPassenger(nameHider);
   }
   // Set animal health to match hit amount
@@ -107,31 +103,27 @@ function handleDrops(entity: LivingEntity) {
 
 /**
  * Adds downwards velocity to entity until it hits the ground.
- * Calls itself recursively.
  * @param entity Entity to be dropped to the ground
  */
-function dropBodyUntilOnGround(entity: LivingEntity) {
-  if (
-    entity.world.getBlockAt(entity.location.add(0, -0.1, 0)).type ===
-      Material.AIR &&
-    entity.health > 0
+async function dropBodyUntilOnGround(entity: LivingEntity) {
+  let previousY = entity.location.y;
+  let firstLoop = true;
+  entity.setAI(true);
+  while (
+    entity.health > 0 &&
+    (firstLoop ? true : entity.location.y < previousY)
   ) {
-    // console.log('FALL RECURSION x1');    <-- UNCOMMENT for loop/recursion checks
-    entity.setAI(true);
+    //console.log('FALL LOOP x1'); <-- UNCOMMENT for loop checks
+    firstLoop = false;
+    previousY = entity.location.y;
     // Adding velocity for smoother falling (Chicken fall slowly without)
-    const previousY = entity.location.y;
     const pos: Vector = entity.location.toVector();
     const target: Vector = entity.location.add(0, -8, 0).toVector();
     const vel: Vector = target.subtract(pos);
     entity.setVelocity(vel.normalize());
-    setTimeout(() => {
-      // Break from recursion if not falling
-      if (entity.location.y >= previousY) entity.setAI(false);
-      else dropBodyUntilOnGround(entity);
-    }, 200);
-  } else {
-    entity.setAI(false);
+    await wait(100, 'millis');
   }
+  entity.setAI(false);
 }
 
 /**
@@ -216,4 +208,20 @@ registerEvent(EntityDamageByEntityEvent, (event) => {
     if (slaughterTools.includes(player.itemInHand.type)) handleDrops(entity);
     playSlaughterEffects(entity.location);
   }
+});
+
+// Prevent pickup of nameHiders riding entity
+registerEvent(EntityPickupItemEvent, (event) => {
+  if (event.item.itemStack.type === Material.BARRIER && event.item.vehicle) {
+    event.setCancelled(true);
+    event.item.setPickupDelay(1000000);
+  }
+});
+
+// Remove animal corpse on namehider despawn
+registerEvent(ItemDespawnEvent, (event) => {
+  if (!(event.entity instanceof ItemStack)) return;
+  const itemStack = event.entity as ItemStack;
+  if (itemStack == nameHiderItem && event.entity.vehicle)
+    event.entity.vehicle.remove();
 });
