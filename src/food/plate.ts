@@ -47,6 +47,7 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
     // Empty the plate
     if (key.toString().includes('STEW')) item.type = Material.BOWL;
     else if (key.toString().includes('SOUP')) item.type = Material.BOWL;
+    else if (key === Material.HONEY_BOTTLE) item.type = Material.GLASS_BOTTLE;
     else item.type = Material.AIR;
     itemframe.item = item;
 
@@ -67,16 +68,23 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
 });
 
 async function playEatingEffects(location: Location, material: Material) {
+  location = location.add(0, 0.15, 0);
   const data = new ItemStack(material, 1);
   for (let i = 0; i < 4; i++) {
     location.world.playSound(location, 'minecraft:entity.generic.eat', 1, 1);
 
-    location.world.spawnParticle(
-      Particle.ITEM_CRACK,
-      location.add(0, 0.15, 0),
-      0,
-      data,
-    );
+    for (let particles = 0; particles < 5; particles++) {
+      location.world.spawnParticle(
+        Particle.ITEM_CRACK,
+        location,
+        0,
+        (Math.random() - 0.5) * 0.1,
+        0.1,
+        (Math.random() - 0.5) * 0.1,
+        data,
+      );
+    }
+
     await wait(240, 'millis');
   }
 }
