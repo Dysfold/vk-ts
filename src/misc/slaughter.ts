@@ -11,6 +11,7 @@ import {
 import { ItemStack } from 'org.bukkit.inventory';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import { Vector } from 'org.bukkit.util';
+import { CustomItem } from '../common/items/CustomItem';
 import { LootDrop, generateLoot } from '../common/items/drops';
 
 const MIN_BODY_HITS = 3;
@@ -20,7 +21,15 @@ const CORPSE_NAME = 'Dinnerbone';
 const slaughterableAnimals = new Map<string, Array<LootDrop<undefined>>>();
 const slaughterTools: Material[] = [Material.IRON_SWORD, Material.IRON_AXE];
 const slaugtherSound = Sound.BLOCK_SLIME_BLOCK_STEP;
-const nameHiderItem = new ItemStack(Material.BARRIER, 1);
+
+const Namehider = new CustomItem({
+  id: 15,
+  name: 'Namehider',
+  type: Material.HEART_OF_THE_SEA,
+  modelId: 15,
+});
+
+const nameHiderItem = Namehider.create();
 
 addSlaughterableAnimal(EntityType.COW, [
   { item: Material.LEATHER, rarity: 0.3, count: 1 },
@@ -212,7 +221,7 @@ registerEvent(EntityDamageByEntityEvent, (event) => {
 
 // Prevent pickup of nameHiders riding entity
 registerEvent(EntityPickupItemEvent, (event) => {
-  if (event.item.itemStack.type === Material.BARRIER && event.item.vehicle) {
+  if (event.item.itemStack.type === nameHiderItem.type && event.item.vehicle) {
     event.setCancelled(true);
     event.item.setPickupDelay(1000000);
   }
@@ -222,6 +231,6 @@ registerEvent(EntityPickupItemEvent, (event) => {
 registerEvent(ItemDespawnEvent, (event) => {
   if (!(event.entity instanceof ItemStack)) return;
   const itemStack = event.entity as ItemStack;
-  if (itemStack == nameHiderItem && event.entity.vehicle)
+  if (itemStack.type == nameHiderItem.type && event.entity.vehicle)
     event.entity.vehicle.remove();
 });
