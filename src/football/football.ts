@@ -13,6 +13,8 @@ import { CustomItem } from '../common/items/CustomItem';
 import { Float } from 'java.lang';
 
 const BALL_DESPAWN_SECONDS = 30;
+const JUMP_KICK_MULTIPLIER = 2;
+
 const Football = new CustomItem({
   id: 3,
   name: 'Jalkapallo',
@@ -185,10 +187,8 @@ function bounceOnBlock(
 
 // Kick the ball
 registerEvent(PlayerToggleSneakEvent, (event) => {
-  if (!event.player.isSprinting) {
-    return;
-  }
   const player = event.player;
+  if (player.isSneaking()) return;
   const nearby = player.getNearbyEntities(2, 2, 2);
   for (const entity of nearby) {
     if (entity?.type !== EntityType.SNOWBALL) continue;
@@ -215,6 +215,11 @@ registerEvent(PlayerToggleSneakEvent, (event) => {
       power = 1;
     }
 
+    // Power from jump + kick
+    if (!player.isOnGround()) {
+      power *= JUMP_KICK_MULTIPLIER;
+    }
+
     const velocity = ball.velocity;
     velocity.add(dir.multiply(power));
     ball.velocity = velocity;
@@ -223,6 +228,16 @@ registerEvent(PlayerToggleSneakEvent, (event) => {
 });
 
 function playBounceSound(location: Location, volume: number) {
+  location.world.playSound(
+    location,
+    'minecraft:block.wool.hit',
+    SoundCategory.BLOCKS,
+    (new Float(volume) as unknown) as number,
+    (new Float(1.5) as unknown) as number,
+  );
+}
+
+function playKickSound(location: Location, volume: number) {
   location.world.playSound(
     location,
     'minecraft:block.wool.hit',
