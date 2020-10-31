@@ -200,10 +200,10 @@ registerEvent(PlayerToggleSneakEvent, (event) => {
 
     ball.customName = Date.now().toString();
 
-    const a = player.location;
-    const pitch = 90 - a.pitch;
+    const location = player.location;
+    const pitch = 90 - location.pitch;
     const b = ball.location;
-    const delta = b.add(a.multiply(-1)).toVector();
+    const delta = b.add(location.multiply(-1)).toVector();
     const dir = delta.normalize();
     dir.y = 0.15;
     let angle = (pitch / 180) * Math.PI;
@@ -218,6 +218,9 @@ registerEvent(PlayerToggleSneakEvent, (event) => {
     // Power from jump + kick
     if (!player.isOnGround()) {
       power *= JUMP_KICK_MULTIPLIER;
+      playKickSound(ball, 3);
+    } else {
+      playKickSound(ball, 0.3);
     }
 
     const velocity = ball.velocity;
@@ -233,17 +236,17 @@ function playBounceSound(location: Location, volume: number) {
     'minecraft:block.wool.hit',
     SoundCategory.BLOCKS,
     (new Float(volume) as unknown) as number,
-    (new Float(1.5) as unknown) as number,
+    (new Float(2) as unknown) as number,
   );
 }
 
-function playKickSound(location: Location, volume: number) {
-  location.world.playSound(
-    location,
-    'minecraft:block.wool.hit',
+function playKickSound(ball: Entity, volume: number) {
+  ball.world.playSound(
+    ball.location,
+    'minecraft:entity.player.attack.knockback',
     SoundCategory.BLOCKS,
     (new Float(volume) as unknown) as number,
-    (new Float(1.5) as unknown) as number,
+    (new Float(1.2) as unknown) as number,
   );
 }
 
