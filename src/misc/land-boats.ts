@@ -8,7 +8,7 @@ import { ItemStack } from 'org.bukkit.inventory';
 
 const Boaters = new Set<Player>();
 
-const BoatItems = new Map<TreeSpecies, ItemStack>([
+const BOAT_ITEMS = new Map<TreeSpecies, ItemStack>([
   [TreeSpecies.GENERIC, new ItemStack(Material.OAK_BOAT)],
   [TreeSpecies.REDWOOD, new ItemStack(Material.SPRUCE_BOAT)],
   [TreeSpecies.BIRCH, new ItemStack(Material.BIRCH_BOAT)],
