@@ -89,12 +89,3 @@ async function playEatingEffects(location: Location, material: Material) {
   }
 }
 
-// function playEatingEffects(location: Location, material: Material) {
-//   const data = new ItemStack(material, 1);
-//   location.world.spawnParticle(
-//     Particle.ITEM_CRACK,
-//     location.add(0, 0.5, 0),
-//     0,
-//     data,
-//   );
-// }
