@@ -2,7 +2,12 @@ import { Material } from 'org.bukkit';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { CustomItem } from '../common/items/CustomItem';
 
-const CROPS = [Material.WHEAT, Material.BEETROOT];
+const CROPS = new Set([
+  Material.WHEAT.ordinal(),
+  Material.BEETROOT.ordinal(),
+  Material.TALL_GRASS.ordinal(),
+  Material.GRASS.ordinal(),
+]);
 const CHANCE_WITHOUT_CICLE = 0.02;
 
 const Sickle = new CustomItem({
@@ -13,7 +18,7 @@ const Sickle = new CustomItem({
 });
 
 registerEvent(BlockBreakEvent, (event) => {
-  if (CROPS.indexOf(event.block.type) === -1) return;
+  if (!CROPS.has(event.block.type.ordinal())) return;
   if (Sickle.check(event.player.itemInHand)) return;
   if (Math.random() < CHANCE_WITHOUT_CICLE) return;
   event.setCancelled(true);
