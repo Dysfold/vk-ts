@@ -2,13 +2,23 @@ import { Material, Particle } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
-import { PlayerInteractEvent } from 'org.bukkit.event.player';
-import { EquipmentSlot } from 'org.bukkit.inventory';
+import {
+  PlayerInteractEntityEvent,
+  PlayerInteractEvent,
+} from 'org.bukkit.event.player';
+import {
+  EquipmentSlot,
+  ItemStack,
+  PlayerInventory,
+} from 'org.bukkit.inventory';
+import { CustomItem } from '../common/items/CustomItem';
 
 const GRINDSTONE_EFFIENCY = 0.1;
 const GRINDSTONE_DURATION = 1; // Seconds
+const HAND_GRINDSTONE_EFFIENCY = 0.03;
+const HAND_GRINDSTONE_DURATION = 1; // Seconds
 
-const grindstoneUsers: Player[] = [];
+const grindstoneUsers = new Set<Player>();
 
 const tools: Material[] = [
   Material.IRON_PICKAXE,
@@ -20,7 +30,39 @@ const tools: Material[] = [
   // TODO: Add more tools
 ];
 
-registerEvent(PlayerInteractEvent, (event) => {
+const HandGrindstone = new CustomItem({
+  id: 1,
+  name: 'Hiomakivi',
+  type: Material.SHULKER_SHELL,
+  modelId: 1,
+});
+
+HandGrindstone.event(
+  PlayerInteractEvent,
+  (event) => (event.player.inventory as PlayerInventory).itemInOffHand,
+  async (event) => {
+    if (
+      event.action !== Action.RIGHT_CLICK_AIR &&
+      event.action !== Action.RIGHT_CLICK_BLOCK
+    ) {
+      return;
+    }
+
+    const tool = event.item;
+    const player = event.player;
+    if (!tool) return;
+    if (!canBeGrinded(tool, player)) return;
+
+    grindstoneUsers.add(player);
+    repairTool(tool, HAND_GRINDSTONE_EFFIENCY);
+    player.swingOffHand();
+    player.playSound(player.location, 'block.grindstone.use', 1, 2);
+    await wait(HAND_GRINDSTONE_DURATION, 'seconds');
+    grindstoneUsers.delete(player);
+  },
+);
+
+registerEvent(PlayerInteractEvent, async (event) => {
   if (event.action !== Action.RIGHT_CLICK_BLOCK) return;
   if (event.getHand() !== EquipmentSlot.HAND) return;
   const block = event.getClickedBlock();
@@ -29,32 +71,19 @@ registerEvent(PlayerInteractEvent, (event) => {
   event.setCancelled(true);
 
   const item = event.getItem();
-  if (!item || item.getDurability() === 0) return;
-
-  // Check if the tool can be grinded
-  const material = item.getType();
   const player = event.getPlayer();
-  const toolIdx = tools.indexOf(material, 0);
-  if (toolIdx === -1) {
-    player.sendActionBar('Tätä esinettä ei voi hioa');
-    return;
-  }
 
-  // Check if the player is already using a grindstone
-  const playerIdx = grindstoneUsers.indexOf(player, 0);
-  if (playerIdx > -1) {
-    return;
-  }
+  if (!item) return;
+  if (!canBeGrinded(item, player)) return;
 
-  grindstoneUsers.push(player);
-  const amount = Math.floor(material.getMaxDurability() * GRINDSTONE_EFFIENCY);
-  item.setDurability(item.getDurability() - amount);
-
+  grindstoneUsers.add(player);
+  repairTool(item, GRINDSTONE_EFFIENCY);
   playGrindstoneEffects(block, player);
-  endGrinding(player);
+  await wait(GRINDSTONE_DURATION, 'seconds');
+  grindstoneUsers.delete(player);
 });
 
-const playGrindstoneEffects = (block: Block, player: Player) => {
+function playGrindstoneEffects(block: Block, player: Player) {
   const location = block.getLocation();
   player.spawnParticle(
     Particle.CLOUD,
@@ -65,14 +94,24 @@ const playGrindstoneEffects = (block: Block, player: Player) => {
     0.2,
     0,
   );
-  block.getWorld().playSound(location, 'block.grindstone.use', 1, 1);
-};
+  block.world.playSound(location, 'block.grindstone.use', 1, 1);
+}
 
-const endGrinding = (player: Player) => {
-  setTimeout(() => {
-    const index = grindstoneUsers.indexOf(player, 0);
-    if (index > -1) {
-      grindstoneUsers.splice(index, 1);
-    }
-  }, GRINDSTONE_DURATION * 1000);
-};
+function repairTool(item: ItemStack, effiency: number) {
+  const amount = Math.floor(item.type.getMaxDurability() * effiency);
+  item.setDurability(item.durability - amount);
+}
+
+function canBeGrinded(item: ItemStack, player: Player) {
+  // Check if the tool can be grinded
+  if (item.getDurability() === 0) return false;
+  if (grindstoneUsers.has(player)) return false;
+
+  const toolIdx = tools.indexOf(item.type, 0);
+  if (toolIdx === -1) {
+    player.sendActionBar('Tätä esinettä ei voi hioa');
+    return false;
+  }
+
+  return true;
+}
