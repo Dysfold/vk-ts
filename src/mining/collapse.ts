@@ -5,7 +5,7 @@ import { Player } from 'org.bukkit.entity';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { Vector } from 'org.bukkit.util';
 
-const COLLAPSE_CHECK_CHANCE = 1;
+const COLLAPSE_CHECK_CHANCE = 0.1;
 
 const STONES = new Set([
   Material.STONE.ordinal(),
@@ -32,7 +32,6 @@ const SUPPORTS = new Set([
 ]);
 
 registerEvent(BlockBreakEvent, (event) => {
-  if (event.player.itemInHand.type === Material.AIR) return;
   const block = event.block;
 
   // We only collapse underground mines
