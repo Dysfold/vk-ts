@@ -11,6 +11,7 @@ import { EquipmentSlot, PlayerInventory } from 'org.bukkit.inventory';
 import { Vector } from 'org.bukkit.util';
 import { CustomItem } from '../common/items/CustomItem';
 import { Float } from 'java.lang';
+import { PlayerLaunchProjectileEvent } from 'com.destroystokyo.paper.event.player';
 
 const BALL_DESPAWN_SECONDS = 30;
 const JUMP_KICK_MULTIPLIER = 2;
@@ -46,18 +47,10 @@ registerEvent(PlayerInteractEvent, (event) => {
 
 // To start the game, player can throw the ball just like snowball
 Football.event(
-  PlayerInteractEvent,
-  (event) => event.item,
+  PlayerLaunchProjectileEvent,
+  (event) => event.itemStack,
   async (event) => {
     event.setCancelled(true);
-    if (event.hand !== EquipmentSlot.HAND) return;
-    if (!event.item) return;
-    if (
-      event.action !== Action.RIGHT_CLICK_AIR &&
-      event.action !== Action.RIGHT_CLICK_BLOCK
-    ) {
-      return;
-    }
     const player = event.player;
     const dir = player.location.direction;
     const ball = player.world.spawnEntity(
@@ -68,7 +61,7 @@ Football.event(
 
     ball.velocity = dir.multiply(0.2);
     ball.customName = Date.now().toString();
-    event.item.amount -= 1;
+    event.itemStack.amount -= 1;
   },
 );
 
