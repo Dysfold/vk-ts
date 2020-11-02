@@ -9,3 +9,4 @@ require('./nametag');
 require('./slaughter');
 require('./respack');
 require('./piano');
+require('./flour');
