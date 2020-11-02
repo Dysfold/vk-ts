@@ -6,9 +6,9 @@ import { PlayerInteractEvent, PlayerJoinEvent } from 'org.bukkit.event.player';
 import { VehicleEnterEvent } from 'org.bukkit.event.vehicle';
 import { ItemStack } from 'org.bukkit.inventory';
 
-const Boaters = new Set<Player>();
+const boaters = new Set<Player>();
 
-const BoatItems = new Map<TreeSpecies, ItemStack>([
+const BOAT_ITEMS = new Map<TreeSpecies, ItemStack>([
   [TreeSpecies.GENERIC, new ItemStack(Material.OAK_BOAT)],
   [TreeSpecies.REDWOOD, new ItemStack(Material.SPRUCE_BOAT)],
   [TreeSpecies.BIRCH, new ItemStack(Material.BIRCH_BOAT)],
@@ -39,7 +39,7 @@ registerEvent(PlayerInteractEvent, (event) => {
 registerEvent(VehicleEnterEvent, (event) => {
   if (event.vehicle.type !== EntityType.BOAT) return;
   if (event.entered.type === EntityType.PLAYER) {
-    Boaters.add(event.entered as Player);
+    boaters.add(event.entered as Player);
     removeIfOnLand(event.vehicle as Boat);
   }
 });
@@ -47,18 +47,18 @@ registerEvent(VehicleEnterEvent, (event) => {
 registerEvent(PlayerJoinEvent, (event) => {
   const player = event.player;
   if (player.vehicle?.type === EntityType.BOAT) {
-    Boaters.add(player);
+    boaters.add(player);
   }
 });
 
 // VechicleMoveEvent is called multiple times each second
 // -> Use interval for checking boaters to reduce lag
 setInterval(() => {
-  Boaters.forEach((boater) => {
+  boaters.forEach((boater) => {
     if (!boater.isOnline()) {
-      Boaters.delete(boater);
+      boaters.delete(boater);
     } else if (boater.vehicle?.type !== EntityType.BOAT) {
-      Boaters.delete(boater);
+      boaters.delete(boater);
     } else {
       removeIfOnLand(boater.vehicle as Boat);
     }
@@ -81,7 +81,7 @@ function removeIfOnLand(boat: Boat) {
   boat.remove();
   boat.world.dropItemNaturally(
     boat.location,
-    BoatItems.get(boat.woodType) || DEFAULT_BOAT,
+    BOAT_ITEMS.get(boat.woodType) || DEFAULT_BOAT,
   );
   return;
 }
