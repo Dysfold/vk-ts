@@ -7,6 +7,7 @@ require('./portal');
 require('./day');
 require('./grindstone');
 require('./nametag');
+require('./land-boats');
 require('./slaughter');
 require('./respack');
 require('./crawling');
