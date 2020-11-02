@@ -4,3 +4,4 @@ require('./mobs/index');
 require('./combat/index');
 require('./hydration/index');
 require('./farming/index');
+require('./football/index');
