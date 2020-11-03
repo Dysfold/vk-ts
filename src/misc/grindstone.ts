@@ -2,10 +2,7 @@ import { Material, Particle } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
-import {
-  PlayerInteractEntityEvent,
-  PlayerInteractEvent,
-} from 'org.bukkit.event.player';
+import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import {
   EquipmentSlot,
   ItemStack,

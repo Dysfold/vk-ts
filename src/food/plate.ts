@@ -1,6 +1,6 @@
 import { Location, Material, Particle } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
-import { EntityType, Player } from 'org.bukkit.entity';
+import { EntityType } from 'org.bukkit.entity';
 import {
   PlayerInteractEntityEvent,
   PlayerItemConsumeEvent,
@@ -88,4 +88,3 @@ async function playEatingEffects(location: Location, material: Material) {
     await wait(240, 'millis');
   }
 }
-
