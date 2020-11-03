@@ -1,1 +1,2 @@
 require('./pushing');
+require('./handcuffs');
