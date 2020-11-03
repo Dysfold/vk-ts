@@ -12,7 +12,7 @@ const Whip = new CustomItem({
   modelId: 3,
 });
 
-const SLOW = new PotionEffect(PotionEffectType.SLOW, 4 * 20, 1);
+const SLOW = new PotionEffect(PotionEffectType.SLOW, 3 * 20, 2);
 
 Whip.event(
   EntityDamageByEntityEvent,
