@@ -28,6 +28,7 @@ registerEvent(BlockGrowEvent, (event) => {
   const block = event.block;
   let cancelled = false;
   const temperature = block.temperature;
+  let chance = 0;
 
   switch (block.type) {
     case Material.WHEAT:
@@ -38,7 +39,7 @@ registerEvent(BlockGrowEvent, (event) => {
       // Normal climate
       if (temperature > WARM_TEMP) cancelled = true;
       if (temperature < COLD_TEMP) cancelled = true;
-      var chance = calculateSuccess(block.z, ZONES.normal);
+      chance = calculateSuccess(block.z, ZONES.normal);
       if (chanceOf(chance)) cancelled = true;
       break;
 
@@ -47,12 +48,12 @@ registerEvent(BlockGrowEvent, (event) => {
       // Tropical climate
       if (temperature > HOT_TEMP) cancelled = true;
       if (temperature < COOL_TEMP) cancelled = true;
-      var chance = calculateSuccess(block.z, ZONES.tropical);
+      chance = calculateSuccess(block.z, ZONES.tropical);
       if (chanceOf(chance)) cancelled = true;
       break;
 
     case Material.SWEET_BERRY_BUSH:
-      var chance = calculateSuccess(block.z, ZONES.northern);
+      chance = calculateSuccess(block.z, ZONES.northern);
       if (chanceOf(chance)) cancelled = true;
       break;
   }
