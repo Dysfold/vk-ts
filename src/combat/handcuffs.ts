@@ -1,5 +1,10 @@
+import { remove } from 'lodash';
 import { GameMode, Material } from 'org.bukkit';
 import { EntityType, Player } from 'org.bukkit.entity';
+import {
+  EntityDamageByEntityEvent,
+  PlayerDeathEvent,
+} from 'org.bukkit.event.entity';
 import { InventoryClickEvent, InventoryType } from 'org.bukkit.event.inventory';
 import {
   PlayerInteractEntityEvent,
@@ -12,13 +17,12 @@ import {
   ItemStack,
   PlayerInventory,
 } from 'org.bukkit.inventory';
-import { CustomItem } from '../common/items/CustomItem';
+import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
+import { Vector } from 'org.bukkit.util';
 import * as yup from 'yup';
-import {
-  EntityDamageByEntityEvent,
-  ItemSpawnEvent,
-  PlayerDeathEvent,
-} from 'org.bukkit.event.entity';
+import { CustomItem } from '../common/items/CustomItem';
+
+const draggedPlayers = new Map<Player, Player>();
 
 const Handcuffs = new CustomItem({
   id: 2,
@@ -45,6 +49,9 @@ const Key = new CustomItem({
   modelId: 4,
 });
 
+const MAX_CAPTURE_DISTANCE = 2;
+const CAPTURE_HEALTH_TRESHOLD = 4;
+
 // Handcuff a player
 Handcuffs.event(
   PlayerInteractEntityEvent,
@@ -63,7 +70,11 @@ Handcuffs.event(
     const offHandItem = captiveInventory.itemInOffHand;
     const mainHandItem = captiveInventory.itemInMainHand;
     if (LockedHandcuffs.check(offHandItem)) return;
-
+    if (!canCapturePlayer(captor, captive)) {
+      captor.sendActionBar('Et onnistu kahlitsemaan pelaajaa');
+      captive.sendActionBar('Sinua yritettiin kahlita');
+      return;
+    }
     // Add locked handcuffs to both hands
     handcuffs.amount -= 1;
     const keycode = handcuffs.itemMeta.displayName;
@@ -71,13 +82,22 @@ Handcuffs.event(
     captiveInventory.itemInMainHand = LockedHandcuffs.create(); // Mainhand handcuffs are only for visuals
 
     // Give player back the previous items from hands
-    giveItem(captive, offHandItem);
     giveItem(captive, mainHandItem);
+    giveItem(captive, offHandItem);
 
     captive.sendActionBar('Sinut on kahlittu');
     captor.sendActionBar('Kahlitset pelaajan');
   },
 );
+
+function canCapturePlayer(captor: Player, captive: Player) {
+  const distance = captive.location.distance(captor.location);
+  if (distance > MAX_CAPTURE_DISTANCE) return false;
+  if (captive.isSneaking()) return true;
+  if (captive.hasPotionEffect(PotionEffectType.SLOW)) return true;
+  if (captive.health <= CAPTURE_HEALTH_TRESHOLD) return true;
+  return false;
+}
 
 // Remove handcuffs from a player
 Key.event(
@@ -129,6 +149,8 @@ registerEvent(PlayerDeathEvent, (event) => {
   const player = event.entity as Player;
   const offHandItem = (player.inventory as PlayerInventory).itemInOffHand;
   const mainHandItem = (player.inventory as PlayerInventory).itemInMainHand;
+  // If the player was dragged
+  draggedPlayers.delete(player);
 
   if (LockedHandcuffs.check(offHandItem)) {
     if (event.drops.remove(offHandItem)) {
@@ -162,17 +184,7 @@ LockedHandcuffs.event(
   },
 );
 
-// Lock Handcuffs in the inventory ("F"-key)
-LockedHandcuffs.event(
-  PlayerSwapHandItemsEvent,
-  (event) => event.mainHandItem,
-  async (event) => {
-    if (event.player.gameMode === GameMode.CREATIVE) return;
-    event.setCancelled(true);
-  },
-);
-
-// Lock Handcuffs in the inventory ("F"-key)
+// Lock Handcuffs in the mainhand
 LockedHandcuffs.event(
   PlayerItemHeldEvent,
   (event) => (event.player.inventory as PlayerInventory).itemInOffHand,
@@ -182,7 +194,7 @@ LockedHandcuffs.event(
   },
 );
 
-// Prevent handcuffed player from interacting
+// Prevent handcuffed player from clicking
 LockedHandcuffs.event(
   PlayerInteractEvent,
   (event) => (event.player.inventory as PlayerInventory).itemInOffHand,
@@ -192,7 +204,7 @@ LockedHandcuffs.event(
   },
 );
 
-// Prevent handcuffed player from interacting
+// Prevent handcuffed player from attacking
 LockedHandcuffs.event(
   EntityDamageByEntityEvent,
   (event) =>
@@ -204,8 +216,79 @@ LockedHandcuffs.event(
 );
 
 function giveItem(player: Player, item: ItemStack) {
+  if (item.type === Material.AIR) return;
   const leftOver = player.inventory.addItem(item);
   if (leftOver.size()) {
     player.world.dropItem(player.location, leftOver.get(0));
   }
 }
+
+// Drag handcuffed player
+registerEvent(PlayerInteractEntityEvent, (event) => {
+  if (event.hand !== EquipmentSlot.HAND) return;
+  if (event.rightClicked.type !== EntityType.PLAYER) return;
+  const dragged = event.rightClicked as Player;
+  const player = event.player;
+
+  if (player.itemInHand.type !== Material.AIR) return;
+  const offHandItem = (dragged.inventory as PlayerInventory).itemInOffHand;
+  if (!LockedHandcuffs.check(offHandItem)) return;
+  if (player.location.distance(dragged.location) > 2) return;
+  if (draggedPlayers.has(dragged)) {
+    // Stop dragging
+    const dragger = draggedPlayers.get(dragged);
+    if (dragger) {
+      draggedPlayers.delete(dragged);
+      player.sendActionBar('Lopetat pelaajan raahaamisen');
+      dragged.sendActionBar('Sinua ei enää raahata');
+    }
+    return;
+  }
+  // Start dragging
+  draggedPlayers.set(dragged, player);
+
+  player.sendActionBar('Alat raahaamaan pelaajaa');
+  dragged.sendActionBar('Sinua raahataan');
+  event.setCancelled(true);
+});
+
+// Move dragged players
+const JUMP = new PotionEffect(PotionEffectType.JUMP, 60, 200);
+setInterval(() => {
+  for (const pair of draggedPlayers) {
+    const dragged = pair[0];
+    const dragger = pair[1];
+    if (!dragged.isOnline()) {
+      draggedPlayers.delete(dragged);
+    }
+    const draggerLoc = dragger.location;
+    const draggedLoc = dragged.location;
+    const distanceSquared = draggerLoc.distanceSquared(draggedLoc); // Squared is more lightweight
+    if (distanceSquared < 1.5 * 1.5) return;
+
+    if (distanceSquared < 10 * 10) {
+      // Teleport player to same height, (if the dragger goes up)
+      const yDifference = draggerLoc.y - draggedLoc.y;
+      if (yDifference > 0) {
+        draggedLoc.y += yDifference;
+        dragged.teleport(draggedLoc);
+      }
+
+      // Push player to towards the dragger
+      const push = dragger.location
+        .toVector()
+        .subtract(draggedLoc.toVector())
+        .multiply(0.4);
+      dragged.velocity = push;
+    } else {
+      // Players were too far apart -> free the player
+      draggedPlayers.delete(dragged);
+      dragged.sendActionBar('Irtoat raahauksesta');
+      dragger.sendActionBar('Menetät otteesi raahatusta pelaajasta');
+      return;
+    }
+    dragged.addPotionEffect(JUMP);
+  }
+}, 600);
+
+// Prevent dragged player from dying
