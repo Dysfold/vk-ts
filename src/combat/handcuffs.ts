@@ -87,6 +87,7 @@ Handcuffs.event(
 
     captive.sendActionBar('Sinut on kahlittu');
     captor.sendActionBar('Kahlitset pelaajan');
+    captive.world.playSound(captive.location, 'custom.lock', 1, 1);
   },
 );
 
@@ -113,6 +114,7 @@ Key.event(
     if (removeHandcuffs(handcuffed, player)) {
       handcuffed.sendActionBar('Kahleesi avattiin');
       player.sendActionBar('Avaat kahleet');
+      handcuffed.world.playSound(handcuffed.location, 'custom.lock', 1, 1);
     }
   },
 );
