@@ -7,6 +7,7 @@ import {
 import { InventoryClickEvent, InventoryType } from 'org.bukkit.event.inventory';
 import {
   PlayerDropItemEvent,
+  PlayerInteractAtEntityEvent,
   PlayerInteractEntityEvent,
   PlayerInteractEvent,
   PlayerItemHeldEvent,
@@ -220,6 +221,26 @@ LockedHandcuffs.event(
     ((event.damager as Player).inventory as PlayerInventory).itemInOffHand,
   async (event) => {
     (event.damager as Player).sendActionBar('Et voi tehdä näin kahlittuna');
+    event.setCancelled(true);
+  },
+);
+
+// Prevent handcuffed player from clicking armorstands
+LockedHandcuffs.event(
+  PlayerInteractAtEntityEvent,
+  (event) => (event.player.inventory as PlayerInventory).itemInOffHand,
+  async (event) => {
+    event.player.sendActionBar('Et voi tehdä näin kahlittuna');
+    event.setCancelled(true);
+  },
+);
+
+// Prevent handcuffed player from clicking entities
+LockedHandcuffs.event(
+  PlayerInteractEntityEvent,
+  (event) => (event.player.inventory as PlayerInventory).itemInOffHand,
+  async (event) => {
+    event.player.sendActionBar('Et voi tehdä näin kahlittuna');
     event.setCancelled(true);
   },
 );
