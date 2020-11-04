@@ -1,4 +1,3 @@
-import { remove } from 'lodash';
 import { GameMode, Material } from 'org.bukkit';
 import { EntityType, Player } from 'org.bukkit.entity';
 import {
@@ -19,7 +18,6 @@ import {
   PlayerInventory,
 } from 'org.bukkit.inventory';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
-import { Vector } from 'org.bukkit.util';
 import * as yup from 'yup';
 import { CustomItem } from '../common/items/CustomItem';
 
@@ -33,7 +31,7 @@ const Handcuffs = new CustomItem({
 });
 const HandcuffsItem = Handcuffs.create();
 
-const LockedHandcuffs = new CustomItem({
+export const LockedHandcuffs = new CustomItem({
   id: 3,
   name: 'Lukitut käsiraudat',
   type: Material.SHULKER_SHELL,
@@ -163,7 +161,7 @@ registerEvent(PlayerDeathEvent, (event) => {
   }
 });
 
-// Lock Handcuffs in the inventory
+// Lock handcuffs in the inventory
 LockedHandcuffs.event(
   InventoryClickEvent,
   (event) => event.currentItem,
@@ -175,7 +173,7 @@ LockedHandcuffs.event(
   },
 );
 
-// Lock Handcuffs in the inventory ("F"-key)
+// Lock handcuffs in the inventory ("F"-key)
 LockedHandcuffs.event(
   PlayerSwapHandItemsEvent,
   (event) => event.mainHandItem,
@@ -185,7 +183,7 @@ LockedHandcuffs.event(
   },
 );
 
-// Lock Handcuffs in the inventory (dropping)
+// Lock handcuffs in the inventory (dropping)
 LockedHandcuffs.event(
   PlayerDropItemEvent,
   (event) => event.itemDrop.itemStack,
@@ -195,7 +193,7 @@ LockedHandcuffs.event(
   },
 );
 
-// Lock Handcuffs in the mainhand
+// Lock handcuffs in the mainhand
 LockedHandcuffs.event(
   PlayerItemHeldEvent,
   (event) => (event.player.inventory as PlayerInventory).itemInOffHand,
@@ -301,5 +299,3 @@ setInterval(() => {
     dragged.addPotionEffect(JUMP);
   }
 }, 600);
-
-// Prevent dragged player from dying
