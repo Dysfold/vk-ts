@@ -7,6 +7,7 @@ import {
 } from 'org.bukkit.event.entity';
 import { InventoryClickEvent, InventoryType } from 'org.bukkit.event.inventory';
 import {
+  PlayerDropItemEvent,
   PlayerInteractEntityEvent,
   PlayerInteractEvent,
   PlayerItemHeldEvent,
@@ -178,6 +179,16 @@ LockedHandcuffs.event(
 LockedHandcuffs.event(
   PlayerSwapHandItemsEvent,
   (event) => event.mainHandItem,
+  async (event) => {
+    if (event.player.gameMode === GameMode.CREATIVE) return;
+    event.setCancelled(true);
+  },
+);
+
+// Lock Handcuffs in the inventory (dropping)
+LockedHandcuffs.event(
+  PlayerDropItemEvent,
+  (event) => event.itemDrop.itemStack,
   async (event) => {
     if (event.player.gameMode === GameMode.CREATIVE) return;
     event.setCancelled(true);
