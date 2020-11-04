@@ -322,3 +322,13 @@ setInterval(() => {
     dragged.addPotionEffect(JUMP);
   }
 }, 600);
+
+registerCommand('handcuffs', (sender, label, args) => {
+  if (!sender.isOp()) return;
+
+  if (sender instanceof Player) {
+    const player = sender as Player;
+    player.world.dropItem(player.location, Handcuffs.create());
+    player.world.dropItem(player.location, Key.create());
+  }
+});
