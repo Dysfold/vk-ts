@@ -6,7 +6,6 @@ import {
   InventoryClickEvent,
   InventoryType,
 } from 'org.bukkit.event.inventory';
-import { SlotType } from 'org.bukkit.event.inventory.InventoryType';
 import {
   PlayerInteractAtEntityEvent,
   PlayerInteractEvent,
