@@ -1,10 +1,14 @@
 import { Location, Material } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Gate } from 'org.bukkit.block.data.type';
+import { Player } from 'org.bukkit.entity';
 import {
+  Action,
+  BlockBreakEvent,
   BlockPistonExtendEvent,
   BlockPistonRetractEvent,
 } from 'org.bukkit.event.block';
+import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { CustomItem } from '../common/items/CustomItem';
@@ -22,6 +26,7 @@ const HandSaw = new CustomItem({
 
 const SAW_COOLDOWN_SECONDS = 1;
 const sawCooldowns = new Set<string>();
+const sawingPlayers = new Set<Player>();
 
 // prettier-ignore
 const DROPS = new Map<number, Material>([
@@ -154,3 +159,32 @@ function moveLogs(saw: Block, direction: BlockFace) {
 function playSawSound(location: Location) {
   location.world.playSound(location, 'custom.saw', 1, 1);
 }
+
+HandSaw.event(
+  PlayerInteractEvent,
+  (event) => event.item,
+  async (event) => {
+    if (event.action !== Action.LEFT_CLICK_BLOCK) return;
+    const block = event.clickedBlock;
+    if (!block) return;
+    if (!isWood(block.type)) return;
+    const player = event.player;
+
+    if (sawingPlayers.has(player)) return;
+    sawingPlayers.add(player);
+    playSawSound(block.location);
+    await wait(SAW_COOLDOWN_SECONDS, 'seconds');
+
+    // Call BlockBreakEvent because other plugins or features might want to log or prevent the action
+    const blockBreakEvent = new BlockBreakEvent(block, event.player);
+    server.pluginManager.callEvent(blockBreakEvent);
+    if (blockBreakEvent.isCancelled()) return;
+
+    const dropType = DROPS.get(block.type.ordinal()) || Material.AIR;
+    const drops = new ItemStack(dropType, 2);
+    block.world.dropItem(block.location.add(0.5, 0.5, 0.5), drops);
+
+    block.type = Material.AIR;
+    sawingPlayers.delete(player);
+  },
+);
