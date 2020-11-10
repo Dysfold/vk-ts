@@ -7,9 +7,17 @@ import {
 } from 'org.bukkit.event.block';
 import { ItemStack } from 'org.bukkit.inventory';
 import { CustomBlock } from '../common/blocks/CustomBlock';
+import { CustomItem } from '../common/items/CustomItem';
 
 export const Saw = new CustomBlock({
   type: Material.WARPED_FENCE_GATE,
+});
+
+const HandSaw = new CustomItem({
+  id: 5,
+  name: 'Käsisaha',
+  type: Material.IRON_HOE,
+  modelId: 5,
 });
 
 const SAW_COOLDOWN_SECONDS = 1;
