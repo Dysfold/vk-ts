@@ -1,4 +1,4 @@
-import { Material, SoundCategory } from 'org.bukkit';
+import { GameMode, Material, SoundCategory } from 'org.bukkit';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import {
@@ -71,6 +71,13 @@ registerEvent(PlayerInteractAtEntityEvent, (event) => {
   armorstand.helmet = itemInHand;
   event.setCancelled(true);
   playEquipSound(event.player);
+
+  // Creative players do not lose item when placing it on armorstand
+  if (event.player.gameMode === GameMode.CREATIVE) {
+    if (inventory.itemInMainHand.type === Material.AIR) {
+      inventory.itemInMainHand = armorstand.helmet;
+    }
+  }
 });
 
 function playEquipSound(player: Player) {
