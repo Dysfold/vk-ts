@@ -21,7 +21,7 @@ const HandSaw = new CustomItem({
 });
 
 const SAW_COOLDOWN_SECONDS = 1;
-const sawCooldowns = new Set<String>();
+const sawCooldowns = new Set<string>();
 
 // prettier-ignore
 const DROPS = new Map<number, Material>([
