@@ -12,5 +12,6 @@ require('./slaughter');
 require('./respack');
 require('./crawling');
 require('./piano');
-require('./quiet-doors');
+require('./quiet-open');
 require('./flour');
+require('./saw');
