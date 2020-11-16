@@ -5,6 +5,7 @@ import { Dispenser as DispenserData, Fence } from 'org.bukkit.block.data.type';
 import { BlockDispenseEvent } from 'org.bukkit.event.block';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import { CustomBlock } from '../common/blocks/CustomBlock';
+import { Cauldron } from 'org.bukkit.material';
 
 const Winch = new CustomBlock({
   type: Material.DROPPER,
@@ -28,7 +29,7 @@ function isRope(block: Block) {
 
 function isLog(block: Block) {
   const name = block.type.toString();
-  return name.includes('_LOG') || name.includes('_WOOD');
+  return name.endsWith('_LOG') || name.endsWith('_WOOD');
 }
 
 function isFence(block: Block) {
@@ -149,22 +150,23 @@ function lower(winch: Block) {
       return false;
     }
 
-    if (blockBelow.type === Material.WATER) {
-      if (block.type === Material.CAULDRON) {
-        const data = block.blockData as Levelled;
-        data.level = data.maximumLevel;
-        block.blockData = data;
-      }
-    }
+    const isWater = blockBelow.type === Material.WATER;
 
     blockBelow.setType(block.type, true);
     const data = blockBelow.blockData;
     blockBelow.blockData = data;
 
+    // Update fence connections
     if (data instanceof Fence) {
       blockBelow.setType(Material.AIR, true);
       blockBelow.state.update(true, true);
       blockBelow.setType(block.type, true);
+    }
+    // Fill the cauldron
+    else if (isWater && data instanceof Levelled) {
+      const cauldron = data as Levelled;
+      cauldron.level = cauldron.maximumLevel;
+      blockBelow.blockData = cauldron;
     }
 
     block.type = Material.AIR;
