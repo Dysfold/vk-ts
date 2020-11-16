@@ -33,7 +33,7 @@ function isLog(block: Block) {
 
 function isFence(block: Block) {
   const name = block.type.toString();
-  return name.includes('_FENCE') || name.includes('_WOOD');
+  return name.endsWith('_FENCE');
 }
 
 // Check if the block is a rope block or a liftable block
