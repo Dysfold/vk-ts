@@ -1,7 +1,7 @@
 import { Axis, Material } from 'org.bukkit';
 import { Block, BlockFace, Dispenser } from 'org.bukkit.block';
 import { Levelled, Orientable, Waterlogged } from 'org.bukkit.block.data';
-import { Dispenser as DispenserData } from 'org.bukkit.block.data.type';
+import { Dispenser as DispenserData, Fence } from 'org.bukkit.block.data.type';
 import { BlockDispenseEvent } from 'org.bukkit.event.block';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import { CustomBlock } from '../common/blocks/CustomBlock';
@@ -26,10 +26,25 @@ function isRope(block: Block) {
   return isRopeMaterial;
 }
 
+function isLog(block: Block) {
+  const name = block.type.toString();
+  return name.includes('_LOG') || name.includes('_WOOD');
+}
+
+function isFence(block: Block) {
+  const name = block.type.toString();
+  return name.includes('_FENCE') || name.includes('_WOOD');
+}
+
 // Check if the block is a rope block or a liftable block
 function isLiftable(block: Block) {
   const key = block.type.ordinal();
-  return isRope(block) || LiftableMaterials.has(key);
+  return (
+    isRope(block) ||
+    LiftableMaterials.has(key) ||
+    isLog(block) ||
+    isFence(block)
+  );
 }
 
 Winch.event(
@@ -66,6 +81,7 @@ Winch.event(
     }
   },
 );
+
 const MAX_LEN = 20;
 function lift(winch: Block) {
   let blockAbove: Block | undefined;
@@ -77,12 +93,18 @@ function lift(winch: Block) {
       if (!isLiftable(block)) {
         return;
       }
-      blockAbove.type = block.type;
       const data = block.blockData;
       if (data instanceof Waterlogged) {
         data.setWaterlogged(false);
       }
+
+      blockAbove.setType(block.type, true);
       blockAbove.blockData = data;
+      if (data instanceof Fence) {
+        blockAbove.setType(Material.AIR, true);
+        blockAbove.state.update(true, true);
+        blockAbove.setType(block.type, true);
+      }
       block.type = Material.AIR;
     } else {
       // There needs to be 2 rope blocks below the winch
@@ -135,8 +157,16 @@ function lower(winch: Block) {
       }
     }
 
-    blockBelow.type = block.type;
-    blockBelow.blockData = block.blockData;
+    blockBelow.setType(block.type, true);
+    const data = blockBelow.blockData;
+    blockBelow.blockData = data;
+
+    if (data instanceof Fence) {
+      blockBelow.setType(Material.AIR, true);
+      blockBelow.state.update(true, true);
+      blockBelow.setType(block.type, true);
+    }
+
     block.type = Material.AIR;
   }
 
