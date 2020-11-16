@@ -1,12 +1,10 @@
-import { Material, Axis } from 'org.bukkit';
-import { BlockFace, Dispenser, Block } from 'org.bukkit.block';
+import { Axis, Material } from 'org.bukkit';
+import { Block, BlockFace, Dispenser } from 'org.bukkit.block';
+import { Levelled, Orientable, Waterlogged } from 'org.bukkit.block.data';
 import { Dispenser as DispenserData } from 'org.bukkit.block.data.type';
 import { BlockDispenseEvent } from 'org.bukkit.event.block';
-import { InventoryOpenEvent, InventoryType } from 'org.bukkit.event.inventory';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import { CustomBlock } from '../common/blocks/CustomBlock';
-import { Orientable, Levelled, Waterlogged } from 'org.bukkit.block.data';
-import { Cauldron } from 'org.bukkit.material';
 
 const Winch = new CustomBlock({
   type: Material.DROPPER,
