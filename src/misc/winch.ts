@@ -7,6 +7,7 @@ import { InventoryOpenEvent, InventoryType } from 'org.bukkit.event.inventory';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { Float } from 'java.lang';
+import { LivingEntity } from 'org.bukkit.entity';
 
 const Winch = new CustomBlock({
   type: Material.DISPENSER,
@@ -145,6 +146,18 @@ function lift(winch: Block) {
       const block = log.getRelative(BlockFace.DOWN, i);
       if (!isFence(block)) break;
       liftedBlocks.push(block);
+
+      // Lift entities standing on the log
+      const entities = block.world.getNearbyEntities(
+        block.location.add(0.5, 1.5, 0.5),
+        1,
+        1.5,
+        1,
+      );
+      for (const entity of entities) {
+        if (entity instanceof LivingEntity)
+          entity.teleport(entity.location.add(0, 1, 0));
+      }
     }
   }
 
@@ -154,6 +167,19 @@ function lift(winch: Block) {
     const data = block.blockData;
     if (data instanceof Waterlogged) {
       data.setWaterlogged(false);
+    }
+    if (block.type === Material.CAULDRON) {
+      // Lift entities standing on the log
+      const entities = block.world.getNearbyEntities(
+        block.location.add(0.5, 1.5, 0.5),
+        1,
+        0.5,
+        1,
+      );
+      for (const entity of entities) {
+        if (entity instanceof LivingEntity)
+          entity.teleport(entity.location.add(0, 1, 0));
+      }
     }
 
     blockAbove.setType(block.type, true);
