@@ -114,49 +114,28 @@ function lift(winch: Block) {
     liftedBlocks.push(block);
     if (isLog(block)) {
       logs.push(block);
+
       // Get adjanced logs
       const logData = block.blockData as Orientable;
-      switch (logData.axis) {
-        case Axis.X:
-          // West - East
-          for (let i = 1; i < 4; i++) {
-            const log = block.getRelative(BlockFace.WEST, i);
-            if (isLog(log)) {
-              if (!isEmpty(log.getRelative(BlockFace.UP))) return false;
-              liftedBlocks.push(log);
-              logs.push(log);
-            } else break;
-          }
-          for (let i = 1; i < 4; i++) {
-            const log = block.getRelative(BlockFace.EAST, i);
-            if (isLog(log)) {
-              if (!isEmpty(log.getRelative(BlockFace.UP))) return false;
-              liftedBlocks.push(log);
-              logs.push(log);
-            } else break;
-          }
-          break;
-        case Axis.Z:
-          // North - South
-          for (let i = 1; i < 4; i++) {
-            const log = block.getRelative(BlockFace.NORTH, i);
-            if (isLog(log)) {
-              if (!isEmpty(log.getRelative(BlockFace.UP))) return false;
-              liftedBlocks.push(log);
-              logs.push(log);
-            } else break;
-          }
-          for (let i = 1; i < 4; i++) {
-            const log = block.getRelative(BlockFace.SOUTH, i);
-            if (isLog(log)) {
-              if (!isEmpty(log.getRelative(BlockFace.UP))) return false;
-              liftedBlocks.push(log);
-              logs.push(log);
-            } else break;
-          }
-          break;
+      const direction =
+        logData.axis === Axis.X ? BlockFace.WEST : BlockFace.NORTH;
+
+      for (let i = 1; i < 4; i++) {
+        const log = block.getRelative(direction, i);
+        if (isLog(log)) {
+          if (!isEmpty(log.getRelative(BlockFace.UP))) return false;
+          liftedBlocks.push(log);
+          logs.push(log);
+        } else break;
       }
-      break;
+      for (let i = 1; i < 4; i++) {
+        const log = block.getRelative(direction, -i);
+        if (isLog(log)) {
+          if (!isEmpty(log.getRelative(BlockFace.UP))) return false;
+          liftedBlocks.push(log);
+          logs.push(log);
+        } else break;
+      }
     }
   }
 
@@ -220,44 +199,27 @@ function lower(winch: Block) {
     loweredBlocks.unshift(block);
     if (isLog(block)) {
       logs.push(block);
+
       // Get adjanced logs
       const logData = block.blockData as Orientable;
-      switch (logData.axis) {
-        case Axis.X:
-          // West - East
-          for (let i = 1; i < 4; i++) {
-            const log = block.getRelative(BlockFace.WEST, i);
-            if (isLog(log)) {
-              loweredBlocks.unshift(log);
-              logs.push(log);
-            } else break;
-          }
-          for (let i = 1; i < 4; i++) {
-            const log = block.getRelative(BlockFace.EAST, i);
-            if (isLog(log)) {
-              loweredBlocks.unshift(log);
-              logs.push(log);
-            } else break;
-          }
-          break;
-        case Axis.Z:
-          // North - South
-          for (let i = 1; i < 4; i++) {
-            const log = block.getRelative(BlockFace.NORTH, i);
-            if (isLog(log)) {
-              loweredBlocks.unshift(log);
-              logs.push(log);
-            } else break;
-          }
-          for (let i = 1; i < 4; i++) {
-            const log = block.getRelative(BlockFace.SOUTH, i);
-            if (isLog(log)) {
-              loweredBlocks.unshift(log);
-              logs.push(log);
-            } else break;
-          }
-          break;
+      const direction =
+        logData.axis === Axis.X ? BlockFace.WEST : BlockFace.NORTH;
+
+      for (let i = 1; i < 4; i++) {
+        const log = block.getRelative(direction, i);
+        if (isLog(log)) {
+          loweredBlocks.unshift(log);
+          logs.push(log);
+        } else break;
       }
+      for (let i = 1; i < 4; i++) {
+        const log = block.getRelative(direction, -i);
+        if (isLog(log)) {
+          loweredBlocks.unshift(log);
+          logs.push(log);
+        } else break;
+      }
+
       break;
     }
   }
