@@ -11,6 +11,7 @@ import { LivingEntity } from 'org.bukkit.entity';
 
 const MAX_LEN = 20;
 const MAX_GATE_HEIGHT = 10;
+const WINCH_SPEED = 500; // millis
 
 const Winch = new CustomBlock({
   type: Material.DISPENSER,
@@ -136,6 +137,7 @@ function lift(winch: Block) {
           logs.push(log);
         } else break;
       }
+      break;
     }
   }
 
@@ -154,21 +156,29 @@ function lift(winch: Block) {
     const blockAbove = block.getRelative(BlockFace.UP);
     if (blockAbove.type === Material.DISPENSER) continue;
     const data = block.blockData;
+
+    if (block.type === Material.CAULDRON) {
+      // Lift entities standing on cauldron
+      // (entities on logs lifted earlier)
+      liftEntities(block);
+    }
+
+    // Remove water from block to avoid weird fountains :)
     if (data instanceof Waterlogged) {
       data.setWaterlogged(false);
-    }
-    if (block.type === Material.CAULDRON) {
-      // Lift entities standing on the log
-      liftEntities(block);
     }
 
     blockAbove.setType(block.type, true);
     blockAbove.blockData = data;
+
+    // Update fence connections
     if (data instanceof Fence) {
       blockAbove.setType(Material.AIR, true);
       blockAbove.state.update(true, true);
       blockAbove.setType(block.type, true);
     }
+
+    // Deleting the previus block
     block.type = Material.AIR;
   }
 
@@ -200,11 +210,12 @@ function lower(winch: Block) {
     if (isLog(block)) {
       logs.push(block);
 
-      // Get adjanced logs
+      // Get direction of the log (X OR Y)
       const logData = block.blockData as Orientable;
       const direction =
         logData.axis === Axis.X ? BlockFace.WEST : BlockFace.NORTH;
 
+      // Get adjanced logs
       for (let i = 1; i < 4; i++) {
         const log = block.getRelative(direction, i);
         if (isLog(log)) {
@@ -219,7 +230,6 @@ function lower(winch: Block) {
           logs.push(log);
         } else break;
       }
-
       break;
     }
   }
@@ -289,6 +299,7 @@ registerEvent(InventoryOpenEvent, (event) => {
   if (hasRope > 0) event.setCancelled(true);
 });
 
+// Move blocks affected by a winch
 setInterval(() => {
   winches.forEach((winch) => {
     const block = winch.block;
@@ -303,6 +314,7 @@ setInterval(() => {
       case BlockFace.DOWN: {
         const canBeLowered = lower(block);
         if (!canBeLowered) {
+          // Change direction, because the winch did hit a block or limit
           winch.direction = BlockFace.UP;
           lift(block);
         }
@@ -310,8 +322,10 @@ setInterval(() => {
       }
     }
   });
-}, 500);
+}, WINCH_SPEED);
 
+// Count rope items inside winch block
+// Note: If this is called on BlockDispenseEvent, the dispensed item will not be included
 function countRopes(inventory: Inventory) {
   let ropes = 0;
   for (const content of inventory.storageContents) {
@@ -322,8 +336,8 @@ function countRopes(inventory: Inventory) {
   return ropes;
 }
 
+// Lift entities standing on lifted the block (log or cauldron)
 function liftEntities(block: Block) {
-  // Lift entities standing on the block
   const entities = block.world.getNearbyEntities(
     block.location.add(0.5, 1.5, 0.5),
     1,
