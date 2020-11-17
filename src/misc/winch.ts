@@ -1,14 +1,14 @@
-import { Axis, Material } from 'org.bukkit';
+import { Axis, GameMode, Material } from 'org.bukkit';
 import { Block, BlockFace, Dispenser } from 'org.bukkit.block';
 import { Levelled, Orientable, Waterlogged } from 'org.bukkit.block.data';
 import { Dispenser as DispenserData, Fence } from 'org.bukkit.block.data.type';
 import { BlockDispenseEvent } from 'org.bukkit.event.block';
+import { InventoryOpenEvent, InventoryType } from 'org.bukkit.event.inventory';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import { CustomBlock } from '../common/blocks/CustomBlock';
-import { Cauldron } from 'org.bukkit.material';
 
 const Winch = new CustomBlock({
-  type: Material.DROPPER,
+  type: Material.DISPENSER,
 });
 
 const winches = new Map<string, { block: Block; direction: BlockFace }>();
@@ -179,18 +179,19 @@ function lower(winch: Block) {
   return true;
 }
 
-// Don't allow players to open dropper inventory if it contains only rope items
-// registerEvent(InventoryOpenEvent, (event) => {
-//   const inventory = event.inventory;
-//   if (inventory.type !== InventoryType.DROPPER) return;
-//   if (
-//     ((inventory.holder as Dispenser).block.blockData as DispenserData)
-//       .facing !== BlockFace.DOWN
-//   )
-//     return;
-//   const hasRope = countRopes(inventory);
-//   if (hasRope > 0) event.setCancelled(true);
-// });
+// Don't allow players to open DISPENSER inventory if it contains only rope items
+registerEvent(InventoryOpenEvent, (event) => {
+  const inventory = event.inventory;
+  if (inventory.type !== InventoryType.DISPENSER) return;
+  if (
+    ((inventory.holder as Dispenser).block.blockData as DispenserData)
+      .facing !== BlockFace.DOWN
+  )
+    return;
+  if (event.player.gameMode === GameMode.CREATIVE) return;
+  const hasRope = countRopes(inventory);
+  if (hasRope > 0) event.setCancelled(true);
+});
 
 setInterval(() => {
   winches.forEach((winch) => {
