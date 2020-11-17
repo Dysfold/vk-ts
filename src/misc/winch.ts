@@ -9,17 +9,23 @@ import { CustomBlock } from '../common/blocks/CustomBlock';
 import { Float } from 'java.lang';
 import { LivingEntity } from 'org.bukkit.entity';
 
+const MAX_LEN = 20;
+const MAX_GATE_HEIGHT = 10;
+
 const Winch = new CustomBlock({
   type: Material.DISPENSER,
 });
 
 const winches = new Map<string, { block: Block; direction: BlockFace }>();
 
-const WinchRopes = new Set<number>([Material.CHAIN.ordinal()]);
+// Materials which will go into the winch. Allow only CHAIN for now
+const RopeMaterials = new Set<number>([Material.CHAIN.ordinal()]);
+
+// Liftable blocks (other than logs, ropes or fences)
 const LiftableMaterials = new Set<number>([Material.CAULDRON.ordinal()]);
 
 function isRope(block: Block) {
-  const isRopeMaterial = WinchRopes.has(block.type.ordinal());
+  const isRopeMaterial = RopeMaterials.has(block.type.ordinal());
 
   if (block.type === Material.CHAIN) {
     // Allow only vertical chains
@@ -29,6 +35,7 @@ function isRope(block: Block) {
   return isRopeMaterial;
 }
 
+// Allow all types of log-like blocks
 function isLog(block: Block) {
   const name = block.type.toString();
   return name.endsWith('_LOG') || name.endsWith('_WOOD');
@@ -36,7 +43,12 @@ function isLog(block: Block) {
 
 function isFence(block: Block) {
   const name = block.type.toString();
-  return name.endsWith('_FENCE');
+  return name.endsWith('_FENCE'); // Allow fences, but not fence gates
+}
+
+// Can the block be replaced by moving gate/rope/block
+function isEmpty(block: Block) {
+  return block.type === Material.AIR || block.type === Material.WATER;
 }
 
 // Check if the block is a rope block or a liftable block
@@ -50,6 +62,7 @@ function isLiftable(block: Block) {
   );
 }
 
+// Start the winch
 Winch.event(
   BlockDispenseEvent,
   (event) => event.block,
@@ -58,13 +71,13 @@ Winch.event(
 
     const blockData = winch.blockData as DispenserData;
     if (blockData.facing !== BlockFace.DOWN) return;
-    if (!WinchRopes.has(event.item.type.ordinal())) return;
+    if (!RopeMaterials.has(event.item.type.ordinal())) return;
 
     const inventory = (winch.state as Dispenser).inventory;
     const ropes = countRopes(inventory) + 1;
     if (ropes === 0) return;
     event.setCancelled(true);
-    await wait(1, 'ticks'); // Delay because we need the inventory to update after cancelling the drop
+    await wait(1, 'ticks'); // Delay because we need the inventory to update after cancelling the drop/event
 
     const key = winch.location.toString();
     const activeWinch = winches.get(winch.location.toString());
@@ -85,7 +98,6 @@ Winch.event(
   },
 );
 
-const MAX_LEN = 20;
 function lift(winch: Block) {
   const inventory = (winch.state as Dispenser).inventory;
 
@@ -108,31 +120,39 @@ function lift(winch: Block) {
         case Axis.X:
           // West - East
           for (let i = 1; i < 4; i++) {
-            let log = block.getRelative(BlockFace.WEST, i);
+            const log = block.getRelative(BlockFace.WEST, i);
             if (isLog(log)) {
+              if (!isEmpty(log.getRelative(BlockFace.UP))) return false;
               liftedBlocks.push(log);
               logs.push(log);
-            }
-            log = block.getRelative(BlockFace.EAST, i);
+            } else break;
+          }
+          for (let i = 1; i < 4; i++) {
+            const log = block.getRelative(BlockFace.EAST, i);
             if (isLog(log)) {
+              if (!isEmpty(log.getRelative(BlockFace.UP))) return false;
               liftedBlocks.push(log);
               logs.push(log);
-            }
+            } else break;
           }
           break;
         case Axis.Z:
           // North - South
           for (let i = 1; i < 4; i++) {
-            let log = block.getRelative(BlockFace.NORTH, i);
+            const log = block.getRelative(BlockFace.NORTH, i);
             if (isLog(log)) {
+              if (!isEmpty(log.getRelative(BlockFace.UP))) return false;
               liftedBlocks.push(log);
               logs.push(log);
-            }
-            log = block.getRelative(BlockFace.SOUTH, i);
+            } else break;
+          }
+          for (let i = 1; i < 4; i++) {
+            const log = block.getRelative(BlockFace.SOUTH, i);
             if (isLog(log)) {
+              if (!isEmpty(log.getRelative(BlockFace.UP))) return false;
               liftedBlocks.push(log);
               logs.push(log);
-            }
+            } else break;
           }
           break;
       }
@@ -142,24 +162,14 @@ function lift(winch: Block) {
 
   // Select all fences below logs
   for (const log of logs) {
-    for (let i = 1; i < MAX_LEN; i++) {
+    for (let i = 1; i < MAX_GATE_HEIGHT; i++) {
       const block = log.getRelative(BlockFace.DOWN, i);
       if (!isFence(block)) break;
       liftedBlocks.push(block);
-
-      // Lift entities standing on the log
-      const entities = block.world.getNearbyEntities(
-        block.location.add(0.5, 1.5, 0.5),
-        1,
-        1.5,
-        1,
-      );
-      for (const entity of entities) {
-        if (entity instanceof LivingEntity)
-          entity.teleport(entity.location.add(0, 1, 0));
-      }
     }
   }
+
+  for (const log of logs) liftEntities(log);
 
   for (const block of liftedBlocks) {
     const blockAbove = block.getRelative(BlockFace.UP);
@@ -170,16 +180,7 @@ function lift(winch: Block) {
     }
     if (block.type === Material.CAULDRON) {
       // Lift entities standing on the log
-      const entities = block.world.getNearbyEntities(
-        block.location.add(0.5, 1.5, 0.5),
-        1,
-        0.5,
-        1,
-      );
-      for (const entity of entities) {
-        if (entity instanceof LivingEntity)
-          entity.teleport(entity.location.add(0, 1, 0));
-      }
+      liftEntities(block);
     }
 
     blockAbove.setType(block.type, true);
@@ -225,31 +226,35 @@ function lower(winch: Block) {
         case Axis.X:
           // West - East
           for (let i = 1; i < 4; i++) {
-            let log = block.getRelative(BlockFace.WEST, i);
+            const log = block.getRelative(BlockFace.WEST, i);
             if (isLog(log)) {
               loweredBlocks.unshift(log);
               logs.push(log);
-            }
-            log = block.getRelative(BlockFace.EAST, i);
+            } else break;
+          }
+          for (let i = 1; i < 4; i++) {
+            const log = block.getRelative(BlockFace.EAST, i);
             if (isLog(log)) {
               loweredBlocks.unshift(log);
               logs.push(log);
-            }
+            } else break;
           }
           break;
         case Axis.Z:
           // North - South
           for (let i = 1; i < 4; i++) {
-            let log = block.getRelative(BlockFace.NORTH, i);
+            const log = block.getRelative(BlockFace.NORTH, i);
             if (isLog(log)) {
               loweredBlocks.unshift(log);
               logs.push(log);
-            }
-            log = block.getRelative(BlockFace.SOUTH, i);
+            } else break;
+          }
+          for (let i = 1; i < 4; i++) {
+            const log = block.getRelative(BlockFace.SOUTH, i);
             if (isLog(log)) {
               loweredBlocks.unshift(log);
               logs.push(log);
-            }
+            } else break;
           }
           break;
       }
@@ -259,9 +264,14 @@ function lower(winch: Block) {
 
   // Select all fences below logs
   for (const log of logs) {
-    for (let i = 1; i < MAX_LEN; i++) {
+    for (let i = 1; i < MAX_GATE_HEIGHT; i++) {
       const block = log.getRelative(BlockFace.DOWN, i);
-      if (!isFence(block)) break;
+      if (!isFence(block)) {
+        if (block.type !== Material.AIR && block.type !== Material.WATER) {
+          return false;
+        }
+        break;
+      }
       loweredBlocks.unshift(block);
     }
   }
@@ -269,10 +279,7 @@ function lower(winch: Block) {
   // Loop blocks from bottom to top
   for (const block of loweredBlocks) {
     const blockBelow = block.getRelative(BlockFace.DOWN);
-    if (
-      blockBelow.type !== Material.AIR &&
-      blockBelow.type !== Material.WATER
-    ) {
+    if (!isEmpty(blockBelow)) {
       return false;
     }
 
@@ -325,7 +332,10 @@ setInterval(() => {
     const block = winch.block;
     switch (winch.direction) {
       case BlockFace.UP: {
-        lift(block);
+        if (!lift(block)) {
+          const key = block.location.toString();
+          winches.delete(key);
+        }
         break;
       }
       case BlockFace.DOWN: {
@@ -344,10 +354,27 @@ function countRopes(inventory: Inventory) {
   let ropes = 0;
   for (const content of inventory.storageContents) {
     if (!content) continue;
-    if (!WinchRopes.has(content.type.ordinal())) return -1;
+    if (!RopeMaterials.has(content.type.ordinal())) return -1;
     else ropes += content.amount;
   }
   return ropes;
+}
+
+function liftEntities(block: Block) {
+  // Lift entities standing on the block
+  const entities = block.world.getNearbyEntities(
+    block.location.add(0.5, 1.5, 0.5),
+    1,
+    1.5,
+    1,
+  );
+  for (const entity of entities) {
+    if (entity instanceof LivingEntity) {
+      const destination = entity.location;
+      destination.y = block.y + 2;
+      entity.teleport(destination);
+    }
+  }
 }
 
 function playWinchSound(location: Location) {
