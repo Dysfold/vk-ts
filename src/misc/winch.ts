@@ -1,4 +1,4 @@
-import { Axis, GameMode, Material } from 'org.bukkit';
+import { Axis, GameMode, Material, Location, SoundCategory } from 'org.bukkit';
 import { Block, BlockFace, Dispenser } from 'org.bukkit.block';
 import { Levelled, Orientable, Waterlogged } from 'org.bukkit.block.data';
 import { Dispenser as DispenserData, Fence } from 'org.bukkit.block.data.type';
@@ -6,6 +6,7 @@ import { BlockDispenseEvent } from 'org.bukkit.event.block';
 import { InventoryOpenEvent, InventoryType } from 'org.bukkit.event.inventory';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import { CustomBlock } from '../common/blocks/CustomBlock';
+import { Float } from 'java.lang';
 
 const Winch = new CustomBlock({
   type: Material.DISPENSER,
@@ -85,41 +86,92 @@ Winch.event(
 
 const MAX_LEN = 20;
 function lift(winch: Block) {
-  let blockAbove: Block | undefined;
   const inventory = (winch.state as Dispenser).inventory;
 
-  for (let i = 1; i < MAX_LEN + 1; i++) {
+  // Select all blocks below the winch to be moved
+  const liftedBlocks: Block[] = [];
+  const logs: Block[] = [];
+  for (let i = 1; i < MAX_LEN; i++) {
     const block = winch.getRelative(BlockFace.DOWN, i);
-    if (blockAbove) {
-      if (!isLiftable(block)) {
-        return;
-      }
-      const data = block.blockData;
-      if (data instanceof Waterlogged) {
-        data.setWaterlogged(false);
-      }
 
-      blockAbove.setType(block.type, true);
-      blockAbove.blockData = data;
-      if (data instanceof Fence) {
-        blockAbove.setType(Material.AIR, true);
-        blockAbove.state.update(true, true);
-        blockAbove.setType(block.type, true);
+    // 1st and 2nd blocks need to be ropes
+    if (i <= 2 && !isRope(block)) return false;
+
+    if (!isLiftable(block)) break;
+    liftedBlocks.push(block);
+    if (isLog(block)) {
+      logs.push(block);
+      // Get adjanced logs
+      const logData = block.blockData as Orientable;
+      switch (logData.axis) {
+        case Axis.X:
+          // West - East
+          for (let i = 1; i < 4; i++) {
+            let log = block.getRelative(BlockFace.WEST, i);
+            if (isLog(log)) {
+              liftedBlocks.push(log);
+              logs.push(log);
+            }
+            log = block.getRelative(BlockFace.EAST, i);
+            if (isLog(log)) {
+              liftedBlocks.push(log);
+              logs.push(log);
+            }
+          }
+          break;
+        case Axis.Z:
+          // North - South
+          for (let i = 1; i < 4; i++) {
+            let log = block.getRelative(BlockFace.NORTH, i);
+            if (isLog(log)) {
+              liftedBlocks.push(log);
+              logs.push(log);
+            }
+            log = block.getRelative(BlockFace.SOUTH, i);
+            if (isLog(log)) {
+              liftedBlocks.push(log);
+              logs.push(log);
+            }
+          }
+          break;
       }
-      block.type = Material.AIR;
-    } else {
-      // There needs to be 2 rope blocks below the winch
-      if (!isRope(block) || !isRope(block.getRelative(BlockFace.DOWN))) {
-        winches.delete(winch.location.toString());
-        return;
-      }
-      // Put the rope inside the winch
-      const ropeItem = new ItemStack(Material.CHAIN);
-      inventory.addItem(ropeItem);
+      break;
+    }
+  }
+
+  // Select all fences below logs
+  for (const log of logs) {
+    for (let i = 1; i < MAX_LEN; i++) {
+      const block = log.getRelative(BlockFace.DOWN, i);
+      if (!isFence(block)) break;
+      liftedBlocks.push(block);
+    }
+  }
+
+  for (const block of liftedBlocks) {
+    const blockAbove = block.getRelative(BlockFace.UP);
+    if (blockAbove.type === Material.DISPENSER) continue;
+    const data = block.blockData;
+    if (data instanceof Waterlogged) {
+      data.setWaterlogged(false);
     }
 
-    blockAbove = block;
+    blockAbove.setType(block.type, true);
+    blockAbove.blockData = data;
+    if (data instanceof Fence) {
+      blockAbove.setType(Material.AIR, true);
+      blockAbove.state.update(true, true);
+      blockAbove.setType(block.type, true);
+    }
+    block.type = Material.AIR;
   }
+
+  // Put the rope inside the winch
+  const ropeItem = new ItemStack(Material.CHAIN);
+  inventory.addItem(ropeItem);
+
+  playWinchSound(winch.location.add(0.5, 0.5, 0.5));
+  return true;
 }
 
 function lower(winch: Block) {
@@ -132,12 +184,60 @@ function lower(winch: Block) {
     return true;
   }
 
-  // Select all blocks to be moved
+  // Select all blocks below the winch to be moved
   const loweredBlocks: Block[] = [];
+  const logs: Block[] = [];
   for (let i = 1; i < MAX_LEN; i++) {
     const block = winch.getRelative(BlockFace.DOWN, i);
     if (!isLiftable(block)) break;
     loweredBlocks.unshift(block);
+    if (isLog(block)) {
+      logs.push(block);
+      // Get adjanced logs
+      const logData = block.blockData as Orientable;
+      switch (logData.axis) {
+        case Axis.X:
+          // West - East
+          for (let i = 1; i < 4; i++) {
+            let log = block.getRelative(BlockFace.WEST, i);
+            if (isLog(log)) {
+              loweredBlocks.unshift(log);
+              logs.push(log);
+            }
+            log = block.getRelative(BlockFace.EAST, i);
+            if (isLog(log)) {
+              loweredBlocks.unshift(log);
+              logs.push(log);
+            }
+          }
+          break;
+        case Axis.Z:
+          // North - South
+          for (let i = 1; i < 4; i++) {
+            let log = block.getRelative(BlockFace.NORTH, i);
+            if (isLog(log)) {
+              loweredBlocks.unshift(log);
+              logs.push(log);
+            }
+            log = block.getRelative(BlockFace.SOUTH, i);
+            if (isLog(log)) {
+              loweredBlocks.unshift(log);
+              logs.push(log);
+            }
+          }
+          break;
+      }
+      break;
+    }
+  }
+
+  // Select all fences below logs
+  for (const log of logs) {
+    for (let i = 1; i < MAX_LEN; i++) {
+      const block = log.getRelative(BlockFace.DOWN, i);
+      if (!isFence(block)) break;
+      loweredBlocks.unshift(block);
+    }
   }
 
   // Loop blocks from bottom to top
@@ -153,7 +253,7 @@ function lower(winch: Block) {
     const isWater = blockBelow.type === Material.WATER;
 
     blockBelow.setType(block.type, true);
-    const data = blockBelow.blockData;
+    const data = block.blockData;
     blockBelow.blockData = data;
 
     // Update fence connections
@@ -176,6 +276,7 @@ function lower(winch: Block) {
   rope.amount--;
   winch.getRelative(BlockFace.DOWN).type = Material.CHAIN;
 
+  playWinchSound(winch.location.add(0.5, 0.5, 0.5));
   return true;
 }
 
@@ -221,4 +322,14 @@ function countRopes(inventory: Inventory) {
     else ropes += content.amount;
   }
   return ropes;
+}
+
+function playWinchSound(location: Location) {
+  location.world.playSound(
+    location,
+    'minecraft:block.chain.step',
+    SoundCategory.BLOCKS,
+    (new Float(0.5) as unknown) as number,
+    (new Float(0.7) as unknown) as number,
+  );
 }
