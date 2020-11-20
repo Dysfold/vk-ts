@@ -1,6 +1,5 @@
 require('./barrel');
 require('./knock');
-require('./bonemeal');
 require('./falling');
 require('./compass');
 require('./portal');
@@ -11,7 +10,5 @@ require('./land-boats');
 require('./slaughter');
 require('./respack');
 require('./crawling');
-require('./piano');
 require('./quiet-doors');
-require('./flour');
 require('./hat');
