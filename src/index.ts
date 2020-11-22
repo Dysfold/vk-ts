@@ -7,3 +7,4 @@ require('./hydration/index');
 require('./food/index');
 require('./farming/index');
 require('./football/index');
+require('./blacksmith/index');
