@@ -1,8 +1,7 @@
 import { EntityType, Player } from 'org.bukkit.entity';
 import { InventoryCloseEvent, InventoryType } from 'org.bukkit.event.inventory';
-import { Reason } from 'org.bukkit.event.inventory.InventoryCloseEvent';
 import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
-import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
+import { PotionEffectType } from 'org.bukkit.potion';
 import { isHandcuffed } from './handcuffs';
 
 const MAX_DISTANCE = 1.6;
