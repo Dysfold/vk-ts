@@ -15,3 +15,4 @@ require('./piano');
 require('./quiet-open');
 require('./flour');
 require('./saw');
+require('./hat');
