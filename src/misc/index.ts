@@ -20,3 +20,4 @@ require('./winch');
 require('./saw');
 require('./hat');
 require('./throwables');
+require('./horn');
