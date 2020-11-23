@@ -1,3 +1,4 @@
+/* Disabled until https request are ready
 import { Player } from 'org.bukkit.entity';
 import {
   PlayerJoinEvent,
@@ -21,3 +22,4 @@ registerEvent(PlayerResourcePackStatusEvent, (event) => {
 function sendWarning(player: Player) {
   player.sendTitle('HUOMIO!', 'Resurssipaketti puuttuu', 1, 100, 1);
 }
+*/
