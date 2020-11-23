@@ -14,5 +14,6 @@ require('./crawling');
 require('./piano');
 require('./quiet-open');
 require('./flour');
+require('./winch');
 require('./saw');
 require('./hat');
