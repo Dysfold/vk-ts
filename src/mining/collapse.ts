@@ -35,7 +35,7 @@ registerEvent(BlockBreakEvent, (event) => {
   const block = event.block;
 
   // We only collapse underground mines
-  if (block.lightFromSky !== 0) return;
+  if (event.player.location.block.lightFromSky !== 0) return;
   if (!STONES.has(block.type.ordinal())) return;
   if (Math.random() > COLLAPSE_CHECK_CHANCE) return;
 
@@ -98,7 +98,7 @@ function collapse(air: Block) {
     location.add(0, 1, 0);
 
     const block = location.block;
-    if (!STONES.has(block.type.ordinal())) {
+    if (STONES.has(block.type.ordinal())) {
       block.setType(Material.AIR);
       const fallingBlock = block.world.spawnFallingBlock(
         block.location.add(0.5, 0.5, 0.5),
