@@ -5,6 +5,11 @@ import {
 } from 'org.bukkit.event.inventory';
 import { PlayerAttemptPickupItemEvent } from 'org.bukkit.event.player';
 
+/* 
+Prevent players from getting heart of the sea -items 
+because they are reserved for hidden or forbidden items.
+*/
+
 const TYPE = Material.HEART_OF_THE_SEA;
 
 registerEvent(PlayerAttemptPickupItemEvent, (event) => {
