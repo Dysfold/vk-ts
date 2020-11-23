@@ -1,15 +1,1 @@
-on: pull_request
 
-name: Notify discord
-
-jobs:
-  build:
-    name: Upload Release Asset
-    runs-on: ubuntu-latest
-    steps:
-    - name: Discord notification
-      env:
-        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-      uses: Ilshidur/action-discord@master
-      with:
-        args: 'Uusi pull request {{ EVENT_PAYLOAD.repository.full_name }}-repositorissa luotu.'
