@@ -2,10 +2,11 @@ import { Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { ArmorStand, EntityType, Pose } from 'org.bukkit.entity';
 import { BlockFormEvent, BlockPistonExtendEvent } from 'org.bukkit.event.block';
+import { EntityDeathEvent } from 'org.bukkit.event.entity';
 import { SpawnReason } from 'org.bukkit.event.entity.CreatureSpawnEvent';
 import { PlayerInteractAtEntityEvent } from 'org.bukkit.event.player';
 import { ChunkLoadEvent } from 'org.bukkit.event.world';
-import { PlayerInventory } from 'org.bukkit.inventory';
+import { ItemStack, PlayerInventory } from 'org.bukkit.inventory';
 import { EulerAngle } from 'org.bukkit.util';
 
 // prettier-ignore
@@ -100,7 +101,7 @@ registerEvent(PlayerInteractAtEntityEvent, (event) => {
 
   let pose = POSES[Math.floor(Math.random() * POSES.length)];
 
-  // Small chance to get completely random pose
+  // Chance to get completely random pose
   if (Math.random() < 0.2) {
     pose = {
       head: randomEulerAngle(),
@@ -147,6 +148,18 @@ registerEvent(BlockPistonExtendEvent, (event) => {
       if (canBeChanged(armorstand)) {
         armorstand.setSmall(true);
       }
+    }
+  }
+});
+
+// Drop 2 sticks when armorstand with arms dies
+const ARM_DROPS = new ItemStack(Material.STICK, 2);
+registerEvent(EntityDeathEvent, (event) => {
+  if (event.entity.type !== EntityType.ARMOR_STAND) return;
+  const armorstand = event.entity as ArmorStand;
+  if (armorstand.hasArms()) {
+    if (canBeChanged(armorstand)) {
+      event.drops.add(ARM_DROPS);
     }
   }
 });
