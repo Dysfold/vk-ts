@@ -71,7 +71,7 @@ setInterval(() => {
 setInterval(() => {
   // Reverse for-loop because we are deleting
   dehydratedPlayers.forEach((player) => {
-    if (!player.isOnline || player.gameMode !== GameMode.SURVIVAL) {
+    if (!player.isOnline() || player.gameMode !== GameMode.SURVIVAL) {
       dehydratedPlayers.delete(player);
     }
 
