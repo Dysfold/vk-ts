@@ -6,5 +6,7 @@ require('./combat/index');
 require('./hydration/index');
 require('./food/index');
 require('./farming/index');
+require('./games/index');
+require('./instruments/index');
 require('./football/index');
 require('./admin/index');
