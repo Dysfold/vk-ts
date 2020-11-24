@@ -5,7 +5,7 @@ import { Chicken, Cow, EntityType, LivingEntity, Pig } from 'org.bukkit.entity';
 import { EntityBreedEvent } from 'org.bukkit.event.entity';
 import { ItemStack } from 'org.bukkit.inventory';
 
-const animalsWithCustomBreeding: EntityType[] = [
+const ANIMALS_WITH_CUSTOM_BREEDING: EntityType[] = [
   EntityType.COW,
   EntityType.PIG,
   EntityType.CHICKEN,
@@ -23,16 +23,16 @@ function hasFoodSource(entity: LivingEntity): boolean {
   for (const block of blocksNearEntity) {
     if (entity instanceof Chicken) {
       if (block.type === SEED_BOWL) {
-        block.setType(EMPTY_SEED_BOWL);
+        block.type = EMPTY_SEED_BOWL;
         const data = block.blockData;
         if (data instanceof Waterlogged) data.setWaterlogged(false);
-        block.setBlockData(data);
+        block.blockData = data;
         playFeedingEffects(block, Material.WHEAT_SEEDS);
         return true;
       }
     } else if (entity instanceof Cow) {
       if (block.type === Material.HAY_BLOCK) {
-        block.setType(Material.AIR);
+        block.type = Material.AIR;
         playFeedingEffects(block, Material.HAY_BLOCK);
         return true;
       }
@@ -40,8 +40,8 @@ function hasFoodSource(entity: LivingEntity): boolean {
       if (block.type === Material.COMPOSTER) {
         const composterData = block.blockData as Levelled;
         if (composterData.level >= BREED_COMPOST_LEVEL) {
-          composterData.setLevel(composterData.level - BREED_COMPOST_LEVEL);
-          block.setBlockData(composterData);
+          composterData.level = composterData.level - BREED_COMPOST_LEVEL;
+          block.blockData = composterData;
           playFeedingEffects(block, Material.COMPOSTER);
           return true;
         }
@@ -58,8 +58,8 @@ function hasWaterSource(entity: LivingEntity): boolean {
     if (block.type === Material.CAULDRON) {
       const cauldronData = block.blockData as Levelled;
       if (cauldronData.level >= BREED_WATER_LEVEL) {
-        cauldronData.setLevel(cauldronData.level - BREED_WATER_LEVEL);
-        block.setBlockData(cauldronData);
+        cauldronData.level = cauldronData.level - BREED_WATER_LEVEL;
+        block.blockData = cauldronData;
         playDrinkingEffects(block);
         return true;
       }
@@ -107,25 +107,26 @@ async function playFeedingEffects(block: Block, material: Material) {
 function playDrinkingEffects(block: Block) {
   const location = block.location.add(0.5, 0.8, 0.5);
 
-  for (let i = 0; i < 4; i++) {
-    location.world.playSound(location, Sound.ITEM_BUCKET_EMPTY, 0.5, 1);
-    location.world.spawnParticle(
-      Particle.WATER_SPLASH,
-      location,
-      5,
-      0,
-      0,
-      0,
-      0.1,
-    );
-  }
+  location.world.playSound(location, Sound.ITEM_BUCKET_EMPTY, 0.5, 1);
+  location.world.spawnParticle(
+    Particle.WATER_SPLASH,
+    location,
+    10,
+    0,
+    0,
+    0,
+    0.1,
+  );
 }
 
 registerEvent(EntityBreedEvent, (event) => {
-  if (!animalsWithCustomBreeding.includes(event.entityType)) return;
+  if (!ANIMALS_WITH_CUSTOM_BREEDING.includes(event.entityType)) return;
 
   const baby = event.entity as LivingEntity;
   const mother = event.mother as LivingEntity;
 
-  if (!hasFoodSource(mother) || !hasWaterSource(mother)) baby.remove();
+  const hasFood = hasFoodSource(mother);
+  const hasWater = hasWaterSource(mother);
+
+  if (!hasFood || !hasWater) baby.remove();
 });
