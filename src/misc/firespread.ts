@@ -8,18 +8,19 @@ const VERTICAL_MULTIPLIER = 0.98;
 const HORIZONTAL_MULTIPLIER = 0.3;
 const OLD_EXTINGUISH_CHANCE = 0.75; // Fires might not extinguish completely if below 1-HORIZONTAL_MULTIPLIER
 
+const FIREPLACE_BLOCKS = [Material.COAL_BLOCK, Material.MAGMA_BLOCK];
+
 const chanceOf = (percent: number) => Math.random() < percent;
-const fireplaceBlocks: Material[] = [Material.COAL_BLOCK, Material.MAGMA_BLOCK];
 
 function addAge(fire: Block) {
   if (fire.type !== Material.FIRE) return;
   const fireData = fire.blockData as Fire;
   if (fireData.age + 1 >= MAX_FIRE_AGE) {
-    fireData.setAge(MAX_FIRE_AGE);
+    fireData.age = MAX_FIRE_AGE;
   } else {
-    fireData.setAge(fireData.age + 1);
+    fireData.age++;
   }
-  fire.setBlockData(fireData);
+  fire.blockData = fireData;
 }
 
 function getAge(fire: Block): number {
@@ -35,7 +36,7 @@ function cancelFireSpreadByChance(source: Block, dirMod: number): boolean {
   } else if (getAge(source) <= 13) {
     if (chanceOf(0.9 * dirMod)) return true;
   } else {
-    if (chanceOf(OLD_EXTINGUISH_CHANCE)) source.setType(Material.AIR);
+    if (chanceOf(OLD_EXTINGUISH_CHANCE)) source.type = Material.AIR;
     if (chanceOf(1 * dirMod)) return true;
   }
   addAge(source);
@@ -50,7 +51,7 @@ registerEvent(BlockSpreadEvent, (event) => {
 
   // Cancel spread from fireplace blocks
   const ignitionPointMaterial = source.location.add(0, -1, 0).block.type;
-  if (fireplaceBlocks.includes(ignitionPointMaterial)) {
+  if (FIREPLACE_BLOCKS.includes(ignitionPointMaterial)) {
     event.setCancelled(true);
     return;
   }
