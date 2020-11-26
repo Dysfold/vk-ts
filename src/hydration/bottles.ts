@@ -1,7 +1,6 @@
-import { replace } from 'lodash';
 import { Material } from 'org.bukkit';
 import { Levelled, Waterlogged } from 'org.bukkit.block.data';
-import { Item, Player } from 'org.bukkit.entity';
+import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import {
   PlayerInteractEvent,
