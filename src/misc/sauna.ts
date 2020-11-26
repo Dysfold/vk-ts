@@ -1,5 +1,6 @@
 import { Material, Particle, Sound } from 'org.bukkit';
-import { Block } from 'org.bukkit.block';
+import { Block, BlockFace } from 'org.bukkit.block';
+import { Furnace } from 'org.bukkit.block.data.type';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import {
@@ -15,6 +16,9 @@ registerEvent(PlayerInteractEvent, (event) => {
   if (event.clickedBlock?.type !== SAUNA_STONES) return;
   if (event.item?.type !== Material.POTION) return;
   if (event.action !== Action.LEFT_CLICK_BLOCK) return;
+  const blockBelow = event.clickedBlock.getRelative(BlockFace.DOWN);
+  if (blockBelow.type !== Material.FURNACE) return;
+  if (!(blockBelow.blockData as Furnace).isLit()) return;
   event.setCancelled(true);
 
   // Remove water from the item
