@@ -234,8 +234,8 @@ function bake(block: Block) {
 function summonItemFrame(block: Block, face: BlockFace, item: ItemStack) {
   const loc = block.getRelative(face).location;
   const frame = block.world.spawnEntity(loc, EntityType.ITEM_FRAME) as any; // ItemFrame type didn't exist
+  frame.facingDirection = face;
   frame.visible = false;
-  frame.facing = face;
   frame.item = item;
   return frame;
 }
