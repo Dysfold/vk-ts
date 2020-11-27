@@ -3,6 +3,7 @@ import { Block } from 'org.bukkit.block';
 import { Levelled, Waterlogged } from 'org.bukkit.block.data';
 import { Chicken, Cow, EntityType, LivingEntity, Pig } from 'org.bukkit.entity';
 import { EntityBreedEvent } from 'org.bukkit.event.entity';
+import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
 
 const ANIMALS_WITH_CUSTOM_BREEDING: EntityType[] = [
@@ -13,6 +14,7 @@ const ANIMALS_WITH_CUSTOM_BREEDING: EntityType[] = [
 
 const BREED_WATER_LEVEL = 1; // Max 3
 const BREED_COMPOST_LEVEL = 4; // Max 8
+const BOWL_SEED_AMOUNT = 4;
 
 const SEED_BOWL = Material.DEAD_BRAIN_CORAL_FAN;
 const EMPTY_SEED_BOWL = Material.DEAD_TUBE_CORAL_FAN;
@@ -129,4 +131,22 @@ registerEvent(EntityBreedEvent, (event) => {
   const hasWater = hasWaterSource(mother);
 
   if (!hasFood || !hasWater) baby.remove();
+});
+
+registerEvent(PlayerInteractEvent, (event) => {
+  if (!event.clickedBlock) return;
+  if (!event.item) return;
+  if (event.item.type !== Material.WHEAT_SEEDS) return;
+  if (event.clickedBlock.type !== EMPTY_SEED_BOWL) return;
+  if (event.item.amount < BOWL_SEED_AMOUNT) return;
+
+  const block = event.clickedBlock;
+  const item = event.item;
+
+  block.type = SEED_BOWL;
+  const data = block.blockData;
+  if (data instanceof Waterlogged) data.setWaterlogged(false);
+  block.blockData = data;
+
+  item.amount -= BOWL_SEED_AMOUNT;
 });
