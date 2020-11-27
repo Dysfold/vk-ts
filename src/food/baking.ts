@@ -1,4 +1,4 @@
-import { Location, Material } from 'org.bukkit';
+import { Material } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Entity, EntityType, Hanging, Item } from 'org.bukkit.entity';
 import { Action, BlockBreakEvent } from 'org.bukkit.event.block';
@@ -76,7 +76,12 @@ const RESIPES = [
     dough: DOUGH_PUMPKIN_PIE,
     doughRisen: DOUGH_PUMPKIN_PIE,
     result: DOUGH_PUMPKIN_PIE_ITEM.create(),
-    ingredients: [Material.PUMPKIN, Material.SUGAR, Material.EGG],
+    ingredients: [
+      Material.PUMPKIN,
+      Material.SUGAR,
+      Material.POTION,
+      Material.EGG,
+    ],
   },
   {
     dough: DOUGH_COOKIE,
@@ -86,6 +91,7 @@ const RESIPES = [
       Material.PHANTOM_MEMBRANE,
       Material.SUGAR,
       Material.COCOA_BEANS,
+      Material.POTION,
     ],
   },
 ];
