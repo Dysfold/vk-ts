@@ -2,7 +2,6 @@ import { Material, Sound, SoundCategory } from 'org.bukkit';
 import { EntityType, Snowball } from 'org.bukkit.entity';
 import { ProjectileHitEvent } from 'org.bukkit.event.entity';
 import { PlayerDropItemEvent } from 'org.bukkit.event.player';
-import { ItemStack } from 'org.bukkit.inventory';
 import { Vector } from 'org.bukkit.util';
 import { LockedHandcuffs } from '../combat/handcuffs';
 
