@@ -4,6 +4,7 @@ import { ProjectileHitEvent } from 'org.bukkit.event.entity';
 import { PlayerDropItemEvent } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
 import { Vector } from 'org.bukkit.util';
+import { LockedHandcuffs } from '../combat/handcuffs';
 
 const VELOCITY_MULTIPLIER = 0.8;
 const THROW_SOUND = Sound.ENTITY_SNOWBALL_THROW;
@@ -23,16 +24,19 @@ registerEvent(PlayerDropItemEvent, (event) => {
 
   if (player.velocity.y < 0.08) return; // Return if player didn't jump
   if (NOT_THROWABLE.includes(itemType)) return;
+  if (LockedHandcuffs.check(item)) return;
 
   event.setCancelled(true);
-  item.amount--;
 
   const snowball = player.world.spawnEntity(
     player.location.add(0, 1.4, 0),
     EntityType.SNOWBALL,
   ) as Snowball;
 
-  snowball.item = new ItemStack(itemType);
+  snowball.item = item;
+  snowball.item.amount = 1;
+  item.amount--;
+
   snowball.velocity = player.eyeLocation.direction.multiply(
     VELOCITY_MULTIPLIER,
   );
