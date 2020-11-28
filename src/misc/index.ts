@@ -11,7 +11,6 @@ require('./slaughter');
 require('./respack');
 require('./crawling');
 require('./quiet-open');
-require('./naming');
 require('./heart-of-the-sea');
 require('./winch');
 require('./saw');
