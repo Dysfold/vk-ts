@@ -9,12 +9,8 @@ import {
   PlayerInventory,
 } from 'org.bukkit.inventory';
 import { Vector } from 'org.bukkit.util';
-import { CustomBlock } from '../common/blocks/CustomBlock';
 import { CustomItem } from '../common/items/CustomItem';
-
-const Bowl = new CustomBlock({
-  type: Material.DEAD_TUBE_CORAL_FAN,
-});
+import { Bowl } from './Bowl';
 
 const INGREDIENT_PICKUP_DELAY = 5; // Seconds
 
