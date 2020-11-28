@@ -2,14 +2,14 @@ import { Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
 import { HandSaw } from '../../misc/saw';
 
-interface CustomShapedResipe {
+export interface CustomShapedRecipe {
   key: string;
   shape: string[];
   ingredients: Map<string, Material | ItemStack>;
   result: ItemStack;
 }
 
-export const SHAPED_RECIPES: CustomShapedResipe[] = [
+export const SHAPED_RECIPES: CustomShapedRecipe[] = [
   {
     // TEST ITEMSTACK
     key: 'itemstack_test',
