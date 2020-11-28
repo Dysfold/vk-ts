@@ -1,7 +1,5 @@
 import { Material } from 'org.bukkit';
-import { BlockFace } from 'org.bukkit.block';
-import { Action } from 'org.bukkit.event.block';
-import { PlayerInteractEvent } from 'org.bukkit.event.player';
+import { BlockPlaceEvent } from 'org.bukkit.event.block';
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { CustomItem } from '../common/items/CustomItem';
 
@@ -22,12 +20,8 @@ Bowl.onBreak(async (event) => {
   return true;
 });
 
-// Bowls should be place only on top of the blocks
-registerEvent(PlayerInteractEvent, (event) => {
-  if (event.action !== Action.RIGHT_CLICK_BLOCK) return;
-  if (event.item?.type === Material.DEAD_TUBE_CORAL_FAN) {
-    if (event.blockFace !== BlockFace.UP) {
-      event.setCancelled(true);
-    }
-  }
+// Prevent bowls to be placed on walls
+registerEvent(BlockPlaceEvent, (event) => {
+  if (event.block.type === Material.DEAD_TUBE_CORAL_WALL_FAN)
+    event.setCancelled(true);
 });

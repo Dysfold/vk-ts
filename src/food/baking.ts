@@ -108,7 +108,7 @@ setInterval(() => {
     else if (seconds > 0) {
       risingDoughs.set(frame, { seconds: --seconds, risen: risen });
     } else {
-      (frame as any).item = risen;
+      (frame as any).setItem(risen, false); // false = no sound
       risingDoughs.delete(frame);
     }
   });
@@ -238,7 +238,7 @@ function summonItemFrame(block: Block, face: BlockFace, item: ItemStack) {
   const frame = block.world.spawnEntity(loc, EntityType.ITEM_FRAME) as any; // ItemFrame type didn't exist
   frame.facingDirection = face;
   frame.visible = false;
-  frame.item = item;
+  frame.setItem(item, false); // false = no sound
   return frame;
 }
 
