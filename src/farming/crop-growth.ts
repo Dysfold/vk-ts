@@ -1,10 +1,17 @@
-import { Material } from 'org.bukkit';
+import { Location, Material } from 'org.bukkit';
+import { BlockFace } from 'org.bukkit.block';
 import { BlockGrowEvent } from 'org.bukkit.event.block';
 
 const COLD_TEMP = 0.2; // Less than 0.15 will be snowy
 const COOL_TEMP = 0.5;
 const WARM_TEMP = 0.89;
 const HOT_TEMP = 0.95; // Greater than 0.95 will be dry biome (savanna etc), jungles are 0.85-0.95
+
+// Yeast has its own growth rates and is not affected by location
+const YEAST_MATERIAL = Material.NETHER_WART;
+const YEAST_GROWTH_RATE = 0.05;
+const YEAST_LIGHT_LEVEL = 3;
+const YEAST_WATER_RADIUS = 3;
 
 const ZONES = {
   northern: {
@@ -59,6 +66,44 @@ registerEvent(BlockGrowEvent, (event) => {
   }
   event.setCancelled(cancelled);
 });
+
+// Special conditions for yeast
+registerEvent(BlockGrowEvent, (event) => {
+  const block = event.block;
+  if (block.type !== YEAST_MATERIAL) return;
+
+  if (block.lightLevel > YEAST_LIGHT_LEVEL) {
+    event.setCancelled(true);
+    block.type = Material.DEAD_BUSH; // TODO: Maybe use different block because dead bush breaks after blockupdate?
+    return;
+  }
+  // Slow down the growth
+  if (!chanceOf(YEAST_GROWTH_RATE)) {
+    event.setCancelled(true);
+    return;
+  }
+
+  if (!hasWaterNearby(block.location, YEAST_WATER_RADIUS)) {
+    event.setCancelled(true);
+    event.block.getRelative(BlockFace.DOWN).type = Material.COARSE_DIRT;
+  }
+});
+
+// Check if there is water within the radius
+function hasWaterNearby(location: Location, r: number) {
+  const x = location.x;
+  const y = location.y;
+  const z = location.z;
+  for (let xi = x - r; xi <= location.x + r; xi++) {
+    for (let zi = z - r; zi <= z + r; zi++) {
+      const material = location.world.getBlockAt(xi, y - 1, zi).type;
+      if (material === Material.WATER) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
 // Returns probability of growth at given z
 function calculateSuccess(
