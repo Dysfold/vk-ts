@@ -24,23 +24,24 @@ ShepherdsStaff.event(
     if (!clicked) return;
     if (event.hand !== EquipmentSlot.HAND) return;
 
-    const pusher = event.player;
+    const player = event.player;
     if (!(clicked instanceof LivingEntity)) return;
     const target = clicked as LivingEntity;
     if (target.type === EntityType.PLAYER) {
       if ((target as Player).isSneaking()) return;
     }
-    if (cooldowns.has(pusher)) return;
+    if (cooldowns.has(player)) return;
 
     // Start pulling
-    cooldowns.add(pusher);
+    cooldowns.add(player);
     const velocity = target.velocity;
-    const direction = pusher.location.direction.multiply(FORCE);
+    const direction = player.location.direction.multiply(FORCE);
     velocity.subtract(direction);
     velocity.y = Math.min(velocity.y, MAX_FORCE_UPWARDS);
     target.velocity = velocity;
+    player.swingMainHand();
 
     await wait(1, 'seconds');
-    cooldowns.delete(pusher);
+    cooldowns.delete(player);
   },
 );
