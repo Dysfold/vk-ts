@@ -29,8 +29,9 @@ function getAge(fire: Block): number {
 }
 
 function cancelFireSpreadByChance(source: Block, dirMod: number): boolean {
+  // Increase chance of canceling spread based on age of fire
   if (getAge(source) <= 1) {
-    if (chanceOf(1 * dirMod)) return true;
+    if (chanceOf(1 * dirMod)) return true; // Very young fire should spread slowly -> Higher chance of canceling spread
   } else if (getAge(source) <= 5) {
     if (chanceOf(0.8 * dirMod)) return true;
   } else if (getAge(source) <= 13) {
