@@ -17,5 +17,6 @@ require('./heart-of-the-sea');
 require('./winch');
 require('./saw');
 require('./hat');
-require('./armorstand-pose');
 require('./throwables');
+require('./horn');
+require('./armorstand-pose');
