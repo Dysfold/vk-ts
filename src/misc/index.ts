@@ -16,7 +16,7 @@ require('./heart-of-the-sea');
 require('./winch');
 require('./saw');
 require('./hat');
-require('./throwables
+require('./throwables');
 require('./itemframe');
 require('./shepherds-staff');
 require('./horn');
