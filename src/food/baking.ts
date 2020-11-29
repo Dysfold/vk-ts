@@ -56,7 +56,7 @@ const DOUGH_PUMPKIN_PIE_ITEM = new CustomItem({
   name: 'Kurpitsapiirakkataikina',
 });
 
-const RESIPES = [
+const RECIPES = [
   {
     dough: DOUGH_BREAD,
     doughRisen: DOUGH_BREAD_RISEN,
@@ -96,7 +96,7 @@ const risingDoughs = new Map<Entity, { seconds: number; risen: ItemStack }>([]);
 
 // List all possible ingredients
 const INGREDIENTS = new Set<number>();
-for (const recipe of RESIPES) {
+for (const recipe of RECIPES) {
   for (const ingredient of recipe.ingredients)
     INGREDIENTS.add(ingredient.ordinal());
 }
@@ -122,13 +122,13 @@ Bowl.event(
     const itemFrame = getItemFrame(event.block, BlockFace.UP);
     if (itemFrame) {
       const item = itemFrame.item;
-      const doughRisen = RESIPES.find((r) => r.doughRisen.check(item));
+      const doughRisen = RECIPES.find((r) => r.doughRisen.check(item));
 
       if (doughRisen) {
         // Delete the item frame and drop a dough
         dropItem(event.block, doughRisen.result);
         itemFrame.remove();
-      } else if (RESIPES.some((r) => r.dough.check(item))) {
+      } else if (RECIPES.some((r) => r.dough.check(item))) {
         // Delete the item frame, but without a drop
         itemFrame.remove();
       }
@@ -160,7 +160,7 @@ Bowl.event(
       const frameItem = frame.item;
       if (!(frameItem instanceof ItemStack)) return;
 
-      for (const recipe of RESIPES) {
+      for (const recipe of RECIPES) {
         if (recipe.doughRisen.check(frameItem)) {
           // Dough has risen and can be picked
           dropItem(bowl, recipe.result);
@@ -213,7 +213,7 @@ function bake(block: Block) {
     types.push(entity.itemStack.type);
   }
   if (!drops.length) return;
-  for (const recipe of RESIPES) {
+  for (const recipe of RECIPES) {
     // Check if the recipe contains the incredients
     if (types.every((i) => recipe.ingredients.includes(i))) {
       drops.forEach((drop) => {
