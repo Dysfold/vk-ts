@@ -9,6 +9,7 @@ require('./nametag');
 require('./land-boats');
 require('./slaughter');
 require('./respack');
+require('./bear-trap');
 require('./crawling');
 require('./quiet-open');
 require('./naming');
