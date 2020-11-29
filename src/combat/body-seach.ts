@@ -22,8 +22,8 @@ registerEvent(PlayerInteractEntityEvent, async (event) => {
   const distance = clicker.location.distance(target.location);
   if (distance > MAX_DISTANCE) return;
 
-  // @ts-ignore: This is valid method
-  clicker.openInventory(target.inventory);
+  // This is valid method but currently doesn't work without "any"
+  (clicker.openInventory as any)(target.inventory);
   searchedPlayers.set(target, clicker);
   target.sendActionBar('Joku tutkii reppuasi');
 });
