@@ -19,7 +19,8 @@ const BOWL_SEED_AMOUNT = 4;
 const SEED_BOWL = Material.DEAD_BRAIN_CORAL_FAN;
 const EMPTY_SEED_BOWL = Material.DEAD_TUBE_CORAL_FAN;
 
-function hasFoodSource(entity: LivingEntity): boolean {
+// Returns true if successfull
+function consumeFood(entity: LivingEntity): boolean {
   const blocksNearEntity = blocksInRadiusOfEntity(entity, 2);
 
   for (const block of blocksNearEntity) {
@@ -54,7 +55,8 @@ function hasFoodSource(entity: LivingEntity): boolean {
   return false;
 }
 
-function hasWaterSource(entity: LivingEntity): boolean {
+// Returns true if successfull
+function consumeWater(entity: LivingEntity): boolean {
   const blocksNearEntity = blocksInRadiusOfEntity(entity, 2);
   for (const block of blocksNearEntity) {
     if (block.type === Material.CAULDRON) {
@@ -127,10 +129,10 @@ registerEvent(EntityBreedEvent, (event) => {
   const baby = event.entity as LivingEntity;
   const mother = event.mother as LivingEntity;
 
-  const hasFood = hasFoodSource(mother);
-  const hasWater = hasWaterSource(mother);
+  const isFed = consumeFood(mother);
+  const isHydrated = consumeWater(mother);
 
-  if (!hasFood || !hasWater) baby.remove();
+  if (!isFed || !isHydrated) baby.remove();
 });
 
 registerEvent(PlayerInteractEvent, (event) => {
