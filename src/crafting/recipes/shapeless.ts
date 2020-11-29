@@ -1,9 +1,9 @@
 import { Material } from 'org.bukkit';
-import { ItemStack } from 'org.bukkit.inventory';
+import { ItemStack, RecipeChoice } from 'org.bukkit.inventory';
 
 export interface CustomShapelessRecipe {
   key: string;
-  ingredients: (Material | ItemStack)[];
+  ingredients: (Material | ItemStack | RecipeChoice)[];
   result: ItemStack;
 }
 

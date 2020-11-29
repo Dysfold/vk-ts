@@ -6,7 +6,8 @@ export interface CustomFurnaceRecipe {
   key: string;
   input: Material;
   result: ItemStack;
-  seconds: number;
+  seconds: number; // Default duration (blast furnaces and smokers are twice as fast)
+  furnaces: ('blasting' | 'campfire' | 'smelting' | 'smoking')[];
 }
 
 export const FURNACE_RECIPES: CustomFurnaceRecipe[] = [
@@ -14,6 +15,7 @@ export const FURNACE_RECIPES: CustomFurnaceRecipe[] = [
     key: 'hand_grindstone',
     input: Material.FLINT,
     result: HandGrindstone.create(),
-    seconds: 4,
+    seconds: 10,
+    furnaces: ['smelting', 'blasting'],
   },
 ];
