@@ -44,7 +44,8 @@ function isLog(block: Block) {
 
 function isFence(block: Block) {
   const name = block.type.toString();
-  return name.endsWith('_FENCE'); // Allow fences, but not fence gates
+  // Count iron bars as fences, since they are similar
+  return name.endsWith('_FENCE') || block.type === Material.IRON_BARS;
 }
 
 // Can the block be replaced by moving gate/rope/block
