@@ -52,6 +52,12 @@ const Key = new CustomItem({
 const MAX_CAPTURE_DISTANCE = 2;
 const CAPTURE_HEALTH_TRESHOLD = 4;
 
+export function isHandcuffed(player: Player) {
+  return LockedHandcuffs.check(
+    (player.inventory as PlayerInventory).itemInOffHand,
+  );
+}
+
 // Handcuff a player
 Handcuffs.event(
   PlayerInteractEntityEvent,
@@ -76,10 +82,10 @@ Handcuffs.event(
       return;
     }
     // Add locked handcuffs to both hands
-    handcuffs.amount -= 1;
     const keycode = handcuffs.itemMeta.displayName;
     captiveInventory.itemInOffHand = LockedHandcuffs.create({ key: keycode });
     captiveInventory.itemInMainHand = LockedHandcuffs.create(); // Mainhand handcuffs are only for visuals
+    handcuffs.amount -= 1;
 
     // Give player back the previous items from hands
     giveItem(captive, mainHandItem);
@@ -169,8 +175,6 @@ LockedHandcuffs.event(
   InventoryClickEvent,
   (event) => event.currentItem,
   async (event) => {
-    const inv = event.inventory;
-    if (inv.type !== InventoryType.CRAFTING) return;
     if (event.whoClicked.gameMode === GameMode.CREATIVE) return;
     event.setCancelled(true);
   },
@@ -261,6 +265,9 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
   if (event.rightClicked.type !== EntityType.PLAYER) return;
   const dragged = event.rightClicked as Player;
   const player = event.player;
+
+  // If player is sneaking, he is trying to open the inventory of the target
+  if (player.isSneaking()) return;
 
   if (player.itemInHand.type !== Material.AIR) return;
   const offHandItem = (dragged.inventory as PlayerInventory).itemInOffHand;
