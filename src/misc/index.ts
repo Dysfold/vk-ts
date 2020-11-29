@@ -12,7 +12,6 @@ require('./respack');
 require('./bear-trap');
 require('./crawling');
 require('./quiet-open');
-require('./naming');
 require('./heart-of-the-sea');
 require('./winch');
 require('./saw');
