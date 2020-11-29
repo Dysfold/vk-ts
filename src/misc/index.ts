@@ -18,5 +18,6 @@ require('./winch');
 require('./saw');
 require('./hat');
 require('./throwables');
+require('./shepherds-staff');
 require('./horn');
 require('./armorstand-pose');
