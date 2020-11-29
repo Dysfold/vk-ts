@@ -7,6 +7,7 @@ export interface CustomStonecutterRecipe {
   result: ItemStack;
 }
 
+// Not yet functional
 export const STONECUTTER_RECIPES: CustomStonecutterRecipe[] = [
   {
     key: 'cobblestone_trapdoor',
