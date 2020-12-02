@@ -1,24 +1,17 @@
 import { Material } from 'org.bukkit';
-import { ItemStack, RecipeChoice } from 'org.bukkit.inventory';
+import { ItemStack } from 'org.bukkit.inventory';
+import { shapelessRecipe } from './utilities/shapeless-recipes';
 
-export interface CustomShapelessRecipe {
-  key: string;
-  ingredients: (Material | ItemStack | RecipeChoice)[];
-  result: ItemStack;
-}
+shapelessRecipe({
+  key: 'berry_soup',
+  ingredients: [
+    Material.BOWL,
+    Material.SWEET_BERRIES,
+    Material.SWEET_BERRIES,
+    Material.SWEET_BERRIES,
+    Material.SUGAR,
+  ],
+  result: new ItemStack(Material.BEETROOT_SOUP),
+});
 
-export const SHAPELESS_RECIPES: CustomShapelessRecipe[] = [
-  {
-    key: 'berry_soup',
-    ingredients: [
-      Material.BOWL,
-      Material.SWEET_BERRIES,
-      Material.SWEET_BERRIES,
-      Material.SWEET_BERRIES,
-      Material.SWEET_BERRIES,
-      Material.SWEET_BERRIES,
-      Material.SWEET_BERRIES,
-    ],
-    result: new ItemStack(Material.BEETROOT_SOUP),
-  },
-];
+server.broadcastMessage('Shapeless recipes created');
