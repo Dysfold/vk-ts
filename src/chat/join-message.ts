@@ -18,7 +18,7 @@ registerEvent(PlayerJoinEvent, (event) => {
 
 registerEvent(PlayerQuitEvent, (event) => {
   const name = event.player.displayName;
-  const players = server.onlinePlayers.length;
+  const players = server.onlinePlayers.length - 1;
   const msg = `§e${name} poistui. Pelaajia paikalla: §6${players}/${MAX_PLAYERS}`;
   event.setQuitMessage(msg);
 });
