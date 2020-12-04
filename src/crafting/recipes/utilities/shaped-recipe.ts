@@ -3,8 +3,7 @@ import { ItemStack, ShapedRecipe } from 'org.bukkit.inventory';
 import { MaterialChoice } from 'org.bukkit.inventory.RecipeChoice';
 
 interface Ingredient {
-  key: string;
-  item: Material | ItemStack | MaterialChoice;
+  [key: string]: Material | ItemStack | MaterialChoice;
 }
 
 export function shapedRecipe({
@@ -15,11 +14,11 @@ export function shapedRecipe({
 }: {
   key: string;
   shape: string[];
-  ingredients: Ingredient[];
+  ingredients: Ingredient;
   result: ItemStack | Material;
 }) {
   const namespacedKey = new NamespacedKey('vk', key);
-  let shapedRecipe;
+  let shapedRecipe: ShapedRecipe;
 
   if (result instanceof ItemStack)
     shapedRecipe = new ShapedRecipe(namespacedKey, result);
@@ -27,10 +26,8 @@ export function shapedRecipe({
 
   (shapedRecipe.shape as any)(...shape);
 
-  for (const ingredient of ingredients) {
-    const item = ingredient.item;
-    const symbol = ingredient.key;
-
+  Object.keys(ingredients).forEach((symbol) => {
+    const item = ingredients[symbol];
     // We want the item to be either Material or ItemStack or RecipeChoice but not "Material | ItemStack | RecipeChoice"
     if (item instanceof Material) {
       shapedRecipe.setIngredient(symbol, item);
@@ -38,10 +35,21 @@ export function shapedRecipe({
       shapedRecipe.setIngredient(symbol, item);
     } else {
       // TODO: RecipeChoice
-      continue;
-      //shapedRecipe.setIngredient(symbol, item);
     }
-  }
+  });
+  // const item = ingredient.item;
+  // const symbol = ingredient.key;
+
+  // // We want the item to be either Material or ItemStack or RecipeChoice but not "Material | ItemStack | RecipeChoice"
+  // if (item instanceof Material) {
+  //   shapedRecipe.setIngredient(symbol, item);
+  // } else if (item instanceof ItemStack) {
+  //   shapedRecipe.setIngredient(symbol, item);
+  // } else {
+  //   // TODO: RecipeChoice
+  //   continue;
+  //   //shapedRecipe.setIngredient(symbol, item);
+  // }
 
   server.addRecipe(shapedRecipe);
 }
