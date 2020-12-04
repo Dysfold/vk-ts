@@ -9,4 +9,5 @@ furnaceRecipe({
   seconds: 10,
   furnaces: ['smelting', 'blasting'],
 });
+
 server.broadcastMessage('Furnace recipes created');

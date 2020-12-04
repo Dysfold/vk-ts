@@ -7,19 +7,21 @@ import {
   SmokingRecipe,
 } from 'org.bukkit.inventory';
 
+interface CustomFurnaceRecipe {
+  key: string;
+  input: Material;
+  result: Material | ItemStack;
+  seconds: number;
+  furnaces: ('blasting' | 'campfire' | 'smoking' | 'smelting')[];
+}
+
 export function furnaceRecipe({
   key,
   input,
   result,
   seconds,
   furnaces,
-}: {
-  key: string;
-  input: Material;
-  result: Material | ItemStack;
-  seconds: number;
-  furnaces: ('blasting' | 'campfire' | 'smoking' | 'smelting')[];
-}) {
+}: CustomFurnaceRecipe) {
   let RecipeConstructor;
   for (const furnace of furnaces) {
     let ticks = seconds * 20;

@@ -5,18 +5,19 @@ import { MaterialChoice } from 'org.bukkit.inventory.RecipeChoice';
 interface Ingredient {
   [key: string]: Material | ItemStack | MaterialChoice;
 }
+interface CustomShapedRecipe {
+  key: string;
+  shape: string[];
+  ingredients: Ingredient;
+  result: ItemStack | Material;
+}
 
 export function shapedRecipe({
   key,
   shape,
   ingredients,
   result,
-}: {
-  key: string;
-  shape: string[];
-  ingredients: Ingredient;
-  result: ItemStack | Material;
-}) {
+}: CustomShapedRecipe) {
   const namespacedKey = new NamespacedKey('vk', key);
   let shapedRecipe: ShapedRecipe;
 
@@ -37,19 +38,6 @@ export function shapedRecipe({
       // TODO: RecipeChoice
     }
   });
-  // const item = ingredient.item;
-  // const symbol = ingredient.key;
-
-  // // We want the item to be either Material or ItemStack or RecipeChoice but not "Material | ItemStack | RecipeChoice"
-  // if (item instanceof Material) {
-  //   shapedRecipe.setIngredient(symbol, item);
-  // } else if (item instanceof ItemStack) {
-  //   shapedRecipe.setIngredient(symbol, item);
-  // } else {
-  //   // TODO: RecipeChoice
-  //   continue;
-  //   //shapedRecipe.setIngredient(symbol, item);
-  // }
 
   server.addRecipe(shapedRecipe);
 }

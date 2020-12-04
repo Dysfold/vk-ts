@@ -1,16 +1,17 @@
 import { Material, NamespacedKey } from 'org.bukkit';
 import { ItemStack, RecipeChoice, ShapelessRecipe } from 'org.bukkit.inventory';
-import { MaterialChoice } from 'org.bukkit.inventory.RecipeChoice';
+
+interface CustomShapelessRecipe {
+  key: string;
+  ingredients: (Material | ItemStack | RecipeChoice)[];
+  result: ItemStack | Material;
+}
 
 export function shapelessRecipe({
   key,
   ingredients,
   result,
-}: {
-  key: string;
-  ingredients: (Material | ItemStack | RecipeChoice)[];
-  result: ItemStack | Material;
-}) {
+}: CustomShapelessRecipe) {
   const namespacedKey = new NamespacedKey('vk', key);
   let recipe: ShapelessRecipe;
   if (result instanceof ItemStack)

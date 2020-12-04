@@ -9,7 +9,7 @@ shapedRecipe({
   ingredients: {
     G: HandSaw.create(),
   },
-  result: new ItemStack(Material.DIRT),
+  result: Material.STONE,
 });
 
 shapedRecipe({
@@ -18,7 +18,7 @@ shapedRecipe({
   ingredients: {
     L: Material.OAK_LOG,
   },
-  result: new ItemStack(Material.OAK_PLANKS),
+  result: Material.OAK_PLANKS,
 });
 
 shapedRecipe({
