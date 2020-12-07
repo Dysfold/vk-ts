@@ -13,7 +13,6 @@ import { EquipmentSlot, PlayerInventory } from 'org.bukkit.inventory';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import { CustomItem } from '../common/items/CustomItem';
 
-const WHIP_MATERIAL = Material.GHAST_TEAR;
 const MAX_WHIP_DISTANCE = 3;
 
 const SLOW = new PotionEffect(PotionEffectType.SLOW, 3 * 20, 2);

@@ -5,7 +5,6 @@ import { PlayerDropItemEvent } from 'org.bukkit.event.player';
 import { Vector } from 'org.bukkit.util';
 import { LockedHandcuffs } from '../combat/handcuffs';
 import { Whip } from '../combat/whip';
-import { CustomItem } from '../common/items/CustomItem';
 
 const VELOCITY_MULTIPLIER = 0.8;
 const THROW_SOUND = Sound.ENTITY_SNOWBALL_THROW;
