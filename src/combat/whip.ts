@@ -1,6 +1,6 @@
 import { Float } from 'java.lang';
 import { Location, Material } from 'org.bukkit';
-import { LivingEntity, Player } from 'org.bukkit.entity';
+import { Entity, EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
 import {
   PlayerDropItemEvent,
@@ -79,7 +79,15 @@ Whip.event(
     const meta = item.itemMeta;
     meta.customModelData = 11;
     item.itemMeta = meta;
-    await wait(10, 'ticks');
+    await wait(5, 'ticks');
+
+    // Hurt sounds
+    if (event.entity.type === EntityType.PIG) {
+      playHurtSound(event.entity.location);
+    }
+
+    await wait(5, 'ticks');
+
     meta.customModelData = 10;
     item.itemMeta = meta;
 
@@ -135,6 +143,12 @@ Whip.event(
   PlayerInteractAtEntityEvent,
   (event) => (event.player.inventory as PlayerInventory).itemInHand,
   async (event) => {
+    if (
+      event.rightClicked.type !== EntityType.ARMOR_STAND &&
+      event.rightClicked.type !== EntityType.ITEM_FRAME
+    ) {
+      return;
+    }
     const item = (event.player.inventory as PlayerInventory).itemInHand;
     const meta = item.itemMeta;
     if (meta.customModelData === 11) {
@@ -151,4 +165,8 @@ function playWhipSound(location: Location) {
     1,
     (new Float(0.8) as unknown) as number,
   );
+}
+
+function playHurtSound(location: Location) {
+  location.world.playSound(location, 'custom.hurt', 1, 1);
 }
