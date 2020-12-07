@@ -82,7 +82,7 @@ Whip.event(
     await wait(5, 'ticks');
 
     // Hurt sounds
-    if (event.entity.type === EntityType.PIG) {
+    if (event.entity.type === EntityType.PLAYER) {
       playHurtSound(event.entity.location);
     }
 
