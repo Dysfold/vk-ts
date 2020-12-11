@@ -10,3 +10,4 @@ require('./instruments/index');
 require('./blacksmith/index');
 require('./admin/index');
 require('./chat/index');
+require('./economy/index');
