@@ -27,7 +27,7 @@ const tools: Material[] = [
   // TODO: Add more tools
 ];
 
-const HandGrindstone = new CustomItem({
+export const HandGrindstone = new CustomItem({
   id: 1,
   name: 'Hiomakivi',
   type: Material.SHULKER_SHELL,
