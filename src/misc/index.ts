@@ -22,4 +22,5 @@ require('./itemframe');
 require('./shepherds-staff');
 require('./horn');
 require('./armorstand-pose');
+require('./book-authors');
 require('./sealing-wax');
