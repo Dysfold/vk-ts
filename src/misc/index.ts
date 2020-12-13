@@ -21,4 +21,4 @@ require('./itemframe');
 require('./shepherds-staff');
 require('./horn');
 require('./armorstand-pose');
-require('./index');
+require('./book-authors');
