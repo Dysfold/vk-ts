@@ -1,10 +1,9 @@
-import { test, Assert } from 'zora';
-import { dataHolder, DataHolder, DataType, dataType } from './holder';
+import { Bukkit, Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
-import { Material, Bukkit } from 'org.bukkit';
 import * as yup from 'yup';
+import { Assert, test } from 'zora';
 import { DatabaseEntry } from './database';
-import { Block } from 'org.bukkit.block';
+import { dataHolder, DataHolder, dataType } from './holder';
 
 function persistMsg(context: string, type: string) {
   return `${context}: ${type} persists`;
