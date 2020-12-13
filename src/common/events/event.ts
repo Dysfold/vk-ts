@@ -1,4 +1,3 @@
-import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { Event } from 'org.bukkit.event';
 
 /**
