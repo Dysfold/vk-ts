@@ -1,1 +1,2 @@
 require('./anvil');
+require('./naming');
