@@ -17,7 +17,7 @@ export const Saw = new CustomBlock({
   type: Material.WARPED_FENCE_GATE,
 });
 
-const HandSaw = new CustomItem({
+export const HandSaw = new CustomItem({
   id: 5,
   name: 'Käsisaha',
   type: Material.IRON_HOE,

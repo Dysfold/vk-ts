@@ -2,6 +2,7 @@ import { Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { EntityType } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
+import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
 import { HangingBreakEvent } from 'org.bukkit.event.hanging';
 import {
   PlayerInteractEntityEvent,
@@ -55,4 +56,12 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
     clickedFace,
   );
   server.pluginManager.callEvent(playerInteractEvent);
+});
+
+// Only allow players to break itemframe items
+registerEvent(EntityDamageByEntityEvent, (event) => {
+  const entity = event.entity;
+  if (entity.type !== EntityType.ITEM_FRAME) return;
+  if (event.damager.type === EntityType.PLAYER) return;
+  event.setCancelled(true);
 });
