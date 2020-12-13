@@ -316,27 +316,26 @@ function updateBoard(board: Block, move: Move) {
 
   // Kingside castling
   if (move.flags.includes('k')) {
-    const whiteRook: Castling = { type: 'R', from: 'h1', to: 'f1' };
-    const blackRook: Castling = { type: 'r', from: 'h8', to: 'f8' };
+    const whiteRook: Castling = { type: 'wr', from: 'h1', to: 'f1' };
+    const blackRook: Castling = { type: 'br', from: 'h8', to: 'f8' };
 
     const rook = move.color === 'w' ? whiteRook : blackRook;
+
     const rookArmorstand = findArmorstandAtSquare(board, rook.type, rook.from);
     if (!rookArmorstand) return;
     const destination = getSquareLocation(board, rook.to);
-    rookArmorstand.setCustomName(rook.to);
     rookArmorstand.teleport(destination);
   }
 
   // Queenside castling
   if (move.flags.includes('q')) {
-    const whiteRook: Castling = { type: 'R', from: 'a1', to: 'd1' };
-    const blackRook: Castling = { type: 'r', from: 'a8', to: 'd8' };
+    const whiteRook: Castling = { type: 'wr', from: 'a1', to: 'd1' };
+    const blackRook: Castling = { type: 'br', from: 'a8', to: 'd8' };
 
     const rook = move.color === 'w' ? whiteRook : blackRook;
     const rookArmorstand = findArmorstandAtSquare(board, rook.type, rook.from);
     if (!rookArmorstand) return;
     const destination = getSquareLocation(board, rook.to);
-    rookArmorstand.setCustomName(rook.to);
     rookArmorstand.teleport(destination);
   }
 
@@ -358,7 +357,6 @@ function updateBoard(board: Block, move: Move) {
 
   // Move the piece
   const destination = getSquareLocation(board, move.to);
-  armorstand.setCustomName(move.to);
   armorstand.teleport(destination);
 }
 

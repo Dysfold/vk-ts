@@ -8,6 +8,7 @@ import {
   PlayerItemConsumeEvent,
 } from 'org.bukkit.event.player';
 import { EquipmentSlot } from 'org.bukkit.inventory';
+import { LockedHandcuffs } from '../combat/handcuffs';
 
 const Hydration = {
   MAX: 0.99,
@@ -44,7 +45,11 @@ registerEvent(PlayerInteractEvent, async (event) => {
     const player = event.player;
     const material = event.item?.type;
 
-    if (material && material !== Material.AIR) return;
+    // Player can drink only with empty hand or with handcuffs
+    if (event.item) {
+      if (material !== Material.AIR && !LockedHandcuffs.check(event.item))
+        return;
+    }
     if (drinkers.has(player)) return;
 
     // Drinking from cauldron

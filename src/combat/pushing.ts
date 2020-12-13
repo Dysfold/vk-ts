@@ -15,6 +15,7 @@ registerEvent(PlayerInteractEntityEvent, async (event) => {
   const target = clicked as Player;
   if (pusher.itemInHand.type !== Material.AIR) return;
   if (target.isSneaking()) return;
+  if (pusher.isSneaking()) return;
   if (cooldowns.has(pusher)) return;
   const distance = pusher.location.distance(clicked.location);
   if (distance > MAX_DISTANCE) return;

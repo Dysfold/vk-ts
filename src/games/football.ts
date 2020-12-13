@@ -73,6 +73,7 @@ Football.event(
   async (event) => {
     if (event.entityType !== EntityType.SNOWBALL) return;
     const ball = event.entity as Snowball;
+    if (ball.isDead()) return;
 
     const name = event.entity.customName;
     const num = parseInt(name || '');

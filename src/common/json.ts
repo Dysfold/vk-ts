@@ -1,5 +1,4 @@
-import { Path, Files } from 'java.nio.file';
-import { ensureFile } from './utils';
+import { Files, Path } from 'java.nio.file';
 
 function ensureJSON(file: Path) {
   if (Files.exists(file)) {
