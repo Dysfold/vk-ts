@@ -1,15 +1,12 @@
-import { Player } from 'org.bukkit.entity';
-import { Paths, Files } from 'java.nio.file';
-import { config } from '../config';
-import {
-  PlayerJoinEvent,
-  AsyncPlayerPreLoginEvent,
-} from 'org.bukkit.event.player';
-import { readJSON, writeJSON } from '../json';
-import { applyDefault } from '../data';
-import { defaultPlayerData, PlayerData, playerDataSchema } from '../types';
+import { Files } from 'java.nio.file';
 import { UUID } from 'java.util';
 import { OfflinePlayer } from 'org.bukkit';
+import { Player } from 'org.bukkit.entity';
+import { AsyncPlayerPreLoginEvent } from 'org.bukkit.event.player';
+import { config } from '../config';
+import { applyDefault } from '../data';
+import { readJSON, writeJSON } from '../json';
+import { defaultPlayerData, PlayerData, playerDataSchema } from '../types';
 
 const indexFile = config.DATA_FOLDER.resolve('players').resolve('index.json');
 

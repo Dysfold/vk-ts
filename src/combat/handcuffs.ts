@@ -4,7 +4,7 @@ import {
   EntityDamageByEntityEvent,
   PlayerDeathEvent,
 } from 'org.bukkit.event.entity';
-import { InventoryClickEvent, InventoryType } from 'org.bukkit.event.inventory';
+import { InventoryClickEvent } from 'org.bukkit.event.inventory';
 import {
   PlayerDropItemEvent,
   PlayerInteractAtEntityEvent,
@@ -329,13 +329,3 @@ setInterval(() => {
     dragged.addPotionEffect(JUMP);
   }
 }, 600);
-
-registerCommand('handcuffs', (sender, label, args) => {
-  if (sender instanceof Player) {
-    const player = sender as Player;
-    if (player.isOp()) {
-      player.world.dropItem(player.location, Handcuffs.create());
-      player.world.dropItem(player.location, Key.create());
-    }
-  }
-});
