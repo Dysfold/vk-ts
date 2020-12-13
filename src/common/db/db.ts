@@ -11,4 +11,4 @@ export class DB {
   }
 }
 
-const db = new DB();
+new DB();

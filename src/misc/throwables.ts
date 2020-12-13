@@ -4,6 +4,7 @@ import { ProjectileHitEvent } from 'org.bukkit.event.entity';
 import { PlayerDropItemEvent } from 'org.bukkit.event.player';
 import { Vector } from 'org.bukkit.util';
 import { LockedHandcuffs } from '../combat/handcuffs';
+import { Whip } from '../combat/whip';
 
 const VELOCITY_MULTIPLIER = 0.8;
 const THROW_SOUND = Sound.ENTITY_SNOWBALL_THROW;
@@ -16,6 +17,8 @@ const NOT_THROWABLE: Material[] = [
   Material.HEART_OF_THE_SEA,
 ];
 
+const NOT_THROWABLE_CUSTOMITEMS = [LockedHandcuffs, Whip];
+
 registerEvent(PlayerDropItemEvent, (event) => {
   const player = event.player;
   const item = event.itemDrop.itemStack;
@@ -23,7 +26,8 @@ registerEvent(PlayerDropItemEvent, (event) => {
 
   if (player.velocity.y < 0.08) return; // Return if player didn't jump
   if (NOT_THROWABLE.includes(itemType)) return;
-  if (LockedHandcuffs.check(item)) return;
+  // Check if item was unthrowable customitem
+  if (NOT_THROWABLE_CUSTOMITEMS.some((i) => i.check(item))) return;
 
   event.setCancelled(true);
 

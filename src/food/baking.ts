@@ -1,4 +1,4 @@
-import { Material } from 'org.bukkit';
+import { Material, Particle } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Entity, EntityType, Hanging, Item } from 'org.bukkit.entity';
 import { Action, BlockBreakEvent } from 'org.bukkit.event.block';
@@ -230,6 +230,15 @@ function bake(block: Block) {
       break;
     }
   }
+  block.world.spawnParticle(
+    Particle.CLOUD,
+    block.location.add(0.5, 0.1, 0.5),
+    5,
+    0.2,
+    0.2,
+    0.2,
+    0,
+  );
 }
 
 // TODO: Common api for item frames?qq
