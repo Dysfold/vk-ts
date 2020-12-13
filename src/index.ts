@@ -11,3 +11,4 @@ require('./blacksmith/index');
 require('./admin/index');
 require('./crafting/index');
 require('./chat/index');
+require('./economy/index');
