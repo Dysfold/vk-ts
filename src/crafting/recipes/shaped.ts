@@ -42,4 +42,4 @@ shapedRecipe({
   result: new ItemStack(Material.BROWN_GLAZED_TERRACOTTA),
 });
 
-server.broadcastMessage('Shaped recipes created');
+console.log('Shaped recipes created');
