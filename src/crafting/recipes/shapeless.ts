@@ -14,4 +14,3 @@ shapelessRecipe({
   result: new ItemStack(Material.BEETROOT_SOUP),
 });
 
-server.broadcastMessage('Shapeless recipes created');
