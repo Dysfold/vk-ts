@@ -17,6 +17,7 @@ require('./winch');
 require('./saw');
 require('./hat');
 require('./throwables');
+require('./firespread');
 require('./itemframe');
 require('./shepherds-staff');
 require('./horn');
