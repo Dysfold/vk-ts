@@ -39,6 +39,7 @@ Pipe.event(
     const meta = pipe.itemMeta;
     let lore = meta.lore;
 
+    // Test
     // prettier-ignore
     lore = (['§r§7Rivi 1', '§r§7Rivi 2', '§r§7Rivi 3'] as unknown) as List<string>;
 
