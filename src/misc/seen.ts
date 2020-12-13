@@ -30,7 +30,21 @@ registerCommand('seen', (sender, label, args) => {
   );
   const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
 
-  sender.sendMessage(
-    `§aPelaaja ${name} nähny viimeeksi ${days}pv ${hours}t ${minutes}min sitten`,
-  );
+  if (!days && !hours) {
+    if (minutes) {
+      // If player has been offline 1 - 59 minutes
+      sender.sendMessage(
+        `§aPelaaja ${name} nähny viimeeksi ${minutes}min sitten`,
+      );
+    } else {
+      // If player has been offline less than 1 minute
+      sender.sendMessage(`§aPelaaja ${name} nähny alle minuutti sitten`);
+    }
+  }
+  // If player has been offline more tha 1 hour
+  else {
+    sender.sendMessage(
+      `§aPelaaja ${name} nähny viimeeksi ${days}pv ${hours}t ${minutes}min sitten`,
+    );
+  }
 });
