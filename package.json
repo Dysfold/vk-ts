@@ -3,7 +3,7 @@
   "scripts": {
     "start": "tsc --watch",
     "typecheck": "tsc --noemit",
-    "lint": "eslint \"src/**/*\""
+    "lint": "eslint \"./src/**/*\""
   },
   "dependencies": {
     "@types/chess.js": "^0.10.1",
