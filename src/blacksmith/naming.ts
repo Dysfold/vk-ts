@@ -6,7 +6,7 @@ import { PrepareAnvilEvent } from 'org.bukkit.event.inventory';
 // Don't allow renaming of already named items
 registerEvent(PrepareAnvilEvent, (event) => {
   const inventory = event.inventory;
-  if (inventory.firstItem?.itemMeta.hasDisplayName) {
+  if (inventory.firstItem?.itemMeta.displayName) {
     // TODO: Add checks for non-italic texts
     event.result = null;
 
