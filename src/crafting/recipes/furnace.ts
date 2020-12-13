@@ -10,4 +10,4 @@ furnaceRecipe({
   furnaces: ['smelting', 'blasting'],
 });
 
-server.broadcastMessage('Furnace recipes created');
+console.log('Furnace recipes created');
