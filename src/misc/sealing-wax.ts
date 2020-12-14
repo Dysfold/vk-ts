@@ -35,7 +35,6 @@ SealingWax.event(
       event.player.sendActionBar(`Ei tarpeeksi sinettivahaa (${book.amount})`);
       return;
     }
-    wax.amount -= book.amount;
 
     // Symbol of the seal is the first character of the wax
     const symbol = wax.itemMeta.hasDisplayName()
@@ -52,6 +51,7 @@ SealingWax.event(
     bookMeta.customModelData = 1;
     book.itemMeta = bookMeta;
     event.setCancelled(true);
+    wax.amount -= book.amount;
   },
 );
 
