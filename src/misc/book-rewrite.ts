@@ -20,9 +20,5 @@ registerEvent(PlayerInteractEvent, (event) => {
 
   if (author === username) {
     book.type = Material.WRITABLE_BOOK; // Keeps the content of the book
-  } else {
-    event.player.sendActionBar(
-      'Vain alkuperäinen kirjoittaja voi muokata tätä kirjaa',
-    );
   }
 });

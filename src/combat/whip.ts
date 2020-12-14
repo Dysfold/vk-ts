@@ -8,6 +8,7 @@ import {
   PlayerInteractEvent,
   PlayerItemHeldEvent,
   PlayerPickupItemEvent,
+  PlayerInteractEntityEvent,
 } from 'org.bukkit.event.player';
 import { EquipmentSlot, PlayerInventory } from 'org.bukkit.inventory';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
