@@ -1,6 +1,6 @@
 import { Float } from 'java.lang';
 import { Location, Material } from 'org.bukkit';
-import { Entity, EntityType, LivingEntity, Player } from 'org.bukkit.entity';
+import { EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
 import {
   PlayerDropItemEvent,
@@ -8,7 +8,6 @@ import {
   PlayerInteractEvent,
   PlayerItemHeldEvent,
   PlayerPickupItemEvent,
-  PlayerInteractEntityEvent,
 } from 'org.bukkit.event.player';
 import { EquipmentSlot, PlayerInventory } from 'org.bukkit.inventory';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
