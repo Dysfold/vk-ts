@@ -126,11 +126,10 @@ function playNoteNumber(location: Location, note: number) {
 }
 
 registerCommand('piano', (sender, label, args) => {
-    if (!sender.isOp()) return;
-  
-    if (sender instanceof Player) {
-      const player = sender as Player;
-        parseNotes(test, player);
+  if (!sender.isOp()) return;
 
-    }
-}
+  if (sender instanceof Player) {
+    const player = sender as Player;
+    parseNotes(test, player);
+  }
+});
