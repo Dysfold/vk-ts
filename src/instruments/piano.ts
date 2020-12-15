@@ -31,7 +31,7 @@ function playNote(block: Block, note: number) {
 
   block.world.playSound(
     block.location,
-    `custom.piano${octave}`,
+    `custom.piano${octave + 2}`,
     2,
     (new Float(pitch) as unknown) as number,
   );
