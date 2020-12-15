@@ -4,11 +4,10 @@ import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { ItemStack, PlayerInventory } from 'org.bukkit.inventory';
-import { CustomItem } from '../common/items/CustomItem';
 import { Damageable, ItemMeta } from 'org.bukkit.inventory.meta';
-import { Category } from 'java.util.Locale';
+import { CustomItem } from '../common/items/CustomItem';
 
-const DriedTobacco = new CustomItem({
+export const DriedTobacco = new CustomItem({
   id: 11,
   modelId: 11,
   type: Material.SHULKER_SHELL,
