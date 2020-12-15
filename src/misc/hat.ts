@@ -15,7 +15,7 @@ import {
   ItemStack,
   PlayerInventory,
 } from 'org.bukkit.inventory';
-import { canEquipPipe, Pipe } from './pipe';
+import { Pipe, equipPipe } from './pipe';
 
 const HAT_MATERIAL = Material.DIAMOND_HOE;
 const HELMET_SLOT = 39;
@@ -34,7 +34,7 @@ registerEvent(PlayerInteractEvent, (event) => {
 
   // Special case for the pipe. (Player might be filling the pipe)
   if (Pipe.check(event.item)) {
-    if (!canEquipPipe(event.player)) {
+    if (!equipPipe(event.player)) {
       return;
     }
   }

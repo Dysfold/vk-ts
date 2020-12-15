@@ -1,10 +1,12 @@
 import { List } from 'java.util';
-import { Material } from 'org.bukkit';
+import { Material, Particle, Sound, SoundCategory } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { ItemStack, PlayerInventory } from 'org.bukkit.inventory';
 import { CustomItem } from '../common/items/CustomItem';
+import { Damageable, ItemMeta } from 'org.bukkit.inventory.meta';
+import { Category } from 'java.util.Locale';
 
 const DriedTobacco = new CustomItem({
   id: 11,
@@ -19,6 +21,15 @@ export const Pipe = new CustomItem({
   type: Material.DIAMOND_HOE,
   name: 'Piippu',
 });
+
+const smokers = new Set<Player>();
+
+// How many percentages the pipe level changes per tobacco item
+const PIPE_FILL_LEVEL_CHANGE = 50;
+
+// How much tobacco level changes per interval
+const TOBACCO_LEVEL_CHANGE = 0.5;
+const INTERVAL = 2000; // millis
 
 Pipe.event(
   PlayerInteractEvent,
@@ -46,17 +57,56 @@ Pipe.event(
 
     const percentage = getTobaccoLevel(pipe);
     if (percentage >= 100) return;
-    changeTobaccoLevel(pipe, 20);
+    changeTobaccoLevel(pipe, PIPE_FILL_LEVEL_CHANGE);
     tobacco.amount--;
   },
 );
 
 // Function for hat script to check if player is trying to fill the pipe
-export function canEquipPipe(player: Player) {
+export function equipPipe(player: Player) {
   const inv = player.inventory as PlayerInventory;
-  if (DriedTobacco.check(inv.itemInMainHand)) return false;
-  if (DriedTobacco.check(inv.itemInOffHand)) return false;
+  const offHand = inv.itemInOffHand;
+  const mainHand = inv.itemInMainHand;
+  if (DriedTobacco.check(offHand)) return false;
+  if (DriedTobacco.check(mainHand)) return false;
+
+  if (offHand.type === Material.FLINT_AND_STEEL) {
+    useFlintAndSteel(player, offHand);
+    startSmoking(player);
+  } else if (mainHand.type === Material.FLINT_AND_STEEL) {
+    useFlintAndSteel(player, mainHand);
+    startSmoking(player);
+  }
   return true;
+}
+
+function useFlintAndSteel(player: Player, item: ItemStack) {
+  const meta = (item.itemMeta as unknown) as Damageable;
+  meta.damage++;
+  item.itemMeta = (meta as unknown) as ItemMeta;
+
+  // Check if the tools breaks. 64 -> broken item
+  if (meta.damage >= 64) {
+    item.amount = 0;
+    player.world.playSound(
+      player.location,
+      Sound.ENTITY_ITEM_BREAK,
+      SoundCategory.PLAYERS,
+      1,
+      1,
+    );
+  }
+}
+
+function startSmoking(player: Player) {
+  player.world.playSound(
+    player.location,
+    Sound.ITEM_FLINTANDSTEEL_USE,
+    SoundCategory.PLAYERS,
+    1,
+    1,
+  );
+  smokers.add(player);
 }
 
 function getTobaccoLevel(item: ItemStack) {
@@ -93,4 +143,34 @@ function parseLore(str: string) {
 
 function createLore(number: number) {
   return '§r§7' + number + '%';
+}
+
+setInterval(() => {
+  smokers.forEach((player) => {
+    const pipe = (player.inventory as PlayerInventory).helmet;
+    if (!pipe || !Pipe.check(pipe)) {
+      smokers.delete(player);
+      return;
+    } else {
+      playSmokeParticles(player);
+      const level = getTobaccoLevel(pipe);
+      if (level >= TOBACCO_LEVEL_CHANGE) {
+        changeTobaccoLevel(pipe, -TOBACCO_LEVEL_CHANGE);
+      } else {
+        smokers.delete(player);
+      }
+    }
+  });
+}, INTERVAL);
+
+function playSmokeParticles(player: Player) {
+  const location = player.location;
+  location.y += 1.8; // Offset to eye height
+
+  // Smoke particles relative to players direction -> to the pipe
+  const offset = player.location.direction.multiply(0.7);
+  offset.rotateAroundY(-0.4);
+
+  location.add(offset);
+  player.world.spawnParticle(Particle.SMOKE_LARGE, location, 0, 0, 0.03, 0);
 }
