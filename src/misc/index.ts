@@ -28,3 +28,4 @@ require('./book-rewrite');
 require('./tool-preventions');
 require('./book-authors');
 require('./sealing-wax');
+require('./glass-damage');
