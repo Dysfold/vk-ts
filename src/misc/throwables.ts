@@ -55,12 +55,18 @@ registerEvent(PlayerDropItemEvent, (event) => {
 registerEvent(ProjectileHitEvent, (event) => {
   if (event.entity.type !== EntityType.SNOWBALL) return;
   const snowball = event.entity as Snowball;
-  if (NOT_THROWABLE.includes(snowball.item.type)) return;
+  const item = snowball.item;
+  if (NOT_THROWABLE.includes(item.type)) return;
+
+  // Don't drop breaking bottles -> breaking handled at breaking-bottles.ts
+  if (item.type === Material.POTION || item.type === Material.GLASS_BOTTLE)
+    return;
 
   const drop = event.entity.world.dropItem(
     event.entity.location,
     snowball.item,
   );
+
   drop.velocity = ZERO_VECTOR; // Remove random velocity from the dropped item
   drop.world.playSound(drop.location, HIT_SOUND, SoundCategory.PLAYERS, 0.5, 1);
 });
