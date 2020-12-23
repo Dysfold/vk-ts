@@ -9,6 +9,5 @@ registerEvent(PlayerInteractEvent, (event) => {
     event.clickedBlock?.type === Material.FARMLAND
   ) {
     event.setCancelled(true);
-    server.broadcastMessage('Test');
   }
 });
