@@ -251,6 +251,10 @@ async function createMoney(location: Location, currency: Currency) {
     }
 
     meta.displayName = name;
+    // prettier-ignore
+    const lore = ([`§r§6[${currency.unitPlural}, ${currency.subunitPlural}]`] as unknown) as List<string>;
+    meta.lore = lore;
+
     item.itemMeta = meta;
     item.amount = coin.amount;
 
@@ -267,29 +271,26 @@ registerCommand('rahamuotti', (sender, label, args) => {
   if (!(sender instanceof Player)) return;
   const player = sender as Player;
 
-  if (args.length !== 5) {
+  if (args.length !== 3) {
     player.sendMessage(
-      '/rahamuotti <yksikkö> <yksikön monikko> <alayksikkö> <alayksikön monikko> <malli>',
+      '/rahamuotti <yksikön monikko> <alayksikön monikko> <malli>',
     );
-    player.sendMessage('Esim: /rahamuotti Euro Euroa Sentti Senttiä 2');
+    player.sendMessage('Esim: /rahamuotti Euroa Senttiä 2');
     return;
   }
 
-  const unit = args[0];
-  const unitPlural = args[1];
-  const subunit = args[2];
-  const subunitPlural = args[3];
-  const model = args[4];
+  const unitPlural = args[0];
+  const subunitPlural = args[1];
+  const model = args[2];
 
-  if (!unit || !unitPlural || !subunit || !subunitPlural || !Number(model))
-    return;
+  if (!unitPlural || !subunitPlural || !Number(model)) return;
 
   const item = MoneyMold.create();
   const meta = item.itemMeta;
   const lore = ([
-    unit,
+    unitPlural.slice(0, -1),
     unitPlural,
-    subunit,
+    subunitPlural.slice(0, -1),
     subunitPlural,
     model,
   ] as unknown) as List<string>;
@@ -310,10 +311,12 @@ MoneyMold.event(
 
     if (!lore || lore.size() !== 5) return;
 
-    const model = Number(lore.get(4));
+    const line = lore.get(4);
+    console.log(line);
+    const model = Number(line);
     const items = RAW_MATERIALS[model];
 
-    event.player.sendMessage('Tarvitset tätä valuuttaa varten: ');
+    event.player.sendMessage('Tarvitset tätä valuuttaa varten: ' + model);
     for (const item of items) {
       const type = item.type.toString();
       const amount = item.amount;
