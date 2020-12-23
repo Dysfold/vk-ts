@@ -23,6 +23,7 @@ require('./itemframe');
 require('./shepherds-staff');
 require('./horn');
 require('./armorstand-pose');
+require('./pipe');
 require('./seen');
 require('./book-rewrite');
 require('./tool-preventions');

@@ -15,6 +15,7 @@ import {
   ItemStack,
   PlayerInventory,
 } from 'org.bukkit.inventory';
+import { Pipe, equipPipe } from './pipe';
 
 const HAT_MATERIAL = Material.DIAMOND_HOE;
 const HELMET_SLOT = 39;
@@ -30,6 +31,14 @@ registerEvent(PlayerInteractEvent, (event) => {
   }
   const inventory = event.player.inventory as PlayerInventory;
   if (inventory.helmet) return;
+
+  // Special case for the pipe. (Player might be filling the pipe)
+  if (Pipe.check(event.item)) {
+    if (!equipPipe(event.player)) {
+      return;
+    }
+  }
+
   inventory.helmet = event.item;
   event.item.amount = 0;
   playEquipSound(event.player);
