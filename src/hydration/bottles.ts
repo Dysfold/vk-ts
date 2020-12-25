@@ -62,6 +62,14 @@ const BOTTLES = new Map<number, { full: ItemStack; empty: ItemStack }>([
   [3, { full: Scoop.create(), empty: ScoopEmpty.create() }],
 ]);
 
+export function canBreak(item: ItemStack): boolean {
+  const unbreakableCustomBottles = [Mug, MugEmpty, Scoop, ScoopEmpty];
+  for (const bottle of unbreakableCustomBottles) {
+    if (bottle.check(item)) return false;
+  }
+  return true;
+}
+
 function getFullBottle(modelId: number) {
   return BOTTLES.get(modelId)?.full || new ItemStack(Material.POTION);
 }

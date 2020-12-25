@@ -6,6 +6,8 @@ import { Vector } from 'org.bukkit.util';
 import { LockedHandcuffs } from '../combat/handcuffs';
 import { Whip } from '../combat/whip';
 
+import { canBreak } from '../hydration/bottles';
+
 const VELOCITY_MULTIPLIER = 0.8;
 const HIT_DAMAGE = 0.2;
 const THROW_SOUND = Sound.ENTITY_SNOWBALL_THROW;
@@ -69,7 +71,10 @@ registerEvent(ProjectileHitEvent, (event) => {
   }
 
   // Prevent dropping broken bottles -> Breaking handled at breaking-bottles.ts
-  if (item.type === Material.POTION || item.type === Material.GLASS_BOTTLE)
+  if (
+    (item.type === Material.POTION || item.type === Material.GLASS_BOTTLE) &&
+    canBreak(item)
+  )
     return;
 
   const drop = event.entity.world.dropItem(

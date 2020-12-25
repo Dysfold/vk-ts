@@ -7,6 +7,8 @@ import { PotionMeta } from 'org.bukkit.inventory.meta';
 import { Location } from 'org.bukkit';
 import { Vector } from 'org.bukkit.util';
 
+import { canBreak } from '../hydration/bottles';
+
 // Materials for different colored potion particles
 const particles: Record<string, Material> = {
   FIRE_RESISTANCE: Material.YELLOW_WOOL,
@@ -63,11 +65,18 @@ async function breakAfterFall(drop: Item) {
   let currentVel = 0;
   await wait(100, 'millis'); // Wait for bottle to move before checks
 
-  while (drop && drop.velocity.y < previousY) {
-    previousY = drop.velocity.y;
-    currentVel = drop.velocity.lengthSquared();
-    await wait(100, 'millis');
+  for (let i = 0; i < 200; i++) {
+    if (drop && drop.velocity.y < previousY) {
+      previousY = drop.velocity.y;
+      currentVel = drop.velocity.lengthSquared();
+      await wait(100, 'millis');
+    } else {
+      break;
+    }
   }
+
+  // Bottle hit water -> don't break
+  if (drop.location.block.type === Material.WATER) return;
 
   // Bottle hit ground
   if (currentVel >= BREAK_VELOCITY) {
@@ -93,6 +102,9 @@ registerEvent(PlayerDropItemEvent, (event) => {
   if (item.type !== Material.POTION && item.type !== Material.GLASS_BOTTLE)
     return;
 
+  // Don't destroy non glass CustomItems
+  if (!canBreak(item)) return;
+
   breakAfterFall(drop);
 });
 
@@ -103,6 +115,9 @@ registerEvent(ProjectileHitEvent, (event) => {
 
   if (item.type !== Material.POTION && item.type !== Material.GLASS_BOTTLE)
     return;
+
+  // Don't destroy non glass CustomItems
+  if (!canBreak(item)) return;
 
   playBottleBreakEffects(snowball.location, item);
   item.type = Material.AIR;
