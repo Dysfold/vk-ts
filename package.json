@@ -7,6 +7,8 @@
     "lint": "eslint \"./src/**/*\""
   },
   "dependencies": {
+    "@bensku/java-core-types": "latest",
+    "@bensku/paper-types": "latest",
     "@types/chess.js": "^0.10.1",
     "@types/deep-diff": "^1.0.0",
     "@types/lodash": "^4.14.157",
