@@ -1,3 +1,4 @@
+require('./common/polyfill');
 require('./misc/index');
 require('./mining/index');
 require('./mobs/index');

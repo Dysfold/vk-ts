@@ -1,4 +1,3 @@
-import { Float } from 'java.lang';
 import { Location, Material } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
@@ -99,7 +98,7 @@ function collapse(air: Block) {
 
     const block = location.block;
     if (STONES.has(block.type.ordinal())) {
-      block.setType(Material.AIR);
+      block.type = Material.AIR;
       const fallingBlock = block.world.spawnFallingBlock(
         block.location.add(0.5, 0.5, 0.5),
         Material.COBBLESTONE,
@@ -116,7 +115,7 @@ async function shake(player: Player) {
   const directions = [new Vector(0.1, 0, 0.1), new Vector(-0.1, 0, -0.1)];
 
   for (let i = 0; i < 15; i++) {
-    player.setVelocity(player.velocity.add(directions[i % directions.length]));
+    player.velocity = player.velocity.add(directions[i % directions.length]);
     await wait(10 * i, 'millis');
   }
   return;
@@ -130,6 +129,6 @@ function playSound(location: Location) {
     //'minecraft:item.totem.use',
     //'minecraft:block.chorus_flower.death',
     0.5,
-    (new Float(0.2) as unknown) as number,
+    0.2,
   );
 }

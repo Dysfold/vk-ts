@@ -24,7 +24,7 @@ registerEvent(InventoryClickEvent, async (event) => {
   if (event.slot !== 2) return;
   // Player clicked the result slot of an anvil
 
-  const player = event.whoClicked as Player;
+  const player = (event.whoClicked as unknown) as Player;
   const levelBefore = player.level;
 
   // Give the player enought levels for any kind of anvil usage

@@ -1,4 +1,3 @@
-import { List } from 'java.util';
 import { Material, Particle, Sound, SoundCategory } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
@@ -113,7 +112,7 @@ function getTobaccoLevel(item: ItemStack) {
   const lore = meta.lore;
   if (!lore) return 0;
   // Parse the percentage from the lore
-  const line = lore.get(0);
+  const line = lore[0];
   const percentage = parseLore(line);
   return Number(percentage) || 0;
 }
@@ -124,13 +123,13 @@ function changeTobaccoLevel(item: ItemStack, amount: number) {
   let percentage = 0;
   if (lore) {
     // Parse the percentage from the lore
-    const line = lore.get(0);
+    const line = lore[0];
     percentage = Number(parseLore(line)) || 0;
   }
   // Add the amount, but limit the number to 0-100
   percentage = Math.max(Math.min(percentage + amount, 100), 0);
 
-  const newLore = ([createLore(percentage)] as unknown) as List<string>;
+  const newLore = [createLore(percentage)];
   meta.lore = newLore;
   item.itemMeta = meta;
 }

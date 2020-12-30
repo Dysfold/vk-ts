@@ -57,10 +57,10 @@ export function generateLoot<T>(data: T, loot: LootDrop<T>[]): ItemStack[] {
     // Create as many stacks as needed for count
     let remaining = drop.count;
     while (remaining > 0) {
-      const stackSize = Math.min(remaining, item.getType().getMaxStackSize());
+      const stackSize = Math.min(remaining, item.type.maxStackSize);
       remaining -= stackSize;
       const droppedItem = item.clone() as ItemStack;
-      droppedItem.setAmount(stackSize);
+      droppedItem.amount = stackSize;
       items.push(droppedItem); // FIXME wrong return type for ItemStack#clone()
     }
   }
@@ -94,7 +94,7 @@ export function setBlockDrops<T>(block: CustomBlock<T>, loot: LootDrop<T>[]) {
         block.world.dropItemNaturally(block.location, item);
       }
     }
-    block.setType(Material.AIR); // 'Break' the block
+    block.type = Material.AIR; // 'Break' the block
     return false; // We did the breaking
   });
 }

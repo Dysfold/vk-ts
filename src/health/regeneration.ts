@@ -1,5 +1,4 @@
-import { Boolean } from 'java.lang';
-import { GameRule } from 'org.bukkit';
+import { Bukkit, GameRule } from 'org.bukkit';
 
 const REGENERATION_INTERVAL = 30; // Seconds
 // If treshold is 15, player will not regenerate if he has more than 5 food points missing (or "2.5" points)
@@ -10,13 +9,11 @@ const Regeneration = {
 };
 
 // We assume that first world is the default world
-server.worlds
-  .get(0)
-  .setGameRule(GameRule.NATURAL_REGENERATION, new Boolean(false));
+Bukkit.server.worlds[0].setGameRule(GameRule.NATURAL_REGENERATION, false);
 
 // Regenerate health
 setInterval(() => {
-  for (const player of server.onlinePlayers) {
+  for (const player of Bukkit.server.onlinePlayers) {
     if (player.health >= player.maxHealth) continue;
     if (player.foodLevel < FOOD_LEVEL_TRESHOLD) continue;
 

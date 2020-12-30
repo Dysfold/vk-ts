@@ -1,4 +1,4 @@
-import { Material } from 'org.bukkit';
+import { Bukkit, Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { EntityType } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
@@ -55,7 +55,7 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
     clickedBlock,
     clickedFace,
   );
-  server.pluginManager.callEvent(playerInteractEvent);
+  Bukkit.server.pluginManager.callEvent(playerInteractEvent);
 });
 
 // Only allow players to break itemframe items

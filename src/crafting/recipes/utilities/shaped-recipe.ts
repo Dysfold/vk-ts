@@ -1,4 +1,4 @@
-import { Material, NamespacedKey } from 'org.bukkit';
+import { Bukkit, Material, NamespacedKey } from 'org.bukkit';
 import { ItemStack, ShapedRecipe } from 'org.bukkit.inventory';
 import { MaterialChoice } from 'org.bukkit.inventory.RecipeChoice';
 
@@ -39,5 +39,5 @@ export function shapedRecipe({
     }
   });
 
-  server.addRecipe(shapedRecipe);
+  Bukkit.server.addRecipe(shapedRecipe);
 }

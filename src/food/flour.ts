@@ -30,8 +30,8 @@ Grinder.event(
     const player = event.player;
 
     const inventory = player.inventory as PlayerInventory;
-    const offHand = inventory.getItemInOffHand();
-    const mainHand = inventory.getItemInMainHand();
+    const offHand = inventory.itemInOffHand;
+    const mainHand = inventory.itemInMainHand;
     if (mainHand.type !== TOOL_MATERIAL) return;
     if (offHand.type !== Material.WHEAT_SEEDS) return;
     if (offHand.amount < SEEDS_PER_FLOUR) return;
@@ -44,12 +44,12 @@ Grinder.event(
     playEffects(block);
 
     flourPlayers.add(player);
-    offHand.setAmount(offHand.amount - SEEDS_PER_FLOUR);
+    offHand.amount = offHand.amount - SEEDS_PER_FLOUR;
     const flour = block.world.dropItem(
       block.location.add(0.5, 1, 0.5),
       FLOUR_ITEM,
     );
-    flour.setVelocity(new Vector()); // Stationary item
+    flour.velocity = new Vector();
 
     await wait(DELAY, 'seconds');
     flourPlayers.delete(player);

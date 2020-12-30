@@ -25,19 +25,19 @@ export function setBlock(
   purgeCustomData(block); // Delete previous maybe-custom block
 
   // Replace Vanilla block
-  block.setType(type);
+  block.type = type;
   if (data) {
     if (Array.isArray(data)) {
       const index = Math.floor(Math.random() * data.length); // Select used block state randomly
-      block.setBlockData(data[index]);
+      block.blockData = data[index];
     } else {
-      block.setBlockData(data);
+      block.blockData = data;
     }
   }
 }
 
 // Purge custom data when players break a block
-registerEvent(BlockBreakEvent, (event) => purgeCustomData(event.getBlock()));
+registerEvent(BlockBreakEvent, (event) => purgeCustomData(event.block));
 // TODO explosions?
 
 // TODO cleanup function for purging any leftover custom data (if/when bugs happen in prod)

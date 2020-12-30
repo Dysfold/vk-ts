@@ -68,7 +68,7 @@ function announceDice(location: Location, face: number) {
   const entities = location.world.getNearbyEntities(location, 5, 5, 5);
   for (const entity of entities) {
     if (entity.type === EntityType.PLAYER) {
-      (entity as Player).sendTitle('§6' + face, '', 0, 40, 20);
+      ((entity as unknown) as Player).sendTitle('§6' + face, '', 0, 40, 20);
     }
   }
 }

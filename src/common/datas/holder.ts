@@ -4,12 +4,12 @@ import {
   PersistentDataContainer,
   PersistentDataHolder,
 } from 'org.bukkit.persistence';
-import { Integer, Double } from 'java.lang';
 import * as yup from 'yup';
 import { ItemStack } from 'org.bukkit.inventory';
 import { ItemMeta } from 'org.bukkit.inventory.meta';
-import { DatabaseEntry, getTable, Table } from './database';
+import { DatabaseEntry, getTable } from './database';
 import { Block } from 'org.bukkit.block';
+import { Table } from 'craftjs-plugin';
 
 /**
  * A custom data holder.
@@ -146,7 +146,7 @@ export function dataHolder(storage: DataHolderStorage): DataHolder {
     );
   } else if (storage instanceof ItemStack) {
     // Use wrapper that automatically sets ItemMeta on changes
-    return new ItemStackHolder(storage, storage.getItemMeta());
+    return new ItemStackHolder(storage, storage.itemMeta);
   } else if (storage instanceof Block) {
     // Storage custom block data in database by location
     // Custom building materials etc. won't have data, so this is fine
@@ -156,7 +156,7 @@ export function dataHolder(storage: DataHolderStorage): DataHolder {
   } else if (storage instanceof DatabaseEntry) {
     return new DatabaseHolder(storage);
   } else if (storage instanceof PersistentDataHolder) {
-    return new BukkitHolder(storage.getPersistentDataContainer());
+    return new BukkitHolder(storage.persistentDataContainer);
   } else {
     throw new Error('unknown dataHolder storage');
   }
@@ -211,12 +211,13 @@ function toJson<T extends object>(
   return JSON.stringify(data);
 }
 
-function intToBoolean(value: Integer | null): boolean | null {
-  return value != null ? ((value as unknown) as number) != 0 : null;
+function intToBoolean(value: number | null): boolean | null {
+  return value != null ? value != 0 : null;
 }
 
 function namespacedKey(key: string): NamespacedKey {
-  return new NamespacedKey(__plugin, key);
+  // TODO CraftJS should have public wrapper for __craftjs.plugin
+  return new NamespacedKey('vk', key);
 }
 
 /**
@@ -259,7 +260,7 @@ class BukkitHolder extends DataHolder {
         this.container.set(
           containerKey,
           PersistentDataType.INTEGER,
-          ((value ? 1 : 0) as unknown) as Integer,
+          value ? 1 : 0,
         );
         break;
       case 'integer':
@@ -269,11 +270,7 @@ class BukkitHolder extends DataHolder {
         this.container.set(containerKey, PersistentDataType.INTEGER, value);
         break;
       case 'number':
-        this.container.set(
-          containerKey,
-          PersistentDataType.DOUBLE,
-          Double.valueOf(value), // Graal can't auto-cast number to boxed Double
-        );
+        this.container.set(containerKey, PersistentDataType.DOUBLE, value);
         break;
       case 'string':
         this.container.set(containerKey, PersistentDataType.STRING, value);
@@ -308,7 +305,7 @@ function checkType(value: any, type: any) {
  * Stores data by prefix in database.
  */
 class DatabaseHolder extends DataHolder {
-  table: Table;
+  table: Table<any, any>;
   prefix: string;
 
   constructor(entry: DatabaseEntry) {
@@ -331,14 +328,14 @@ class DatabaseHolder extends DataHolder {
   set(key: string, type: any, value: any, validateSchema = true): void {
     const fullKey = this.prefix + key;
     if (typeof type == 'string') {
-      this.table.put(fullKey, value); // boolean, integer, number or string
+      this.table.set(fullKey, value); // boolean, integer, number or string
     } else {
-      this.table.put(fullKey, toJson(type, value, validateSchema));
+      this.table.set(fullKey, toJson(type, value, validateSchema));
     }
   }
 
   delete(key: string): void {
-    this.table.remove(this.prefix + key);
+    this.table.delete(this.prefix + key);
   }
 }
 
@@ -350,7 +347,7 @@ class ItemStackHolder extends BukkitHolder {
   private meta: ItemMeta;
 
   constructor(stack: ItemStack, meta: ItemMeta) {
-    super(meta.getPersistentDataContainer());
+    super(meta.persistentDataContainer);
     this.stack = stack;
     this.meta = meta;
   }

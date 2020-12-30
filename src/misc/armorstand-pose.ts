@@ -157,7 +157,7 @@ registerEvent(EntityDeathEvent, (event) => {
   const armorstand = event.entity as ArmorStand;
   if (armorstand.hasArms()) {
     if (canBeChanged(armorstand)) {
-      event.drops.add(ARM_DROPS);
+      event.drops.push(ARM_DROPS);
     }
   }
 });
