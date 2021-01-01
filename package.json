@@ -1,5 +1,6 @@
 {
-  "main": "dist/index.js",
+  "name": "vk",
+  "main": "index.js",
   "scripts": {
     "tsc": "tsc",
     "watch": "tsc --watch",
