@@ -14,3 +14,5 @@ require('./admin/index');
 require('./crafting/index');
 require('./chat/index');
 require('./economy/index');
+
+log.info('Valtakausi systems loaded');
