@@ -1,6 +1,5 @@
-import { GameMode, Material, SoundCategory } from 'org.bukkit';
+import { GameMode, Material, SoundCategory, Sound } from 'org.bukkit';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
-import { Action } from 'org.bukkit.event.block';
 import {
   InventoryAction,
   InventoryClickEvent,
@@ -32,6 +31,7 @@ registerEvent(PlayerInteractEvent, (event) => {
   if (!event.item) return;
   if (!isHat(event.item)) return;
   if (!isRightClick(event.action)) return;
+  event.setCancelled(true);
 
   const inventory = event.player.inventory as PlayerInventory;
   if (inventory.helmet) return;
@@ -46,7 +46,6 @@ registerEvent(PlayerInteractEvent, (event) => {
   inventory.helmet = event.item;
   event.item.amount = 0;
   playEquipSound(event.player);
-  event.setCancelled(true);
 });
 
 // Shift click a hat to equip
@@ -99,7 +98,7 @@ registerEvent(PlayerInteractAtEntityEvent, (event) => {
 function playEquipSound(player: Player) {
   player.world.playSound(
     player.location,
-    'minecraft:item.armor.equip_leather',
+    Sound.ITEM_ARMOR_EQUIP_LEATHER,
     SoundCategory.PLAYERS,
     1,
     1,
