@@ -1,6 +1,6 @@
 import { Material, Particle } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
-import { Entity, EntityType, Hanging, Item } from 'org.bukkit.entity';
+import { EntityType, Item, ItemFrame } from 'org.bukkit.entity';
 import { Action, BlockBreakEvent } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import {
@@ -92,7 +92,9 @@ const RECIPES = [
   },
 ];
 
-const risingDoughs = new Map<Entity, { seconds: number; risen: ItemStack }>([]);
+const risingDoughs = new Map<ItemFrame, { seconds: number; risen: ItemStack }>(
+  [],
+);
 
 // List all possible ingredients
 const INGREDIENTS = new Set<number>();
@@ -108,7 +110,7 @@ setInterval(() => {
     else if (seconds > 0) {
       risingDoughs.set(frame, { seconds: --seconds, risen: risen });
     } else {
-      (frame as any).setItem(risen, false); // false = no sound
+      frame.setItem(risen, false); // false = no sound
       risingDoughs.delete(frame);
     }
   });
@@ -244,9 +246,12 @@ function bake(block: Block) {
 // TODO: Common api for item frames?qq
 function summonItemFrame(block: Block, face: BlockFace, item: ItemStack) {
   const loc = block.getRelative(face).location;
-  const frame = block.world.spawnEntity(loc, EntityType.ITEM_FRAME) as any; // ItemFrame type didn't exist
+  const frame = block.world.spawnEntity(
+    loc,
+    EntityType.ITEM_FRAME,
+  ) as ItemFrame;
   frame.facingDirection = face;
-  frame.visible = false;
+  frame.setVisible(false);
   frame.setItem(item, false); // false = no sound
   return frame;
 }
@@ -256,10 +261,10 @@ function getItemFrame(block: Block, face: BlockFace) {
   const entities = block.world.getNearbyEntities(loc, 0.5, 0.5, 0.5);
   for (const entity of entities) {
     if (entity.type !== EntityType.ITEM_FRAME) continue;
-    const frame = entity as Hanging;
+    const frame = entity as ItemFrame;
     const hangedBlock = entity.location.block.getRelative(frame.attachedFace);
     if (hangedBlock.location.equals(block.location)) {
-      return entity as any; // ItemFrame type didn't exist;
+      return frame;
     }
   }
   return undefined;

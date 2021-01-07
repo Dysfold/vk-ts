@@ -1,6 +1,6 @@
 import { Bukkit, Location, Material, Particle } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
-import { EntityType } from 'org.bukkit.entity';
+import { EntityType, ItemFrame } from 'org.bukkit.entity';
 import {
   PlayerInteractEntityEvent,
   PlayerItemConsumeEvent,
@@ -13,7 +13,7 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
   const entity = event.rightClicked;
   if (entity.type !== EntityType.ITEM_FRAME) return;
   if (entity.facing !== BlockFace.UP) return;
-  const itemframe = entity as any;
+  const itemframe = entity as ItemFrame;
 
   const item = itemframe.item as ItemStack;
   if (!item) return;
