@@ -1,10 +1,12 @@
+import { Bukkit } from 'org.bukkit';
+
 registerCommand('seen', (sender, label, args) => {
   if (args.length !== 1) {
     sender.sendMessage('/seen <pelaaja>');
     return;
   }
   let name = args[0];
-  const player = server.getOfflinePlayer(name);
+  const player = Bukkit.server.getOfflinePlayer(name);
 
   name = player.name || name;
 

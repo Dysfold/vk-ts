@@ -66,7 +66,7 @@ Handcuffs.event(
     const entity = event.rightClicked;
     if (entity.type !== EntityType.PLAYER) return;
     if (event.hand !== EquipmentSlot.HAND) return;
-    const captive = entity as Player;
+    const captive = (entity as unknown) as Player;
     const captor = event.player;
     const captiveInventory = captive.inventory as PlayerInventory;
     const captorInventory = captor.inventory as PlayerInventory;
@@ -114,7 +114,7 @@ Key.event(
     const entity = event.rightClicked;
     if (entity.type !== EntityType.PLAYER) return;
     if (event.hand !== EquipmentSlot.HAND) return;
-    const handcuffed = entity as Player;
+    const handcuffed = (entity as unknown) as Player;
     const player = event.player;
 
     if (removeHandcuffs(handcuffed, player)) {
@@ -155,18 +155,18 @@ function removeHandcuffs(from: Player, to: Player) {
 registerEvent(PlayerDeathEvent, (event) => {
   if (event.entity.type !== EntityType.PLAYER) return;
   const player = event.entity as Player;
-  const offHandItem = (player.inventory as PlayerInventory).itemInOffHand;
-  const mainHandItem = (player.inventory as PlayerInventory).itemInMainHand;
+  const offHandItem = player.inventory.itemInOffHand;
+  const mainHandItem = player.inventory.itemInMainHand;
   // If the player was dragged
   draggedPlayers.delete(player);
 
   if (LockedHandcuffs.check(offHandItem)) {
-    if (event.drops.remove(offHandItem)) {
+    if (event.drops.removeValue(offHandItem)) {
       player.world.dropItem(player.location, HandcuffsItem);
     }
   }
   if (LockedHandcuffs.check(mainHandItem)) {
-    event.drops.remove(mainHandItem);
+    event.drops.removeValue(mainHandItem);
   }
 });
 
@@ -224,9 +224,12 @@ LockedHandcuffs.event(
 LockedHandcuffs.event(
   EntityDamageByEntityEvent,
   (event) =>
-    ((event.damager as Player).inventory as PlayerInventory).itemInOffHand,
+    (((event.damager as unknown) as Player).inventory as PlayerInventory)
+      .itemInOffHand,
   async (event) => {
-    (event.damager as Player).sendActionBar('Et voi tehdä näin kahlittuna');
+    ((event.damager as unknown) as Player).sendActionBar(
+      'Et voi tehdä näin kahlittuna',
+    );
     event.setCancelled(true);
   },
 );
@@ -263,7 +266,7 @@ function giveItem(player: Player, item: ItemStack) {
 registerEvent(PlayerInteractEntityEvent, (event) => {
   if (event.hand !== EquipmentSlot.HAND) return;
   if (event.rightClicked.type !== EntityType.PLAYER) return;
-  const dragged = event.rightClicked as Player;
+  const dragged = (event.rightClicked as unknown) as Player;
   const player = event.player;
 
   // If player is sneaking, he is trying to open the inventory of the target

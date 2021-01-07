@@ -6,7 +6,6 @@ import { BlockDispenseEvent } from 'org.bukkit.event.block';
 import { InventoryOpenEvent, InventoryType } from 'org.bukkit.event.inventory';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import { CustomBlock } from '../common/blocks/CustomBlock';
-import { Float } from 'java.lang';
 import { LivingEntity } from 'org.bukkit.entity';
 
 const MAX_LEN = 20;
@@ -359,7 +358,7 @@ function playWinchSound(location: Location) {
     location,
     'minecraft:block.chain.step',
     SoundCategory.BLOCKS,
-    (new Float(0.5) as unknown) as number,
-    (new Float(0.7) as unknown) as number,
+    0.5,
+    0.7,
   );
 }

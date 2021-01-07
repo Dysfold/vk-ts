@@ -1,4 +1,3 @@
-import { List } from 'java.util';
 import { Material } from 'org.bukkit';
 import { BlockState } from 'org.bukkit.block';
 import { BlockFertilizeEvent } from 'org.bukkit.event.block';
@@ -9,7 +8,7 @@ registerEvent(BlockFertilizeEvent, (event) => {
   event.setCancelled(cancel);
 });
 
-function canBeFertilized(blocks: List<BlockState>) {
+function canBeFertilized(blocks: BlockState[]) {
   for (const block of blocks) {
     switch (block.type) {
       case Material.SEAGRASS:
