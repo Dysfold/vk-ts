@@ -1,3 +1,3 @@
 require('./anvil');
 require('./naming');
-require('./smelting');
+require('./blacksmith');

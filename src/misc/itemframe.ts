@@ -1,6 +1,6 @@
 import { Bukkit, Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
-import { EntityType } from 'org.bukkit.entity';
+import { EntityType, ItemFrame } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
 import { HangingBreakEvent } from 'org.bukkit.event.hanging';
@@ -14,23 +14,31 @@ import { PlayerInventory } from 'org.bukkit.inventory';
 // and remove the item, if it was hidden item (heart of the sea)
 registerEvent(HangingBreakEvent, (event) => {
   if (event.entity.type !== EntityType.ITEM_FRAME) return;
-  const frame = event.entity as any; // TODO: replace any with ItemFrame (when the type exists)
+  const frame = event.entity as ItemFrame;
   if (frame.isVisible()) return;
 
   const item = frame.item;
   if (item && item.type !== Material.HEART_OF_THE_SEA) {
-    // Drop the item, if it wasn't a hidden item (Heart of the sea)
-    event.entity.world.dropItem(event.entity.location, item);
+    // The entity was invisible item frame with hidden item (Heart of the sea)
+    event.entity.remove();
+    return;
+  }
+  if (frame.isSilent()) {
+    // The entity was silent item frame -> It should not drop the itemframe item
+    event.entity.remove();
+    return;
   }
 
-  // The entity was invisible item frame
-  event.entity.remove();
+  if (!item || item.type.isEmpty()) return;
+
+  // Drop the item, if it wasn't a hidden item (Heart of the sea)
+  event.entity.world.dropItem(event.entity.location, item);
 });
 
 registerEvent(PlayerInteractEntityEvent, (event) => {
   const entity = event.rightClicked;
   if (entity.type !== EntityType.ITEM_FRAME) return;
-  const frame = entity as any; // TODO: replace any with ItemFrame (when the type exists)
+  const frame = entity as ItemFrame;
   if (frame.isVisible()) return;
 
   // The entity was invisible item frame
