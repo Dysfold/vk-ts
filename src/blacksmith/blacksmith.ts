@@ -1,13 +1,6 @@
-import {
-  Location,
-  Material,
-  Sound,
-  SoundCategory,
-  Bukkit,
-  Server,
-} from 'org.bukkit';
+import { Location, Material, Sound, SoundCategory } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
-import { EntityType, ItemFrame, Player, Item } from 'org.bukkit.entity';
+import { EntityType, Item, ItemFrame, Player } from 'org.bukkit.entity';
 import { CraftItemEvent } from 'org.bukkit.event.inventory';
 import {
   PlayerInteractEntityEvent,
@@ -17,7 +10,6 @@ import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { isRightClick } from '../common/helpers/click';
 import { summonInvisibleItemFrame } from '../common/helpers/itemframes';
 import { CustomItem } from '../common/items/CustomItem';
-import { giveItem } from '../common/helpers/inventory';
 
 const MOLTEN_MATERIAL = Material.IRON_NUGGET;
 
@@ -311,12 +303,9 @@ Pliers.event(
   PlayerInteractEvent,
   (event) => event.player.inventory.itemInMainHand,
   async (event) => {
-    Bukkit.server.broadcastMessage('KLIK');
-
     if (!isRightClick(event.action)) return;
 
     const raytrace = event.player.rayTraceBlocks(4);
-    Bukkit.server.broadcastMessage(raytrace?.hitPosition + '.aaaa..');
     const hitPos = raytrace?.hitPosition;
     if (!hitPos) return;
     const world = event.player.world;

@@ -1,7 +1,7 @@
+import { Bukkit, Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
-import { CustomItem } from '../common/items/CustomItem';
-import { Material, Server, Bukkit } from 'org.bukkit';
 import { Damageable } from 'org.bukkit.inventory.meta';
+import { CustomItem } from '../common/items/CustomItem';
 
 export function makeDamaged(tool: Material | ItemStack | CustomItem<{}>) {
   let item: ItemStack;

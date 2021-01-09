@@ -1,8 +1,7 @@
-import { Bukkit, Sound, Effect } from 'org.bukkit';
+import { Bukkit, Sound } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { ItemStack } from 'org.bukkit.inventory';
 import { isMoltenMetal } from './blacksmith';
-import { InventoryMoveItemEvent } from 'org.bukkit.event.inventory';
 
 // Check if player is holding molten metal
 setInterval(() => {
