@@ -62,10 +62,10 @@ const BOTTLES = new Map<number, { full: ItemStack; empty: ItemStack }>([
   [3, { full: Scoop.create(), empty: ScoopEmpty.create() }],
 ]);
 
-function getFullBottle(modelId: number) {
+export function getFullBottle(modelId: number) {
   return BOTTLES.get(modelId)?.full || new ItemStack(Material.POTION);
 }
-function getEmptyBottle(modelId: number) {
+export function getEmptyBottle(modelId: number) {
   return BOTTLES.get(modelId)?.empty || new ItemStack(Material.GLASS_BOTTLE);
 }
 
