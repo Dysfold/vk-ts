@@ -1,5 +1,5 @@
 import { Chess, ChessInstance, Move, Square } from 'chess.js';
-import { Integer } from 'java.lang';
+import { HashSet, Set } from 'java.util';
 import { Location, Material, World } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Directional } from 'org.bukkit.block.data';
@@ -134,7 +134,7 @@ function announce(block: Block, state: string, winner?: 'w' | 'b') {
   const entities = block.location.getNearbyEntities(3, 2, 3);
   for (const entity of entities) {
     if (entity.type === EntityType.PLAYER) {
-      (entity as Player).sendTitle('§6' + state, msg, 0, 50, 30);
+      ((entity as unknown) as Player).sendTitle('§6' + state, msg, 0, 50, 30);
     }
   }
 }
@@ -348,10 +348,10 @@ function updateBoard(board: Block, move: Move) {
   if (move.promotion) {
     const promotionType = getToken(move.promotion, move.color);
     const helmet = armorstand.helmet;
-    const meta = helmet.getItemMeta();
+    const meta = helmet.itemMeta;
     const cmd = ModelData.get(promotionType) || 0;
-    meta.setCustomModelData(new Integer(cmd));
-    helmet.setItemMeta(meta);
+    meta.customModelData = cmd;
+    helmet.itemMeta = meta;
     armorstand.helmet = helmet;
   }
 
@@ -367,9 +367,9 @@ function createArmorstand(type: string, world: World) {
   ) as ArmorStand;
 
   const helmet = new ItemStack(PIECE_MATERIAL);
-  const meta = helmet.getItemMeta();
-  meta.setCustomModelData(new Integer(ModelData.get(type) || 0));
-  helmet.setItemMeta(meta);
+  const meta = helmet.itemMeta;
+  meta.customModelData = ModelData.get(type) || 0;
+  helmet.itemMeta = meta;
   armorstand.helmet = helmet;
 
   armorstand.setSmall(true);
@@ -383,13 +383,13 @@ function createArmorstand(type: string, world: World) {
   armorstand.setCanPickupItems(false);
   armorstand.setMarker(true);
   armorstand.setCustomNameVisible(false);
-  armorstand.setDisabledSlots(
-    EquipmentSlot.HAND,
-    EquipmentSlot.OFF_HAND,
-    EquipmentSlot.CHEST,
-    EquipmentSlot.LEGS,
-    EquipmentSlot.FEET,
-  );
+  const disabled: Set<EquipmentSlot> = new HashSet();
+  disabled.add(EquipmentSlot.HAND);
+  disabled.add(EquipmentSlot.OFF_HAND);
+  disabled.add(EquipmentSlot.CHEST);
+  disabled.add(EquipmentSlot.LEGS);
+  disabled.add(EquipmentSlot.FEET);
+  armorstand.disabledSlots = disabled;
 
   return armorstand;
 }

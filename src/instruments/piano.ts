@@ -1,4 +1,3 @@
-import { Float } from 'java.lang';
 import { Material } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Action } from 'org.bukkit.event.block';
@@ -29,12 +28,7 @@ function playNote(block: Block, note: number) {
 
   const pitch = 0.5 * 2 ** ((note - octave * KEYS_IN_OCTAVE) / KEYS_IN_OCTAVE);
 
-  block.world.playSound(
-    block.location,
-    `custom.piano${octave}`,
-    2,
-    (new Float(pitch) as unknown) as number,
-  );
+  block.world.playSound(block.location, `custom.piano${octave}`, 2, pitch);
 }
 
 export function playPianoChord(block: Block, chord: number, minor = false) {

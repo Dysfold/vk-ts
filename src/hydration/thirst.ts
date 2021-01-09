@@ -1,5 +1,4 @@
-import { Float } from 'java.lang';
-import { GameMode } from 'org.bukkit';
+import { Bukkit, GameMode } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 
@@ -45,11 +44,11 @@ const dehydratedPlayers = new Set<Player>();
 
 // Reduce the hydration of the players
 setInterval(() => {
-  for (const player of server.onlinePlayers) {
+  for (const player of Bukkit.server.onlinePlayers) {
     if (player.gameMode !== GameMode.SURVIVAL) return;
 
     const bar = limit(player.exp + THIRST_CYCLE_HYDRATION);
-    player.exp = (new Float(bar) as unknown) as number;
+    player.exp = bar;
 
     if (bar < DEHYDRATION_LEVEL) {
       dehydratedPlayers.add(player);

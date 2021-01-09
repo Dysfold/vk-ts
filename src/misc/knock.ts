@@ -1,18 +1,10 @@
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { Action } from 'org.bukkit.event.block';
 import { Material, Location } from 'org.bukkit';
-import { Float } from 'java.lang';
 
 function knockSound(location: Location, sound: string) {
   const pitch = 1.45 + 0.1 * Math.random();
-  location.world.playSound(
-    location,
-    sound,
-    1,
-    (new Float(pitch) as unknown) as number,
-  );
-  // GraalJS float handling is weird, need to explicitly "cast"
-  // And of course, TS types don't know that (yet)
+  location.world.playSound(location, sound, 1, pitch);
 }
 
 registerEvent(PlayerInteractEvent, (event) => {

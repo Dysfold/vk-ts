@@ -1,4 +1,4 @@
-import { Location, Material } from 'org.bukkit';
+import { Bukkit, Location, Material } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Gate } from 'org.bukkit.block.data.type';
 import { Player } from 'org.bukkit.entity';
@@ -103,12 +103,12 @@ Saw.event(
     const dropType = DROPS.get(log.type.ordinal()) || Material.AIR;
     const drops = new ItemStack(dropType, 4);
     log.world.dropItem(saw.location.add(0.5, 0.5, 0.5), drops);
-    log.setType(Material.AIR);
+    log.type = Material.AIR;
 
     // Spin the blade
     const data = saw.blockData as Gate;
     data.setOpen(true);
-    saw.setBlockData(data);
+    saw.blockData = data;
 
     playSawSound(saw.location);
   },
@@ -124,7 +124,7 @@ Saw.event(
     const data = saw.blockData as Gate;
     let face = rotateFace(data.facing);
     data.setOpen(false);
-    saw.setBlockData(data);
+    saw.blockData = data;
 
     // Try other direction if there isn't any wood in the main direction
     if (!isWood(saw.getRelative(face).type)) {
@@ -177,7 +177,7 @@ HandSaw.event(
 
     // Call BlockBreakEvent because other plugins or features might want to log or prevent the action
     const blockBreakEvent = new BlockBreakEvent(block, event.player);
-    server.pluginManager.callEvent(blockBreakEvent);
+    Bukkit.server.pluginManager.callEvent(blockBreakEvent);
     if (blockBreakEvent.isCancelled()) return;
 
     const dropType = DROPS.get(block.type.ordinal()) || Material.AIR;

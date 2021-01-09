@@ -29,7 +29,7 @@ const TestB = dataType('TestB', {
 
 test('DataHolder view works', (t) => {
   const item = new ItemStack(Material.STONE, 1);
-  const meta = item.getItemMeta();
+  const meta = item.itemMeta;
 
   const a = dataView(TestA, dataHolder(meta));
   a.bool = false;
@@ -53,7 +53,7 @@ test('DataHolder view works', (t) => {
 
 test('DataHolder view without autoSave', (t) => {
   const item = new ItemStack(Material.STONE, 1);
-  const meta = item.getItemMeta();
+  const meta = item.itemMeta;
 
   const a = dataView(TestA, meta, false);
   a.bool = false;

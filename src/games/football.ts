@@ -10,7 +10,6 @@ import {
 import { EquipmentSlot, PlayerInventory } from 'org.bukkit.inventory';
 import { Vector } from 'org.bukkit.util';
 import { CustomItem } from '../common/items/CustomItem';
-import { Float } from 'java.lang';
 import { PlayerLaunchProjectileEvent } from 'com.destroystokyo.paper.event.player';
 
 const BALL_DESPAWN_SECONDS = 30;
@@ -106,7 +105,7 @@ function bounceOnEntity(entity: Entity, ball: Snowball) {
     return;
   }
 
-  const player = entity as Player;
+  const player = (entity as unknown) as Player;
   const rand = new Vector(
     Math.random() - 0.5,
     Math.random() - 0.5,
@@ -117,7 +116,7 @@ function bounceOnEntity(entity: Entity, ball: Snowball) {
     ball.location,
     EntityType.SNOWBALL,
   ) as Snowball;
-  newBall.setCustomName(ball.customName || '');
+  newBall.customName = ball.customName || '';
   newBall.item = FootballItemStack;
 
   let bounciness = player.isOnGround() ? 0.25 : 0.7;
@@ -126,9 +125,9 @@ function bounceOnEntity(entity: Entity, ball: Snowball) {
   }
   const angle = velocity.angle(ball.velocity);
   if (angle < 1) {
-    newBall.setVelocity(rand.multiply(bounciness));
+    newBall.velocity = rand.multiply(bounciness);
   } else {
-    newBall.setVelocity(velocity.multiply(bounciness));
+    newBall.velocity = velocity.multiply(bounciness);
   }
 }
 
@@ -229,8 +228,8 @@ function playBounceSound(location: Location, volume: number) {
     location,
     'minecraft:block.wool.hit',
     SoundCategory.BLOCKS,
-    (new Float(volume) as unknown) as number,
-    (new Float(2) as unknown) as number,
+    volume,
+    2,
   );
 }
 
@@ -239,8 +238,8 @@ function playKickSound(ball: Entity, volume: number) {
     ball.location,
     'minecraft:entity.player.attack.knockback',
     SoundCategory.BLOCKS,
-    (new Float(volume) as unknown) as number,
-    (new Float(1.2) as unknown) as number,
+    volume,
+    1.2,
   );
 }
 
@@ -252,6 +251,6 @@ function stopBall(ball: Entity) {
     'minecraft:entity.generic.small_fall',
     SoundCategory.BLOCKS,
     1,
-    (new Float(0.7) as unknown) as number,
+    0.7,
   );
 }

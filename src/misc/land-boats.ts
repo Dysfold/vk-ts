@@ -39,7 +39,7 @@ registerEvent(PlayerInteractEvent, (event) => {
 registerEvent(VehicleEnterEvent, (event) => {
   if (event.vehicle.type !== EntityType.BOAT) return;
   if (event.entered.type === EntityType.PLAYER) {
-    boaters.add(event.entered as Player);
+    boaters.add((event.entered as unknown) as Player);
     removeIfOnLand(event.vehicle as Boat);
   }
 });

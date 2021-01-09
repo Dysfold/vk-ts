@@ -66,13 +66,13 @@ function checkDelete(holder: DataHolder, t: Assert) {
 
 test('PersistentDataHolder serialization', (t) => {
   const stack = new ItemStack(Material.STONE, 1);
-  const meta = stack.getItemMeta();
+  const meta = stack.itemMeta;
   const holder = dataHolder(meta);
   setData(holder);
   checkData(holder, t, 'same holder');
   checkData(dataHolder(meta), t, 'same ItemMeta');
-  stack.setItemMeta(meta);
-  checkData(dataHolder(stack.getItemMeta()), t, 'new ItemMeta'); // New ItemMeta from same stack
+  stack.itemMeta = meta;
+  checkData(dataHolder(stack.itemMeta), t, 'new ItemMeta'); // New ItemMeta from same stack
   checkDelete(holder, t);
 });
 
