@@ -1,4 +1,12 @@
-import { Location, Material, Rotation, Sound, SoundCategory } from 'org.bukkit';
+import {
+  Location,
+  Material,
+  Rotation,
+  Sound,
+  SoundCategory,
+  Server,
+  Bukkit,
+} from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { EntityType, Item, ItemFrame, Player } from 'org.bukkit.entity';
 import { CraftItemEvent, InventoryType } from 'org.bukkit.event.inventory';
@@ -11,6 +19,7 @@ import { isRightClick } from '../common/helpers/click';
 import { summonInvisibleItemFrame } from '../common/helpers/itemframes';
 import { CustomItem } from '../common/items/CustomItem';
 import { Directional } from 'org.bukkit.block.data';
+import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
 
 const MOLTEN_MATERIAL = Material.IRON_NUGGET;
 
@@ -231,12 +240,59 @@ registerEvent(PlayerInteractEvent, (event) => {
       } else {
         event.player.inventory.itemInOffHand = Pliers.create();
       }
+      frame.world.playSound(
+        frame.location,
+        Sound.ITEM_TRIDENT_HIT,
+        SoundCategory.PLAYERS,
+        0.7,
+        1,
+      );
     }
   });
 });
 
 // Shape the iron with a hammer
 const hammerUsers = new Set<Player>();
+
+async function hammerHit(frame: ItemFrame, player: Player) {
+  // Check if the frame is on top of anvil
+  if (frame.facing !== BlockFace.UP) return;
+  const attachedBlock = frame.world.getBlockAt(frame.location.add(0, -0.5, 0));
+  if (attachedBlock.type !== Material.ANVIL) return;
+
+  const item = frame.item;
+  if (!isMoltenMetal(item)) return;
+
+  if (hammerUsers.has(player)) return;
+  hammerUsers.add(player);
+
+  let newIronItem = item;
+  IronIngotDerivativesArray.forEach((iron, index) => {
+    if (iron.check(item)) {
+      const nextIndex = (index + 1) % IronIngotDerivativesArray.length;
+      newIronItem = IronIngotDerivativesArray[nextIndex].create();
+
+      // Hide nametag from the item
+      const meta = newIronItem.itemMeta;
+      meta.displayName = '';
+      newIronItem.itemMeta = meta;
+    }
+  });
+
+  playHammeringSounds(frame.location);
+  await swingHammer(player);
+  frame.setItem(newIronItem, false);
+  frame.location.world.playSound(
+    frame.location,
+    Sound.ENTITY_RAVAGER_STEP,
+    SoundCategory.PLAYERS,
+    0.6,
+    1,
+  );
+
+  hammerUsers.delete(player);
+}
+
 Hammer.event(
   PlayerInteractEntityEvent,
   (event) => event.player.inventory.itemInMainHand,
@@ -244,47 +300,23 @@ Hammer.event(
     const clicked = event.rightClicked;
     if (clicked.type !== EntityType.ITEM_FRAME) return;
     const frame = clicked as ItemFrame;
-
-    // Check if the frame is on top of anvil
-    if (frame.facing !== BlockFace.UP) return;
-    const attachedBlock = frame.world.getBlockAt(
-      frame.location.add(0, -0.5, 0),
-    );
-    if (attachedBlock.type !== Material.ANVIL) return;
-
-    const item = frame.item;
-    if (!isMoltenMetal(item)) return;
-
-    const player = event.player;
     event.setCancelled(true);
-    if (hammerUsers.has(player)) return;
-    hammerUsers.add(player);
 
-    let newIronItem = item;
-    IronIngotDerivativesArray.forEach((iron, index) => {
-      if (iron.check(item)) {
-        const nextIndex = (index + 1) % IronIngotDerivativesArray.length;
-        newIronItem = IronIngotDerivativesArray[nextIndex].create();
+    await hammerHit(frame, event.player);
+  },
+);
 
-        // Hide nametag from the item
-        const meta = newIronItem.itemMeta;
-        meta.displayName = '';
-        newIronItem.itemMeta = meta;
-      }
-    });
-
-    playHammeringSounds(frame.location);
-    await swingHammer(player);
-    frame.setItem(newIronItem, false);
-    frame.location.world.playSound(
-      frame.location,
-      Sound.ENTITY_RAVAGER_STEP,
-      SoundCategory.PLAYERS,
-      0.6,
-      1,
-    );
-
-    hammerUsers.delete(player);
+Hammer.event(
+  EntityDamageByEntityEvent,
+  (event) =>
+    event.damager.type === EntityType.PLAYER
+      ? ((event.damager as unknown) as Player).inventory.itemInMainHand
+      : null,
+  async (event) => {
+    event.setCancelled(true);
+    const entity = event.entity;
+    if (!(entity instanceof ItemFrame)) return;
+    await hammerHit(entity, (event.damager as unknown) as Player);
   },
 );
 
@@ -402,20 +434,7 @@ registerEvent(CraftItemEvent, (event) => {
   if (crafter.getTargetBlock(5)?.type === Material.SMITHING_TABLE) return;
   if (!(crafter instanceof Player)) return;
   crafter.sendTitle('', 'Tarvitset takomispöydän');
-  // crafter.playSound(
-  //   crafter.location,
-  //   Sound.BLOCK_STONE_BREAK,
-  //   SoundCategory.PLAYERS,
-  //   2,
-  //   1,
-  // );
-  // const contents = inv.contents;
-  // for (const item of contents) {
-  //   if (isMoltenMetal(item)) {
-  //     giveItem(crafter, item);
-  //     item.type = Material.AIR;
-  //   }
-  // }
   inv.result = null;
-  //crafter.closeInventory();
+  crafter.closeInventory();
+  crafter.updateInventory();
 });
