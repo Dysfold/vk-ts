@@ -20,7 +20,10 @@ export function summonInvisibleItemFrame(
     EntityType.ITEM_FRAME,
   ) as ItemFrame;
   frame.setVisible(false);
-  frame.facingDirection = face;
+  if (!frame.setFacingDirection(face, false)) {
+    frame.remove();
+    return null;
+  }
   frame.setVisible(false);
   frame.setItem(item, false); // false = no spawning sound
   frame.setCustomNameVisible(false);

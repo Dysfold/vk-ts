@@ -1,7 +1,7 @@
-import { Location, Material, Sound, SoundCategory } from 'org.bukkit';
+import { Location, Material, Rotation, Sound, SoundCategory } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { EntityType, Item, ItemFrame, Player } from 'org.bukkit.entity';
-import { CraftItemEvent } from 'org.bukkit.event.inventory';
+import { CraftItemEvent, InventoryType } from 'org.bukkit.event.inventory';
 import {
   PlayerInteractEntityEvent,
   PlayerInteractEvent,
@@ -10,6 +10,7 @@ import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { isRightClick } from '../common/helpers/click';
 import { summonInvisibleItemFrame } from '../common/helpers/itemframes';
 import { CustomItem } from '../common/items/CustomItem';
+import { Directional } from 'org.bukkit.block.data';
 
 const MOLTEN_MATERIAL = Material.IRON_NUGGET;
 
@@ -151,6 +152,17 @@ export function isMoltenMetal(item: ItemStack | null) {
   return true;
 }
 
+function getAnvilFrameRotation(anvil: Directional) {
+  switch (anvil.facing) {
+    case BlockFace.EAST:
+    case BlockFace.WEST:
+      return Rotation.CLOCKWISE_45;
+
+    default:
+      return Rotation.CLOCKWISE_135;
+  }
+}
+
 // Smelt an iron
 Pliers.event(
   PlayerInteractEvent,
@@ -205,7 +217,13 @@ registerEvent(PlayerInteractEvent, (event) => {
       const meta = smeltedItem.itemMeta;
       meta.displayName = ''; // Displayname would hover on top of the itemframe
       smeltedItem.itemMeta = meta;
-      summonInvisibleItemFrame(anvil, event.blockFace, smeltedItem);
+      const frame = summonInvisibleItemFrame(
+        anvil,
+        event.blockFace,
+        smeltedItem,
+      );
+      if (!frame) return;
+      frame.rotation = getAnvilFrameRotation(anvil.blockData as Directional);
 
       // Give player empty pliers
       if (event.hand === EquipmentSlot.HAND) {
@@ -226,16 +244,21 @@ Hammer.event(
     const clicked = event.rightClicked;
     if (clicked.type !== EntityType.ITEM_FRAME) return;
     const frame = clicked as ItemFrame;
-    const item = frame.item;
-    if (item.type !== MOLTEN_MATERIAL) return;
-    if (!item.itemMeta.hasCustomModelData()) return;
-    const player = event.player;
 
+    // Check if the frame is on top of anvil
+    if (frame.facing !== BlockFace.UP) return;
+    const attachedBlock = frame.world.getBlockAt(
+      frame.location.add(0, -0.5, 0),
+    );
+    if (attachedBlock.type !== Material.ANVIL) return;
+
+    const item = frame.item;
+    if (!isMoltenMetal(item)) return;
+
+    const player = event.player;
     event.setCancelled(true);
     if (hammerUsers.has(player)) return;
     hammerUsers.add(player);
-
-    playHammeringSounds(frame.location);
 
     let newIronItem = item;
     IronIngotDerivativesArray.forEach((iron, index) => {
@@ -250,6 +273,7 @@ Hammer.event(
       }
     });
 
+    playHammeringSounds(frame.location);
     await swingHammer(player);
     frame.setItem(newIronItem, false);
     frame.location.world.playSound(
@@ -357,6 +381,7 @@ PLIERS_ITEMS.forEach((iron, plier) => {
 
 // Open crafting table by clicking the smithing table
 registerEvent(PlayerInteractEvent, (event) => {
+  if (!isRightClick(event.action)) return;
   if (event.clickedBlock?.type !== Material.SMITHING_TABLE) return;
   event.setCancelled(true);
   event.player.openWorkbench(event.clickedBlock.location, true);
@@ -365,7 +390,14 @@ registerEvent(PlayerInteractEvent, (event) => {
 // Allow crafting (with molten items) only with smithing table
 registerEvent(CraftItemEvent, (event) => {
   if (!event.inventory.contains(MOLTEN_MATERIAL)) return;
-  if (event.inventory.contains(new ItemStack(MOLTEN_MATERIAL))) return;
+  const inv = event.inventory;
+  if (
+    inv.type !== InventoryType.CRAFTING &&
+    inv.type !== InventoryType.WORKBENCH
+  ) {
+    return;
+  }
+  if (inv.contains(new ItemStack(MOLTEN_MATERIAL))) return;
   const crafter = event.whoClicked;
   if (crafter.getTargetBlock(5)?.type === Material.SMITHING_TABLE) return;
   if (!(crafter instanceof Player)) return;
@@ -377,13 +409,13 @@ registerEvent(CraftItemEvent, (event) => {
   //   2,
   //   1,
   // );
-  // const contents = event.inventory.contents;
+  // const contents = inv.contents;
   // for (const item of contents) {
   //   if (isMoltenMetal(item)) {
   //     giveItem(crafter, item);
   //     item.type = Material.AIR;
   //   }
   // }
-  event.inventory.result = null;
+  inv.result = null;
   //crafter.closeInventory();
 });
