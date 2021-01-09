@@ -6,6 +6,7 @@ import {
   SoundCategory,
   Server,
   Bukkit,
+  Particle,
 } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { EntityType, Item, ItemFrame, Player } from 'org.bukkit.entity';
@@ -197,6 +198,7 @@ Pliers.event(
     } else {
       inventory.itemInOffHand = pliersWithItem.create();
     }
+    playFlameParticle(event.clickedBlock.location.add(0.5, 0.5, 0.5));
     event.player.world.playSound(
       event.player.location,
       Sound.ITEM_FIRECHARGE_USE,
@@ -280,7 +282,7 @@ async function hammerHit(frame: ItemFrame, player: Player) {
   });
 
   playHammeringSounds(frame.location);
-  await swingHammer(player);
+  await swingHammer(player, frame.location);
   frame.setItem(newIronItem, false);
   frame.location.world.playSound(
     frame.location,
@@ -320,12 +322,30 @@ Hammer.event(
   },
 );
 
-async function swingHammer(player: Player) {
+async function swingHammer(player: Player, location: Location) {
+  hotIronParticle(location);
   await wait(0.4, 'seconds');
+  hotIronParticle(location);
   player.swingMainHand();
   await wait(0.4, 'seconds');
+  hotIronParticle(location);
   player.swingMainHand();
   await wait(0.4, 'seconds');
+}
+
+function hotIronParticle(location: Location) {
+  location.world.spawnParticle(
+    Particle.SMOKE_NORMAL,
+    location,
+    0,
+    (Math.random() - 0.5) * 0.2,
+    0,
+    (Math.random() - 0.5) * 0.2,
+  );
+}
+
+function playFlameParticle(location: Location) {
+  location.world.spawnParticle(Particle.LAVA, location, 3);
 }
 
 function playHammeringSounds(location: Location) {
