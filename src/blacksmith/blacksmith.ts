@@ -1,14 +1,23 @@
-import { Location, Material, Sound } from 'org.bukkit';
-import { EntityType, ItemFrame, Player } from 'org.bukkit.entity';
+import {
+  Location,
+  Material,
+  Sound,
+  SoundCategory,
+  Bukkit,
+  Server,
+} from 'org.bukkit';
+import { BlockFace } from 'org.bukkit.block';
+import { EntityType, ItemFrame, Player, Item } from 'org.bukkit.entity';
+import { CraftItemEvent } from 'org.bukkit.event.inventory';
 import {
   PlayerInteractEntityEvent,
   PlayerInteractEvent,
-  PlayerItemHeldEvent,
 } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { isRightClick } from '../common/helpers/click';
 import { summonInvisibleItemFrame } from '../common/helpers/itemframes';
 import { CustomItem } from '../common/items/CustomItem';
+import { giveItem } from '../common/helpers/inventory';
 
 const MOLTEN_MATERIAL = Material.IRON_NUGGET;
 
@@ -102,6 +111,7 @@ export const HotIronNugget = new CustomItem({
   name: 'Kuuma rautaharkko',
 });
 
+// Pair pliers with corresponding molten items
 const PLIERS_ITEMS = new Map<CustomItem<{}>, CustomItem<{}>>([
   [PliersAndIronBar, HotIronBar],
   [PliersAndIronBlade, HotIronBlade],
@@ -111,6 +121,7 @@ const PLIERS_ITEMS = new Map<CustomItem<{}>, CustomItem<{}>>([
   [PliersAndIronStick, HotIronStick],
 ]);
 
+// Combine molten iron shape with pliers
 function getPliersForItem(item: ItemStack): ItemStack | undefined {
   let pliers = undefined;
   PLIERS_ITEMS.forEach((value, key) => {
@@ -121,6 +132,7 @@ function getPliersForItem(item: ItemStack): ItemStack | undefined {
   return pliers;
 }
 
+// Iron ingot can form into these items
 const IronIngotDerivatives = new Map<CustomItem<{}>, ItemStack>([
   [HotIronBar, PliersAndIronBar.create()],
   [HotIronBlade, PliersAndIronBlade.create()],
@@ -130,12 +142,21 @@ const IronIngotDerivatives = new Map<CustomItem<{}>, ItemStack>([
 ]);
 const IronIngotDerivativesArray = Array.from(IronIngotDerivatives.keys());
 
-const IronNuggetDerivatives = [HotIronNugget];
+// Maybe needed in the future?
+//const IronNuggetDerivatives = [HotIronNugget];
 
+// Combine pliers and regular iron item into pliers + molten iron ingot
+// Used when clicking a fire
 function getPliersWithItem(item: ItemStack) {
   if (item.type === Material.IRON_INGOT) return PliersAndIronIngot;
-  if (item.type === MOLTEN_MATERIAL) return PliersAndIronNugget;
+  if (item.type === Material.IRON_NUGGET) return PliersAndIronNugget;
   return undefined;
+}
+
+export function isMoltenMetal(item: ItemStack | null) {
+  if (item?.type !== MOLTEN_MATERIAL) return false;
+  if (!item.itemMeta.hasCustomModelData()) return false;
+  return true;
 }
 
 // Smelt an iron
@@ -166,6 +187,7 @@ Pliers.event(
     event.player.world.playSound(
       event.player.location,
       Sound.ITEM_FIRECHARGE_USE,
+      SoundCategory.PLAYERS,
       0.6,
       1,
     );
@@ -175,6 +197,7 @@ Pliers.event(
 // Place iron on anvil
 registerEvent(PlayerInteractEvent, (event) => {
   if (event.clickedBlock?.type !== Material.ANVIL) return;
+  if (event.blockFace !== BlockFace.UP) return;
   if (!isRightClick(event.action)) return;
   const tool = event.item;
   if (!tool) return;
@@ -237,6 +260,13 @@ Hammer.event(
 
     await swingHammer(player);
     frame.setItem(newIronItem, false);
+    frame.location.world.playSound(
+      frame.location,
+      Sound.ENTITY_RAVAGER_STEP,
+      SoundCategory.PLAYERS,
+      0.6,
+      1,
+    );
 
     hammerUsers.delete(player);
   },
@@ -253,9 +283,9 @@ async function swingHammer(player: Player) {
 function playHammeringSounds(location: Location) {
   const pitch = Math.random() * 0.2 + 0.8;
   location.world.playSound(location, Sound.BLOCK_ANVIL_USE, 0.6, pitch);
-  //location.world.playSound(location, Sound.ITEM_TRIDENT_HIT, 0.6, 1.3);
 }
 
+// Take the molten iron from the anvil with pliers
 Pliers.event(
   PlayerInteractEntityEvent,
   (event) => event.player.inventory.itemInMainHand,
@@ -276,6 +306,48 @@ Pliers.event(
   },
 );
 
+// Take the molten iron from ground
+Pliers.event(
+  PlayerInteractEvent,
+  (event) => event.player.inventory.itemInMainHand,
+  async (event) => {
+    Bukkit.server.broadcastMessage('KLIK');
+
+    if (!isRightClick(event.action)) return;
+
+    const raytrace = event.player.rayTraceBlocks(4);
+    Bukkit.server.broadcastMessage(raytrace?.hitPosition + '.aaaa..');
+    const hitPos = raytrace?.hitPosition;
+    if (!hitPos) return;
+    const world = event.player.world;
+    const entities = world.getNearbyEntities(
+      hitPos.toLocation(world),
+      0.5,
+      0.5,
+      0.5,
+    );
+    for (const entity of entities) {
+      if (entity instanceof Item) {
+        const item = entity.itemStack;
+        if (isMoltenMetal(item)) {
+          // Check because this event was fired 3 times. This line may be deleted later
+          if (!Pliers.check(event.player.inventory.itemInMainHand)) return;
+
+          const pliersWithItem = getPliersForItem(item);
+          if (!pliersWithItem) continue;
+
+          entity.itemStack.amount--;
+          await wait(1, 'ticks');
+          event.player.inventory.itemInMainHand = pliersWithItem;
+
+          return;
+        }
+      }
+    }
+  },
+);
+
+// Click with pliers to get the molten iron
 PLIERS_ITEMS.forEach((iron, plier) => {
   plier.event(
     PlayerInteractEvent,
@@ -294,26 +366,35 @@ PLIERS_ITEMS.forEach((iron, plier) => {
   );
 });
 
-// Damage player if he holds hot iron
-registerEvent(PlayerItemHeldEvent, (event) => {
-  const item = event.player.inventory.getItem(event.newSlot);
-  if (item?.type !== MOLTEN_MATERIAL) return;
-  if (!item.itemMeta.hasCustomModelData()) return;
-  const player = event.player;
-  playerBurnHand(player, item);
+// Open crafting table by clicking the smithing table
+registerEvent(PlayerInteractEvent, (event) => {
+  if (event.clickedBlock?.type !== Material.SMITHING_TABLE) return;
+  event.setCancelled(true);
+  event.player.openWorkbench(event.clickedBlock.location, true);
 });
 
-function playerBurnHand(player: Player, item: ItemStack) {
-  player.damage(1);
-  player.fireTicks = 5;
-  player.world.dropItem(player.location, item).velocity =
-    player.location.direction;
-  item.amount = 0;
-
-  player.world.playSound(
-    player.location,
-    Sound.ENTITY_PLAYER_HURT_ON_FIRE,
-    0.6,
-    1,
-  );
-}
+// Allow crafting (with molten items) only with smithing table
+registerEvent(CraftItemEvent, (event) => {
+  if (!event.inventory.contains(MOLTEN_MATERIAL)) return;
+  if (event.inventory.contains(new ItemStack(MOLTEN_MATERIAL))) return;
+  const crafter = event.whoClicked;
+  if (crafter.getTargetBlock(5)?.type === Material.SMITHING_TABLE) return;
+  if (!(crafter instanceof Player)) return;
+  crafter.sendTitle('', 'Tarvitset takomispöydän');
+  // crafter.playSound(
+  //   crafter.location,
+  //   Sound.BLOCK_STONE_BREAK,
+  //   SoundCategory.PLAYERS,
+  //   2,
+  //   1,
+  // );
+  // const contents = event.inventory.contents;
+  // for (const item of contents) {
+  //   if (isMoltenMetal(item)) {
+  //     giveItem(crafter, item);
+  //     item.type = Material.AIR;
+  //   }
+  // }
+  event.inventory.result = null;
+  //crafter.closeInventory();
+});
