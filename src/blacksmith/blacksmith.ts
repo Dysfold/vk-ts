@@ -7,6 +7,7 @@ import {
   Server,
   Bukkit,
   Particle,
+  Color,
 } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { EntityType, Item, ItemFrame, Player } from 'org.bukkit.entity';
@@ -21,6 +22,8 @@ import { summonInvisibleItemFrame } from '../common/helpers/itemframes';
 import { CustomItem } from '../common/items/CustomItem';
 import { Directional } from 'org.bukkit.block.data';
 import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
+import { SerializablePermission } from 'java.io';
+import { DustOptions } from 'org.bukkit.Particle';
 
 const MOLTEN_MATERIAL = Material.IRON_NUGGET;
 
@@ -242,13 +245,7 @@ registerEvent(PlayerInteractEvent, (event) => {
       } else {
         event.player.inventory.itemInOffHand = Pliers.create();
       }
-      frame.world.playSound(
-        frame.location,
-        Sound.ITEM_TRIDENT_HIT,
-        SoundCategory.PLAYERS,
-        0.7,
-        1,
-      );
+      playIronClickSound(frame.location);
     }
   });
 });
@@ -322,6 +319,16 @@ Hammer.event(
   },
 );
 
+function playIronClickSound(location: Location) {
+  location.world.playSound(
+    location,
+    Sound.ITEM_TRIDENT_HIT,
+    SoundCategory.PLAYERS,
+    0.7,
+    1,
+  );
+}
+
 async function swingHammer(player: Player, location: Location) {
   hotIronParticle(location);
   await wait(0.4, 'seconds');
@@ -334,6 +341,10 @@ async function swingHammer(player: Player, location: Location) {
 }
 
 function hotIronParticle(location: Location) {
+  location.world.spawnParticle(Particle.LAVA, location.add(0, -0.2, 0), 3);
+
+  // Alternative particle effect
+  /*
   location.world.spawnParticle(
     Particle.SMOKE_NORMAL,
     location,
@@ -342,6 +353,7 @@ function hotIronParticle(location: Location) {
     0,
     (Math.random() - 0.5) * 0.2,
   );
+  */
 }
 
 function playFlameParticle(location: Location) {
@@ -358,6 +370,7 @@ Pliers.event(
   PlayerInteractEntityEvent,
   (event) => event.player.inventory.itemInMainHand,
   async (event) => {
+    if (event.hand !== EquipmentSlot.HAND) return;
     const clicked = event.rightClicked;
     if (clicked.type !== EntityType.ITEM_FRAME) return;
     const frame = clicked as ItemFrame;
@@ -371,6 +384,7 @@ Pliers.event(
     if (!pliers) return;
     player.inventory.itemInMainHand = pliers;
     frame.remove();
+    playIronClickSound(frame.location);
   },
 );
 
