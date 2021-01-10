@@ -4,38 +4,39 @@ import { Attribute, AttributeModifier } from 'org.bukkit.attribute';
 import { Operation } from 'org.bukkit.attribute.AttributeModifier';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 
+// prettier-ignore
 const ARMORS = new Map<Material, (item: ItemStack) => ItemStack>([
-  [Material.DIAMOND_HELMET, createDefaultHelmet],
-  [Material.DIAMOND_CHESTPLATE, createDefaultChestplate],
-  [Material.DIAMOND_LEGGINGS, createDefaultLeggings],
-  [Material.DIAMOND_BOOTS, createDefaultBoots],
+  [Material.DIAMOND_HELMET,         createDefaultHelmet],
+  [Material.DIAMOND_CHESTPLATE,     createDefaultChestplate],
+  [Material.DIAMOND_LEGGINGS,       createDefaultLeggings],
+  [Material.DIAMOND_BOOTS,          createDefaultBoots],
 
-  [Material.LEATHER_HELMET, createDefaultHelmet],
-  [Material.LEATHER_CHESTPLATE, createDefaultChestplate],
-  [Material.LEATHER_LEGGINGS, createDefaultLeggings],
-  [Material.LEATHER_BOOTS, createCustomHat],
+  [Material.LEATHER_HELMET,         createDefaultHelmet],
+  [Material.LEATHER_CHESTPLATE,     createDefaultChestplate],
+  [Material.LEATHER_LEGGINGS,       createDefaultLeggings],
+  [Material.LEATHER_BOOTS,          createCustomHat],
 
-  [Material.GOLDEN_HELMET, createDefaultHelmet],
-  [Material.GOLDEN_CHESTPLATE, createDefaultChestplate],
-  [Material.GOLDEN_LEGGINGS, createDefaultLeggings],
-  [Material.GOLDEN_BOOTS, createDefaultBoots],
+  [Material.GOLDEN_HELMET,          createDefaultHelmet],
+  [Material.GOLDEN_CHESTPLATE,      createDefaultChestplate],
+  [Material.GOLDEN_LEGGINGS,        createDefaultLeggings],
+  [Material.GOLDEN_BOOTS,           createDefaultBoots],
 
-  [Material.CHAINMAIL_HELMET, createDefaultHelmet],
-  [Material.CHAINMAIL_CHESTPLATE, createDefaultChestplate],
-  [Material.CHAINMAIL_LEGGINGS, createDefaultLeggings],
-  [Material.CHAINMAIL_BOOTS, createDefaultBoots],
+  [Material.CHAINMAIL_HELMET,       createDefaultHelmet],
+  [Material.CHAINMAIL_CHESTPLATE,   createDefaultChestplate],
+  [Material.CHAINMAIL_LEGGINGS,     createDefaultLeggings],
+  [Material.CHAINMAIL_BOOTS,        createDefaultBoots],
 
-  [Material.NETHERITE_HELMET, createDefaultHelmet],
-  [Material.NETHERITE_CHESTPLATE, createDefaultChestplate],
-  [Material.NETHERITE_LEGGINGS, createDefaultLeggings],
-  [Material.NETHERITE_BOOTS, createDefaultBoots],
+  [Material.NETHERITE_HELMET,       createDefaultHelmet],
+  [Material.NETHERITE_CHESTPLATE,   createDefaultChestplate],
+  [Material.NETHERITE_LEGGINGS,     createDefaultLeggings],
+  [Material.NETHERITE_BOOTS,        createDefaultBoots],
 
-  [Material.IRON_HELMET, createIronHelmet],
-  [Material.IRON_CHESTPLATE, createIronChestplate],
-  [Material.IRON_LEGGINGS, createIronLeggings],
-  [Material.IRON_BOOTS, createIronBoots],
+  [Material.IRON_HELMET,            createIronHelmet],
+  [Material.IRON_CHESTPLATE,        createIronChestplate],
+  [Material.IRON_LEGGINGS,          createIronLeggings],
+  [Material.IRON_BOOTS,             createIronBoots],
 
-  [Material.TURTLE_HELMET, createDefaultHelmet],
+  [Material.TURTLE_HELMET,          createDefaultHelmet],
 ]);
 
 /**
