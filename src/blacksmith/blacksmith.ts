@@ -1,16 +1,15 @@
 import {
   Location,
   Material,
+  Particle,
   Rotation,
   Sound,
   SoundCategory,
-  Server,
-  Bukkit,
-  Particle,
-  Color,
 } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
+import { Directional } from 'org.bukkit.block.data';
 import { EntityType, Item, ItemFrame, Player } from 'org.bukkit.entity';
+import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
 import { CraftItemEvent, InventoryType } from 'org.bukkit.event.inventory';
 import {
   PlayerInteractEntityEvent,
@@ -20,10 +19,6 @@ import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { isRightClick } from '../common/helpers/click';
 import { summonInvisibleItemFrame } from '../common/helpers/itemframes';
 import { CustomItem } from '../common/items/CustomItem';
-import { Directional } from 'org.bukkit.block.data';
-import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
-import { SerializablePermission } from 'java.io';
-import { DustOptions } from 'org.bukkit.Particle';
 
 const MOLTEN_MATERIAL = Material.IRON_NUGGET;
 
