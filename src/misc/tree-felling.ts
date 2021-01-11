@@ -1,6 +1,6 @@
-import { BlockBreakEvent } from 'org.bukkit.event.block';
-import { Material, Bukkit, TreeSpecies } from 'org.bukkit';
+import { Material, TreeSpecies } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
+import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { Vector } from 'org.bukkit.util';
 
 const LOGS = new Map([
@@ -81,54 +81,43 @@ const TREE_MATERIALS = new Map([
 // prettier-ignore
 const LAYER_FACES = [
   { face: BlockFace.NORTH,          distance: 1 },
-  { face: BlockFace.NORTH,          distance: 2 },
-  { face: BlockFace.NORTH_WEST,     distance: 1 },
   { face: BlockFace.WEST,           distance: 1 },
-  { face: BlockFace.WEST,           distance: 2 },
-  { face: BlockFace.SOUTH_WEST,     distance: 1 },
   { face: BlockFace.SOUTH,          distance: 1 },
-  { face: BlockFace.SOUTH,          distance: 2 },
-  { face: BlockFace.SOUTH_EAST,     distance: 1 },
   { face: BlockFace.EAST,           distance: 1 },
+
+  { face: BlockFace.NORTH,          distance: 2 },
+  { face: BlockFace.WEST,           distance: 2 },
+  { face: BlockFace.SOUTH,          distance: 2 },
   { face: BlockFace.EAST,           distance: 2 },
+
+  { face: BlockFace.NORTH_WEST,     distance: 1 },
+  { face: BlockFace.SOUTH_WEST,     distance: 1 },
+  { face: BlockFace.SOUTH_EAST,     distance: 1 },
   { face: BlockFace.NORTH_EAST,     distance: 1 },
+
+  { face: BlockFace.NORTH_WEST,     distance: 2 },
+  { face: BlockFace.SOUTH_WEST,     distance: 2 },
+  { face: BlockFace.NORTH_EAST,     distance: 2 },
+  { face: BlockFace.SOUTH_EAST,     distance: 2 },
+
+  { face: BlockFace.NORTH_NORTH_EAST,     distance: 1 },
+  { face: BlockFace.NORTH_NORTH_WEST,     distance: 1 },
+  { face: BlockFace.SOUTH_SOUTH_EAST,     distance: 1 },
+  { face: BlockFace.SOUTH_SOUTH_WEST,     distance: 1 },
+
   { face: BlockFace.SELF,           distance: 1 },
 ];
+
+const MAX_TREE_HEIGHT = 30;
 
 registerEvent(BlockBreakEvent, (event) => {
   const species = LOGS.get(event.block.type);
   if (!species) return;
+  if (!isNaturalTree(event.block, species)) return;
   const blocks = getTree(event.block, species);
   if (!blocks) return;
   collapse(blocks, species);
 });
-
-// function getTree(source: Block, species: TreeSpecies) {
-//   const logs = new Set<Block>();
-//   const allowedBlocks = TREE_MATERIALS.get(species);
-//   if (!allowedBlocks) return;
-//   let hasLeaves = false;
-
-//   let block = source;
-//   // Loop 1 layer at the time
-//   for (let i = 0; i < 20; i++) {
-//     block = block.getRelative(BlockFace.UP);
-
-//     const relatives = new Set<Block>([]);
-//     for (const face of LAYER_FACES) {
-//       relatives.add(block.getRelative(face));
-//     }
-
-//     for (const relative of relatives) {
-//       if (allowedBlocks.has(relative.type)) {
-//         logs.add(relative);
-//       }
-//       if (relative.type.toString().endsWith('_LEAVES')) hasLeaves = true;
-//     }Oks mei
-//   }
-//   if (!hasLeaves) return;
-//   return logs;
-// }
 
 function getTree(source: Block, species: TreeSpecies) {
   const logLayers: Map<string, Block>[] = [];
@@ -137,28 +126,14 @@ function getTree(source: Block, species: TreeSpecies) {
 
   // let block = source;
   let layer = new Map<string, Block>([[source.location.toString(), source]]);
-  let isTree = false;
 
   // Loop 1 layer at the time
-  for (let i = 0; i < 20; i++) {
-    // block = block.getRelative(BlockFace.UP);
-    // const relatives = new Set<Block>([]);
-    // for (const face of LAYER_FACES) {
-    //   relatives.add(block.getRelative(face));
-    // }
-    // for (const relative of relatives) {
-    //   if (allowedBlocks.has(relative.type)) {
-    //     logs.add(relative);
-    //   }
-    // }
-
-    const { logs, hasLeaves } = getNextLayerLogs(layer, allowedBlocks);
-    layer = logs;
-    if (hasLeaves) isTree = true;
+  for (let i = 0; i < MAX_TREE_HEIGHT; i++) {
+    layer = getNextLayerLogs(layer, allowedBlocks);
     if (layer.size === 0) break;
     logLayers.push(layer);
   }
-  if (isTree) return logLayers;
+  return logLayers;
 }
 
 function getNextLayerLogs(
@@ -166,8 +141,6 @@ function getNextLayerLogs(
   allowedBlocks: { logs: Set<Material>; leaves: Material },
 ) {
   const logs = new Map<string, Block>();
-
-  let hasLeaves = false;
 
   prevLayer.forEach((prevBlock) => {
     const centerBlock = prevBlock.getRelative(BlockFace.UP);
@@ -179,13 +152,22 @@ function getNextLayerLogs(
       if (allowedBlocks.logs.has(loopBlock.type)) {
         logs.set(loopBlock.location.toString(), loopBlock);
       }
-      if (allowedBlocks.leaves === loopBlock.type) {
-        hasLeaves = true;
-      }
     }
   });
 
-  return { logs: logs, hasLeaves: hasLeaves };
+  return logs;
+}
+
+function isNaturalTree(source: Block, species: TreeSpecies) {
+  const allowedBlocks = TREE_MATERIALS.get(species);
+  if (!allowedBlocks) return;
+
+  for (let i = 1; i < MAX_TREE_HEIGHT; i++) {
+    const type = source.getRelative(BlockFace.UP, i).type;
+    if (type === allowedBlocks.leaves) {
+      return true;
+    }
+  }
 }
 
 async function collapse(layers: Map<string, Block>[], species: TreeSpecies) {
@@ -196,8 +178,15 @@ async function collapse(layers: Map<string, Block>[], species: TreeSpecies) {
   for (const layer of layers) {
     for (const block of layer.values()) {
       // Only collapse logs which can fall down
-      if (!isFirstLayer && !block.getRelative(BlockFace.DOWN).type.isAir())
-        continue;
+      if (!isFirstLayer) {
+        const blockBelow = block.getRelative(BlockFace.DOWN);
+        if (blockBelow.type === allowedBlocks.leaves) {
+          blockBelow.type = Material.AIR;
+        } else if (!blockBelow.isPassable()) {
+          // Skip this layer because the block can't fall
+          continue;
+        }
+      }
 
       // Prevent other blocks from falling
       if (!allowedBlocks.logs.has(block.type)) continue;
