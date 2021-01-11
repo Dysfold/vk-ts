@@ -3,16 +3,11 @@ import { Block } from 'org.bukkit.block';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { CustomItem } from '../common/items/CustomItem';
 
-export const CROPS = new Set([
-  Material.WHEAT.ordinal(),
-  Material.BEETROOT.ordinal(),
-  Material.TALL_GRASS.ordinal(),
-  Material.GRASS.ordinal(),
-]);
-
-export const DROPS_REMOVED = new Set([
-  Material.TALL_GRASS.ordinal(),
-  Material.GRASS.ordinal(),
+export const CROPS = new Map<Material, { hasDrops: boolean }>([
+  [Material.WHEAT, { hasDrops: true }],
+  [Material.BEETROOT, { hasDrops: true }],
+  [Material.TALL_GRASS, { hasDrops: false }],
+  [Material.GRASS, { hasDrops: false }],
 ]);
 
 const CHANCE_WITHOUT_TOOL = 0.02;
@@ -32,7 +27,7 @@ const Scythe = new CustomItem({
 });
 
 registerEvent(BlockBreakEvent, (event) => {
-  if (!CROPS.has(event.block.type.ordinal())) return;
+  if (!CROPS.has(event.block.type)) return;
   if (Sickle.check(event.player.itemInHand)) return;
   if (Scythe.check(event.player.itemInHand)) {
     useScythe(event.block);
@@ -51,11 +46,13 @@ function useScythe(orig: Block) {
     for (let dz = -1; dz <= 1; dz++) {
       if (!dx && !dz) continue; // Both are 0 -> same block
       const block = orig.world.getBlockAt(x + dx, location.y, z + dz);
-      if (!CROPS.has(block.type.ordinal())) continue;
+      if (!CROPS.has(block.type)) continue;
 
+      const crop = CROPS.get(block.type);
+      if (!crop) continue;
+      if (crop.hasDrops) block.breakNaturally();
       // Remove seed drops from grass
-      if (DROPS_REMOVED.has(block.type.ordinal())) block.type = Material.AIR;
-      else block.breakNaturally();
+      else block.type = Material.AIR;
     }
   }
 }

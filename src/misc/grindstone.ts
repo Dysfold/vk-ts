@@ -17,7 +17,7 @@ const HAND_GRINDSTONE_DURATION = 1; // Seconds
 
 const grindstoneUsers = new Set<Player>();
 
-const tools: Material[] = [
+const TOOLS = new Set([
   Material.IRON_PICKAXE,
   Material.IRON_AXE,
   Material.IRON_SHOVEL,
@@ -25,7 +25,7 @@ const tools: Material[] = [
   Material.IRON_HOE,
   Material.SHEARS,
   // TODO: Add more tools
-];
+]);
 
 export const HandGrindstone = new CustomItem({
   id: 1,
@@ -104,8 +104,7 @@ function canBeGrinded(item: ItemStack, player: Player) {
   if (item.durability === 0) return false;
   if (grindstoneUsers.has(player)) return false;
 
-  const toolIdx = tools.indexOf(item.type, 0);
-  if (toolIdx === -1) {
+  if (!TOOLS.has(item.type)) {
     player.sendActionBar('Tätä esinettä ei voi hioa');
     return false;
   }

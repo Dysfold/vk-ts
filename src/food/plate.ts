@@ -26,32 +26,30 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
   if (type.isEdible()) {
     event.setCancelled(true);
 
-    // Black magic, because we can't use FoodInfo.get(type)
-    const key = Material.getMaterial(type.toString());
-    if (!key) return;
-
-    const value = FoodInfo.get(key);
-    if (!value) {
+    const food = FoodInfo.get(type);
+    if (!food) {
       return;
     }
 
     const maxFoodLevel = 20;
-    player.foodLevel = Math.min(player.foodLevel + value.f, maxFoodLevel);
+    player.foodLevel = Math.min(
+      player.foodLevel + food.foodPoints,
+      maxFoodLevel,
+    );
 
     const maxSaturation = Math.min(player.foodLevel, 20); // Max saturation is always equal to players foodlevel
-    player.saturation = Math.min(player.saturation + value.s, maxSaturation);
+    player.saturation = Math.min(
+      player.saturation + food.saturation,
+      maxSaturation,
+    );
 
     const consumeEvent = new PlayerItemConsumeEvent(player, item);
     Bukkit.server.pluginManager.callEvent(consumeEvent);
 
     // Empty the plate
-    if (key.toString().includes('STEW')) item.type = Material.BOWL;
-    else if (key.toString().includes('SOUP')) item.type = Material.BOWL;
-    else if (key === Material.HONEY_BOTTLE) item.type = Material.GLASS_BOTTLE;
-    else item.type = Material.AIR;
-    itemframe.item = item;
+    itemframe.item = food.result || new ItemStack(Material.AIR);
 
-    playEatingEffects(itemframe.location, type);
+    playEatingEffects(itemframe.location, item);
   }
 
   // Drinking
@@ -67,9 +65,8 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
   }
 });
 
-async function playEatingEffects(location: Location, material: Material) {
+async function playEatingEffects(location: Location, item: ItemStack) {
   location = location.add(0, 0.15, 0);
-  const data = new ItemStack(material, 1);
   for (let i = 0; i < 4; i++) {
     location.world.playSound(location, 'minecraft:entity.generic.eat', 1, 1);
 
@@ -81,7 +78,7 @@ async function playEatingEffects(location: Location, material: Material) {
         (Math.random() - 0.5) * 0.1,
         0.1,
         (Math.random() - 0.5) * 0.1,
-        data,
+        item,
       );
     }
 

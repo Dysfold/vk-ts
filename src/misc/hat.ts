@@ -1,6 +1,5 @@
 import { GameMode, Material, SoundCategory } from 'org.bukkit';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
-import { Action } from 'org.bukkit.event.block';
 import {
   InventoryAction,
   InventoryClickEvent,

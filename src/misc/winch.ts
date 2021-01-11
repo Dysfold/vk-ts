@@ -16,16 +16,16 @@ const Winch = new CustomBlock({
   type: Material.DISPENSER,
 });
 
-const winches = new Map<string, { block: Block; direction: BlockFace }>();
+const winches = new Map<Block, { direction: BlockFace }>();
 
 // Materials which will go into the winch. Allow only CHAIN for now
-const RopeMaterials = new Set<number>([Material.CHAIN.ordinal()]);
+const RopeMaterials = new Set<Material>([Material.CHAIN]);
 
 // Liftable blocks (other than logs, ropes or fences)
-const LiftableMaterials = new Set<number>([Material.CAULDRON.ordinal()]);
+const LiftableMaterials = new Set<Material>([Material.CAULDRON]);
 
 function isRope(block: Block) {
-  const isRopeMaterial = RopeMaterials.has(block.type.ordinal());
+  const isRopeMaterial = RopeMaterials.has(block.type);
 
   if (block.type === Material.CHAIN) {
     // Allow only vertical chains
@@ -54,10 +54,9 @@ function isEmpty(block: Block) {
 
 // Check if the block is a rope block or a liftable block
 function isLiftable(block: Block) {
-  const key = block.type.ordinal();
   return (
     isRope(block) ||
-    LiftableMaterials.has(key) ||
+    LiftableMaterials.has(block.type) ||
     isLog(block) ||
     isFence(block)
   );
@@ -72,7 +71,7 @@ Winch.event(
 
     const blockData = winch.blockData as DispenserData;
     if (blockData.facing !== BlockFace.DOWN) return;
-    if (!RopeMaterials.has(event.item.type.ordinal())) return;
+    if (!RopeMaterials.has(event.item.type)) return;
 
     const inventory = (winch.state as Dispenser).inventory;
     const ropes = countRopes(inventory) + 1;
@@ -80,21 +79,23 @@ Winch.event(
     event.setCancelled(true);
     await wait(1, 'ticks'); // Delay because we need the inventory to update after cancelling the drop/event
 
-    const key = winch.location.toString();
-    const activeWinch = winches.get(winch.location.toString());
+    const key = winch.blockKey;
+    const activeWinch = winches.get(winch);
     if (activeWinch) {
       // Reverce the direction of the winch
       const oldDirection = activeWinch.direction;
-      winches.set(key, { block: winch, direction: oldDirection.oppositeFace });
+      winches.set(winch, {
+        direction: oldDirection.oppositeFace,
+      });
       return;
     }
     // Lift the rope
     if (ropes === 1) {
-      winches.set(key, { block: winch, direction: BlockFace.UP });
+      winches.set(winch, { direction: BlockFace.UP });
     }
     // Lower the rope
     else {
-      winches.set(key, { block: winch, direction: BlockFace.DOWN });
+      winches.set(winch, { direction: BlockFace.DOWN });
     }
   },
 );
@@ -195,8 +196,8 @@ function lower(winch: Block) {
   const slot = inventory.first(Material.CHAIN);
   const rope = inventory.getItem(slot);
   if (!rope || rope.amount <= 1) {
-    const key = winch.location.toString();
-    winches.delete(key);
+    const key = winch.blockKey;
+    winches.delete(winch);
     return true;
   }
 
@@ -301,13 +302,11 @@ registerEvent(InventoryOpenEvent, (event) => {
 
 // Move blocks affected by a winch
 setInterval(() => {
-  winches.forEach((winch) => {
-    const block = winch.block;
+  winches.forEach((winch, block) => {
     switch (winch.direction) {
       case BlockFace.UP: {
         if (!lift(block)) {
-          const key = block.location.toString();
-          winches.delete(key);
+          winches.delete(block);
         }
         break;
       }
@@ -330,7 +329,7 @@ function countRopes(inventory: Inventory) {
   let ropes = 0;
   for (const content of inventory.storageContents) {
     if (!content) continue;
-    if (!RopeMaterials.has(content.type.ordinal())) return -1;
+    if (!RopeMaterials.has(content.type)) return -1;
     else ropes += content.amount;
   }
   return ropes;
