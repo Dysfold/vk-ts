@@ -1,5 +1,5 @@
-import { PlayerEggThrowEvent } from 'org.bukkit.event.player';
+import { ThrownEggHatchEvent } from 'com.destroystokyo.paper.event.entity';
 
-registerEvent(PlayerEggThrowEvent, (event) => {
+registerEvent(ThrownEggHatchEvent, (event) => {
   event.setHatching(false);
 });
