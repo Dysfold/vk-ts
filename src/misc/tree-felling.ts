@@ -2,7 +2,6 @@ import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { Material, Bukkit, TreeSpecies } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Vector } from 'org.bukkit.util';
-import { has } from 'lodash';
 
 const LOGS = new Map([
   [Material.OAK_LOG, TreeSpecies.GENERIC],
@@ -65,16 +64,21 @@ const TREE_MATERIALS = new Map([
     ])],
 ]);
 
+// prettier-ignore
 const LAYER_FACES = [
-  BlockFace.NORTH,
-  BlockFace.NORTH_WEST,
-  BlockFace.WEST,
-  BlockFace.SOUTH_WEST,
-  BlockFace.SOUTH,
-  BlockFace.SOUTH_EAST,
-  BlockFace.EAST,
-  BlockFace.NORTH_EAST,
-  BlockFace.SELF,
+  { face: BlockFace.NORTH,          distance: 1 },
+  { face: BlockFace.NORTH,          distance: 2 },
+  { face: BlockFace.NORTH_WEST,     distance: 1 },
+  { face: BlockFace.WEST,           distance: 1 },
+  { face: BlockFace.WEST,           distance: 2 },
+  { face: BlockFace.SOUTH_WEST,     distance: 1 },
+  { face: BlockFace.SOUTH,          distance: 1 },
+  { face: BlockFace.SOUTH,          distance: 2 },
+  { face: BlockFace.SOUTH_EAST,     distance: 1 },
+  { face: BlockFace.EAST,           distance: 1 },
+  { face: BlockFace.EAST,           distance: 2 },
+  { face: BlockFace.NORTH_EAST,     distance: 1 },
+  { face: BlockFace.SELF,           distance: 1 },
 ];
 
 registerEvent(BlockBreakEvent, (event) => {
@@ -107,7 +111,7 @@ registerEvent(BlockBreakEvent, (event) => {
 //         logs.add(relative);
 //       }
 //       if (relative.type.toString().endsWith('_LEAVES')) hasLeaves = true;
-//     }
+//     }Oks mei
 //   }
 //   if (!hasLeaves) return;
 //   return logs;
@@ -145,8 +149,11 @@ function getNextLayerLogs(prevLayer: Set<Block>, allowedBlocks: Set<Material>) {
 
   prevLayer.forEach((prevBlock) => {
     const centerBlock = prevBlock.getRelative(BlockFace.UP);
-    for (const face of LAYER_FACES) {
-      const loopBlock = centerBlock.getRelative(face);
+    for (const layerFace of LAYER_FACES) {
+      const loopBlock = centerBlock.getRelative(
+        layerFace.face,
+        layerFace.distance,
+      );
       if (allowedBlocks.has(loopBlock.type)) {
         logs.add(loopBlock);
       }
@@ -157,7 +164,7 @@ function getNextLayerLogs(prevLayer: Set<Block>, allowedBlocks: Set<Material>) {
   return logs;
 }
 
-function collapse(layers: Set<Block>[]) {
+async function collapse(layers: Set<Block>[]) {
   let n = 0;
   for (const layer of layers) {
     for (const block of layer) {
@@ -172,6 +179,7 @@ function collapse(layers: Set<Block>[]) {
       fallingBlock.setDropItem(false);
       fallingBlock.velocity = new Vector();
     }
+    await wait(3, 'ticks');
   }
   Bukkit.server.broadcastMessage(n + ' puuta');
 }
