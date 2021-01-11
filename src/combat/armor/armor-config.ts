@@ -1,5 +1,5 @@
 import { UUID } from 'java.util';
-import { Bukkit, Material } from 'org.bukkit';
+import { Material } from 'org.bukkit';
 import { Attribute, AttributeModifier } from 'org.bukkit.attribute';
 import { Operation } from 'org.bukkit.attribute.AttributeModifier';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
@@ -14,7 +14,7 @@ const ARMORS = new Map<Material, (item: ItemStack) => ItemStack>([
   [Material.LEATHER_HELMET,         createDefaultHelmet],
   [Material.LEATHER_CHESTPLATE,     createDefaultChestplate],
   [Material.LEATHER_LEGGINGS,       createDefaultLeggings],
-  [Material.LEATHER_BOOTS,          createCustomHat],
+  [Material.LEATHER_BOOTS,          createLeatherBoots],
 
   [Material.GOLDEN_HELMET,          createDefaultHelmet],
   [Material.GOLDEN_CHESTPLATE,      createDefaultChestplate],
@@ -39,6 +39,10 @@ const ARMORS = new Map<Material, (item: ItemStack) => ItemStack>([
   [Material.TURTLE_HELMET,          createDefaultHelmet],
 ]);
 
+export function isArmor(type: Material) {
+  return ARMORS.has(type);
+}
+
 /**
  * Modify attributes of the armor
  * @param item Armor to be modified.
@@ -58,16 +62,18 @@ export function modifyArmor(item: ItemStack) {
 function createDefaultHelmet(item: ItemStack) {
   const meta = item.itemMeta;
 
-  const headAdd1 = new AttributeModifier(
-    UUID.randomUUID(),
-    'head_1',
-    1,
-    Operation.ADD_NUMBER,
-    EquipmentSlot.HEAD,
-  );
-
   meta.removeAttributeModifier(EquipmentSlot.HEAD);
-  meta.addAttributeModifier(Attribute.GENERIC_ARMOR, headAdd1);
+
+  meta.addAttributeModifier(
+    Attribute.GENERIC_ARMOR,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.armor',
+      1,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.HEAD,
+    ),
+  );
   item.itemMeta = meta;
   return item;
 }
@@ -78,16 +84,18 @@ function createDefaultHelmet(item: ItemStack) {
 function createDefaultChestplate(item: ItemStack) {
   const meta = item.itemMeta;
 
-  const chestAdd1 = new AttributeModifier(
-    UUID.randomUUID(),
-    'chest_1',
-    1,
-    Operation.ADD_NUMBER,
-    EquipmentSlot.CHEST,
-  );
-
   meta.removeAttributeModifier(EquipmentSlot.CHEST);
-  meta.addAttributeModifier(Attribute.GENERIC_ARMOR, chestAdd1);
+
+  meta.addAttributeModifier(
+    Attribute.GENERIC_ARMOR,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.armor',
+      1,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.CHEST,
+    ),
+  );
   item.itemMeta = meta;
   return item;
 }
@@ -98,16 +106,18 @@ function createDefaultChestplate(item: ItemStack) {
 function createDefaultLeggings(item: ItemStack) {
   const meta = item.itemMeta;
 
-  const legsAdd1 = new AttributeModifier(
-    UUID.randomUUID(),
-    'legs_1',
-    1,
-    Operation.ADD_NUMBER,
-    EquipmentSlot.LEGS,
-  );
-
   meta.removeAttributeModifier(EquipmentSlot.LEGS);
-  meta.addAttributeModifier(Attribute.GENERIC_ARMOR, legsAdd1);
+
+  meta.addAttributeModifier(
+    Attribute.GENERIC_ARMOR,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.armor',
+      1,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.LEGS,
+    ),
+  );
   item.itemMeta = meta;
   return item;
 }
@@ -118,16 +128,17 @@ function createDefaultLeggings(item: ItemStack) {
 function createDefaultBoots(item: ItemStack) {
   const meta = item.itemMeta;
 
-  const feetAdd1 = new AttributeModifier(
-    UUID.randomUUID(),
-    'feet_1',
-    1,
-    Operation.ADD_NUMBER,
-    EquipmentSlot.FEET,
-  );
-
   meta.removeAttributeModifier(EquipmentSlot.FEET);
-  meta.addAttributeModifier(Attribute.GENERIC_ARMOR, feetAdd1);
+  meta.addAttributeModifier(
+    Attribute.GENERIC_ARMOR,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.armor',
+      1,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.FEET,
+    ),
+  );
   item.itemMeta = meta;
   return item;
 }
@@ -135,13 +146,13 @@ function createDefaultBoots(item: ItemStack) {
 /**
  * Leather boots and custom hats
  */
-function createCustomHat(item: ItemStack) {
+function createLeatherBoots(item: ItemStack) {
   const meta = item.itemMeta;
 
   // Check if the item was actully default leather boots
   if (!meta.hasCustomModelData()) return createDefaultBoots(item);
 
-  // Item was custom hat!
+  // The item was custom hat!
   return createDefaultHelmet(item);
 }
 
@@ -151,17 +162,18 @@ function createCustomHat(item: ItemStack) {
 function createIronHelmet(item: ItemStack) {
   const meta = item.itemMeta;
 
-  const headAdd3 = new AttributeModifier(
-    UUID.randomUUID(),
-    'iron_helmet_3',
-    3,
-    Operation.ADD_NUMBER,
-    EquipmentSlot.HEAD,
-  );
-
   meta.removeAttributeModifier(EquipmentSlot.HEAD);
-  meta.addAttributeModifier(Attribute.GENERIC_ARMOR, headAdd3);
-  //meta.addAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS, headAdd2);
+
+  meta.addAttributeModifier(
+    Attribute.GENERIC_ARMOR,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.armor',
+      3,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.HEAD,
+    ),
+  );
   item.itemMeta = meta;
   return item;
 }
@@ -172,33 +184,48 @@ function createIronHelmet(item: ItemStack) {
 function createIronChestplate(item: ItemStack) {
   const meta = item.itemMeta;
 
-  const chestAdd4 = new AttributeModifier(
-    UUID.randomUUID(),
-    'iron_chestplate_4',
-    4,
-    Operation.ADD_NUMBER,
-    EquipmentSlot.CHEST,
-  );
-  const chestAdd2 = new AttributeModifier(
-    UUID.randomUUID(),
-    'iron_chestplate_2',
-    4,
-    Operation.ADD_NUMBER,
-    EquipmentSlot.CHEST,
-  );
-
-  const chestSub = new AttributeModifier(
-    UUID.randomUUID(),
-    'iron_chestplate_sub',
-    -0.012,
-    Operation.ADD_NUMBER,
-    EquipmentSlot.CHEST,
-  );
-
   meta.removeAttributeModifier(EquipmentSlot.CHEST);
-  meta.addAttributeModifier(Attribute.GENERIC_ARMOR, chestAdd4);
-  meta.addAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS, chestAdd2);
-  meta.addAttributeModifier(Attribute.GENERIC_MOVEMENT_SPEED, chestSub);
+
+  meta.addAttributeModifier(
+    Attribute.GENERIC_ARMOR,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.armor',
+      4,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.CHEST,
+    ),
+  );
+  meta.addAttributeModifier(
+    Attribute.GENERIC_ARMOR_TOUGHNESS,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.armorToughness',
+      4,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.CHEST,
+    ),
+  );
+  meta.addAttributeModifier(
+    Attribute.GENERIC_KNOCKBACK_RESISTANCE,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.knockbackResistance',
+      0.1,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.CHEST,
+    ),
+  );
+  meta.addAttributeModifier(
+    Attribute.GENERIC_MOVEMENT_SPEED,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.movementSpeed',
+      -0.005,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.CHEST,
+    ),
+  );
   item.itemMeta = meta;
   return item;
 }
@@ -209,33 +236,48 @@ function createIronChestplate(item: ItemStack) {
 function createIronLeggings(item: ItemStack) {
   const meta = item.itemMeta;
 
-  const legsAdd3 = new AttributeModifier(
-    UUID.randomUUID(),
-    'iron_leggings_3',
-    3,
-    Operation.ADD_NUMBER,
-    EquipmentSlot.LEGS,
-  );
-  const legsAdd1 = new AttributeModifier(
-    UUID.randomUUID(),
-    'iron_leggings_1',
-    1,
-    Operation.ADD_NUMBER,
-    EquipmentSlot.LEGS,
-  );
-
-  const legsSub = new AttributeModifier(
-    UUID.randomUUID(),
-    'iron_leggings_sub',
-    -0.012,
-    Operation.ADD_NUMBER,
-    EquipmentSlot.LEGS,
-  );
-
   meta.removeAttributeModifier(EquipmentSlot.LEGS);
-  meta.addAttributeModifier(Attribute.GENERIC_ARMOR, legsAdd3);
-  meta.addAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS, legsAdd1);
-  meta.addAttributeModifier(Attribute.GENERIC_MOVEMENT_SPEED, legsSub);
+
+  meta.addAttributeModifier(
+    Attribute.GENERIC_ARMOR,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.armor',
+      3,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.LEGS,
+    ),
+  );
+  meta.addAttributeModifier(
+    Attribute.GENERIC_ARMOR_TOUGHNESS,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.armorToughness',
+      1,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.LEGS,
+    ),
+  );
+  meta.addAttributeModifier(
+    Attribute.GENERIC_KNOCKBACK_RESISTANCE,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.knockbackResistance',
+      0.1,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.LEGS,
+    ),
+  );
+  meta.addAttributeModifier(
+    Attribute.GENERIC_MOVEMENT_SPEED,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.movementSpeed',
+      -0.005,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.LEGS,
+    ),
+  );
   item.itemMeta = meta;
   return item;
 }
@@ -246,33 +288,41 @@ function createIronLeggings(item: ItemStack) {
 function createIronBoots(item: ItemStack) {
   const meta = item.itemMeta;
 
-  const feetAdd2 = new AttributeModifier(
-    UUID.randomUUID(),
-    'iron_boots_2',
-    2,
-    Operation.ADD_NUMBER,
-    EquipmentSlot.FEET,
-  );
-  const feetAdd1 = new AttributeModifier(
-    UUID.randomUUID(),
-    'iron_boots_1',
-    1,
-    Operation.ADD_NUMBER,
-    EquipmentSlot.FEET,
-  );
-
-  const feetSub1 = new AttributeModifier(
-    UUID.randomUUID(),
-    'iron_boots_sub',
-    -0.012,
-    Operation.ADD_NUMBER,
-    EquipmentSlot.FEET,
-  );
-
   meta.removeAttributeModifier(EquipmentSlot.FEET);
-  meta.addAttributeModifier(Attribute.GENERIC_ARMOR, feetAdd2);
-  meta.addAttributeModifier(Attribute.GENERIC_ARMOR_TOUGHNESS, feetAdd1);
-  meta.addAttributeModifier(Attribute.GENERIC_MOVEMENT_SPEED, feetSub1);
+
+  meta.addAttributeModifier(
+    Attribute.GENERIC_ARMOR,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.armor',
+      2,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.FEET,
+    ),
+  );
+  meta.addAttributeModifier(
+    Attribute.GENERIC_ARMOR_TOUGHNESS,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.armorToughness',
+      1,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.FEET,
+    ),
+  );
+  // Can be added later
+  /*
+  meta.addAttributeModifier(
+    Attribute.GENERIC_MOVEMENT_SPEED,
+    new AttributeModifier(
+      UUID.randomUUID(),
+      'generic.movementSpeed',
+      -0.005,
+      Operation.ADD_NUMBER,
+      EquipmentSlot.FEET,
+    ),
+  );
+  */
   item.itemMeta = meta;
   return item;
 }
