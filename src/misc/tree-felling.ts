@@ -24,44 +24,58 @@ const LOGS = new Map([
 ]);
 
 // All blocks that can be part of specific tree (leaves not included)
-// prettier-ignore
 const TREE_MATERIALS = new Map([
-  [TreeSpecies.GENERIC, 
-    new Set([
-      Material.OAK_LOG, 
-      Material.OAK_WOOD
-    ])],
+  [
+    TreeSpecies.GENERIC,
+    {
+      logs: new Set([Material.OAK_LOG, Material.OAK_WOOD]),
+      leaves: Material.OAK_LEAVES,
+    },
+  ],
 
-  [TreeSpecies.REDWOOD, 
-    new Set([
-      Material.SPRUCE_LOG, 
-      Material.SPRUCE_WOOD
-    ])],
+  [
+    TreeSpecies.REDWOOD,
+    {
+      logs: new Set([Material.SPRUCE_LOG, Material.SPRUCE_WOOD]),
+      leaves: Material.SPRUCE_LEAVES,
+    },
+  ],
 
-  [TreeSpecies.BIRCH, 
-    new Set([
-      Material.BIRCH_LOG, 
-      Material.BIRCH_WOOD
-    ])],
+  [
+    TreeSpecies.BIRCH,
+    {
+      logs: new Set([Material.BIRCH_LOG, Material.BIRCH_WOOD]),
+      leaves: Material.BIRCH_LEAVES,
+    },
+  ],
 
-  [TreeSpecies.JUNGLE, 
-    new Set([
-      Material.JUNGLE_LOG, 
-      Material.JUNGLE_WOOD,
-      Material.COCOA_BEANS
-    ])],
+  [
+    TreeSpecies.JUNGLE,
+    {
+      logs: new Set([
+        Material.JUNGLE_LOG,
+        Material.JUNGLE_WOOD,
+        Material.COCOA_BEANS,
+      ]),
+      leaves: Material.JUNGLE_LEAVES,
+    },
+  ],
 
-  [TreeSpecies.DARK_OAK, 
-    new Set([
-      Material.DARK_OAK_LOG, 
-      Material.DARK_OAK_WOOD
-    ])],
+  [
+    TreeSpecies.DARK_OAK,
+    {
+      logs: new Set([Material.DARK_OAK_LOG, Material.DARK_OAK_WOOD]),
+      leaves: Material.DARK_OAK_LEAVES,
+    },
+  ],
 
-  [TreeSpecies.ACACIA, 
-    new Set([
-      Material.ACACIA_LOG, 
-      Material.ACACIA_WOOD
-    ])],
+  [
+    TreeSpecies.ACACIA,
+    {
+      logs: new Set([Material.ACACIA_LOG, Material.ACACIA_WOOD]),
+      leaves: Material.ACACIA_LEAVES,
+    },
+  ],
 ]);
 
 // prettier-ignore
@@ -85,9 +99,8 @@ registerEvent(BlockBreakEvent, (event) => {
   const species = LOGS.get(event.block.type);
   if (!species) return;
   const blocks = getTree(event.block, species);
-  Bukkit.server.broadcastMessage('Layers: ' + blocks?.length + '...');
   if (!blocks) return;
-  collapse(blocks);
+  collapse(blocks, species);
 });
 
 // function getTree(source: Block, species: TreeSpecies) {
@@ -118,12 +131,14 @@ registerEvent(BlockBreakEvent, (event) => {
 // }
 
 function getTree(source: Block, species: TreeSpecies) {
-  const logLayers: Set<Block>[] = [];
+  const logLayers: Map<string, Block>[] = [];
   const allowedBlocks = TREE_MATERIALS.get(species);
   if (!allowedBlocks) return;
 
   // let block = source;
-  let layer = new Set<Block>([source]);
+  let layer = new Map<string, Block>([[source.location.toString(), source]]);
+  let isTree = false;
+
   // Loop 1 layer at the time
   for (let i = 0; i < 20; i++) {
     // block = block.getRelative(BlockFace.UP);
@@ -137,15 +152,22 @@ function getTree(source: Block, species: TreeSpecies) {
     //   }
     // }
 
-    layer = getNextLayerLogs(layer, allowedBlocks);
+    const { logs, hasLeaves } = getNextLayerLogs(layer, allowedBlocks);
+    layer = logs;
+    if (hasLeaves) isTree = true;
     if (layer.size === 0) break;
     logLayers.push(layer);
   }
-  return logLayers;
+  if (isTree) return logLayers;
 }
 
-function getNextLayerLogs(prevLayer: Set<Block>, allowedBlocks: Set<Material>) {
-  const logs = new Set<Block>();
+function getNextLayerLogs(
+  prevLayer: Map<string, Block>,
+  allowedBlocks: { logs: Set<Material>; leaves: Material },
+) {
+  const logs = new Map<string, Block>();
+
+  let hasLeaves = false;
 
   prevLayer.forEach((prevBlock) => {
     const centerBlock = prevBlock.getRelative(BlockFace.UP);
@@ -154,21 +176,32 @@ function getNextLayerLogs(prevLayer: Set<Block>, allowedBlocks: Set<Material>) {
         layerFace.face,
         layerFace.distance,
       );
-      if (allowedBlocks.has(loopBlock.type)) {
-        logs.add(loopBlock);
+      if (allowedBlocks.logs.has(loopBlock.type)) {
+        logs.set(loopBlock.location.toString(), loopBlock);
+      }
+      if (allowedBlocks.leaves === loopBlock.type) {
+        hasLeaves = true;
       }
     }
   });
 
-  Bukkit.server.broadcastMessage('KERROKSEN KOKO: ' + logs.size);
-  return logs;
+  return { logs: logs, hasLeaves: hasLeaves };
 }
 
-async function collapse(layers: Set<Block>[]) {
-  let n = 0;
+async function collapse(layers: Map<string, Block>[], species: TreeSpecies) {
+  const allowedBlocks = TREE_MATERIALS.get(species);
+  if (!allowedBlocks) return;
+
+  let isFirstLayer = true;
   for (const layer of layers) {
-    for (const block of layer) {
-      n++;
+    for (const block of layer.values()) {
+      // Only collapse logs which can fall down
+      if (!isFirstLayer && !block.getRelative(BlockFace.DOWN).type.isAir())
+        continue;
+
+      // Prevent other blocks from falling
+      if (!allowedBlocks.logs.has(block.type)) continue;
+
       const data = block.blockData;
       block.type = Material.AIR;
       const fallingBlock = block.world.spawnFallingBlock(
@@ -179,7 +212,8 @@ async function collapse(layers: Set<Block>[]) {
       fallingBlock.setDropItem(false);
       fallingBlock.velocity = new Vector();
     }
-    await wait(3, 'ticks');
+    // Delay between layers
+    await wait(1, 'ticks');
+    isFirstLayer = false;
   }
-  Bukkit.server.broadcastMessage(n + ' puuta');
 }
