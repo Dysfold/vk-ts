@@ -15,7 +15,7 @@ const BOARD_MODEL_DIRECTION = { x: -1, z: 0 };
 const LETTERS = 'abcdefgh'.split('');
 const CENTERING_VECTOR = new Vector(0.5, 1, 0.5);
 
-const games = new Map<Location, ChessInstance>();
+const games = new Map<string, ChessInstance>();
 
 const Colors: { [key: string]: string } = {
   w: 'Valkoinen',
@@ -58,13 +58,13 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
   if (block.type !== BOARD_MATERIAL) return;
   const world = block.world;
 
-  let chess = games.get(block.location);
+  let chess = games.get(block.location.toString());
   const engine = getEngineArmorStand(block);
 
   if (!chess) {
     // No active chess instances were found. Creating a new one from backup
     chess = new Chess(engine.customName || undefined);
-    games.set(block.location, chess);
+    games.set(block.location.toString(), chess);
   }
 
   const selection = getChessNotation(block, raytrace.hitPosition);
@@ -271,7 +271,7 @@ function getEngineArmorStand(block: Block) {
 
 export function createBoard(block: Block) {
   const chess = new Chess();
-  games.set(block.location, chess);
+  games.set(block.location.toString(), chess);
 
   const board = chess.board();
 
@@ -395,7 +395,7 @@ function createArmorstand(type: string, world: World) {
 }
 
 export function destroyBoard(block: Block) {
-  games.delete(block.location);
+  games.delete(block.location.toString());
   const tabletop = block.location.add(new Vector(0.5, 0.9, 0.5));
   const entities = tabletop.getNearbyEntities(0.5, 0.5, 0.5);
 
