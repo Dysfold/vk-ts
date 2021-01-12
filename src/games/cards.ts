@@ -64,18 +64,6 @@ const HIDDEN_CARD = new CustomItem({
     cardID: yup.string(),
   },
 });
-const BLACK_JOKER = new CustomItem({
-  id: 53,
-  name: ChatColor.RESET + 'Pelikortti [J]',
-  type: Material.PRISMARINE_CRYSTALS,
-  modelId: 53,
-});
-const RED_JOKER = new CustomItem({
-  id: 54,
-  name: ChatColor.RESET + 'Pelikortti [J]',
-  type: Material.PRISMARINE_CRYSTALS,
-  modelId: 54,
-});
 
 /**
  *    Generate Custom Items for Cards
@@ -136,7 +124,6 @@ function getCardID(modelID: number): string {
       break;
   }
 
-  // TODO - ADD JOKERS
   return cardID;
 }
 
@@ -270,15 +257,22 @@ async function shuffleDeck(
   if (d.cards.length + s.cards.length > MAX_CARDS_IN_DECK) return;
 
   const shuffledCards: string[] = [];
-  const maxIndex =
-    s.cards.length < d.cards.length ? s.cards.length : d.cards.length;
+
+  const mainDeckSmaller = s.cards.length > d.cards.length;
+  let maxIndex = 0;
+  mainDeckSmaller ? (maxIndex = d.cards.length) : (maxIndex = s.cards.length);
 
   for (let i = 0; i < maxIndex; i++) {
     shuffledCards.push(s.cards[i], d.cards[i]);
   }
 
-  d.cards.splice(0, maxIndex);
-  shuffledCards.push(...d.cards);
+  if (mainDeckSmaller) {
+    s.cards.splice(0, maxIndex);
+    shuffledCards.push(...s.cards);
+  } else {
+    d.cards.splice(0, maxIndex);
+    shuffledCards.push(...d.cards);
+  }
 
   d.cards = shuffledCards;
   secondDeck.amount--;
@@ -442,14 +436,20 @@ registerCommand('deck', (sender) => {
   player.world.dropItem(player.location, deck);
 });
 
+const CARD = new CustomItem({
+  id: 55,
+  name: ChatColor.RESET + 'Pelikortti',
+  type: Material.PRISMARINE_CRYSTALS,
+  modelId: 55,
+});
+
 registerEvent(PlayerInteractEvent, async (event) => {
-  const item = event.item;
   if (event.hand === EquipmentSlot.HAND) {
+    await wait(1, 'millis');
     ClickedOnce(event.player, isRightClick(event.action), event.blockFace);
   } else {
     if (event.action === Action.RIGHT_CLICK_BLOCK) return;
     if (event.player.inventory.itemInMainHand.type !== Material.AIR) return;
     ClickedOnce(event.player, isRightClick(event.action), event.blockFace);
   }
-  await wait(500, 'millis');
 });
