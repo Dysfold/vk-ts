@@ -31,3 +31,4 @@ require('./book-authors');
 require('./sealing-wax');
 require('./glass-damage');
 require('./farmland-trampling');
+require('./fishing');
