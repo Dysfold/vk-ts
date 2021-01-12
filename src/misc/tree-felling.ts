@@ -116,7 +116,7 @@ registerEvent(BlockBreakEvent, (event) => {
   if (!isNaturalTree(event.block, species)) return;
   const blocks = getTree(event.block, species);
   if (!blocks) return;
-  collapse(blocks, species);
+  collapse(blocks, event.block, species);
 });
 
 function getTree(source: Block, species: TreeSpecies) {
@@ -170,22 +170,24 @@ function isNaturalTree(source: Block, species: TreeSpecies) {
   }
 }
 
-async function collapse(layers: Map<string, Block>[], species: TreeSpecies) {
+async function collapse(
+  layers: Map<string, Block>[],
+  source: Block,
+  species: TreeSpecies,
+) {
   const allowedBlocks = TREE_MATERIALS.get(species);
   if (!allowedBlocks) return;
 
-  let isFirstLayer = true;
+  await wait(1, 'ticks');
   for (const layer of layers) {
     for (const block of layer.values()) {
       // Only collapse logs which can fall down
-      if (!isFirstLayer) {
-        const blockBelow = block.getRelative(BlockFace.DOWN);
-        if (blockBelow.type === allowedBlocks.leaves) {
-          blockBelow.type = Material.AIR;
-        } else if (!blockBelow.isPassable()) {
-          // Skip this layer because the block can't fall
-          continue;
-        }
+      const blockBelow = block.getRelative(BlockFace.DOWN);
+      if (blockBelow.type === allowedBlocks.leaves) {
+        blockBelow.type = Material.AIR;
+      } else if (!blockBelow.isPassable()) {
+        // Skip this layer because the block can't fall
+        continue;
       }
 
       // Prevent other blocks from falling
@@ -203,6 +205,5 @@ async function collapse(layers: Map<string, Block>[], species: TreeSpecies) {
     }
     // Delay between layers
     await wait(1, 'ticks');
-    isFirstLayer = false;
   }
 }
