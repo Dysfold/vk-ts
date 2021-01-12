@@ -1,6 +1,6 @@
 import { ChatColor } from 'net.md_5.bungee.api';
-import { Material, Sound, SoundCategory } from 'org.bukkit';
-import { Block, BlockFace } from 'org.bukkit.block';
+import { Material, SoundCategory } from 'org.bukkit';
+import { BlockFace } from 'org.bukkit.block';
 import { Item, Player } from 'org.bukkit.entity';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
@@ -12,15 +12,17 @@ import { isRightClick } from '../common/helpers/click';
 
 const ZERO_VECTOR = new Vector();
 const PICKUP_DELAY = 12000; // TICKS -> 10 minutes
-const MAX_CARDS_IN_DECK = 52;
+const MAX_CARDS_IN_DECK = 54; // 52 cards + 2 jokers
+const SHUFFLE_COOLDOWN = 1250; // milliseconds
 
 const CARD_FLIP_SOUND = 'custom.card';
 const DECK_SHUFFLE_SOUND = 'custom.shuffle';
 
 const CARDS = new Map<string, CustomItem<{}>>();
+const SHUFFLE_COOLDOWNS = new Set<Player>();
 
 /*
- *  DEFINING DECK ITEMS
+ *  Defining deck items
  */
 const FULL_DECK = new CustomItem({
   id: 56,
@@ -48,6 +50,31 @@ const LOW_DECK = new CustomItem({
   data: {
     cards: yup.array<string>(),
   },
+});
+
+/*
+ *  Defining special cards
+ */
+const HIDDEN_CARD = new CustomItem({
+  id: 55,
+  name: ChatColor.RESET + 'Pelikortti',
+  type: Material.PRISMARINE_CRYSTALS,
+  modelId: 55,
+  data: {
+    cardID: yup.string(),
+  },
+});
+const BLACK_JOKER = new CustomItem({
+  id: 53,
+  name: ChatColor.RESET + 'Pelikortti [J]',
+  type: Material.PRISMARINE_CRYSTALS,
+  modelId: 53,
+});
+const RED_JOKER = new CustomItem({
+  id: 54,
+  name: ChatColor.RESET + 'Pelikortti [J]',
+  type: Material.PRISMARINE_CRYSTALS,
+  modelId: 54,
 });
 
 /**
@@ -91,6 +118,12 @@ function getCardID(modelID: number): string {
 
   cardID = `${country}${number}`;
 
+  if (modelID === 53) {
+    cardID = ChatColor.DARK_GRAY + '♠' + ChatColor.RESET + `O`;
+  } else if (modelID === 54) {
+    cardID = ChatColor.RED + '♥' + ChatColor.RESET + 'O';
+  }
+
   switch (number) {
     case 11:
       cardID = `${country}J`;
@@ -120,13 +153,11 @@ function removeCard(deck: ItemStack, player: Player) {
 
   const oldCards = d.cards;
   const cardID = oldCards[oldCards.length - 1]; // ID of "top" card in deck
-  const card = CARDS.get(cardID);
-
-  if (!card) return;
+  const card = HIDDEN_CARD.create({ cardID: cardID });
 
   oldCards.pop();
   d.cards = oldCards;
-  player.inventory.itemInMainHand = card.create();
+  player.inventory.itemInMainHand = card;
   player.world.playSound(
     player.location,
     CARD_FLIP_SOUND,
@@ -151,7 +182,13 @@ function insertCard(deck: ItemStack, card: ItemStack, player: Player) {
   if (!d.cards) return;
   if (d.cards.length === MAX_CARDS_IN_DECK) return;
 
-  const cardID = getCardID(card.itemMeta.customModelData);
+  let cardID = '';
+  const hiddenCard = HIDDEN_CARD.get(card);
+  if (hiddenCard) {
+    cardID = hiddenCard.cardID;
+  } else {
+    cardID = getCardID(card.itemMeta.customModelData);
+  }
   d.cards = [...d.cards, cardID];
   card.amount--;
   player.world.playSound(
@@ -216,7 +253,12 @@ function combineDeck(deck: ItemStack, secondDeck: ItemStack, player: Player) {
   );
 }
 
-function shuffleDeck(deck: ItemStack, secondDeck: ItemStack, player: Player) {
+async function shuffleDeck(
+  deck: ItemStack,
+  secondDeck: ItemStack,
+  player: Player,
+) {
+  SHUFFLE_COOLDOWNS.add(player);
   const d = getDeck(deck);
   if (!d) return;
   if (!d.cards) return;
@@ -249,6 +291,9 @@ function shuffleDeck(deck: ItemStack, secondDeck: ItemStack, player: Player) {
     1,
     1,
   );
+
+  await wait(SHUFFLE_COOLDOWN, 'millis');
+  SHUFFLE_COOLDOWNS.delete(player);
 }
 
 function getDeck(item: ItemStack) {
@@ -271,19 +316,22 @@ function getResizedDeck(deck: ItemStack): ItemStack {
 
   //console.log(d.cards);
 
+  let resizedDeck;
+
   if (d.cards.length >= 35) {
-    return FULL_DECK.create({ cards: d.cards });
+    resizedDeck = FULL_DECK.create({ cards: d.cards });
   } else if (d.cards.length >= 18) {
-    return HALF_DECK.create({ cards: d.cards });
+    resizedDeck = HALF_DECK.create({ cards: d.cards });
   } else if (d.cards.length > 1) {
-    return LOW_DECK.create({ cards: d.cards });
+    resizedDeck = LOW_DECK.create({ cards: d.cards });
   } else {
     const cardID = d.cards[0];
     if (!cardID) return deck;
-    const card = CARDS.get(d.cards[0]);
-    if (card) return card.create();
+    return HIDDEN_CARD.create({ cardID: cardID });
   }
-  return deck;
+
+  resizedDeck.lore = [ChatColor.DARK_GRAY + `${d.cards.length} korttia`];
+  return resizedDeck;
 }
 
 /**
@@ -291,11 +339,12 @@ function getResizedDeck(deck: ItemStack): ItemStack {
  * @param player Player who clicked
  * @param isRightClick True if player rightclicked with either hand
  */
-function CustomClick(
+function ClickedOnce(
   player: Player,
   isRightClick: boolean,
   blockFace: BlockFace,
 ) {
+  if (SHUFFLE_COOLDOWNS.has(player)) return;
   const mainHandItem = player.inventory.itemInMainHand;
   const offHandItem = player.inventory.itemInOffHand;
 
@@ -303,7 +352,7 @@ function CustomClick(
   if (blockFace === BlockFace.UP && isRightClick) {
     if (isCard(mainHandItem)) {
       // Place card on block
-      const raytrace = player.rayTraceBlocks(2);
+      const raytrace = player.rayTraceBlocks(2.5);
       if (!raytrace) return;
       if (!raytrace.hitBlock) return;
 
@@ -317,7 +366,7 @@ function CustomClick(
       card.pickupDelay = PICKUP_DELAY;
     } else if (mainHandItem.type === Material.AIR) {
       // Pickyp card from block
-      const raytrace = player.rayTraceBlocks(2);
+      const raytrace = player.rayTraceBlocks(2.5);
       if (!raytrace) return;
       const hitLoc = raytrace.hitPosition.toLocation(player.world);
       const entities = hitLoc.getNearbyEntities(0.001, 0.001, 0.001);
@@ -335,7 +384,28 @@ function CustomClick(
     return;
   }
 
-  if (!isDeck(offHandItem)) return;
+  // TOGGLE HIDDEN CARD
+  if (!isDeck(offHandItem)) {
+    if (isRightClick) {
+      if (HIDDEN_CARD.check(mainHandItem)) {
+        // SET TO CARD
+        const hiddenCard = HIDDEN_CARD.get(mainHandItem);
+        if (!hiddenCard) return;
+        if (!hiddenCard.cardID) return;
+
+        const card = CARDS.get(hiddenCard.cardID);
+        if (!card) return;
+
+        player.inventory.itemInMainHand = card.create();
+      } else if (isCard(mainHandItem)) {
+        // SET TO HIDDEN
+        const cardID = getCardID(mainHandItem.itemMeta.customModelData);
+        const hiddenCard = HIDDEN_CARD.create({ cardID: cardID });
+        player.inventory.itemInMainHand = hiddenCard;
+      }
+    }
+    return;
+  }
 
   if (isRightClick) {
     // REMOVE CARD
@@ -360,35 +430,26 @@ function CustomClick(
 }
 
 /**
- * GIVE PLAYER ALL CARDS
- */
-registerCommand('cards', (sender) => {
-  if (!(sender instanceof Player)) return;
-  const player = sender as Player;
-  for (const entry of CARDS) {
-    player.world.dropItem(player.location, entry[1].create());
-  }
-});
-
-/**
  * GIVE PLAYER A DECK FULL OF CARDS
  */
 registerCommand('deck', (sender) => {
   if (!(sender instanceof Player)) return;
   const player = sender as Player;
-  player.world.dropItem(
-    player.location,
-    FULL_DECK.create({ cards: Array.from(CARDS.keys()) }),
-  );
+  if (!player.isOp()) return;
+  const cards = Array.from(CARDS.keys());
+  const deck = FULL_DECK.create({ cards: cards });
+  deck.lore = [ChatColor.DARK_GRAY + `${cards.length} korttia`];
+  player.world.dropItem(player.location, deck);
 });
 
-registerEvent(PlayerInteractEvent, (event) => {
+registerEvent(PlayerInteractEvent, async (event) => {
   const item = event.item;
   if (event.hand === EquipmentSlot.HAND) {
-    CustomClick(event.player, isRightClick(event.action), event.blockFace);
+    ClickedOnce(event.player, isRightClick(event.action), event.blockFace);
   } else {
     if (event.action === Action.RIGHT_CLICK_BLOCK) return;
     if (event.player.inventory.itemInMainHand.type !== Material.AIR) return;
-    CustomClick(event.player, isRightClick(event.action), event.blockFace);
+    ClickedOnce(event.player, isRightClick(event.action), event.blockFace);
   }
+  await wait(500, 'millis');
 });
