@@ -1,4 +1,11 @@
-import { Axis, GameMode, Material, Location, SoundCategory } from 'org.bukkit';
+import {
+  Axis,
+  GameMode,
+  Material,
+  Location,
+  SoundCategory,
+  Bukkit,
+} from 'org.bukkit';
 import { Block, BlockFace, Dispenser } from 'org.bukkit.block';
 import { Levelled, Orientable, Waterlogged } from 'org.bukkit.block.data';
 import { Dispenser as DispenserData, Fence } from 'org.bukkit.block.data.type';
@@ -16,16 +23,16 @@ const Winch = new CustomBlock({
   type: Material.DISPENSER,
 });
 
-const winches = new Map<Block, { direction: BlockFace }>();
+const winches = new Map<string, { block: Block; direction: BlockFace }>();
 
 // Materials which will go into the winch. Allow only CHAIN for now
-const RopeMaterials = new Set<Material>([Material.CHAIN]);
+const RopeMaterials = new Set<number>([Material.CHAIN.ordinal()]);
 
 // Liftable blocks (other than logs, ropes or fences)
-const LiftableMaterials = new Set<Material>([Material.CAULDRON]);
+const LiftableMaterials = new Set<number>([Material.CAULDRON.ordinal()]);
 
 function isRope(block: Block) {
-  const isRopeMaterial = RopeMaterials.has(block.type);
+  const isRopeMaterial = RopeMaterials.has(block.type.ordinal());
 
   if (block.type === Material.CHAIN) {
     // Allow only vertical chains
@@ -54,9 +61,10 @@ function isEmpty(block: Block) {
 
 // Check if the block is a rope block or a liftable block
 function isLiftable(block: Block) {
+  const key = block.type.ordinal();
   return (
     isRope(block) ||
-    LiftableMaterials.has(block.type) ||
+    LiftableMaterials.has(key) ||
     isLog(block) ||
     isFence(block)
   );
@@ -71,7 +79,7 @@ Winch.event(
 
     const blockData = winch.blockData as DispenserData;
     if (blockData.facing !== BlockFace.DOWN) return;
-    if (!RopeMaterials.has(event.item.type)) return;
+    if (!RopeMaterials.has(event.item.type.ordinal())) return;
 
     const inventory = (winch.state as Dispenser).inventory;
     const ropes = countRopes(inventory) + 1;
@@ -79,23 +87,21 @@ Winch.event(
     event.setCancelled(true);
     await wait(1, 'ticks'); // Delay because we need the inventory to update after cancelling the drop/event
 
-    const key = winch.blockKey;
-    const activeWinch = winches.get(winch);
+    const key = winch.location.toString();
+    const activeWinch = winches.get(winch.location.toString());
     if (activeWinch) {
       // Reverce the direction of the winch
       const oldDirection = activeWinch.direction;
-      winches.set(winch, {
-        direction: oldDirection.oppositeFace,
-      });
+      winches.set(key, { block: winch, direction: oldDirection.oppositeFace });
       return;
     }
     // Lift the rope
     if (ropes === 1) {
-      winches.set(winch, { direction: BlockFace.UP });
+      winches.set(key, { block: winch, direction: BlockFace.UP });
     }
     // Lower the rope
     else {
-      winches.set(winch, { direction: BlockFace.DOWN });
+      winches.set(key, { block: winch, direction: BlockFace.DOWN });
     }
   },
 );
@@ -196,8 +202,8 @@ function lower(winch: Block) {
   const slot = inventory.first(Material.CHAIN);
   const rope = inventory.getItem(slot);
   if (!rope || rope.amount <= 1) {
-    const key = winch.blockKey;
-    winches.delete(winch);
+    const key = winch.location.toString();
+    winches.delete(key);
     return true;
   }
 
@@ -302,11 +308,13 @@ registerEvent(InventoryOpenEvent, (event) => {
 
 // Move blocks affected by a winch
 setInterval(() => {
-  winches.forEach((winch, block) => {
+  winches.forEach((winch) => {
+    const block = winch.block;
     switch (winch.direction) {
       case BlockFace.UP: {
         if (!lift(block)) {
-          winches.delete(block);
+          const key = block.location.toString();
+          winches.delete(key);
         }
         break;
       }
@@ -329,7 +337,7 @@ function countRopes(inventory: Inventory) {
   let ropes = 0;
   for (const content of inventory.storageContents) {
     if (!content) continue;
-    if (!RopeMaterials.has(content.type)) return -1;
+    if (!RopeMaterials.has(content.type.ordinal())) return -1;
     else ropes += content.amount;
   }
   return ropes;
