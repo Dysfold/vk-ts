@@ -14,7 +14,7 @@ async function updateHash() {
     'https://api.github.com/repos/Laetta/respack/releases/latest',
   );
   const data = await res.json();
-  hash = data.body;
+  hash = data.body || hash;
 }
 
 updateHash();
@@ -42,3 +42,7 @@ registerCommand('updatehash', (sender) => {
   if (!sender.isOp()) return;
   updateHash();
 });
+
+setInterval(() => {
+  updateHash();
+}, 2 * 60 * 1000);
