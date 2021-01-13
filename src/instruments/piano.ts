@@ -1,10 +1,13 @@
-import { Material } from 'org.bukkit';
+import { Material, Bukkit, Location } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot } from 'org.bukkit.inventory';
 import { Directional } from 'org.bukkit.material';
 import { Vector } from 'org.bukkit.util';
+import { Note, NoteName } from './Note';
+import { keys } from 'lodash';
+import { Player } from 'org.bukkit.entity';
 
 const PIANO = Material.BROWN_GLAZED_TERRACOTTA;
 const MAX_PIANO_WIDTH = 5;
@@ -19,7 +22,44 @@ const BLACK_POSITIONS = [0.1, 0.25, 0.52, 0.68, 0.82];
 const BLACK_VERTICAL_MAX = 0.8;
 const KEYS_VERTICAL_MIN = 0.62;
 
-function playNote(block: Block, note: number) {
+const KEYS = new Map<NoteName, number>([
+  ['C', 6],
+  ['C#', 7],
+  ['D', 8],
+  ['D#', 9],
+  ['E', 10],
+  ['F', 11],
+  ['F#', 12],
+  ['G', 13],
+  ['G#', 14],
+  ['A', 15],
+  ['A#', 16],
+  ['H', 17],
+]);
+
+// Command for sound testing
+registerCommand('piano', (sender, label, args) => {
+  if (!sender.isOp()) return;
+
+  if (sender instanceof Player) {
+    const player = sender as Player;
+    const note = new Note(
+      args[0] as NoteName,
+      Number(args[1]),
+      Number(args[2]),
+    );
+    playNote(player.location, note);
+  }
+});
+
+export function playNote(loc: Location, note: Note) {
+  let noteNumber = KEYS.get(note.name);
+  if (!noteNumber) return;
+  noteNumber = note.octave * KEYS_IN_OCTAVE + noteNumber;
+  playNoteNumber(loc, noteNumber);
+}
+
+function playNoteNumber(location: Location, note: number) {
   const octave = Math.min(MAX_OCTAVE, Math.floor(note / KEYS_IN_OCTAVE));
 
   if (isNaN(octave)) {
@@ -28,12 +68,14 @@ function playNote(block: Block, note: number) {
 
   const pitch = 0.5 * 2 ** ((note - octave * KEYS_IN_OCTAVE) / KEYS_IN_OCTAVE);
 
-  block.world.playSound(block.location, `custom.piano${octave}`, 2, pitch);
+  location.world.playSound(location, `custom.piano${octave + 2}`, 2, pitch);
+  Bukkit.server.broadcastMessage('Octave: ' + octave);
+  Bukkit.server.broadcastMessage('Note: ' + note);
 }
 
-export function playPianoChord(block: Block, chord: number, minor = false) {
+export function playPianoChord(loc: Location, chord: number, minor = false) {
   const notes = [chord, chord + (minor ? 3 : 4), chord + 7];
-  notes.forEach((note) => playNote(block, note));
+  notes.forEach((note) => playNoteNumber(loc, note));
 }
 
 function getPianoIndex(clickedBlock: Block, left: Vector) {
@@ -114,8 +156,8 @@ registerEvent(PlayerInteractEvent, (event) => {
   }
 
   if (isChord) {
-    playPianoChord(block, note, isMinor);
+    playPianoChord(block.location.add(0.5, 1, 0.5), note, isMinor);
   } else {
-    playNote(block, note);
+    playNoteNumber(block.location.add(0.5, 1, 0.5), note);
   }
 });
