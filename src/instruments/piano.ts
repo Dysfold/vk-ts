@@ -1,13 +1,12 @@
-import { Material, Bukkit, Location } from 'org.bukkit';
+import { Location, Material } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
+import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot } from 'org.bukkit.inventory';
 import { Directional } from 'org.bukkit.material';
 import { Vector } from 'org.bukkit.util';
 import { Note, NoteName } from './Note';
-import { keys } from 'lodash';
-import { Player } from 'org.bukkit.entity';
 
 const PIANO = Material.BROWN_GLAZED_TERRACOTTA;
 const MAX_PIANO_WIDTH = 5;
@@ -69,8 +68,6 @@ function playNoteNumber(location: Location, note: number) {
   const pitch = 0.5 * 2 ** ((note - octave * KEYS_IN_OCTAVE) / KEYS_IN_OCTAVE);
 
   location.world.playSound(location, `custom.piano${octave + 2}`, 2, pitch);
-  Bukkit.server.broadcastMessage('Octave: ' + octave);
-  Bukkit.server.broadcastMessage('Note: ' + note);
 }
 
 export function playPianoChord(loc: Location, chord: number, minor = false) {
