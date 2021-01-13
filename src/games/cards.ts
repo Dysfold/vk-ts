@@ -66,7 +66,7 @@ const HIDDEN_CARD = new CustomItem({
 });
 
 /**
- *    Generate Custom Items for Cards
+ *  Generate CustomItems for cards
  */
 for (let modelID = 1; modelID <= MAX_CARDS_IN_DECK; modelID++) {
   const cardID = getCardID(modelID);
@@ -81,6 +81,11 @@ for (let modelID = 1; modelID <= MAX_CARDS_IN_DECK; modelID++) {
   );
 }
 
+/**
+ * Returns cardID string based on given modelID of a card.
+ * (Allows fetching cardID from ItemStack without getting CustomItem)
+ * @param modelID
+ */
 function getCardID(modelID: number): string {
   let country = '';
   let number = 0;
@@ -106,12 +111,14 @@ function getCardID(modelID: number): string {
 
   cardID = `${country}${number}`;
 
+  // JOKERS
   if (modelID === 53) {
-    cardID = ChatColor.DARK_GRAY + '♠' + ChatColor.RESET + `O`;
+    cardID = ChatColor.DARK_GRAY + '♠' + ChatColor.RESET + '⭐';
   } else if (modelID === 54) {
-    cardID = ChatColor.RED + '♥' + ChatColor.RESET + 'O';
+    cardID = ChatColor.RED + '♦' + ChatColor.RESET + '⭐';
   }
 
+  // REPLACE PICTURECARD NUMBERS WITH LETTERS
   switch (number) {
     case 11:
       cardID = `${country}J`;
@@ -128,9 +135,9 @@ function getCardID(modelID: number): string {
 }
 
 /**
- * Removes card from deck and puts it to players mainhand
+ * Removes card from deck and puts it in players mainhand.
  * @param deck deck to remove card from
- * @param player player to give item to
+ * @param player player to give card to
  */
 function removeCard(deck: ItemStack, player: Player) {
   const d = getDeck(deck);
@@ -157,9 +164,9 @@ function removeCard(deck: ItemStack, player: Player) {
 }
 
 /**
- * Removes card from players mainhand and puts it "top" of deck
+ * Removes card from players mainhand and puts it "top" of deck.
  * @param deck Deck to insert card in
- * @param card Card to be placed top deck
+ * @param card Card to be placed in deck
  * @param player
  */
 function insertCard(deck: ItemStack, card: ItemStack, player: Player) {
@@ -189,6 +196,11 @@ function insertCard(deck: ItemStack, card: ItemStack, player: Player) {
   player.inventory.itemInOffHand = getResizedDeck(deck);
 }
 
+/**
+ * Splits deck in offHand. Top half is put in players mainHand.
+ * @param deck Deck to be split
+ * @param player
+ */
 function splitDeck(deck: ItemStack, player: Player) {
   const d = getDeck(deck);
   if (!d) return;
@@ -216,6 +228,12 @@ function splitDeck(deck: ItemStack, player: Player) {
   );
 }
 
+/**
+ * Puts deck in players mainhand on top of deck in players offhand.
+ * @param deck Deck in offhand
+ * @param secondDeck Deck in mainhand
+ * @param player
+ */
 function combineDeck(deck: ItemStack, secondDeck: ItemStack, player: Player) {
   const d = getDeck(deck);
   if (!d) return;
@@ -240,6 +258,12 @@ function combineDeck(deck: ItemStack, secondDeck: ItemStack, player: Player) {
   );
 }
 
+/**
+ * Combines two decks with every other card coming from each deck.
+ * @param deck Deck in offhand
+ * @param secondDeck Deck in mainhand
+ * @param player
+ */
 async function shuffleDeck(
   deck: ItemStack,
   secondDeck: ItemStack,
@@ -290,6 +314,48 @@ async function shuffleDeck(
   SHUFFLE_COOLDOWNS.delete(player);
 }
 
+/**
+ * Combines two cards into a deck.
+ * @param card Card in offhand
+ * @param otherCard Card in mainhand
+ * @param player
+ */
+function createDeckFromCards(
+  card: ItemStack,
+  otherCard: ItemStack,
+  player: Player,
+) {
+  let cardID = '';
+  const hiddenCard = HIDDEN_CARD.get(card);
+  if (hiddenCard) {
+    cardID = hiddenCard.cardID;
+  } else {
+    cardID = getCardID(card.itemMeta.customModelData);
+  }
+
+  let otherCardID = '';
+  const hiddenOtherCard = HIDDEN_CARD.get(card);
+  if (hiddenOtherCard) {
+    otherCardID = hiddenOtherCard.cardID;
+  } else {
+    otherCardID = getCardID(otherCard.itemMeta.customModelData);
+  }
+
+  const deck = LOW_DECK.create({ cards: [cardID, otherCardID] });
+  otherCard.amount--;
+  player.inventory.itemInOffHand = deck;
+
+  player.world.playSound(
+    player.location,
+    CARD_FLIP_SOUND,
+    SoundCategory.PLAYERS,
+    1,
+    1,
+  );
+}
+
+// ######################
+// SMALL HELPER FUNCTIONS
 function getDeck(item: ItemStack) {
   const d = FULL_DECK.get(item) || HALF_DECK.get(item) || LOW_DECK.get(item);
   return d;
@@ -302,13 +368,18 @@ function isDeck(item: ItemStack): boolean {
 function isCard(item: ItemStack): boolean {
   return item.type === Material.PRISMARINE_CRYSTALS && !isDeck(item);
 }
+// ######################
 
+/**
+ * Returns new deck with correct model based on amount of cards in deck
+ * @param deck Deck to be resized
+ */
 function getResizedDeck(deck: ItemStack): ItemStack {
   const d = getDeck(deck);
   if (!d) return deck;
   if (!d.cards) return deck;
 
-  //console.log(d.cards);
+  //console.log(d.cards); ( GOOD PLACE TO DEBUG CARDS IN DECK)
 
   let resizedDeck;
 
@@ -329,7 +400,7 @@ function getResizedDeck(deck: ItemStack): ItemStack {
 }
 
 /**
- * Called ONCE on ANY click in PlayerInteractEvent
+ * Called ONCE on ANY click in PlayerInteractEvent. Handles card/deck related clicks.
  * @param player Player who clicked
  * @param isRightClick True if player rightclicked with either hand
  */
@@ -342,7 +413,7 @@ function ClickedOnce(
   const mainHandItem = player.inventory.itemInMainHand;
   const offHandItem = player.inventory.itemInOffHand;
 
-  // place/pick card to/from ground
+  // RAYCAST EVENTS - PLACE CARD ON BLOCK / PICKUP CARD
   if (blockFace === BlockFace.UP && isRightClick) {
     if (isCard(mainHandItem)) {
       // Place card on block
@@ -359,7 +430,7 @@ function ClickedOnce(
       card.velocity = ZERO_VECTOR;
       card.pickupDelay = PICKUP_DELAY;
     } else if (mainHandItem.type === Material.AIR) {
-      // Pickyp card from block
+      // Pickup card from block
       const raytrace = player.rayTraceBlocks(2.5);
       if (!raytrace) return;
       const hitLoc = raytrace.hitPosition.toLocation(player.world);
@@ -378,53 +449,51 @@ function ClickedOnce(
     return;
   }
 
-  // TOGGLE HIDDEN CARD
-  if (!isDeck(offHandItem)) {
-    if (isRightClick) {
-      if (HIDDEN_CARD.check(mainHandItem)) {
-        // SET TO CARD
-        const hiddenCard = HIDDEN_CARD.get(mainHandItem);
-        if (!hiddenCard) return;
-        if (!hiddenCard.cardID) return;
+  // RIGHTCLICK EVENTS - REMOVE CARD / TOGGLE HIDDEN CARDS
+  if (isRightClick) {
+    // REMOVE CARD FROM DECK
+    if (mainHandItem.type === Material.AIR) {
+      removeCard(offHandItem, player);
+      return;
+    }
+    //TOGGLE HIDDEN CARD
+    if (HIDDEN_CARD.check(mainHandItem)) {
+      const hiddenCard = HIDDEN_CARD.get(mainHandItem);
+      if (!hiddenCard) return;
+      if (!hiddenCard.cardID) return;
 
-        const card = CARDS.get(hiddenCard.cardID);
-        if (!card) return;
+      const card = CARDS.get(hiddenCard.cardID);
+      if (!card) return;
 
-        player.inventory.itemInMainHand = card.create();
-      } else if (isCard(mainHandItem)) {
-        // SET TO HIDDEN
-        const cardID = getCardID(mainHandItem.itemMeta.customModelData);
-        const hiddenCard = HIDDEN_CARD.create({ cardID: cardID });
-        player.inventory.itemInMainHand = hiddenCard;
-      }
+      player.inventory.itemInMainHand = card.create();
+    } else if (isCard(mainHandItem)) {
+      const cardID = getCardID(mainHandItem.itemMeta.customModelData);
+      const hiddenCard = HIDDEN_CARD.create({ cardID: cardID });
+      player.inventory.itemInMainHand = hiddenCard;
     }
     return;
   }
 
-  if (isRightClick) {
-    // REMOVE CARD
-    if (mainHandItem.type !== Material.AIR) return;
-    removeCard(offHandItem, player);
-    return;
-  }
-
+  // LEFT CLICK EVENTS - SHUFFLE / COMBINE / SPLIT DECK / INSERT CARD
   if (isDeck(mainHandItem)) {
     if (player.isSneaking()) {
-      // SNEAKING LEFT CLICK
       shuffleDeck(offHandItem, mainHandItem, player);
     } else {
-      // LEFT CLICK (deck in hand)
       combineDeck(offHandItem, mainHandItem, player);
     }
   } else if (isCard(mainHandItem)) {
-    insertCard(offHandItem, mainHandItem, player);
+    if (isCard(offHandItem)) {
+      createDeckFromCards(offHandItem, mainHandItem, player);
+    } else {
+      insertCard(offHandItem, mainHandItem, player);
+    }
   } else if (mainHandItem.type === Material.AIR) {
     splitDeck(offHandItem, player);
   }
 }
 
 /**
- * GIVE PLAYER A DECK FULL OF CARDS
+ * Gives opped player a deck full of cards
  */
 registerCommand('deck', (sender) => {
   if (!(sender instanceof Player)) return;
@@ -433,16 +502,12 @@ registerCommand('deck', (sender) => {
   const cards = Array.from(CARDS.keys());
   const deck = FULL_DECK.create({ cards: cards });
   deck.lore = [ChatColor.DARK_GRAY + `${cards.length} korttia`];
-  player.world.dropItem(player.location, deck);
+  player.inventory.itemInMainHand = deck;
 });
 
-const CARD = new CustomItem({
-  id: 55,
-  name: ChatColor.RESET + 'Pelikortti',
-  type: Material.PRISMARINE_CRYSTALS,
-  modelId: 55,
-});
-
+/**
+ * Calls ClickedOnce preventing double calls of same click event
+ */
 registerEvent(PlayerInteractEvent, async (event) => {
   if (event.hand === EquipmentSlot.HAND) {
     await wait(1, 'millis');
