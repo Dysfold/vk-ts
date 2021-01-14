@@ -37,9 +37,7 @@ const KEYS = new Map<NoteName, number>([
 ]);
 
 // Command for sound testing
-registerCommand('piano', (sender, label, args) => {
-  if (!sender.isOp()) return;
-
+registerCommand('piano', (sender, _label, args) => {
   if (sender instanceof Player) {
     const player = sender as Player;
     const note = new Note(
