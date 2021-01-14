@@ -73,7 +73,7 @@ export function canBreak(item: ItemStack): boolean {
 export function getFullBottle(modelId: number) {
   return BOTTLES.get(modelId)?.full || new ItemStack(Material.POTION);
 }
-  
+
 export function getEmptyBottle(modelId: number) {
   return BOTTLES.get(modelId)?.empty || new ItemStack(Material.GLASS_BOTTLE);
 }

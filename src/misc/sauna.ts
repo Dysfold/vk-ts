@@ -1,13 +1,8 @@
 import { Material, Particle, Sound } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Furnace } from 'org.bukkit.block.data.type';
-import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
-import {
-  EquipmentSlot,
-  ItemStack,
-  PlayerInventory,
-} from 'org.bukkit.inventory';
+import { EquipmentSlot, PlayerInventory } from 'org.bukkit.inventory';
 import { getEmptyBottle } from '../hydration/bottles';
 
 const SAUNA_STONES = Material.COBBLESTONE_SLAB;
