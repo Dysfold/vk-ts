@@ -34,15 +34,6 @@ shapedRecipe({
 });
 
 shapedRecipe({
-  key: 'iron_sword_part',
-  shape: ['B ', 'B '],
-  ingredients: {
-    B: HotIronBlade.create(),
-  },
-  result: IronSwordPart.create(),
-});
-
-shapedRecipe({
   key: 'piano',
   shape: ['QQQ', 'DND', 'DDD'],
   ingredients: {

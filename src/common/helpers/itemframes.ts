@@ -3,13 +3,13 @@ import { EntityType, ItemFrame } from 'org.bukkit.entity';
 import { ItemStack } from 'org.bukkit.inventory';
 
 /**
- * Summons an invisible item frame
+ * Spawns an invisible item frame
  * @param block The cube to which the item frame is attached
  * @param face The Blockface to which the item frame is attached
  * @param item The itemstack to be placed
- * @returns The summoned item frame
+ * @returns The spawned item frame
  */
-export function summonInvisibleItemFrame(
+export function spawnInvisibleItemFrame(
   block: Block,
   face: BlockFace,
   item: ItemStack,

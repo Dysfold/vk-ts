@@ -17,8 +17,9 @@ import {
 } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { isRightClick } from '../common/helpers/click';
-import { summonInvisibleItemFrame } from '../common/helpers/itemframes';
+import { spawnInvisibleItemFrame } from '../common/helpers/itemframes';
 import { CustomItem } from '../common/items/CustomItem';
+import { Damageable } from 'org.bukkit.inventory.meta';
 
 const MOLTEN_MATERIAL = Material.IRON_NUGGET;
 
@@ -134,14 +135,14 @@ function getPliersForItem(item: ItemStack): ItemStack | undefined {
 }
 
 // Iron ingot can form into these items
-const IronIngotDerivatives = new Map<CustomItem<{}>, ItemStack>([
+const IRON_INGOT_DERIVATIVES = new Map<CustomItem<{}>, ItemStack>([
   [HotIronBar, PliersAndIronBar.create()],
   [HotIronBlade, PliersAndIronBlade.create()],
   [HotIronIngot, PliersAndIronIngot.create()],
   [HotIronPlate, PliersAndIronPlate.create()],
   [HotIronStick, PliersAndIronStick.create()],
 ]);
-const IronIngotDerivativesArray = Array.from(IronIngotDerivatives.keys());
+const IRON_INGOT_DERIVATIVES_ARRAY = Array.from(IRON_INGOT_DERIVATIVES.keys());
 
 // Maybe needed in the future?
 //const IronNuggetDerivatives = [HotIronNugget];
@@ -178,6 +179,7 @@ Pliers.event(
   async (event) => {
     if (event.clickedBlock?.type !== Material.FIRE) return;
     const hand = event.hand;
+    if (!event.item) return;
     const inventory = event.player.inventory;
 
     // Get the iron to be smelted
@@ -190,11 +192,12 @@ Pliers.event(
     if (!pliersWithItem) return;
 
     itemInOtherHand.amount--;
-    // TODO: This repairs broken pliers
+    // Keep the original damage of the pliers
+    const pliers = copyDamage(event.item, pliersWithItem.create());
     if (hand === EquipmentSlot.HAND) {
-      inventory.itemInMainHand = pliersWithItem.create();
+      inventory.itemInMainHand = pliers;
     } else {
-      inventory.itemInOffHand = pliersWithItem.create();
+      inventory.itemInOffHand = pliers;
     }
     playFlameParticle(event.clickedBlock.location.add(0.5, 0.5, 0.5));
     event.player.world.playSound(
@@ -206,6 +209,17 @@ Pliers.event(
     );
   },
 );
+
+// Used to copy damage to next plier item
+function copyDamage(from: ItemStack, to: ItemStack) {
+  const fromMeta = from.itemMeta;
+  const toMeta = to.itemMeta;
+  if (fromMeta instanceof Damageable && toMeta instanceof Damageable) {
+    toMeta.damage = fromMeta.damage;
+    to.itemMeta = toMeta;
+  }
+  return to;
+}
 
 // Place iron on anvil
 registerEvent(PlayerInteractEvent, (event) => {
@@ -226,7 +240,7 @@ registerEvent(PlayerInteractEvent, (event) => {
       const meta = smeltedItem.itemMeta;
       meta.displayName = ''; // Displayname would hover on top of the itemframe
       smeltedItem.itemMeta = meta;
-      const frame = summonInvisibleItemFrame(
+      const frame = spawnInvisibleItemFrame(
         anvil,
         event.blockFace,
         smeltedItem,
@@ -235,10 +249,12 @@ registerEvent(PlayerInteractEvent, (event) => {
       frame.rotation = getAnvilFrameRotation(anvil.blockData as Directional);
 
       // Give player empty pliers
+      // Keep the original damage of the pliers
+      const emptyPliers = copyDamage(tool, Pliers.create());
       if (event.hand === EquipmentSlot.HAND) {
-        event.player.inventory.itemInMainHand = Pliers.create();
+        event.player.inventory.itemInMainHand = emptyPliers;
       } else {
-        event.player.inventory.itemInOffHand = Pliers.create();
+        event.player.inventory.itemInOffHand = emptyPliers;
       }
       playIronClickSound(frame.location);
     }
@@ -261,10 +277,10 @@ async function hammerHit(frame: ItemFrame, player: Player) {
   hammerUsers.add(player);
 
   let newIronItem = item;
-  IronIngotDerivativesArray.forEach((iron, index) => {
+  IRON_INGOT_DERIVATIVES_ARRAY.forEach((iron, index) => {
     if (iron.check(item)) {
-      const nextIndex = (index + 1) % IronIngotDerivativesArray.length;
-      newIronItem = IronIngotDerivativesArray[nextIndex].create();
+      const nextIndex = (index + 1) % IRON_INGOT_DERIVATIVES_ARRAY.length;
+      newIronItem = IRON_INGOT_DERIVATIVES_ARRAY[nextIndex].create();
 
       // Hide nametag from the item
       const meta = newIronItem.itemMeta;
@@ -377,7 +393,11 @@ Pliers.event(
 
     const pliers = getPliersForItem(item);
     if (!pliers) return;
-    player.inventory.itemInMainHand = pliers;
+    // Keep the original damage of the pliers
+    player.inventory.itemInMainHand = copyDamage(
+      player.inventory.itemInMainHand,
+      pliers,
+    );
     frame.remove();
     playIronClickSound(frame.location);
   },
@@ -404,17 +424,26 @@ Pliers.event(
       if (entity instanceof Item) {
         const item = entity.itemStack;
         if (isMoltenMetal(item)) {
+          const inventory = event.player.inventory;
           // Check because this event was fired 3 times. This line may be deleted later
-          if (!Pliers.check(event.player.inventory.itemInMainHand)) return;
+          if (!Pliers.check(inventory.itemInMainHand)) return;
 
           const pliersWithItem = getPliersForItem(item);
           if (!pliersWithItem) continue;
 
-          entity.itemStack.amount--;
-          await wait(1, 'ticks');
-          event.player.inventory.itemInMainHand = pliersWithItem;
+          // Wait 1 millis, because the event would be called twice
+          // and the item would go to the inventory
+          await wait(1, 'millis');
 
-          return;
+          // Prevent duplication caused by delay
+          // Check if the item despawned or was destroyed
+          if (!entity.isValid()) return;
+          if (!Pliers.check(inventory.itemInMainHand)) return;
+
+          entity.itemStack.amount--;
+          // Keep the original damage of the pliers
+          const pliers = copyDamage(inventory.itemInMainHand, pliersWithItem);
+          inventory.itemInMainHand.itemMeta = pliers.itemMeta;
         }
       }
     }
@@ -430,7 +459,12 @@ PLIERS_ITEMS.forEach((iron, plier) => {
       if (event.clickedBlock?.type === Material.ANVIL) return;
       if (event.clickedBlock?.type === Material.FIRE) return;
 
-      event.player.inventory.itemInMainHand = Pliers.create();
+      // Keep the original damage of the pliers
+      const pliersInHand = event.player.inventory.itemInMainHand;
+      event.player.inventory.itemInMainHand = copyDamage(
+        pliersInHand,
+        Pliers.create(),
+      );
 
       const ironItem = iron.create();
       if (event.player.inventory.addItem(ironItem).size()) {
