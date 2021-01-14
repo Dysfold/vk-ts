@@ -46,7 +46,6 @@ function useScythe(orig: Block) {
     for (let dz = -1; dz <= 1; dz++) {
       if (!dx && !dz) continue; // Both are 0 -> same block
       const block = orig.world.getBlockAt(x + dx, location.y, z + dz);
-      if (!CROPS.has(block.type)) continue;
 
       const crop = CROPS.get(block.type);
       if (!crop) continue;
