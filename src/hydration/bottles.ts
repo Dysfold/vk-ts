@@ -62,10 +62,19 @@ const BOTTLES = new Map<number, { full: ItemStack; empty: ItemStack }>([
   [3, { full: Scoop.create(), empty: ScoopEmpty.create() }],
 ]);
 
-function getFullBottle(modelId: number) {
+export function canBreak(item: ItemStack): boolean {
+  const unbreakableCustomBottles = [Mug, MugEmpty, Scoop, ScoopEmpty];
+  for (const bottle of unbreakableCustomBottles) {
+    if (bottle.check(item)) return false;
+  }
+  return true;
+}
+
+export function getFullBottle(modelId: number) {
   return BOTTLES.get(modelId)?.full || new ItemStack(Material.POTION);
 }
-function getEmptyBottle(modelId: number) {
+
+export function getEmptyBottle(modelId: number) {
   return BOTTLES.get(modelId)?.empty || new ItemStack(Material.GLASS_BOTTLE);
 }
 
@@ -93,7 +102,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
     const blockData = clickedBlock.blockData;
     // Check if the block can be used to fill a bottle
     if (blockData instanceof Waterlogged) {
-      bottleCanFill = true;
+      bottleCanFill = blockData.isWaterlogged();
     }
     // Check if cauldron
     else if (blockData instanceof Levelled) {

@@ -1,12 +1,12 @@
-import { Axis, GameMode, Material, Location, SoundCategory } from 'org.bukkit';
+import { Axis, GameMode, Location, Material, SoundCategory } from 'org.bukkit';
 import { Block, BlockFace, Dispenser } from 'org.bukkit.block';
 import { Levelled, Orientable, Waterlogged } from 'org.bukkit.block.data';
 import { Dispenser as DispenserData, Fence } from 'org.bukkit.block.data.type';
+import { LivingEntity } from 'org.bukkit.entity';
 import { BlockDispenseEvent } from 'org.bukkit.event.block';
 import { InventoryOpenEvent, InventoryType } from 'org.bukkit.event.inventory';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import { CustomBlock } from '../common/blocks/CustomBlock';
-import { LivingEntity } from 'org.bukkit.entity';
 
 const MAX_LEN = 20;
 const MAX_GATE_HEIGHT = 10;

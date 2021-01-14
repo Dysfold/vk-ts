@@ -8,7 +8,7 @@ const VERTICAL_MULTIPLIER = 0.98;
 const HORIZONTAL_MULTIPLIER = 0.3;
 const OLD_EXTINGUISH_CHANCE = 0.75; // Fires might not extinguish completely if below 1-HORIZONTAL_MULTIPLIER
 
-const FIREPLACE_BLOCKS = [Material.COAL_BLOCK, Material.MAGMA_BLOCK];
+const FIREPLACE_BLOCKS = new Set([Material.COAL_BLOCK, Material.MAGMA_BLOCK]);
 
 const chanceOf = (percent: number) => Math.random() < percent;
 
@@ -52,7 +52,7 @@ registerEvent(BlockSpreadEvent, (event) => {
 
   // Cancel spread from fireplace blocks
   const ignitionPointMaterial = source.location.add(0, -1, 0).block.type;
-  if (FIREPLACE_BLOCKS.includes(ignitionPointMaterial)) {
+  if (FIREPLACE_BLOCKS.has(ignitionPointMaterial)) {
     event.setCancelled(true);
     return;
   }
