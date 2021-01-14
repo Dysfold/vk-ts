@@ -25,7 +25,7 @@ export function shapedRecipe({
     shapedRecipe = new ShapedRecipe(namespacedKey, result);
   else shapedRecipe = new ShapedRecipe(namespacedKey, new ItemStack(result));
 
-  (shapedRecipe.shape as any)(...shape);
+  shapedRecipe.shape(...shape);
 
   Object.keys(ingredients).forEach((symbol) => {
     const item = ingredients[symbol];

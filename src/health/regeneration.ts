@@ -19,9 +19,11 @@ setInterval(() => {
 
     player.foodLevel -= 1;
     if (player.isSleeping()) {
-      player.health += Regeneration.sleeping;
+      const newHealth = player.health + Regeneration.sleeping;
+      player.health = Math.min(player.maxHealth, newHealth);
     } else {
-      player.health += Regeneration.default;
+      const newHealth = player.health + Regeneration.default;
+      player.health = Math.min(player.maxHealth, newHealth);
     }
   }
 }, REGENERATION_INTERVAL * 1000);
