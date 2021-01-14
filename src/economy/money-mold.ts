@@ -1,4 +1,3 @@
-import { List } from 'java.util';
 import { Location, Material } from 'org.bukkit';
 import { BlockFace, Dispenser } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
@@ -189,12 +188,12 @@ registerEvent(BlockPistonRetractEvent, (event) => {
 
   // Properties of the currency are stored in the lore of the money mold
   const lore = mold.itemMeta.lore;
-  if (!lore || lore.size() !== 5) return;
-  const unit = lore.get(0);
-  const unitPlural = lore.get(1);
-  const subunit = lore.get(2);
-  const subunitPlural = lore.get(3);
-  const model = Number(lore.get(4));
+  if (!lore || lore.length !== 5) return;
+  const unit = lore[0];
+  const unitPlural = lore[1];
+  const subunit = lore[2];
+  const subunitPlural = lore[3];
+  const model = Number(lore[4]);
   if (!unit || !subunit || !model) return;
 
   const materials = RAW_MATERIALS[model];
@@ -211,7 +210,7 @@ registerEvent(BlockPistonRetractEvent, (event) => {
   createMoney(dropperBlock.location.add(0.5, 1.1, 0.5), currency);
 });
 
-function getMoneyMold(items: JArray<ItemStack>) {
+function getMoneyMold(items: ItemStack[]) {
   for (const item of items) {
     if (!item) continue;
     if (MoneyMold.check(item)) return item;
@@ -251,6 +250,10 @@ async function createMoney(location: Location, currency: Currency) {
     }
 
     meta.displayName = name;
+    // prettier-ignore
+    const lore = [`§r§6[${currency.unitPlural}, ${currency.subunitPlural}]`];
+    meta.lore = lore;
+
     item.itemMeta = meta;
     item.amount = coin.amount;
 
@@ -267,32 +270,29 @@ registerCommand('rahamuotti', (sender, label, args) => {
   if (!(sender instanceof Player)) return;
   const player = sender as Player;
 
-  if (args.length !== 5) {
+  if (args.length !== 3) {
     player.sendMessage(
-      '/rahamuotti <yksikkö> <yksikön monikko> <alayksikkö> <alayksikön monikko> <malli>',
+      '/rahamuotti <yksikön monikko> <alayksikön monikko> <malli>',
     );
-    player.sendMessage('Esim: /rahamuotti Euro Euroa Sentti Senttiä 2');
+    player.sendMessage('Esim: /rahamuotti Euroa Senttiä 2');
     return;
   }
 
-  const unit = args[0];
-  const unitPlural = args[1];
-  const subunit = args[2];
-  const subunitPlural = args[3];
-  const model = args[4];
+  const unitPlural = args[0];
+  const subunitPlural = args[1];
+  const model = args[2];
 
-  if (!unit || !unitPlural || !subunit || !subunitPlural || !Number(model))
-    return;
+  if (!unitPlural || !subunitPlural || !Number(model)) return;
 
   const item = MoneyMold.create();
   const meta = item.itemMeta;
-  const lore = ([
-    unit,
+  const lore = [
+    unitPlural.slice(0, -1),
     unitPlural,
-    subunit,
+    subunitPlural.slice(0, -1),
     subunitPlural,
     model,
-  ] as unknown) as List<string>;
+  ];
   meta.lore = lore;
   item.itemMeta = meta;
 
@@ -308,12 +308,14 @@ MoneyMold.event(
     if (a !== Action.RIGHT_CLICK_AIR && a !== Action.RIGHT_CLICK_BLOCK) return;
     const lore = event.item?.itemMeta.lore;
 
-    if (!lore || lore.size() !== 5) return;
+    if (!lore || lore.length !== 5) return;
 
-    const model = Number(lore.get(4));
+    const line = lore[4];
+    console.log(line);
+    const model = Number(line);
     const items = RAW_MATERIALS[model];
 
-    event.player.sendMessage('Tarvitset tätä valuuttaa varten: ');
+    event.player.sendMessage('Tarvitset tätä valuuttaa varten: ' + model);
     for (const item of items) {
       const type = item.type.toString();
       const amount = item.amount;

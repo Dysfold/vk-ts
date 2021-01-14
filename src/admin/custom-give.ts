@@ -1,7 +1,6 @@
 import { Player } from 'org.bukkit.entity';
 import { CustomItem } from '../common/items/CustomItem';
 import { Material } from 'org.bukkit';
-import { PlayerInventory } from 'org.bukkit.inventory';
 
 registerCommand('customitem', (sender, label, args) => {
   if (!sender.isOp()) return;
@@ -26,6 +25,6 @@ registerCommand('customitem', (sender, label, args) => {
       name: name,
     });
 
-    (player.inventory as PlayerInventory).addItem(item.create());
+    player.inventory.addItem(item.create());
   }
 });

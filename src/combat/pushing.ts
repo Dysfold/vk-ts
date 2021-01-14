@@ -12,7 +12,7 @@ registerEvent(PlayerInteractEntityEvent, async (event) => {
   if (clicked.type !== EntityType.PLAYER) return;
 
   const pusher = event.player;
-  const target = clicked as Player;
+  const target = (clicked as unknown) as Player;
   if (pusher.itemInHand.type !== Material.AIR) return;
   if (target.isSneaking()) return;
   if (pusher.isSneaking()) return;
@@ -26,7 +26,7 @@ registerEvent(PlayerInteractEntityEvent, async (event) => {
   const direction = pusher.location.direction.multiply(power);
   velocity.add(direction).add(new Vector(0, 0.3, 0));
   velocity.y = Math.max(velocity.y, 0.3);
-  target.setVelocity(velocity);
+  target.velocity = velocity;
 
   await wait(1, 'seconds');
   cooldowns.delete(pusher);

@@ -128,7 +128,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
     const meta = potion.itemMeta;
 
     // Clear weird data from the potion (it would be pink)
-    (meta as PotionMeta).setBasePotionData(WATER_POTION_DATA);
+    (meta as PotionMeta).basePotionData = WATER_POTION_DATA;
     potion.itemMeta = meta;
 
     event.item.amount--;

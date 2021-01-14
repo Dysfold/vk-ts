@@ -1,4 +1,4 @@
-import { Location, Material, Particle } from 'org.bukkit';
+import { Bukkit, Location, Material, Particle } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { EntityType } from 'org.bukkit.entity';
 import {
@@ -42,7 +42,7 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
     player.saturation = Math.min(player.saturation + value.s, maxSaturation);
 
     const consumeEvent = new PlayerItemConsumeEvent(player, item);
-    server.pluginManager.callEvent(consumeEvent);
+    Bukkit.server.pluginManager.callEvent(consumeEvent);
 
     // Empty the plate
     if (key.toString().includes('STEW')) item.type = Material.BOWL;
@@ -58,7 +58,7 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
   else if (type === Material.POTION) {
     event.setCancelled(true);
     const drinkEvent = new PlayerItemConsumeEvent(player, item);
-    server.pluginManager.callEvent(drinkEvent);
+    Bukkit.server.pluginManager.callEvent(drinkEvent);
     playDrinkingSound(player);
 
     // Empty the bottle

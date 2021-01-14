@@ -1,10 +1,31 @@
-/**
- * Names of all databases.
- */
-const TABLE_NAMES = ['players', 'blocks', 'test'];
+import { Database, Table } from 'craftjs-plugin';
 
 /**
- * An entry in database.
+ * Main Valtakausi database. In future, there might be other databases so we
+ * don't export this but use getTable() instead.
+ */
+const mainDb = new Database('valtakausi');
+
+/**
+ * Tables that someone has asked for, cached.
+ */
+const tables: Map<string, Table<any, any>> = new Map();
+
+/**
+ * Gets key-value database table.
+ * @param name Table name.
+ */
+export function getTable(name: string): Table<any, any> {
+  let table = tables.get(name);
+  if (!table) {
+    table = mainDb.getTable(name);
+    tables.set(name, table);
+  }
+  return table;
+}
+
+/**
+ * An entry in one table.
  */
 export class DatabaseEntry {
   /**
@@ -21,32 +42,3 @@ export class DatabaseEntry {
     this.key = key;
   }
 }
-
-/**
- * Database table.
- */
-export interface Table {
-  get(key: string): any;
-  put(key: string, value: any): void;
-  remove(key: string): void;
-}
-
-/**
- * Gets a table(must be specified in TABLE_NAMES).
- * @param name Database name.
- * @returns Database.
- */
-export function getTable(name: string): Table {
-  return TABLES[name];
-}
-
-function openDatabase(): Record<string, Table> {
-  const db = (__plugin as any).openDatabase('valtakausi.db');
-  const tables: Record<string, Table> = {};
-  for (const name of TABLE_NAMES) {
-    tables[name] = db.openMap(name);
-  }
-  return tables;
-}
-
-const TABLES: Record<string, Table> = openDatabase();
