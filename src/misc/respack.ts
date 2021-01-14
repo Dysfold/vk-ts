@@ -1,4 +1,3 @@
-/* Disabled until https request are ready
 import { Player } from 'org.bukkit.entity';
 import {
   PlayerJoinEvent,
@@ -8,9 +7,20 @@ import {
 const URL =
   'https://github.com/Laetta/respack/releases/download/latest/vk-respack.zip';
 
+let hash: string;
+
+async function updateHash() {
+  const res = await fetch(
+    'https://api.github.com/repos/Laetta/respack/releases/latest',
+  );
+  const data = await res.json();
+  hash = data.body || hash;
+}
+
+updateHash();
+
 registerEvent(PlayerJoinEvent, (event) => {
-  const player = event.player;
-  player.setResourcePack(URL);
+  downloadResourcePack(event.player);
 });
 
 registerEvent(PlayerResourcePackStatusEvent, (event) => {
@@ -19,7 +29,20 @@ registerEvent(PlayerResourcePackStatusEvent, (event) => {
   }
 });
 
-function sendWarning(player: Player) {
-  player.sendTitle('HUOMIO!', 'Resurssipaketti puuttuu', 1, 100, 1);
+function downloadResourcePack(player: Player) {
+  if (hash) player.setResourcePack(URL, hash);
+  else player.resourcePack = URL;
 }
-*/
+
+function sendWarning(player: Player) {
+  player.sendTitle('HUOMIO!', 'Resurssipaketti puuttuu', 1, 40, 1);
+}
+
+registerCommand('updatehash', (sender) => {
+  if (!sender.isOp()) return;
+  updateHash();
+});
+
+setInterval(() => {
+  updateHash();
+}, 2 * 60 * 1000);
