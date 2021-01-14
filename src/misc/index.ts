@@ -30,5 +30,6 @@ require('./tool-preventions');
 require('./book-authors');
 require('./sealing-wax');
 require('./shooting-windows');
+require('./gold-panning');
 require('./glass-damage');
 require('./farmland-trampling');
