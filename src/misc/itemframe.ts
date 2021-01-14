@@ -1,6 +1,6 @@
 import { Bukkit, Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
-import { EntityType, ItemFrame } from 'org.bukkit.entity';
+import { EntityType, ItemFrame, Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
 import { HangingBreakEvent } from 'org.bukkit.event.hanging';
@@ -9,6 +9,8 @@ import {
   PlayerInteractEvent,
 } from 'org.bukkit.event.player';
 import { PlayerInventory } from 'org.bukkit.inventory';
+import { chanceOf } from '../common/helpers/math';
+import { Hammer } from '../blacksmith/blacksmith';
 
 // Remove drop from invisible item frames
 // and remove the item, if it was hidden item (heart of the sea)
@@ -19,12 +21,20 @@ registerEvent(HangingBreakEvent, (event) => {
 
   const item = frame.item;
   if (item && item.type !== Material.HEART_OF_THE_SEA) {
-    // Drop the item, if it wasn't a hidden item (Heart of the sea)
-    event.entity.world.dropItem(event.entity.location, item);
+    // The entity was invisible item frame with hidden item (Heart of the sea)
+    event.entity.remove();
+    return;
+  }
+  if (frame.isSilent()) {
+    // The entity was silent item frame -> It should not drop the itemframe item
+    event.entity.remove();
+    return;
   }
 
-  // The entity was invisible item frame
-  event.entity.remove();
+  if (!item || item.type.isEmpty()) return;
+
+  // Drop the item, if it wasn't a hidden item (Heart of the sea)
+  event.entity.world.dropItem(event.entity.location, item);
 });
 
 registerEvent(PlayerInteractEntityEvent, (event) => {
@@ -61,7 +71,22 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
 // Only allow players to break itemframe items
 registerEvent(EntityDamageByEntityEvent, (event) => {
   const entity = event.entity;
-  if (entity.type !== EntityType.ITEM_FRAME) return;
-  if (event.damager.type === EntityType.PLAYER) return;
-  event.setCancelled(true);
+  if (!(entity instanceof ItemFrame)) return;
+  const damager = event.damager;
+  if (!(damager instanceof Player)) event.setCancelled(true);
+
+  const player = (damager as unknown) as Player;
+
+  // Special case for hammer (smithing feature)
+  if (Hammer.check(player.inventory.itemInMainHand)) {
+    event.setCancelled(true);
+    return;
+  }
+
+  if (entity.isSilent()) {
+    if (chanceOf(entity.itemDropChance ?? 1)) {
+      entity.world.dropItemNaturally(entity.location, entity.item);
+    }
+    if (event.damager) entity.remove();
+  }
 });
