@@ -1,6 +1,6 @@
 import { Bukkit, Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
-import { EntityType } from 'org.bukkit.entity';
+import { EntityType, ItemFrame } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
 import { HangingBreakEvent } from 'org.bukkit.event.hanging';
@@ -14,7 +14,7 @@ import { PlayerInventory } from 'org.bukkit.inventory';
 // and remove the item, if it was hidden item (heart of the sea)
 registerEvent(HangingBreakEvent, (event) => {
   if (event.entity.type !== EntityType.ITEM_FRAME) return;
-  const frame = event.entity as any; // TODO: replace any with ItemFrame (when the type exists)
+  const frame = event.entity as ItemFrame;
   if (frame.isVisible()) return;
 
   const item = frame.item;
@@ -30,7 +30,7 @@ registerEvent(HangingBreakEvent, (event) => {
 registerEvent(PlayerInteractEntityEvent, (event) => {
   const entity = event.rightClicked;
   if (entity.type !== EntityType.ITEM_FRAME) return;
-  const frame = entity as any; // TODO: replace any with ItemFrame (when the type exists)
+  const frame = entity as ItemFrame;
   if (frame.isVisible()) return;
 
   // The entity was invisible item frame
