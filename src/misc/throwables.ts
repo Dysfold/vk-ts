@@ -14,12 +14,12 @@ const THROW_SOUND = Sound.ENTITY_SNOWBALL_THROW;
 const HIT_SOUND = Sound.BLOCK_STONE_HIT;
 const ZERO_VECTOR = new Vector();
 
-const NOT_THROWABLE: Material[] = [
+const NOT_THROWABLE = new Set([
   Material.SNOWBALL,
   Material.EGG,
   Material.SPLASH_POTION,
   Material.HEART_OF_THE_SEA,
-];
+]);
 
 const NOT_THROWABLE_CUSTOMITEMS = [LockedHandcuffs, Whip];
 
@@ -29,7 +29,7 @@ registerEvent(PlayerDropItemEvent, (event) => {
   const itemType = item.type;
 
   if (player.velocity.y < 0.08) return; // Return if player didn't jump
-  if (NOT_THROWABLE.includes(itemType)) return;
+  if (NOT_THROWABLE.has(itemType)) return;
   // Check if item was unthrowable customitem
   if (NOT_THROWABLE_CUSTOMITEMS.some((i) => i.check(item))) return;
 
@@ -59,8 +59,7 @@ registerEvent(PlayerDropItemEvent, (event) => {
 registerEvent(ProjectileHitEvent, (event) => {
   if (event.entity.type !== EntityType.SNOWBALL) return;
   const snowball = event.entity as Snowball;
-  const item = snowball.item;
-  if (NOT_THROWABLE.includes(item.type)) return;
+  if (NOT_THROWABLE.has(snowball.item.type)) return;
 
   // Push and damage entity who got hit
   if (event.hitEntity) {
@@ -76,7 +75,7 @@ registerEvent(ProjectileHitEvent, (event) => {
     canBreak(item)
   )
     return;
-
+  
   const drop = event.entity.world.dropItem(
     event.entity.location,
     snowball.item,

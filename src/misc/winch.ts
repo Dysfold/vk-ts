@@ -1,4 +1,11 @@
-import { Axis, GameMode, Material, Location, SoundCategory } from 'org.bukkit';
+import {
+  Axis,
+  GameMode,
+  Material,
+  Location,
+  SoundCategory,
+  Bukkit,
+} from 'org.bukkit';
 import { Block, BlockFace, Dispenser } from 'org.bukkit.block';
 import { Levelled, Orientable, Waterlogged } from 'org.bukkit.block.data';
 import { Dispenser as DispenserData, Fence } from 'org.bukkit.block.data.type';
