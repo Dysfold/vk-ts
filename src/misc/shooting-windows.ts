@@ -1,4 +1,4 @@
-import { Material, Particle, Sound } from 'org.bukkit';
+import { Material, Particle, Sound, Bukkit } from 'org.bukkit';
 import { Arrow, EntityType, Player } from 'org.bukkit.entity';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { ProjectileHitEvent } from 'org.bukkit.event.entity';
@@ -16,7 +16,7 @@ registerEvent(ProjectileHitEvent, (event) => {
   // Call BlockBreakEvent for grief prevention
   if (!(arrow.shooter instanceof Player)) return;
   const blockBreakEvent = new BlockBreakEvent(block, arrow.shooter);
-  server.pluginManager.callEvent(blockBreakEvent);
+  Bukkit.server.pluginManager.callEvent(blockBreakEvent);
   if (blockBreakEvent.isCancelled()) return;
 
   // Break glass blocks and panes if arrow exceeds BREAK_VELOCITY
