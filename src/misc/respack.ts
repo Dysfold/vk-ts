@@ -21,7 +21,7 @@ async function updateHash(announce = false) {
     // Check if the hash has changed, and then announce the new resource pack
     if (newHash && hash !== newHash) {
       Bukkit.server.broadcastMessage(
-        '[Ilmoitus] Resurssipaketti on päivittynyt! Ota uusi resurssipaketti käyttöön komennolla /resurssipaketti',
+        '[Ilmoitus] Resurssipaketti on päivittynyt! Ota uusi resurssipaketti käyttöön liittymällä peliin uudelleen',
       );
     }
   }
@@ -58,6 +58,8 @@ registerCommand('updatehash', () => {
 });
 
 // Command to download latest resource pack
+// FIXME: Player need to call this twice??
+/*
 registerCommand(
   'resurssipaketti',
   (sender) => {
@@ -68,6 +70,7 @@ registerCommand(
     executableBy: 'players',
   },
 );
+*/
 
 // Try to get new hash every x minutes.
 // Github API will only allow 60 requests per hour
