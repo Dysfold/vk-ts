@@ -22,7 +22,7 @@ const ALIASES = [...CUSTOM_ITEM_TYPES.keys()];
 
 registerCommand(
   'customitem',
-  (sender, label, args) => {
+  (sender, _label, args) => {
     if (args.length < 2) return;
 
     if (sender instanceof Player) {
@@ -40,7 +40,7 @@ registerCommand(
       const item = new CustomItem({
         id: id,
         type: type,
-        modelId: id | modelId,
+        modelId: modelId,
         name: name,
       });
 
@@ -48,7 +48,7 @@ registerCommand(
     }
   },
   {
-    completer: (sender, alias, args) => {
+    completer: (_sender, _alias, args) => {
       switch (args.length) {
         case 1:
           return ALIASES;
@@ -57,7 +57,6 @@ registerCommand(
       }
     },
     executableBy: 'players',
-    accessChecker: (sender) => sender.isOp(),
     description: '/customitem <type> <id> <name?> <modelId?>',
   },
 );
