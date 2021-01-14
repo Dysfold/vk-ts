@@ -5,7 +5,6 @@ import {
   PlayerResourcePackStatusEvent,
 } from 'org.bukkit.event.player';
 import { Status } from 'org.bukkit.event.player.PlayerResourcePackStatusEvent';
-import { fail } from 'zora';
 
 const URL =
   'https://github.com/Laetta/respack/releases/download/latest/vk-respack.zip';
