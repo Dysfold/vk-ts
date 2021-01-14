@@ -11,8 +11,10 @@ registerEvent(PrepareAnvilEvent, (event) => {
     event.result = null;
 
     // Notify the player
-    const viewer = event.viewers.get(0);
+    const viewer = event.viewers[0];
     if (viewer.type !== EntityType.PLAYER) return;
-    (viewer as Player).sendActionBar('Et voi nimetä tätä esinettä uudelleen');
+    ((viewer as unknown) as Player).sendActionBar(
+      'Et voi nimetä tätä esinettä uudelleen',
+    );
   }
 });

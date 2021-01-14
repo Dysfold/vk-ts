@@ -1,4 +1,3 @@
-import { List } from 'java.util';
 import { Material } from 'org.bukkit';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
@@ -47,7 +46,7 @@ SealingWax.event(
     if (symbol) lore.push(`johon on painettu symboli "${symbol}". `);
     else lore.push('jossa ei ole mitään merkintää. ');
 
-    bookMeta.setLore((lore as unknown) as List<string>);
+    bookMeta.lore = lore;
     bookMeta.customModelData = 1;
     book.itemMeta = bookMeta;
     event.setCancelled(true);
@@ -65,8 +64,9 @@ registerEvent(PlayerInteractEvent, (event) => {
   event.player.sendActionBar('Avaat sinetöidyn kirjan');
   const lore = meta.lore;
   if (!lore) return;
-  lore.add('Sinetti on murtunut.');
+  lore.push('Sinetti on murtunut.');
   meta.lore = lore;
-  meta.setCustomModelData(null);
+  // Type bug: getter is not nullable, setter is
+  meta.customModelData = (null as unknown) as number;
   book.itemMeta = meta;
 });

@@ -74,7 +74,9 @@ BearTrap.event(
         victim.removePotionEffect(PotionEffectType.JUMP);
         victim.removePotionEffect(PotionEffectType.SLOW_DIGGING);
         if (victim.type === EntityType.PLAYER) {
-          (victim as Player).sendActionBar('Vapaudut karhunraudasta');
+          ((victim as unknown) as Player).sendActionBar(
+            'Vapaudut karhunraudasta',
+          );
         }
       }
     }

@@ -1,6 +1,7 @@
 import { Material } from 'org.bukkit';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { BlockBreakEvent, Action } from 'org.bukkit.event.block';
+import { HandSaw } from './saw';
 
 const DIRT_LIKE = new Set([
   Material.DIRT.ordinal(),
@@ -44,6 +45,7 @@ registerEvent(BlockBreakEvent, (event) => {
 
   // TODO: Make better check when needed or if more custom items need to be excluded
   if (item.itemMeta.customModelData <= 2) return; // Scythe and sickle
+  if (HandSaw.check(item)) return;
 
   event.setCancelled(true);
 });

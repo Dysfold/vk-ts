@@ -1,4 +1,4 @@
-import { Material, NamespacedKey } from 'org.bukkit';
+import { Bukkit, Material, NamespacedKey } from 'org.bukkit';
 import { ItemStack, RecipeChoice, ShapelessRecipe } from 'org.bukkit.inventory';
 
 interface CustomShapelessRecipe {
@@ -30,5 +30,5 @@ export function shapelessRecipe({
       //recipe.addIngredient(item);
     }
   });
-  server.addRecipe(recipe);
+  Bukkit.server.addRecipe(recipe);
 }
