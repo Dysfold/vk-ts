@@ -1,3 +1,4 @@
+import { Bukkit } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import {
   PlayerJoinEvent,
@@ -9,12 +10,21 @@ const URL =
 
 let hash: string;
 
-async function updateHash() {
+async function updateHash(announce = false) {
   const res = await fetch(
     'https://api.github.com/repos/Laetta/respack/releases/latest',
   );
   const data = await res.json();
-  hash = data.body || hash;
+  const newHash = data.body as string;
+
+  if (announce) {
+    if (newHash && hash !== newHash) {
+      Bukkit.server.broadcastMessage(
+        '[Ilmoitus] Resurssipaketti on päivittynyt! Ota uusi resurssipaketti käyttöön komennolla /resurssipaketti',
+      );
+    }
+  }
+  hash = newHash || hash;
 }
 
 updateHash();
@@ -31,18 +41,31 @@ registerEvent(PlayerResourcePackStatusEvent, (event) => {
 
 function downloadResourcePack(player: Player) {
   if (hash) player.setResourcePack(URL, hash);
-  else player.resourcePack = URL;
+  else {
+    console.error('Resource pack hash ei löytynyt');
+    player.resourcePack = URL;
+  }
 }
 
 function sendWarning(player: Player) {
   player.sendTitle('HUOMIO!', 'Resurssipaketti puuttuu', 1, 40, 1);
 }
 
-registerCommand('updatehash', (sender) => {
-  if (!sender.isOp()) return;
-  updateHash();
+registerCommand('updatehash', () => {
+  updateHash(true);
 });
 
+registerCommand(
+  'resurssipaketti',
+  (sender) => {
+    downloadResourcePack((sender as unknown) as Player);
+  },
+  {
+    accessChecker: () => true,
+    executableBy: 'players',
+  },
+);
+
 setInterval(() => {
-  updateHash();
+  updateHash(true);
 }, 2 * 60 * 1000);
