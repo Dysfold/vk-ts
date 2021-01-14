@@ -5,6 +5,7 @@ import { EntityInteractEvent } from 'org.bukkit.event.entity';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import { CustomBlock } from '../common/blocks/CustomBlock';
+import { PlayerJumpEvent } from 'com.destroystokyo.paper.event.player';
 
 const ESCAPE_CHANCE = 0.3;
 
@@ -41,9 +42,27 @@ BearTrap.event(
 
     player.damage(5);
     player.addPotionEffect(SLOW);
-    player.addPotionEffect(JUMP);
     player.addPotionEffect(SLOW_DIGGING);
     player.spawnParticle(Particle.FLASH, player.location, 10);
+
+    // Set player to middle of the trap
+    const trap = event.clickedBlock;
+    if (!trap) return;
+    const location = trap.location.add(0.5, 0, 0.5);
+    location.direction = event.player.location.direction;
+    event.player.teleport(location);
+  },
+);
+
+// Prevent player from jumping away
+BearTrap.event(
+  PlayerJumpEvent,
+  (event) => event.player.location.block,
+  async (event) => {
+    // Set player to middle of the trap
+    const location = event.player.location.block.location.add(0.5, 0, 0.5);
+    location.direction = event.player.location.direction;
+    event.player.teleport(location);
   },
 );
 
