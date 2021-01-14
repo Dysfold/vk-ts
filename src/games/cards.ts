@@ -9,6 +9,7 @@ import { CustomItem } from '../common/items/CustomItem';
 import * as yup from 'yup';
 import { Action } from 'org.bukkit.event.block';
 import { isRightClick } from '../common/helpers/click';
+import { giveItem } from '../common/helpers/inventory';
 
 const ZERO_VECTOR = new Vector();
 const PICKUP_DELAY = 12000; // TICKS -> 10 minutes
@@ -19,12 +20,13 @@ const CARD_FLIP_SOUND = 'custom.card';
 const DECK_SHUFFLE_SOUND = 'custom.shuffle';
 
 const CARDS = new Map<string, CustomItem<{}>>();
-const SHUFFLE_COOLDOWNS = new Set<Player>();
+
+const shuffleCooldowns = new Set<Player>();
 
 /*
  *  Defining deck items
  */
-const FULL_DECK = new CustomItem({
+const FullDeck = new CustomItem({
   id: 56,
   name: ChatColor.RESET + 'Korttipakka',
   type: Material.PRISMARINE_CRYSTALS,
@@ -33,7 +35,7 @@ const FULL_DECK = new CustomItem({
     cards: yup.array<string>(),
   },
 });
-const HALF_DECK = new CustomItem({
+const HalfDeck = new CustomItem({
   id: 57,
   name: ChatColor.RESET + 'Korttipakka',
   type: Material.PRISMARINE_CRYSTALS,
@@ -42,7 +44,7 @@ const HALF_DECK = new CustomItem({
     cards: yup.array<string>(),
   },
 });
-const LOW_DECK = new CustomItem({
+const LowDeck = new CustomItem({
   id: 58,
   name: ChatColor.RESET + 'Korttipakka',
   type: Material.PRISMARINE_CRYSTALS,
@@ -55,7 +57,7 @@ const LOW_DECK = new CustomItem({
 /*
  *  Defining special cards
  */
-const HIDDEN_CARD = new CustomItem({
+const HiddenCard = new CustomItem({
   id: 55,
   name: ChatColor.RESET + 'Pelikortti',
   type: Material.PRISMARINE_CRYSTALS,
@@ -147,7 +149,7 @@ function removeCard(deck: ItemStack, player: Player) {
 
   const oldCards = d.cards;
   const cardID = oldCards[oldCards.length - 1]; // ID of "top" card in deck
-  const card = HIDDEN_CARD.create({ cardID: cardID });
+  const card = HiddenCard.create({ cardID: cardID });
 
   oldCards.pop();
   d.cards = oldCards;
@@ -177,7 +179,7 @@ function insertCard(deck: ItemStack, card: ItemStack, player: Player) {
   if (d.cards.length === MAX_CARDS_IN_DECK) return;
 
   let cardID = '';
-  const hiddenCard = HIDDEN_CARD.get(card);
+  const hiddenCard = HiddenCard.get(card);
   if (hiddenCard) {
     cardID = hiddenCard.cardID;
   } else {
@@ -213,7 +215,7 @@ function splitDeck(deck: ItemStack, player: Player) {
   const secondHalfCards = cards.splice(-half);
 
   d.cards = firstHalfCards;
-  const newDeck = FULL_DECK.create({ cards: secondHalfCards });
+  const newDeck = FullDeck.create({ cards: secondHalfCards });
   player.inventory.itemInMainHand = newDeck;
 
   player.inventory.itemInOffHand = getResizedDeck(deck);
@@ -269,7 +271,7 @@ async function shuffleDeck(
   secondDeck: ItemStack,
   player: Player,
 ) {
-  SHUFFLE_COOLDOWNS.add(player);
+  shuffleCooldowns.add(player);
   const d = getDeck(deck);
   if (!d) return;
   if (!d.cards) return;
@@ -311,7 +313,7 @@ async function shuffleDeck(
   );
 
   await wait(SHUFFLE_COOLDOWN, 'millis');
-  SHUFFLE_COOLDOWNS.delete(player);
+  shuffleCooldowns.delete(player);
 }
 
 /**
@@ -326,7 +328,7 @@ function createDeckFromCards(
   player: Player,
 ) {
   let cardID = '';
-  const hiddenCard = HIDDEN_CARD.get(card);
+  const hiddenCard = HiddenCard.get(card);
   if (hiddenCard) {
     cardID = hiddenCard.cardID;
   } else {
@@ -334,14 +336,14 @@ function createDeckFromCards(
   }
 
   let otherCardID = '';
-  const hiddenOtherCard = HIDDEN_CARD.get(card);
+  const hiddenOtherCard = HiddenCard.get(otherCard);
   if (hiddenOtherCard) {
     otherCardID = hiddenOtherCard.cardID;
   } else {
     otherCardID = getCardID(otherCard.itemMeta.customModelData);
   }
 
-  const deck = LOW_DECK.create({ cards: [cardID, otherCardID] });
+  const deck = LowDeck.create({ cards: [cardID, otherCardID] });
   otherCard.amount--;
   player.inventory.itemInOffHand = deck;
 
@@ -357,12 +359,12 @@ function createDeckFromCards(
 // ######################
 // SMALL HELPER FUNCTIONS
 function getDeck(item: ItemStack) {
-  const d = FULL_DECK.get(item) || HALF_DECK.get(item) || LOW_DECK.get(item);
+  const d = FullDeck.get(item) || HalfDeck.get(item) || LowDeck.get(item);
   return d;
 }
 
 function isDeck(item: ItemStack): boolean {
-  return FULL_DECK.check(item) || HALF_DECK.check(item) || LOW_DECK.check(item);
+  return FullDeck.check(item) || HalfDeck.check(item) || LowDeck.check(item);
 }
 
 function isCard(item: ItemStack): boolean {
@@ -384,15 +386,15 @@ function getResizedDeck(deck: ItemStack): ItemStack {
   let resizedDeck;
 
   if (d.cards.length >= 35) {
-    resizedDeck = FULL_DECK.create({ cards: d.cards });
+    resizedDeck = FullDeck.create({ cards: d.cards });
   } else if (d.cards.length >= 18) {
-    resizedDeck = HALF_DECK.create({ cards: d.cards });
+    resizedDeck = HalfDeck.create({ cards: d.cards });
   } else if (d.cards.length > 1) {
-    resizedDeck = LOW_DECK.create({ cards: d.cards });
+    resizedDeck = LowDeck.create({ cards: d.cards });
   } else {
     const cardID = d.cards[0];
     if (!cardID) return deck;
-    return HIDDEN_CARD.create({ cardID: cardID });
+    return HiddenCard.create({ cardID: cardID });
   }
 
   resizedDeck.lore = [ChatColor.DARK_GRAY + `${d.cards.length} korttia`];
@@ -404,12 +406,12 @@ function getResizedDeck(deck: ItemStack): ItemStack {
  * @param player Player who clicked
  * @param isRightClick True if player rightclicked with either hand
  */
-function ClickedOnce(
+function clickedOnce(
   player: Player,
   isRightClick: boolean,
   blockFace: BlockFace,
 ) {
-  if (SHUFFLE_COOLDOWNS.has(player)) return;
+  if (shuffleCooldowns.has(player)) return;
   const mainHandItem = player.inventory.itemInMainHand;
   const offHandItem = player.inventory.itemInOffHand;
 
@@ -457,8 +459,8 @@ function ClickedOnce(
       return;
     }
     //TOGGLE HIDDEN CARD
-    if (HIDDEN_CARD.check(mainHandItem)) {
-      const hiddenCard = HIDDEN_CARD.get(mainHandItem);
+    if (HiddenCard.check(mainHandItem)) {
+      const hiddenCard = HiddenCard.get(mainHandItem);
       if (!hiddenCard) return;
       if (!hiddenCard.cardID) return;
 
@@ -468,7 +470,7 @@ function ClickedOnce(
       player.inventory.itemInMainHand = card.create();
     } else if (isCard(mainHandItem)) {
       const cardID = getCardID(mainHandItem.itemMeta.customModelData);
-      const hiddenCard = HIDDEN_CARD.create({ cardID: cardID });
+      const hiddenCard = HiddenCard.create({ cardID: cardID });
       player.inventory.itemInMainHand = hiddenCard;
     }
     return;
@@ -493,17 +495,22 @@ function ClickedOnce(
 }
 
 /**
- * Gives opped player a deck full of cards
+ * Gives player a deck full of cards
  */
-registerCommand('deck', (sender) => {
-  if (!(sender instanceof Player)) return;
-  const player = sender as Player;
-  if (!player.isOp()) return;
-  const cards = Array.from(CARDS.keys());
-  const deck = FULL_DECK.create({ cards: cards });
-  deck.lore = [ChatColor.DARK_GRAY + `${cards.length} korttia`];
-  player.inventory.itemInMainHand = deck;
-});
+registerCommand(
+  'deck',
+  (sender) => {
+    if (!(sender instanceof Player)) return;
+    const player = sender as Player;
+    const cards = Array.from(CARDS.keys());
+    const deck = FullDeck.create({ cards: cards });
+    deck.lore = [ChatColor.DARK_GRAY + `${cards.length} korttia`];
+    giveItem(player, deck, player.mainHand);
+  },
+  {
+    executableBy: 'players',
+  },
+);
 
 /**
  * Calls ClickedOnce preventing double calls of same click event
@@ -511,10 +518,10 @@ registerCommand('deck', (sender) => {
 registerEvent(PlayerInteractEvent, async (event) => {
   if (event.hand === EquipmentSlot.HAND) {
     await wait(1, 'millis');
-    ClickedOnce(event.player, isRightClick(event.action), event.blockFace);
+    clickedOnce(event.player, isRightClick(event.action), event.blockFace);
   } else {
     if (event.action === Action.RIGHT_CLICK_BLOCK) return;
     if (event.player.inventory.itemInMainHand.type !== Material.AIR) return;
-    ClickedOnce(event.player, isRightClick(event.action), event.blockFace);
+    clickedOnce(event.player, isRightClick(event.action), event.blockFace);
   }
 });
