@@ -29,6 +29,7 @@ require('./book-rewrite');
 require('./tool-preventions');
 require('./book-authors');
 require('./sealing-wax');
+require('./shooting-windows');
 require('./breaking-bottles');
 require('./gold-panning');
 require('./glass-damage');
