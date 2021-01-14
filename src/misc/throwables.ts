@@ -59,7 +59,8 @@ registerEvent(PlayerDropItemEvent, (event) => {
 registerEvent(ProjectileHitEvent, (event) => {
   if (event.entity.type !== EntityType.SNOWBALL) return;
   const snowball = event.entity as Snowball;
-  if (NOT_THROWABLE.has(snowball.item.type)) return;
+  const item = snowball.item;
+  if (NOT_THROWABLE.has(item.type)) return;
 
   // Push and damage entity who got hit
   if (event.hitEntity) {
@@ -75,7 +76,7 @@ registerEvent(ProjectileHitEvent, (event) => {
     canBreak(item)
   )
     return;
-  
+
   const drop = event.entity.world.dropItem(
     event.entity.location,
     snowball.item,
