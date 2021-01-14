@@ -101,7 +101,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
     const blockData = clickedBlock.blockData;
     // Check if the block can be used to fill a bottle
     if (blockData instanceof Waterlogged) {
-      bottleCanFill = true;
+      bottleCanFill = blockData.isWaterlogged();
     }
     // Check if cauldron
     else if (blockData instanceof Levelled) {
