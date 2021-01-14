@@ -1,4 +1,3 @@
-import { Float } from 'java.lang';
 import { Location, Material } from 'org.bukkit';
 import { EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
@@ -60,9 +59,10 @@ Whip.event(
 Whip.event(
   EntityDamageByEntityEvent,
   (event) =>
-    ((event.damager as Player).inventory as PlayerInventory).itemInMainHand,
+    (((event.damager as unknown) as Player).inventory as PlayerInventory)
+      .itemInMainHand,
   async (event) => {
-    const player = event.damager as Player;
+    const player = (event.damager as unknown) as Player;
     if (whipPlayers.has(player)) return;
     whipPlayers.add(player);
 
@@ -74,8 +74,8 @@ Whip.event(
     }
 
     // Play animation
-    const item = ((event.damager as Player).inventory as PlayerInventory)
-      .itemInMainHand;
+    const item = (((event.damager as unknown) as Player)
+      .inventory as PlayerInventory).itemInMainHand;
     const meta = item.itemMeta;
     meta.customModelData = 11;
     item.itemMeta = meta;
@@ -159,12 +159,7 @@ Whip.event(
 );
 
 function playWhipSound(location: Location) {
-  location.world.playSound(
-    location,
-    'custom.whip',
-    1,
-    (new Float(0.8) as unknown) as number,
-  );
+  location.world.playSound(location, 'custom.whip', 1, 0.8);
 }
 
 function playHurtSound(location: Location) {

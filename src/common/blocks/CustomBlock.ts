@@ -1,4 +1,3 @@
-import { Newable } from '../types';
 import { Material, Bukkit } from 'org.bukkit';
 import { Event } from 'org.bukkit.event';
 import { dataHolder, DataType, dataType } from '../datas/holder';

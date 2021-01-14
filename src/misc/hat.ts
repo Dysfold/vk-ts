@@ -15,29 +15,44 @@ import {
   ItemStack,
   PlayerInventory,
 } from 'org.bukkit.inventory';
+import { Pipe, equipPipe } from './pipe';
+import { isRightClick } from '../common/helpers/click';
 
-const HAT_MATERIAL = Material.DIAMOND_HOE;
+const HAT_MATERIAL = Material.LEATHER_BOOTS;
 const HELMET_SLOT = 39;
+
+function isHat(item: ItemStack | null) {
+  if (item?.type !== HAT_MATERIAL) return false;
+  if (item.itemMeta.hasCustomModelData()) return true;
+  return false; // The item was not a custom item
+}
 
 // Equip hat with right click
 registerEvent(PlayerInteractEvent, (event) => {
-  if (event.item?.type !== HAT_MATERIAL) return;
-  if (
-    event.action !== Action.RIGHT_CLICK_AIR &&
-    event.action !== Action.RIGHT_CLICK_BLOCK
-  ) {
-    return;
-  }
+  if (!event.item) return;
+  if (!isHat(event.item)) return;
+  if (!isRightClick(event.action)) return;
+
   const inventory = event.player.inventory as PlayerInventory;
   if (inventory.helmet) return;
+
+  // Special case for the pipe. (Player might be filling the pipe)
+  if (Pipe.check(event.item)) {
+    if (!equipPipe(event.player)) {
+      return;
+    }
+  }
+
   inventory.helmet = event.item;
   event.item.amount = 0;
   playEquipSound(event.player);
+  event.setCancelled(true);
 });
 
 // Shift click a hat to equip
 registerEvent(InventoryClickEvent, (event) => {
-  if (event.currentItem?.type !== HAT_MATERIAL) return;
+  if (!event.currentItem) return;
+  if (!isHat(event.currentItem)) return;
   if (event.action !== InventoryAction.MOVE_TO_OTHER_INVENTORY) return;
   if (event.inventory.type !== InventoryType.CRAFTING) return;
   const inventory = event.whoClicked.inventory as PlayerInventory;
@@ -49,7 +64,8 @@ registerEvent(InventoryClickEvent, (event) => {
 
 // Drag a hat to helmet slot
 registerEvent(InventoryClickEvent, (event) => {
-  if (event.cursor?.type !== HAT_MATERIAL) return;
+  if (!event.cursor) return;
+  if (!isHat(event.cursor)) return;
   if (event.action !== InventoryAction.PLACE_ALL) return;
   if (event.slot !== HELMET_SLOT) return;
   const inventory = event.whoClicked.inventory as PlayerInventory;
@@ -64,7 +80,7 @@ registerEvent(PlayerInteractAtEntityEvent, (event) => {
   const entity = event.rightClicked;
   if (entity.type !== EntityType.ARMOR_STAND) return;
   const inventory = event.player.inventory as PlayerInventory;
-  if (inventory.itemInMainHand.type !== HAT_MATERIAL) return;
+  if (!isHat(inventory.itemInMainHand)) return;
   const itemInHand = inventory.itemInMainHand.clone() as ItemStack;
   const armorstand = entity as ArmorStand;
   inventory.itemInMainHand = armorstand.helmet;

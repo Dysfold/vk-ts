@@ -1,4 +1,4 @@
-import { Material, NamespacedKey } from 'org.bukkit';
+import { Bukkit, Material, NamespacedKey } from 'org.bukkit';
 import {
   BlastingRecipe,
   CampfireRecipe,
@@ -53,6 +53,6 @@ export function furnaceRecipe({
       0,
       Math.floor(ticks),
     );
-    server.addRecipe(recipe);
+    Bukkit.server.addRecipe(recipe);
   }
 }

@@ -61,14 +61,14 @@ HandGrindstone.event(
 
 registerEvent(PlayerInteractEvent, async (event) => {
   if (event.action !== Action.RIGHT_CLICK_BLOCK) return;
-  if (event.getHand() !== EquipmentSlot.HAND) return;
-  const block = event.getClickedBlock();
-  if (!block || block.getType() !== Material.GRINDSTONE) return;
+  if (event.hand !== EquipmentSlot.HAND) return;
+  const block = event.clickedBlock;
+  if (!block || block.type !== Material.GRINDSTONE) return;
 
   event.setCancelled(true);
 
-  const item = event.getItem();
-  const player = event.getPlayer();
+  const item = event.item;
+  const player = event.player;
 
   if (!item) return;
   if (!canBeGrinded(item, player)) return;
@@ -81,7 +81,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
 });
 
 function playGrindstoneEffects(block: Block, player: Player) {
-  const location = block.getLocation();
+  const location = block.location;
   player.spawnParticle(
     Particle.CLOUD,
     location.add(0.5, 0.8, 0.5),
@@ -95,13 +95,13 @@ function playGrindstoneEffects(block: Block, player: Player) {
 }
 
 function repairTool(item: ItemStack, effiency: number) {
-  const amount = Math.floor(item.type.getMaxDurability() * effiency);
-  item.setDurability(item.durability - amount);
+  const amount = Math.floor(item.type.maxDurability * effiency);
+  item.durability = item.durability - amount;
 }
 
 function canBeGrinded(item: ItemStack, player: Player) {
   // Check if the tool can be grinded
-  if (item.getDurability() === 0) return false;
+  if (item.durability === 0) return false;
   if (grindstoneUsers.has(player)) return false;
 
   const toolIdx = tools.indexOf(item.type, 0);

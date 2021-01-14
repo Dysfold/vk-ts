@@ -1,11 +1,9 @@
 import { ItemStack } from 'org.bukkit.inventory';
-import { Newable } from '../types';
 import { Material } from 'org.bukkit';
 import { Event } from 'org.bukkit.event';
 import { dataHolder, DataType, dataType } from '../datas/holder';
 import * as yup from 'yup';
 import { dataView, saveView } from '../datas/view';
-import { Integer } from 'java.lang';
 
 const CUSTOM_TYPE_KEY = 'ct';
 const CUSTOM_DATA_KEY = 'cd';
@@ -154,10 +152,10 @@ export class CustomItem<T extends {}> {
 
     // Set values to meta based on item options
     if (this.options.name != undefined) {
-      meta.setDisplayName(this.options.name);
+      meta.displayName = this.options.name;
     }
     if (this.options.modelId != undefined) {
-      meta.setCustomModelData(Integer.valueOf(this.options.modelId));
+      meta.customModelData = this.options.modelId;
     }
     item.itemMeta = meta; // Set new meta to item
 
@@ -230,10 +228,7 @@ export class CustomItem<T extends {}> {
     if (!this.options.type.equals(item.type)) {
       return false; // Item id is per Vanilla material
     }
-    const itemId = dataHolder(item.getItemMeta()).get(
-      CUSTOM_TYPE_KEY,
-      'integer',
-    );
+    const itemId = dataHolder(item.itemMeta).get(CUSTOM_TYPE_KEY, 'integer');
     return itemId == this.options.id;
   }
 }
