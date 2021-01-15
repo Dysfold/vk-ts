@@ -1,7 +1,13 @@
-import { List } from 'java.util';
 import { Material } from 'org.bukkit';
 import { BlockState } from 'org.bukkit.block';
 import { BlockFertilizeEvent } from 'org.bukkit.event.block';
+
+const allowedBlocks = new Set([
+  Material.SEAGRASS,
+  Material.TALL_SEAGRASS,
+  Material.GRASS,
+  Material.TALL_GRASS,
+]);
 
 registerEvent(BlockFertilizeEvent, (event) => {
   const blocks = event.blocks;
@@ -9,16 +15,9 @@ registerEvent(BlockFertilizeEvent, (event) => {
   event.setCancelled(cancel);
 });
 
-function canBeFertilized(blocks: List<BlockState>) {
+function canBeFertilized(blocks: BlockState[]) {
   for (const block of blocks) {
-    switch (block.type) {
-      case Material.SEAGRASS:
-      case Material.TALL_SEAGRASS:
-      case Material.GRASS:
-      case Material.TALL_GRASS:
-        // If the list contains any of the plants above
-        return true;
-    }
+    if (allowedBlocks.has(block.type)) return true;
   }
   // Only if none of the blocks can be grown with bonemeal
   return false;

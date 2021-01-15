@@ -19,7 +19,7 @@ const MAX_BODY_HITS = 6;
 const CORPSE_NAME = 'Dinnerbone';
 
 const slaughterableAnimals = new Map<string, Array<LootDrop<undefined>>>();
-const slaughterTools: Material[] = [Material.IRON_SWORD, Material.IRON_AXE];
+const slaughterTools = new Set([Material.IRON_SWORD, Material.IRON_AXE]);
 const slaugtherSound = Sound.BLOCK_SLIME_BLOCK_STEP;
 
 const Namehider = new CustomItem({
@@ -78,7 +78,7 @@ function getAnimalDrops(entityType: EntityType): ItemStack[] {
  */
 function createAnimalCorpse(entity: LivingEntity) {
   entity.setAI(false);
-  entity.setCustomName(CORPSE_NAME);
+  entity.customName = CORPSE_NAME;
   entity.setSilent(true);
   // Add dropped item as passenger to hide nametag
   if (entity.passenger === null) {
@@ -87,15 +87,15 @@ function createAnimalCorpse(entity: LivingEntity) {
       nameHiderItem,
     );
     nameHider.setCanMobPickup(false);
-    nameHider.setPickupDelay(1000000);
-    entity.setPassenger(nameHider);
+    nameHider.pickupDelay = 1000000;
+    entity.passenger = nameHider;
   }
   // Set animal health to match hit amount
   const hitsToRemove = randomInt(
     MIN_BODY_HITS <= entity.maxHealth ? MIN_BODY_HITS : entity.maxHealth,
     MAX_BODY_HITS <= entity.maxHealth ? MAX_BODY_HITS : entity.maxHealth,
   );
-  entity.setHealth(hitsToRemove);
+  entity.health = hitsToRemove;
   dropBodyUntilOnGround(entity);
 }
 
@@ -129,7 +129,7 @@ async function dropBodyUntilOnGround(entity: LivingEntity) {
     const pos: Vector = entity.location.toVector();
     const target: Vector = entity.location.add(0, -8, 0).toVector();
     const vel: Vector = target.subtract(pos);
-    entity.setVelocity(vel.normalize());
+    entity.velocity = vel.normalize();
     await wait(100, 'millis');
   }
   entity.setAI(false);
@@ -163,8 +163,8 @@ function randomInt(min: number, max: number): number {
 registerEvent(EntityDeathEvent, (event) => {
   if (!slaughterableAnimals.has(event.entity.type.toString())) return;
 
-  event.drops.clear();
-  event.entity.setCustomName('');
+  event.drops.length = 0;
+  event.entity.customName = '';
   if (event.entity.passenger) event.entity.passenger.remove();
 });
 
@@ -210,11 +210,11 @@ registerEvent(EntityDamageByEntityEvent, (event) => {
   const player = event.damager as Player;
 
   if (entity.health <= event.damage && entity.customName !== CORPSE_NAME) {
-    event.setDamage(0);
+    event.damage = 0;
     createAnimalCorpse(entity);
   } else if (entity.customName === CORPSE_NAME) {
-    event.setDamage(1);
-    if (slaughterTools.includes(player.itemInHand.type)) handleDrops(entity);
+    event.damage = 1;
+    if (slaughterTools.has(player.itemInHand.type)) handleDrops(entity);
     playSlaughterEffects(entity.location);
   }
 });
@@ -223,7 +223,7 @@ registerEvent(EntityDamageByEntityEvent, (event) => {
 registerEvent(EntityPickupItemEvent, (event) => {
   if (event.item.itemStack.type === nameHiderItem.type && event.item.vehicle) {
     event.setCancelled(true);
-    event.item.setPickupDelay(1000000);
+    event.item.pickupDelay = 1000000;
   }
 });
 

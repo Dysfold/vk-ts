@@ -1,19 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    "incremental": true,
+    "target": "es2020",
+    "module": "commonjs",
+    "esModuleInterop": true,
     "lib": [
-      "DOM",
-      "esnext"
+      "esnext",
+      "DOM"
     ],
-    "outDir": "./dist",
-    "inlineSourceMap": true,
-    "module": "commonJS",
     "strict": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "outDir": "./dist",
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "typeRoots": ["node_modules/@bensku", "node_modules/craftjs-plugin"],
+    "inlineSourceMap": true
   },
   "include": [
-    "src/**/*",
-    "../../types/**/*",
+    "src/**/*"
   ]
 }

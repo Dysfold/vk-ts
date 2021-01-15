@@ -1,13 +1,12 @@
-import { Axis, GameMode, Material, Location, SoundCategory } from 'org.bukkit';
+import { Axis, GameMode, Location, Material, SoundCategory } from 'org.bukkit';
 import { Block, BlockFace, Dispenser } from 'org.bukkit.block';
 import { Levelled, Orientable, Waterlogged } from 'org.bukkit.block.data';
 import { Dispenser as DispenserData, Fence } from 'org.bukkit.block.data.type';
+import { LivingEntity } from 'org.bukkit.entity';
 import { BlockDispenseEvent } from 'org.bukkit.event.block';
 import { InventoryOpenEvent, InventoryType } from 'org.bukkit.event.inventory';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import { CustomBlock } from '../common/blocks/CustomBlock';
-import { Float } from 'java.lang';
-import { LivingEntity } from 'org.bukkit.entity';
 
 const MAX_LEN = 20;
 const MAX_GATE_HEIGHT = 10;
@@ -44,7 +43,8 @@ function isLog(block: Block) {
 
 function isFence(block: Block) {
   const name = block.type.toString();
-  return name.endsWith('_FENCE'); // Allow fences, but not fence gates
+  // Count iron bars as fences, since they are similar
+  return name.endsWith('_FENCE') || block.type === Material.IRON_BARS;
 }
 
 // Can the block be replaced by moving gate/rope/block
@@ -358,7 +358,7 @@ function playWinchSound(location: Location) {
     location,
     'minecraft:block.chain.step',
     SoundCategory.BLOCKS,
-    (new Float(0.5) as unknown) as number,
-    (new Float(0.7) as unknown) as number,
+    0.5,
+    0.7,
   );
 }

@@ -4,7 +4,7 @@ import {
   EntityDamageByEntityEvent,
   PlayerDeathEvent,
 } from 'org.bukkit.event.entity';
-import { InventoryClickEvent, InventoryType } from 'org.bukkit.event.inventory';
+import { InventoryClickEvent } from 'org.bukkit.event.inventory';
 import {
   PlayerDropItemEvent,
   PlayerInteractAtEntityEvent,
@@ -52,6 +52,12 @@ const Key = new CustomItem({
 const MAX_CAPTURE_DISTANCE = 2;
 const CAPTURE_HEALTH_TRESHOLD = 4;
 
+export function isHandcuffed(player: Player) {
+  return LockedHandcuffs.check(
+    (player.inventory as PlayerInventory).itemInOffHand,
+  );
+}
+
 // Handcuff a player
 Handcuffs.event(
   PlayerInteractEntityEvent,
@@ -60,7 +66,7 @@ Handcuffs.event(
     const entity = event.rightClicked;
     if (entity.type !== EntityType.PLAYER) return;
     if (event.hand !== EquipmentSlot.HAND) return;
-    const captive = entity as Player;
+    const captive = (entity as unknown) as Player;
     const captor = event.player;
     const captiveInventory = captive.inventory as PlayerInventory;
     const captorInventory = captor.inventory as PlayerInventory;
@@ -76,10 +82,10 @@ Handcuffs.event(
       return;
     }
     // Add locked handcuffs to both hands
-    handcuffs.amount -= 1;
     const keycode = handcuffs.itemMeta.displayName;
     captiveInventory.itemInOffHand = LockedHandcuffs.create({ key: keycode });
     captiveInventory.itemInMainHand = LockedHandcuffs.create(); // Mainhand handcuffs are only for visuals
+    handcuffs.amount -= 1;
 
     // Give player back the previous items from hands
     giveItem(captive, mainHandItem);
@@ -108,7 +114,7 @@ Key.event(
     const entity = event.rightClicked;
     if (entity.type !== EntityType.PLAYER) return;
     if (event.hand !== EquipmentSlot.HAND) return;
-    const handcuffed = entity as Player;
+    const handcuffed = (entity as unknown) as Player;
     const player = event.player;
 
     if (removeHandcuffs(handcuffed, player)) {
@@ -149,18 +155,18 @@ function removeHandcuffs(from: Player, to: Player) {
 registerEvent(PlayerDeathEvent, (event) => {
   if (event.entity.type !== EntityType.PLAYER) return;
   const player = event.entity as Player;
-  const offHandItem = (player.inventory as PlayerInventory).itemInOffHand;
-  const mainHandItem = (player.inventory as PlayerInventory).itemInMainHand;
+  const offHandItem = player.inventory.itemInOffHand;
+  const mainHandItem = player.inventory.itemInMainHand;
   // If the player was dragged
   draggedPlayers.delete(player);
 
   if (LockedHandcuffs.check(offHandItem)) {
-    if (event.drops.remove(offHandItem)) {
+    if (event.drops.removeValue(offHandItem)) {
       player.world.dropItem(player.location, HandcuffsItem);
     }
   }
   if (LockedHandcuffs.check(mainHandItem)) {
-    event.drops.remove(mainHandItem);
+    event.drops.removeValue(mainHandItem);
   }
 });
 
@@ -169,8 +175,6 @@ LockedHandcuffs.event(
   InventoryClickEvent,
   (event) => event.currentItem,
   async (event) => {
-    const inv = event.inventory;
-    if (inv.type !== InventoryType.CRAFTING) return;
     if (event.whoClicked.gameMode === GameMode.CREATIVE) return;
     event.setCancelled(true);
   },
@@ -220,9 +224,12 @@ LockedHandcuffs.event(
 LockedHandcuffs.event(
   EntityDamageByEntityEvent,
   (event) =>
-    ((event.damager as Player).inventory as PlayerInventory).itemInOffHand,
+    (((event.damager as unknown) as Player).inventory as PlayerInventory)
+      .itemInOffHand,
   async (event) => {
-    (event.damager as Player).sendActionBar('Et voi tehdä näin kahlittuna');
+    ((event.damager as unknown) as Player).sendActionBar(
+      'Et voi tehdä näin kahlittuna',
+    );
     event.setCancelled(true);
   },
 );
@@ -259,8 +266,11 @@ function giveItem(player: Player, item: ItemStack) {
 registerEvent(PlayerInteractEntityEvent, (event) => {
   if (event.hand !== EquipmentSlot.HAND) return;
   if (event.rightClicked.type !== EntityType.PLAYER) return;
-  const dragged = event.rightClicked as Player;
+  const dragged = (event.rightClicked as unknown) as Player;
   const player = event.player;
+
+  // If player is sneaking, he is trying to open the inventory of the target
+  if (player.isSneaking()) return;
 
   if (player.itemInHand.type !== Material.AIR) return;
   const offHandItem = (dragged.inventory as PlayerInventory).itemInOffHand;
@@ -322,13 +332,3 @@ setInterval(() => {
     dragged.addPotionEffect(JUMP);
   }
 }, 600);
-
-registerCommand('handcuffs', (sender, label, args) => {
-  if (sender instanceof Player) {
-    const player = sender as Player;
-    if (player.isOp()) {
-      player.world.dropItem(player.location, Handcuffs.create());
-      player.world.dropItem(player.location, Key.create());
-    }
-  }
-});

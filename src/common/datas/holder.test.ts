@@ -1,10 +1,9 @@
-import { test, Assert } from 'zora';
-import { dataHolder, DataHolder, DataType, dataType } from './holder';
+import { Bukkit, Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
-import { Material, Bukkit } from 'org.bukkit';
 import * as yup from 'yup';
+import { Assert, test } from 'zora';
 import { DatabaseEntry } from './database';
-import { Block } from 'org.bukkit.block';
+import { dataHolder, DataHolder, dataType } from './holder';
 
 function persistMsg(context: string, type: string) {
   return `${context}: ${type} persists`;
@@ -67,13 +66,13 @@ function checkDelete(holder: DataHolder, t: Assert) {
 
 test('PersistentDataHolder serialization', (t) => {
   const stack = new ItemStack(Material.STONE, 1);
-  const meta = stack.getItemMeta();
+  const meta = stack.itemMeta;
   const holder = dataHolder(meta);
   setData(holder);
   checkData(holder, t, 'same holder');
   checkData(dataHolder(meta), t, 'same ItemMeta');
-  stack.setItemMeta(meta);
-  checkData(dataHolder(stack.getItemMeta()), t, 'new ItemMeta'); // New ItemMeta from same stack
+  stack.itemMeta = meta;
+  checkData(dataHolder(stack.itemMeta), t, 'new ItemMeta'); // New ItemMeta from same stack
   checkDelete(holder, t);
 });
 

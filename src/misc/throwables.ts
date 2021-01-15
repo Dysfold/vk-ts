@@ -1,20 +1,27 @@
 import { Material, Sound, SoundCategory } from 'org.bukkit';
-import { EntityType, Snowball } from 'org.bukkit.entity';
+import { Damageable, EntityType, Snowball } from 'org.bukkit.entity';
 import { ProjectileHitEvent } from 'org.bukkit.event.entity';
 import { PlayerDropItemEvent } from 'org.bukkit.event.player';
-import { ItemStack } from 'org.bukkit.inventory';
 import { Vector } from 'org.bukkit.util';
+import { LockedHandcuffs } from '../combat/handcuffs';
+import { Whip } from '../combat/whip';
+
+import { canBreak } from '../hydration/bottles';
 
 const VELOCITY_MULTIPLIER = 0.8;
+const HIT_DAMAGE = 0.2;
 const THROW_SOUND = Sound.ENTITY_SNOWBALL_THROW;
 const HIT_SOUND = Sound.BLOCK_STONE_HIT;
 const ZERO_VECTOR = new Vector();
 
-const NOT_THROWABLE: Material[] = [
+const NOT_THROWABLE = new Set([
   Material.SNOWBALL,
+  Material.EGG,
   Material.SPLASH_POTION,
   Material.HEART_OF_THE_SEA,
-];
+]);
+
+const NOT_THROWABLE_CUSTOMITEMS = [LockedHandcuffs, Whip];
 
 registerEvent(PlayerDropItemEvent, (event) => {
   const player = event.player;
@@ -22,17 +29,21 @@ registerEvent(PlayerDropItemEvent, (event) => {
   const itemType = item.type;
 
   if (player.velocity.y < 0.08) return; // Return if player didn't jump
-  if (NOT_THROWABLE.includes(itemType)) return;
+  if (NOT_THROWABLE.has(itemType)) return;
+  // Check if item was unthrowable customitem
+  if (NOT_THROWABLE_CUSTOMITEMS.some((i) => i.check(item))) return;
 
   event.setCancelled(true);
-  item.amount--;
 
   const snowball = player.world.spawnEntity(
     player.location.add(0, 1.4, 0),
     EntityType.SNOWBALL,
   ) as Snowball;
 
-  snowball.item = new ItemStack(itemType);
+  snowball.item = item;
+  snowball.item.amount = 1;
+  item.amount--;
+
   snowball.velocity = player.eyeLocation.direction.multiply(
     VELOCITY_MULTIPLIER,
   );
@@ -48,12 +59,29 @@ registerEvent(PlayerDropItemEvent, (event) => {
 registerEvent(ProjectileHitEvent, (event) => {
   if (event.entity.type !== EntityType.SNOWBALL) return;
   const snowball = event.entity as Snowball;
-  if (NOT_THROWABLE.includes(snowball.item.type)) return;
+  const item = snowball.item;
+  if (NOT_THROWABLE.has(item.type)) return;
+
+  // Push and damage entity who got hit
+  if (event.hitEntity) {
+    const damagee = event.hitEntity as Damageable;
+    damagee.damage(HIT_DAMAGE);
+    const pushVel = new Vector(snowball.velocity.x, 0.5, snowball.velocity.z);
+    damagee.velocity = damagee.velocity.add(pushVel.multiply(0.6));
+  }
+
+  // Prevent dropping broken bottles -> Breaking handled at breaking-bottles.ts
+  if (
+    (item.type === Material.POTION || item.type === Material.GLASS_BOTTLE) &&
+    canBreak(item)
+  )
+    return;
 
   const drop = event.entity.world.dropItem(
     event.entity.location,
     snowball.item,
   );
+
   drop.velocity = ZERO_VECTOR; // Remove random velocity from the dropped item
   drop.world.playSound(drop.location, HIT_SOUND, SoundCategory.PLAYERS, 0.5, 1);
 });

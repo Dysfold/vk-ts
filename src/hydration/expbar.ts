@@ -1,4 +1,3 @@
-import { Float } from 'java.lang';
 import { PlayerExpChangeEvent, PlayerJoinEvent } from 'org.bukkit.event.player';
 
 const HYDRATION_ON_FIRST_JOIN = 0.5;
@@ -12,6 +11,6 @@ registerEvent(PlayerExpChangeEvent, (event) => {
 registerEvent(PlayerJoinEvent, (event) => {
   const player = event.player;
   if (!player.hasPlayedBefore) {
-    player.exp = (new Float(HYDRATION_ON_FIRST_JOIN) as unknown) as number;
+    player.exp = HYDRATION_ON_FIRST_JOIN;
   }
 });

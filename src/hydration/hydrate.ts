@@ -1,4 +1,3 @@
-import { Float } from 'java.lang';
 import { Material } from 'org.bukkit';
 import { Levelled } from 'org.bukkit.block.data';
 import { Player } from 'org.bukkit.entity';
@@ -58,8 +57,8 @@ registerEvent(PlayerInteractEvent, async (event) => {
       const cauldronData = block.blockData as Levelled;
       const waterLevel = cauldronData.level;
       if (waterLevel) {
-        cauldronData.setLevel(waterLevel - 1);
-        block.setBlockData(cauldronData);
+        cauldronData.level = waterLevel - 1;
+        block.blockData = cauldronData;
       } else {
         // Cauldron was empty
         return;
@@ -103,7 +102,7 @@ export function playDrinkingSound(player: Player) {
 export function hydrate(player: Player, amount: number, material: Material) {
   const barBefore = player.exp;
   const bar = limit(barBefore + amount);
-  player.exp = (new Float(bar) as unknown) as number;
+  player.exp = bar;
 
   // Send title if the hydration was significant enough
   if (amount > Hydration.SMALL) {

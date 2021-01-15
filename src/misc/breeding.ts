@@ -260,7 +260,7 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
   // Trigger custom breeding
   if (animal.canBreed() && !animal.isLoveMode()) {
     event.setCancelled(true); // Prevent double item removal
-    animal.setLoveModeTicks(600);
+    animal.loveModeTicks = 600;
     animal.world.playSound(animal.location, Sound.ENTITY_HORSE_EAT, 1, 1);
     animal.world.spawnParticle(
       Particle.HEART,
