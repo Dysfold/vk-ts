@@ -17,6 +17,7 @@ require('./winch');
 require('./saw');
 require('./hat');
 require('./throwables');
+require('./breeding');
 require('./sauna');
 require('./firespread');
 require('./itemframe');
