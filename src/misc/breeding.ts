@@ -32,7 +32,7 @@ interface BreedingConditions {
   breedItem?: Material;
 }
 
-const BREEDABLE_ANIMALS = new Map<string, BreedingConditions>();
+const BREEDABLE_ANIMALS = new Map<EntityType, BreedingConditions>();
 
 //  ADD NEW ANIMALS HERE !!!
 addBreedableAnimal(EntityType.COW, FoodSource.HAYBALE);
@@ -53,8 +53,8 @@ function addBreedableAnimal(
   source: FoodSource,
   breedItem?: Material,
 ) {
-  if (BREEDABLE_ANIMALS.has(entityType.toString())) return;
-  BREEDABLE_ANIMALS.set(entityType.toString(), {
+  if (BREEDABLE_ANIMALS.has(entityType)) return;
+  BREEDABLE_ANIMALS.set(entityType, {
     foodSource: source,
     breedItem: breedItem,
   });
@@ -68,7 +68,7 @@ function addBreedableAnimal(
  */
 function consumeFood(entity: LivingEntity): boolean {
   // Return false if setting/getting attributes has failed
-  const conditions = BREEDABLE_ANIMALS.get(entity.type.toString());
+  const conditions = BREEDABLE_ANIMALS.get(entity.type);
   if (!conditions) return false;
 
   const foodSource = conditions.foodSource;
@@ -201,7 +201,7 @@ function blocksInRadiusOfEntity(entity: LivingEntity, radius: number): Block[] {
  * Food/water sources will be consumed even if one is not found and breeding is cancelled
  */
 registerEvent(EntityBreedEvent, (event) => {
-  if (!BREEDABLE_ANIMALS.has(event.entityType.toString())) return;
+  if (!BREEDABLE_ANIMALS.has(event.entityType)) return;
 
   const baby = event.entity as LivingEntity;
   const mother = event.mother as LivingEntity;
@@ -240,7 +240,7 @@ registerEvent(PlayerInteractEvent, (event) => {
  * use held item and play breeding effects.
  */
 registerEvent(PlayerInteractEntityEvent, (event) => {
-  if (!BREEDABLE_ANIMALS.has(event.rightClicked.type.toString())) return;
+  if (!BREEDABLE_ANIMALS.has(event.rightClicked.type)) return;
 
   const animal = event.rightClicked as Animals;
   const item = event.player.itemInHand;
@@ -252,7 +252,7 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
   }
 
   // Return if breedItem isn't spesified -> Use vanilla breeding mechanics
-  const breedItem = BREEDABLE_ANIMALS.get(animal.type.toString())?.breedItem;
+  const breedItem = BREEDABLE_ANIMALS.get(animal.type)?.breedItem;
   if (!breedItem) return;
 
   if (item.type !== breedItem) return;
