@@ -1,4 +1,4 @@
-import { Bukkit, Location, Material } from 'org.bukkit';
+import { Bukkit, Location, Material, Particle } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Gate } from 'org.bukkit.block.data.type';
 import { Player } from 'org.bukkit.entity';
@@ -111,6 +111,7 @@ Saw.event(
     saw.blockData = data;
 
     playSawSound(saw.location);
+    playSawParticles(log, dropType);
   },
 );
 
@@ -186,5 +187,13 @@ HandSaw.event(
 
     block.type = Material.AIR;
     sawingPlayers.delete(player);
+    playSawParticles(block, dropType);
   },
 );
+
+function playSawParticles(block: Block, dropType: Material) {
+  const data = dropType.createBlockData();
+  const location = block.location.add(0.5, 0.5, 0.5);
+
+  block.world.spawnParticle(Particle.BLOCK_DUST, location, 30, data);
+}
