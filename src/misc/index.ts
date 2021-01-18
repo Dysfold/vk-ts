@@ -37,3 +37,4 @@ require('./glass-damage');
 require('./farmland-trampling');
 require('./fishing');
 require('./farmland-trampling');
+require('./announcements');
