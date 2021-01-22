@@ -1,3 +1,4 @@
+import { Bukkit, Effect, EntityEffect, Sound } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { dataHolder } from '../common/datas/holder';
 import { dataView, deleteView } from '../common/datas/view';
@@ -10,20 +11,24 @@ export async function respawnPlayer(player: Player) {
   const location = objToLocation(view.deathLocation);
 
   // If the player died in prison, respawn there
-  // if () {
-  //    ...
-  //    return;
-  // }
+  if (view.isPrisoner) {
+    player.sendTitle('', 'Heräät sellin sängystä', 20, 40, 20);
+    player.teleport(location);
+  }
 
   // Secondary respawn location is the bed
-  if (player.bedSpawnLocation) {
+  else if (player.bedSpawnLocation) {
     player.teleport(player.bedSpawnLocation);
     return;
   }
 
   // Respawn the player to the nearest respawnblock
-  player.teleport(location);
+  else {
+    player.teleport(location);
+  }
 
   // Clear data
   deleteView(deathData, player);
+
+  player.playSound(player.location, Sound.ITEM_ARMOR_EQUIP_GENERIC, 1, 1);
 }

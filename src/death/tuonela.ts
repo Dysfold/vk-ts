@@ -18,11 +18,12 @@ export const TUONELA_WORLD =
   Bukkit.server.worlds[1] ||
   Bukkit.server.worlds[0];
 
-export function startTuonela(player: Player) {
+export async function startTuonela(player: Player) {
   player.teleport(TUONELA_WORLD.spawnLocation);
-  player.sendTitle('', 'Olet kuollut', 30, 40, 30);
   addPlayerToTuonelaPlayers(player);
   playTuonelaJoinEffects(player);
+  await wait(0.7, 'seconds');
+  player.sendTitle('', 'Olet kuollut', 40, 40, 30);
 }
 
 // TODO: Multiple spawnpoints in the Tuonela
