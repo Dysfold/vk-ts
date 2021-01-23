@@ -1,34 +1,61 @@
-import { Bukkit, Effect, EntityEffect, Sound } from 'org.bukkit';
+import { Bukkit, Location, Sound } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
+import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import { dataHolder } from '../common/datas/holder';
 import { dataView, deleteView } from '../common/datas/view';
 import { deathData } from './deathData';
 import { objToLocation } from './helpers';
+import { getNearestSpawnBlock } from './spawnblocks';
 
 // This function will be called after the Tuonela timer has expired
 export async function respawnPlayer(player: Player) {
   const view = dataView(deathData, dataHolder(player));
   const location = objToLocation(view.deathLocation);
+  let respawnLocation = undefined;
 
   // If the player died in prison, respawn there
   if (view.isPrisoner) {
     player.sendTitle('', 'Heräät sellin sängystä', 20, 40, 20);
-    player.teleport(location);
+    respawnLocation = location;
   }
 
   // Secondary respawn location is the bed
   else if (player.bedSpawnLocation) {
-    player.teleport(player.bedSpawnLocation);
-    return;
+    respawnLocation = player.bedSpawnLocation;
   }
 
   // Respawn the player to the nearest respawnblock
-  else {
-    player.teleport(location);
+  const spawnBlock = getNearestSpawnBlock(location);
+  if (!respawnLocation && spawnBlock) {
+    respawnLocation = spawnBlock.location.add(0.5, 1, 0.5);
   }
+
+  // If no other spawn is valid
+  if (!respawnLocation) {
+    console.warn(
+      `${player.name} spawnasi ja yhtään spawnkuutiota ei löytynyt. Virhe?`,
+    );
+    respawnLocation = location.world.spawnLocation;
+  }
+
+  player.teleport(respawnLocation);
 
   // Clear data
   deleteView(deathData, player);
 
-  player.playSound(player.location, Sound.ITEM_ARMOR_EQUIP_GENERIC, 1, 1);
+  player.playSound(player.location, Sound.ITEM_ARMOR_EQUIP_LEATHER, 1, 1);
 }
+
+registerCommand('respawn', (sender, _label, args) => {
+  if (!args.length) {
+    if (sender instanceof Player) {
+      respawnPlayer(sender);
+      return;
+    }
+  }
+  const player = Bukkit.server.getPlayer(args[0]);
+  if (player) {
+    sender.sendMessage('Pelaaja herätetty kuolleista');
+    respawnPlayer(player);
+  }
+});

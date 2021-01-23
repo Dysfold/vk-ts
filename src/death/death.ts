@@ -1,7 +1,8 @@
 import { PlayerPostRespawnEvent } from 'com.destroystokyo.paper.event.player';
-import { Bukkit, Material, Server } from 'org.bukkit';
+import { Bukkit, Material } from 'org.bukkit';
 import { EntityType, Player } from 'org.bukkit.entity';
 import { PlayerDeathEvent } from 'org.bukkit.event.entity';
+import { DamageCause } from 'org.bukkit.event.entity.EntityDamageEvent';
 import { PlayerRespawnEvent } from 'org.bukkit.event.player';
 import { dataHolder } from '../common/datas/holder';
 import { dataView } from '../common/datas/view';
@@ -13,9 +14,41 @@ import {
   TUONELA_WORLD,
 } from './tuonela';
 
+const DURATIONS = {
+  default: 10,
+  monster: 20,
+  player: 60,
+};
+
+function getTuonelaDuration(event: PlayerDeathEvent) {
+  // Player killed
+  if (event.entity.killer) return DURATIONS.player;
+
+  const causeEvent = event.entity.lastDamageCause;
+  if (!causeEvent) return DURATIONS.default;
+
+  // Monster killed
+  if (causeEvent.cause === DamageCause.ENTITY_ATTACK) {
+    return DURATIONS.monster;
+  }
+
+  // Creeper killed
+  if (causeEvent.cause === DamageCause.ENTITY_EXPLOSION) {
+    return DURATIONS.monster;
+  }
+
+  // Projectile killed
+  if (causeEvent.cause === DamageCause.PROJECTILE) {
+    return DURATIONS.monster;
+  }
+
+  return DURATIONS.default;
+}
+
 // Save players death location and set the Tuonela duration
 registerEvent(PlayerDeathEvent, async (event) => {
   if (event.entityType !== EntityType.PLAYER) return;
+  event.deathMessage = null;
   if (event.entity.world === TUONELA_WORLD) {
     event.setCancelled(true);
     return;
@@ -24,7 +57,7 @@ registerEvent(PlayerDeathEvent, async (event) => {
   const view = dataView(deathData, dataHolder(player));
 
   // Set the desired Tuonela time in minutes
-  const tuonelaDuration = 0.12;
+  const tuonelaDuration = getTuonelaDuration(event);
 
   // Save the data
   view.deathLocation = locationToObj(player.location);

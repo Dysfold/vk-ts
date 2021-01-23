@@ -1,12 +1,16 @@
+import { Entity } from 'net.md_5.bungee.api.chat.hover.content';
 import {
   Bukkit,
+  Effect,
   EntityEffect,
   GameMode,
+  Particle,
   Sound,
   SoundCategory,
 } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { PlayerJoinEvent } from 'org.bukkit.event.player';
+import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import { dataHolder } from '../common/datas/holder';
 import { dataView } from '../common/datas/view';
 import { deathData } from './deathData';
@@ -14,9 +18,10 @@ import { respawnPlayer } from './respawning';
 
 // Replace this with the actual Tuonela-world
 export const TUONELA_WORLD =
-  Bukkit.server.getWorld('world_the_nether') ||
-  Bukkit.server.worlds[1] ||
-  Bukkit.server.worlds[0];
+  Bukkit.server.getWorld('tuonela') || // In the production server, there should be world named "tuonela"
+  Bukkit.server.getWorld('world_the_nether') || // Default fallback for development servers (nether)
+  Bukkit.server.worlds[1] || // This is usually nether
+  Bukkit.server.worlds[0]; // The server has only 1 world??
 
 export async function startTuonela(player: Player) {
   player.teleport(TUONELA_WORLD.spawnLocation);
@@ -104,6 +109,9 @@ function getCountdownString(time: number) {
 }
 
 function playTuonelaJoinEffects(player: Player) {
+  player.addPotionEffect(
+    new PotionEffect(PotionEffectType.BLINDNESS, 30, 1, false, false, false),
+  );
   player.playEffect(EntityEffect.TOTEM_RESURRECT);
   player.playSound(
     player.location,
