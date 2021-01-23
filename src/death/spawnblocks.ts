@@ -22,7 +22,7 @@ const spawnBlockData = dataType('spanwBlockData', {
 });
 
 const view = dataView(spawnBlockData, spawnBlockDatabaseEntry);
-console.log('[Spawnblocks] Spawnkuutioita löytyi ' + view.blocks?.length || 0);
+log.info('[Spawnblocks] Spawnkuutioita löytyi ' + (view.blocks?.length || 0));
 
 const SPAWN_BLOCK_TYPE = Material.END_PORTAL_FRAME;
 
@@ -47,31 +47,22 @@ registerEvent(BlockBreakEvent, (event) => {
 export function getNearestSpawnBlock(from: Location) {
   if (!view.blocks) return;
   if (view.blocks.length < 1) return;
-  let nearest = objToLocation(view.blocks[0]);
+  const nearest = [];
   let shortestDistance = 99999999;
-
-  const invalidLocations = [];
 
   for (const objLoc of view.blocks) {
     const loc = objToLocation(objLoc);
     const distance = loc.distance(from);
 
     if (distance < shortestDistance) {
-      if (loc.block.type !== SPAWN_BLOCK_TYPE) {
-        invalidLocations.push(loc);
-        continue;
-      }
       shortestDistance = distance;
-      nearest = loc;
+      nearest.unshift(loc);
     }
   }
 
-  for (const loc of invalidLocations) {
-    console.warn('Poistetaan mystisesti kadonnut spawnkuutio! ' + loc);
-    deleteSpawnBlockAt(loc);
+  for (const location of nearest) {
+    if (location.block.type === SPAWN_BLOCK_TYPE) return location.block;
   }
-
-  return nearest.block;
 }
 
 function deleteSpawnBlockAt(location: Location) {

@@ -1,12 +1,12 @@
 import { PlayerPostRespawnEvent } from 'com.destroystokyo.paper.event.player';
-import { Bukkit, Material } from 'org.bukkit';
+import { Material } from 'org.bukkit';
 import { EntityType, Player } from 'org.bukkit.entity';
 import { PlayerDeathEvent } from 'org.bukkit.event.entity';
 import { DamageCause } from 'org.bukkit.event.entity.EntityDamageEvent';
 import { PlayerRespawnEvent } from 'org.bukkit.event.player';
 import { dataHolder } from '../common/datas/holder';
 import { dataView } from '../common/datas/view';
-import { deathData } from './deathData';
+import { DeathData } from './DeathData';
 import { locationToObj } from './helpers';
 import {
   getTuonelaSpawnLocation,
@@ -54,7 +54,7 @@ registerEvent(PlayerDeathEvent, async (event) => {
     return;
   }
   const player = event.entity;
-  const view = dataView(deathData, dataHolder(player));
+  const view = dataView(DeathData, dataHolder(player));
 
   // Set the desired Tuonela time in minutes
   const tuonelaDuration = getTuonelaDuration(event);

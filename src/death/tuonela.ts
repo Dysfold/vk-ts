@@ -1,10 +1,7 @@
-import { Entity } from 'net.md_5.bungee.api.chat.hover.content';
 import {
   Bukkit,
-  Effect,
   EntityEffect,
   GameMode,
-  Particle,
   Sound,
   SoundCategory,
 } from 'org.bukkit';
@@ -13,7 +10,7 @@ import { PlayerJoinEvent } from 'org.bukkit.event.player';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import { dataHolder } from '../common/datas/holder';
 import { dataView } from '../common/datas/view';
-import { deathData } from './deathData';
+import { DeathData } from './DeathData';
 import { respawnPlayer } from './respawning';
 
 // Replace this with the actual Tuonela-world
@@ -26,6 +23,7 @@ export const TUONELA_WORLD =
 export async function startTuonela(player: Player) {
   player.teleport(TUONELA_WORLD.spawnLocation);
   addPlayerToTuonelaPlayers(player);
+  await wait(0.1, 'seconds');
   playTuonelaJoinEffects(player);
   await wait(0.7, 'seconds');
   player.sendTitle('', 'Olet kuollut', 40, 40, 30);
@@ -56,7 +54,7 @@ for (const player of Bukkit.server.onlinePlayers) {
 }
 
 function addPlayerToTuonelaPlayers(player: Player) {
-  const view = dataView(deathData, dataHolder(player));
+  const view = dataView(DeathData, dataHolder(player));
   tuonelaPlayers.set(player, view.respawnTime);
 }
 
@@ -110,7 +108,7 @@ function getCountdownString(time: number) {
 
 function playTuonelaJoinEffects(player: Player) {
   player.addPotionEffect(
-    new PotionEffect(PotionEffectType.BLINDNESS, 30, 1, false, false, false),
+    new PotionEffect(PotionEffectType.BLINDNESS, 50, 1, false, false, false),
   );
   player.playEffect(EntityEffect.TOTEM_RESURRECT);
   player.playSound(

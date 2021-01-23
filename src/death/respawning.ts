@@ -1,15 +1,14 @@
-import { Bukkit, Location, Sound } from 'org.bukkit';
+import { Bukkit, Sound } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
-import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import { dataHolder } from '../common/datas/holder';
 import { dataView, deleteView } from '../common/datas/view';
-import { deathData } from './deathData';
+import { DeathData } from './DeathData';
 import { objToLocation } from './helpers';
 import { getNearestSpawnBlock } from './spawnblocks';
 
 // This function will be called after the Tuonela timer has expired
 export async function respawnPlayer(player: Player) {
-  const view = dataView(deathData, dataHolder(player));
+  const view = dataView(DeathData, dataHolder(player));
   const location = objToLocation(view.deathLocation);
   let respawnLocation = undefined;
 
@@ -32,7 +31,7 @@ export async function respawnPlayer(player: Player) {
 
   // If no other spawn is valid
   if (!respawnLocation) {
-    console.warn(
+    log.warn(
       `${player.name} spawnasi ja yhtään spawnkuutiota ei löytynyt. Virhe?`,
     );
     respawnLocation = location.world.spawnLocation;
@@ -41,7 +40,7 @@ export async function respawnPlayer(player: Player) {
   player.teleport(respawnLocation);
 
   // Clear data
-  deleteView(deathData, player);
+  deleteView(DeathData, player);
 
   player.playSound(player.location, Sound.ITEM_ARMOR_EQUIP_LEATHER, 1, 1);
 }

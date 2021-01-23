@@ -1,7 +1,7 @@
 import { dataType } from '../common/datas/holder';
 import * as yup from 'yup';
 
-export const deathData = dataType('playerDeathData', {
+export const DeathData = dataType('playerDeathData', {
   isPrisoner: yup.boolean().notRequired(),
   respawnTime: yup.number().required(),
   deathLocation: yup
