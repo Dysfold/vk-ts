@@ -1,6 +1,5 @@
 import { ProjectileCollideEvent } from 'com.destroystokyo.paper.event.entity';
-import { Entity } from 'net.md_5.bungee.api.chat.hover.content';
-import { Bukkit, Material, Sound, SoundCategory } from 'org.bukkit';
+import { Material, Sound, SoundCategory } from 'org.bukkit';
 import { Player, Snowball } from 'org.bukkit.entity';
 import {
   ProjectileHitEvent,
