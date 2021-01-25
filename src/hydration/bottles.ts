@@ -13,7 +13,14 @@ import {
 } from 'org.bukkit.inventory';
 import { PotionMeta } from 'org.bukkit.inventory.meta';
 import { PotionData, PotionType } from 'org.bukkit.potion';
+import { isRightClick } from '../common/helpers/click';
 import { CustomItem } from '../common/items/CustomItem';
+import {
+  canFillCauldron,
+  getPotionData,
+  getWaterQuality,
+  WaterQuality,
+} from './water-quality';
 
 const WATER_POTION_DATA = new PotionData(PotionType.WATER, false, false);
 
@@ -88,14 +95,18 @@ because those items would otherwise become normal bottles without custom model d
 // Fill a bottle
 registerEvent(PlayerInteractEvent, async (event) => {
   if (event.item?.type !== Material.GLASS_BOTTLE) return;
-  if (!event.item.itemMeta.hasCustomModelData()) return; // Default glass bottle
-  const a = event.action;
-  if (a !== Action.RIGHT_CLICK_AIR && a !== Action.RIGHT_CLICK_BLOCK) return;
+  // if (!event.item.itemMeta.hasCustomModelData()) {
+  //   // Default glass bottle
+
+  //   return;
+  // }
+  if (!isRightClick(event.action)) return;
 
   // Didn't compile? Could this be used instead of setCancelled?
-  //event.setUseItemInHand(Result.DENY)
+  //event.setUseItemInHand(Result.DENY);
   event.setCancelled(true);
   let bottleCanFill = false;
+  let waterQuality: WaterQuality | undefined = undefined;
 
   const clickedBlock = event.clickedBlock;
   if (clickedBlock) {
@@ -112,6 +123,9 @@ registerEvent(PlayerInteractEvent, async (event) => {
         // Decrease the level of the cauldron
         blockData.level--;
         clickedBlock.blockData = blockData;
+
+        // Cauldrons provide normal water
+        waterQuality = 'NORMAL';
       }
     }
     // If the block on the clicked side was water
@@ -132,12 +146,19 @@ registerEvent(PlayerInteractEvent, async (event) => {
 
   if (bottleCanFill) {
     // Get corresponding customitem
-    const modelId = event.item.itemMeta.customModelData;
+    const oldMeta = event.item.itemMeta;
+    const modelId = oldMeta.hasCustomModelData() ? oldMeta.customModelData : 0;
     const potion = getFullBottle(modelId);
     const meta = potion.itemMeta;
+    meta.displayName = '';
 
     // Clear weird data from the potion (it would be pink)
-    (meta as PotionMeta).basePotionData = WATER_POTION_DATA;
+    if (!waterQuality) {
+      waterQuality = getWaterQuality(event);
+    }
+
+    const potionData = getPotionData(waterQuality);
+    (meta as PotionMeta).basePotionData = potionData;
     potion.itemMeta = meta;
 
     event.item.amount--;
@@ -148,7 +169,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
 // Fill a cauldron
 registerEvent(PlayerInteractEvent, async (event) => {
   if (event.item?.type !== Material.POTION) return;
-  if (!event.item.itemMeta.hasCustomModelData()) return; // Default glass bottle
+
   const a = event.action;
   if (a !== Action.RIGHT_CLICK_AIR && a !== Action.RIGHT_CLICK_BLOCK) return;
 
@@ -157,8 +178,22 @@ registerEvent(PlayerInteractEvent, async (event) => {
   const levelled = block.blockData as Levelled;
   if (levelled.level === levelled.maximumLevel) return;
 
+  event.setCancelled(true);
+
+  if (!canFillCauldron(event.item)) {
+    event.player.sendActionBar(
+      'Voit täyttää padan vain tavallisella tai kirkkaalla vedellä',
+    );
+    return;
+  }
+
+  // Fill the cauldron
+  levelled.level++;
+  block.blockData = levelled;
+
   // Player is filling a cauldron with custom bottle
-  const modelId = event.item.itemMeta.customModelData;
+  const meta = event.item.itemMeta;
+  const modelId = meta.hasCustomModelData() ? meta.customModelData : 0;
   const bottle = getEmptyBottle(modelId);
 
   // Wait 1 millis so we dont fire bottle fill event

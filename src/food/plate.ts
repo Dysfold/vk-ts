@@ -6,7 +6,7 @@ import {
   PlayerItemConsumeEvent,
 } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
-import { playDrinkingSound } from '../hydration/hydrate';
+import { playDrinkingEffects } from '../hydration/hydrate';
 import { FoodInfo } from './FoodInfo';
 
 registerEvent(PlayerInteractEntityEvent, (event) => {
@@ -57,7 +57,7 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
     event.setCancelled(true);
     const drinkEvent = new PlayerItemConsumeEvent(player, item);
     Bukkit.server.pluginManager.callEvent(drinkEvent);
-    playDrinkingSound(player);
+    playDrinkingEffects(player);
 
     // Empty the bottle
     item.type = Material.GLASS_BOTTLE;
