@@ -20,7 +20,7 @@ export class ChatMessage {
   /**
    * If this message should be discarded before next pipeline step.
    */
-  private requestDiscard: boolean;
+  discard: boolean;
 
   /**
    * Data to pass between chat handlers.
@@ -31,7 +31,7 @@ export class ChatMessage {
     this.sender = sender;
     this.channel = channel;
     this.content = content;
-    this.requestDiscard = false;
+    this.discard = false;
     this.userData = {};
   }
 
@@ -43,16 +43,8 @@ export class ChatMessage {
     return value;
   }
 
-  addData(data: { new (...args: any[]): any }) {
+  setData(data: { new (...args: any[]): any }) {
     this.userData[data.constructor.name] = data;
-  }
-
-  discard(): void {
-    this.requestDiscard = true;
-  }
-
-  isDiscarded(): boolean {
-    return this.requestDiscard;
   }
 }
 
@@ -83,8 +75,19 @@ export class ChatPipeline {
     this.dirty = false; // Empty, nothing to sort
   }
 
-  addHandler(handler: ChatHandler): void {
-    this.handlers.push(handler);
+  /**
+   * Adds a chat handler to this pipeline.
+   * @param name Internally used name of the handler.
+   * @param priority Priority of handler. Handlers with lowest priority come
+   * first within one pipeline,
+   * @param callback Function to call with messages.
+   */
+  addHandler(
+    name: string,
+    priority: number,
+    callback: (msg: ChatMessage) => void,
+  ): void {
+    this.handlers.push({ name: name, priority: priority, callback: callback });
     this.dirty = true; // Sort before use
   }
 
@@ -108,12 +111,29 @@ export class ChatPipeline {
     }
     for (const handler of this.handlers) {
       handler.callback(msg, receiver);
-      if (msg.isDiscarded()) {
+      if (msg.discard) {
         // Execute no more handlers and tell caller not to do so either
         return false;
       }
     }
     return true; // Message was not discarded
+  }
+}
+
+export class LocalPipeline extends ChatPipeline {
+  /**
+   * Adds a chat handler to this pipeline.
+   * @param name Internally used name of the handler.
+   * @param priority Priority of handler. Handlers with lowest priority come
+   * first within one pipeline,
+   * @param callback Function to call with messages and their receivers.
+   */
+  addHandler(
+    name: string,
+    priority: number,
+    callback: (msg: ChatMessage, receiver: Player) => void,
+  ): void {
+    super.addHandler(name, priority, callback as any); // FIXME dirty hack
   }
 }
 
@@ -126,4 +146,4 @@ export const GLOBAL_PIPELINE = new ChatPipeline();
  * Pipeline that is executed once per message per player, for all chat
  * channels.
  */
-export const LOCAL_PIPELINE = new ChatPipeline();
+export const LOCAL_PIPELINE = new LocalPipeline();
