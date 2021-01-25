@@ -7,7 +7,7 @@ const CUSTOM_ITEM_TYPES = new Map([
   ['tool', Material.IRON_HOE],
   ['sword', Material.IRON_SWORD],
   ['hat', Material.LEATHER_BOOTS],
-  ['food', Material.DRIED_KELP],
+  ['food', Material.POISONOUS_POTATO],
   ['throwable', Material.SNOWBALL],
   ['bottle', Material.GLASS_BOTTLE],
   ['hidden', Material.HEART_OF_THE_SEA],
