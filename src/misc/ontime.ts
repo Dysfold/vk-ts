@@ -30,7 +30,7 @@ registerCommand(
     // Get your own ontime
     if (args.length === 0) {
       if (!(sender instanceof Player)) return;
-      var ticks = getTicks(sender);
+      const ticks = getTicks(sender);
       sender.sendMessage('§e-------------------------------');
       displayOntime(sender, sender.name, ticks);
       sender.sendMessage('§e-------------------------------');
