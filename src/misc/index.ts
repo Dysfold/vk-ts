@@ -38,3 +38,4 @@ require('./farmland-trampling');
 require('./fishing');
 require('./farmland-trampling');
 require('./announcements');
+require('./starting-items');
