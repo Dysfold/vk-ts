@@ -50,6 +50,7 @@ registerCommand(
     },
     executableBy: 'both',
     accessChecker: () => true,
+    usage: '/ontime, /ontime top, /ontime top <n>',
   },
 );
 
