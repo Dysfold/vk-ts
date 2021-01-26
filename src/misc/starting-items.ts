@@ -39,7 +39,7 @@ const ITEMS = [
  * Give all basic starting items for the player
  */
 registerEvent(PlayerJoinEvent, (event) => {
-  //   if (event.player.hasPlayedBefore()) return;
+  if (event.player.hasPlayedBefore()) return;
   for (const item of ITEMS) {
     giveItem(event.player, item);
   }
