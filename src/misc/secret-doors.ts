@@ -1,14 +1,18 @@
-import { Bukkit, Material, Sound, SoundCategory } from 'org.bukkit';
+import { Material, Sound, SoundCategory } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Half } from 'org.bukkit.block.data.Bisected';
 import { Door } from 'org.bukkit.block.data.type';
 import { Hinge } from 'org.bukkit.block.data.type.Door';
 import { Player } from 'org.bukkit.entity';
-import { Action, BlockBreakEvent } from 'org.bukkit.event.block';
+import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import * as yup from 'yup';
+import { purgeCustomData } from '../common/blocks/blocks';
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { chanceOf } from '../common/helpers/math';
+
+const DOOR_REVEAL_CHANCE = 0.9;
+const DOOR_HIDE_CHANCE = 0.9;
 
 const CobblestoneDoor = new CustomBlock({
   type: Material.COBBLESTONE,
@@ -45,7 +49,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
   if (doorCooldowns.has(event.player)) return;
   const secretDoor = DOORS.get(block.type);
   if (!secretDoor) return;
-  if (chanceOf(0.9)) return;
+  if (chanceOf(DOOR_HIDE_CHANCE)) return;
 
   const door = block.blockData as Door;
   let upper: Block;
@@ -80,16 +84,16 @@ const revealEvent = async (
 ) => {
   if (data.hasLeftHinge === undefined) return;
   if (doorCooldowns.has(event.player)) return;
-  if (chanceOf(0.9)) return;
+  if (chanceOf(DOOR_REVEAL_CHANCE)) return;
   if (!event.clickedBlock) return;
 
   const hinge = data.hasLeftHinge ? Hinge.LEFT : Hinge.RIGHT;
   const block = event.clickedBlock;
 
   // This deletes the customblock data
-  const blockBreakEvent = new BlockBreakEvent(block, event.player);
-  Bukkit.server.pluginManager.callEvent(blockBreakEvent);
-  if (blockBreakEvent.isCancelled()) return;
+  // We don't want to use setBlock, beucause we replace blockdata of the door
+  // without updating physics (the door would break otherwise)
+  purgeCustomData(block);
 
   const upper = block;
   const lower = upper.getRelative(BlockFace.DOWN);
