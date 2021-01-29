@@ -74,7 +74,7 @@ registerEvent(PlayerDeathEvent, async (event) => {
 });
 
 registerEvent(PlayerRespawnEvent, (event) => {
-  event.respawnLocation = getTuonelaSpawnLocation(event.player);
+  event.respawnLocation = getTuonelaSpawnLocation();
 });
 
 registerEvent(PlayerPostRespawnEvent, (event) => {
