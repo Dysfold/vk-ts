@@ -2,6 +2,8 @@ import { Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
 import { HandSaw } from '../../misc/saw';
 import { shapedRecipe } from './utilities/shaped-recipe';
+import { IronSwordPart } from '../../blacksmith/metal-parts';
+import { HotIronBlade } from '../../blacksmith/blacksmith';
 
 shapedRecipe({
   key: 'itemstack_test',

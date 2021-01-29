@@ -4,9 +4,9 @@ import { BlockBreakEvent, Action } from 'org.bukkit.event.block';
 import { HandSaw } from './saw';
 
 const DIRT_LIKE = new Set([
-  Material.DIRT.ordinal(),
-  Material.GRASS_BLOCK.ordinal(),
-  Material.GRASS_PATH.ordinal(),
+  Material.DIRT,
+  Material.GRASS_BLOCK,
+  Material.GRASS_PATH,
 ]);
 
 function isHoe(type: Material | undefined) {
@@ -30,7 +30,7 @@ registerEvent(PlayerInteractEvent, (event) => {
 
   const block = event.clickedBlock;
   if (!block) return;
-  if (!DIRT_LIKE.has(block.type.ordinal())) return;
+  if (!DIRT_LIKE.has(block.type)) return;
 
   if (!event.item?.itemMeta.hasCustomModelData()) return;
   event.setCancelled(true);

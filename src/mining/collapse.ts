@@ -1,4 +1,4 @@
-import { Location, Material } from 'org.bukkit';
+import { GameMode, Location, Material, Sound, SoundCategory } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
@@ -7,35 +7,38 @@ import { Vector } from 'org.bukkit.util';
 const COLLAPSE_CHECK_CHANCE = 0.1;
 
 const STONES = new Set([
-  Material.STONE.ordinal(),
-  Material.DIORITE.ordinal(),
-  Material.GRANITE.ordinal(),
-  Material.ANDESITE.ordinal(),
+  Material.STONE,
+  Material.DIORITE,
+  Material.GRANITE,
+  Material.ANDESITE,
 ]);
+
+function isStone(type: Material) {
+  return STONES.has(type);
+}
+
+function canFall(type: Material) {
+  if (type.toString().includes('_SLAB')) return true;
+  if (type.toString().includes('_STAIRS')) return true;
+  return false;
+}
 
 const COLLAPSE_RADIUS = 10;
 const SUPPORT_RADIUS = 6;
-const SUPPORTS = new Set([
-  Material.ACACIA_LOG.ordinal(),
-  Material.BIRCH_LOG.ordinal(),
-  Material.DARK_OAK_LOG.ordinal(),
-  Material.JUNGLE_LOG.ordinal(),
-  Material.OAK_LOG.ordinal(),
-  Material.SPRUCE_LOG.ordinal(),
-  Material.STRIPPED_ACACIA_LOG.ordinal(),
-  Material.STRIPPED_BIRCH_LOG.ordinal(),
-  Material.STRIPPED_DARK_OAK_LOG.ordinal(),
-  Material.STRIPPED_JUNGLE_LOG.ordinal(),
-  Material.STRIPPED_OAK_LOG.ordinal(),
-  Material.STRIPPED_SPRUCE_LOG.ordinal(),
-]);
+
+function isSupport(type: Material) {
+  const str = type.toString();
+  return str.includes('_LOG') || str.includes('_WOOD');
+}
 
 registerEvent(BlockBreakEvent, (event) => {
   const block = event.block;
 
+  if (event.player.gameMode === GameMode.CREATIVE) return;
   // We only collapse underground mines
   if (event.player.location.block.lightFromSky !== 0) return;
-  if (!STONES.has(block.type.ordinal())) return;
+  // Breaking a stone or a support block can cause the mine to collapse
+  if (!isStone(block.type) && !isSupport(block.type)) return;
   if (Math.random() > COLLAPSE_CHECK_CHANCE) return;
 
   const location = block.location;
@@ -54,8 +57,12 @@ function isSupported(location: Location) {
   for (let i = x - SUPPORT_RADIUS; i < location.x + SUPPORT_RADIUS; i++) {
     for (let j = -1; j < 1; j++) {
       for (let k = z - SUPPORT_RADIUS; k < z + SUPPORT_RADIUS; k++) {
+        if (i === x && j === 0 && k === z) {
+          // This was the block we broke. No need to check it.
+          continue;
+        }
         const material = world.getBlockAt(i, y + j, k).type;
-        if (SUPPORTS.has(material.ordinal())) {
+        if (isSupport(material)) {
           // The mine was supported
           return true;
         }
@@ -97,7 +104,8 @@ function collapse(air: Block) {
     location.add(0, 1, 0);
 
     const block = location.block;
-    if (STONES.has(block.type.ordinal())) {
+    const type = block.type;
+    if (isStone(type)) {
       block.type = Material.AIR;
       const fallingBlock = block.world.spawnFallingBlock(
         block.location.add(0.5, 0.5, 0.5),
@@ -106,6 +114,18 @@ function collapse(air: Block) {
       );
       fallingBlock.setHurtEntities(true);
       fallingBlock.setDropItem(false);
+      fallingBlock.velocity = new Vector();
+    }
+
+    // Player placed blocks which can fall
+    else if (canFall(type)) {
+      block.type = Material.AIR;
+      const fallingBlock = block.world.spawnFallingBlock(
+        block.location.add(0.5, 0.5, 0.5),
+        type,
+        0,
+      );
+      fallingBlock.setHurtEntities(true);
       fallingBlock.velocity = new Vector();
     }
   }
@@ -124,10 +144,11 @@ async function shake(player: Player) {
 function playSound(location: Location) {
   location.world.playSound(
     location,
-    'minecraft:entity.wither.death',
+    Sound.ENTITY_WITHER_DEATH,
     // Alternative sounds
     //'minecraft:item.totem.use',
     //'minecraft:block.chorus_flower.death',
+    SoundCategory.BLOCKS,
     0.5,
     0.2,
   );

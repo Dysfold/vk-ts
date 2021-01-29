@@ -1,4 +1,4 @@
-import { Bukkit, Location, Material } from 'org.bukkit';
+import { Bukkit, Location, Material, Particle } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Gate } from 'org.bukkit.block.data.type';
 import { Player } from 'org.bukkit.entity';
@@ -29,42 +29,42 @@ const sawCooldowns = new Set<string>();
 const sawingPlayers = new Set<Player>();
 
 // prettier-ignore
-const DROPS = new Map<number, Material>([
+const DROPS = new Map<Material, Material>([
   // Oak
-  [Material.OAK_LOG.ordinal(),                  Material.OAK_PLANKS],
-  [Material.STRIPPED_OAK_LOG.ordinal(),         Material.OAK_PLANKS],
-  [Material.OAK_WOOD.ordinal(),                 Material.OAK_PLANKS],
-  [Material.STRIPPED_OAK_WOOD.ordinal(),        Material.OAK_PLANKS],
+  [Material.OAK_LOG,                    Material.OAK_PLANKS],
+  [Material.STRIPPED_OAK_LOG ,          Material.OAK_PLANKS],
+  [Material.OAK_WOOD ,                  Material.OAK_PLANKS],
+  [Material.STRIPPED_OAK_WOOD,          Material.OAK_PLANKS],
 
   // Jungle
-  [Material.JUNGLE_LOG.ordinal(),               Material.JUNGLE_PLANKS],
-  [Material.STRIPPED_JUNGLE_LOG.ordinal(),      Material.JUNGLE_PLANKS],
-  [Material.JUNGLE_WOOD.ordinal(),              Material.JUNGLE_PLANKS],
-  [Material.STRIPPED_JUNGLE_WOOD.ordinal(),     Material.JUNGLE_PLANKS],
+  [Material.JUNGLE_LOG ,                Material.JUNGLE_PLANKS],
+  [Material.STRIPPED_JUNGLE_LOG,        Material.JUNGLE_PLANKS],
+  [Material.JUNGLE_WOOD,                Material.JUNGLE_PLANKS],
+  [Material.STRIPPED_JUNGLE_WOOD ,      Material.JUNGLE_PLANKS],
 
   // Dark oak
-  [Material.DARK_OAK_LOG.ordinal(),             Material.DARK_OAK_PLANKS],
-  [Material.STRIPPED_DARK_OAK_LOG.ordinal(),    Material.DARK_OAK_PLANKS],
-  [Material.DARK_OAK_WOOD.ordinal(),            Material.DARK_OAK_PLANKS],
-  [Material.STRIPPED_DARK_OAK_WOOD.ordinal(),   Material.DARK_OAK_PLANKS],
+  [Material.DARK_OAK_LOG ,              Material.DARK_OAK_PLANKS],
+  [Material.STRIPPED_DARK_OAK_LOG,      Material.DARK_OAK_PLANKS],
+  [Material.DARK_OAK_WOOD,              Material.DARK_OAK_PLANKS],
+  [Material.STRIPPED_DARK_OAK_WOOD ,    Material.DARK_OAK_PLANKS],
 
   // Spruce
-  [Material.SPRUCE_LOG.ordinal(),               Material.SPRUCE_PLANKS],
-  [Material.STRIPPED_SPRUCE_LOG.ordinal(),      Material.SPRUCE_PLANKS],
-  [Material.SPRUCE_WOOD.ordinal(),              Material.SPRUCE_PLANKS],
-  [Material.STRIPPED_SPRUCE_WOOD.ordinal(),     Material.SPRUCE_PLANKS],
+  [Material.SPRUCE_LOG ,                Material.SPRUCE_PLANKS],
+  [Material.STRIPPED_SPRUCE_LOG,        Material.SPRUCE_PLANKS],
+  [Material.SPRUCE_WOOD,                Material.SPRUCE_PLANKS],
+  [Material.STRIPPED_SPRUCE_WOOD ,      Material.SPRUCE_PLANKS],
 
   // Birch
-  [Material.BIRCH_LOG.ordinal(),                Material.BIRCH_PLANKS],
-  [Material.STRIPPED_BIRCH_LOG.ordinal(),       Material.BIRCH_PLANKS],
-  [Material.BIRCH_WOOD.ordinal(),               Material.BIRCH_PLANKS],
-  [Material.STRIPPED_BIRCH_WOOD.ordinal(),      Material.BIRCH_PLANKS],
+  [Material.BIRCH_LOG,                  Material.BIRCH_PLANKS],
+  [Material.STRIPPED_BIRCH_LOG ,        Material.BIRCH_PLANKS],
+  [Material.BIRCH_WOOD ,                Material.BIRCH_PLANKS],
+  [Material.STRIPPED_BIRCH_WOOD,        Material.BIRCH_PLANKS],
 
   // ACACIA
-  [Material.ACACIA_LOG.ordinal(),               Material.ACACIA_PLANKS],
-  [Material.STRIPPED_ACACIA_LOG.ordinal(),      Material.ACACIA_PLANKS],
-  [Material.ACACIA_WOOD.ordinal(),              Material.ACACIA_PLANKS],
-  [Material.STRIPPED_ACACIA_WOOD.ordinal(),     Material.ACACIA_PLANKS],
+  [Material.ACACIA_LOG ,                Material.ACACIA_PLANKS],
+  [Material.STRIPPED_ACACIA_LOG,        Material.ACACIA_PLANKS],
+  [Material.ACACIA_WOOD,                Material.ACACIA_PLANKS],
+  [Material.STRIPPED_ACACIA_WOOD ,      Material.ACACIA_PLANKS],
 ]);
 
 function isWood(type: Material) {
@@ -100,7 +100,7 @@ Saw.event(
     if (!isWood(log.type)) return;
 
     // Break the block
-    const dropType = DROPS.get(log.type.ordinal()) || Material.AIR;
+    const dropType = DROPS.get(log.type) || Material.AIR;
     const drops = new ItemStack(dropType, 4);
     log.world.dropItem(saw.location.add(0.5, 0.5, 0.5), drops);
     log.type = Material.AIR;
@@ -111,6 +111,7 @@ Saw.event(
     saw.blockData = data;
 
     playSawSound(saw.location);
+    playSawParticles(log, dropType);
   },
 );
 
@@ -180,11 +181,19 @@ HandSaw.event(
     Bukkit.server.pluginManager.callEvent(blockBreakEvent);
     if (blockBreakEvent.isCancelled()) return;
 
-    const dropType = DROPS.get(block.type.ordinal()) || Material.AIR;
+    const dropType = DROPS.get(block.type) || Material.AIR;
     const drops = new ItemStack(dropType, 2);
     block.world.dropItem(block.location.add(0.5, 0.5, 0.5), drops);
 
     block.type = Material.AIR;
     sawingPlayers.delete(player);
+    playSawParticles(block, dropType);
   },
 );
+
+function playSawParticles(block: Block, dropType: Material) {
+  const data = dropType.createBlockData();
+  const location = block.location.add(0.5, 0.5, 0.5);
+
+  block.world.spawnParticle(Particle.BLOCK_DUST, location, 30, data);
+}

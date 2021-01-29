@@ -19,7 +19,7 @@ const MAX_BODY_HITS = 6;
 const CORPSE_NAME = 'Dinnerbone';
 
 const slaughterableAnimals = new Map<string, Array<LootDrop<undefined>>>();
-const slaughterTools: Material[] = [Material.IRON_SWORD, Material.IRON_AXE];
+const slaughterTools = new Set([Material.IRON_SWORD, Material.IRON_AXE]);
 const slaugtherSound = Sound.BLOCK_SLIME_BLOCK_STEP;
 
 const Namehider = new CustomItem({
@@ -214,7 +214,7 @@ registerEvent(EntityDamageByEntityEvent, (event) => {
     createAnimalCorpse(entity);
   } else if (entity.customName === CORPSE_NAME) {
     event.damage = 1;
-    if (slaughterTools.includes(player.itemInHand.type)) handleDrops(entity);
+    if (slaughterTools.has(player.itemInHand.type)) handleDrops(entity);
     playSlaughterEffects(entity.location);
   }
 });
