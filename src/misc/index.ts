@@ -39,3 +39,4 @@ require('./tree-felling');
 require('./fishing');
 require('./farmland-trampling');
 require('./announcements');
+require('./applause');
