@@ -8,7 +8,7 @@ import {
 import { ItemStack } from 'org.bukkit.inventory';
 import { playDrinkingSound } from '../hydration/hydrate';
 import { isCustomFood } from './custom-foods';
-import { CustomFoodInfo, FoodInfo } from './FoodInfo';
+import { CUSTOM_FOOD_INFO, FOOD_INFO } from './FoodInfo';
 import { addFoodPoints, addSaturation } from './helpers';
 
 registerEvent(PlayerInteractEntityEvent, (event) => {
@@ -34,10 +34,10 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
     if (item.isSimilar(inv.itemInOffHand)) return;
     event.setCancelled(true);
 
-    let food = FoodInfo.get(type);
+    let food = FOOD_INFO.get(type);
 
     if (isCustomFood(item)) {
-      food = CustomFoodInfo.get(item.itemMeta.customModelData);
+      food = CUSTOM_FOOD_INFO.get(item.itemMeta.customModelData);
       if (!food) return;
     } else {
       // Consume normal food items

@@ -2,7 +2,7 @@ import { Material } from 'org.bukkit';
 import { PlayerItemConsumeEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { giveItem } from '../common/helpers/inventory';
-import { CustomFoodInfo } from './FoodInfo';
+import { CUSTOM_FOOD_INFO } from './FoodInfo';
 import { addFoodPoints, addSaturation } from './helpers';
 
 const CUSTOM_FOOD_MATERIAL = Material.POISONOUS_POTATO;
@@ -20,7 +20,7 @@ registerEvent(PlayerItemConsumeEvent, (event) => {
   event.setCancelled(true);
 
   food.amount--;
-  const foodInfo = CustomFoodInfo.get(modelId);
+  const foodInfo = CUSTOM_FOOD_INFO.get(modelId);
   if (!foodInfo) return;
 
   const inv = event.player.inventory;

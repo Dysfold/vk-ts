@@ -13,7 +13,7 @@ import {
 const BOWL = new ItemStack(Material.BOWL);
 
 // prettier-ignore
-export const FoodInfo = new Map<Material, { foodPoints: number; saturation: number; result?: ItemStack; effect?: (player: Player, item?: ItemStack) => void}>([
+export const FOOD_INFO = new Map<Material, { foodPoints: number; saturation: number; result?: ItemStack; effect?: (player: Player, item?: ItemStack) => void}>([
   [Material.APPLE,            { foodPoints: 4,   saturation: 2.4    }],
   [Material.BAKED_POTATO,     { foodPoints: 5,   saturation: 6      }],
   [Material.BEETROOT,         { foodPoints: 1,   saturation: 1.2    }],
@@ -54,7 +54,7 @@ export const FoodInfo = new Map<Material, { foodPoints: number; saturation: numb
 ]);
 
 // prettier-ignore
-export const CustomFoodInfo = new Map<number, { foodPoints: number; saturation: number; result?: ItemStack }>([
+export const CUSTOM_FOOD_INFO = new Map<number, { foodPoints: number; saturation: number; result?: ItemStack }>([
   [1,   { foodPoints: 4,   saturation: 2.4    }], // Cheese
   [2,   { foodPoints: 5,   saturation: 6      }], // Meatballs
   [3,   { foodPoints: 3,   saturation: 4      }], // Fried egg
