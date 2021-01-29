@@ -35,6 +35,7 @@ require('./breaking-bottles');
 require('./gold-panning');
 require('./glass-damage');
 require('./farmland-trampling');
+require('./tree-felling');
 require('./fishing');
 require('./farmland-trampling');
 require('./announcements');
