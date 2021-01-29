@@ -11,7 +11,7 @@ registerCommand(
   },
   {
     executableBy: 'players',
-    accessChecker: () => true,
+    permission: 'vk.clap',
   },
 );
 
@@ -25,7 +25,7 @@ registerCommand(
   },
   {
     executableBy: 'players',
-    accessChecker: () => true,
+    permission: 'vk.clap',
   },
 );
 
@@ -39,7 +39,7 @@ registerCommand(
   },
   {
     executableBy: 'players',
-    accessChecker: () => true,
+    permission: 'vk.clap',
   },
 );
 
