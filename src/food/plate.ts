@@ -7,7 +7,9 @@ import {
 } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
 import { playDrinkingEffects } from '../hydration/hydrate';
-import { FoodInfo } from './FoodInfo';
+import { isCustomFood } from './custom-foods';
+import { CUSTOM_FOOD_INFO, FOOD_INFO } from './FoodInfo';
+import { addFoodPoints, addSaturation } from './helpers';
 
 registerEvent(PlayerInteractEntityEvent, (event) => {
   const entity = event.rightClicked;
@@ -24,30 +26,35 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
 
   // Eating
   if (type.isEdible()) {
+    const inv = event.player.inventory;
+
+    // Player should not be able to eat while the same item in hand
+    // To prevent weird conflicts when calling the PlayerItemConsumeEvent (for custom foods)
+    if (item.isSimilar(inv.itemInMainHand)) return;
+    if (item.isSimilar(inv.itemInOffHand)) return;
     event.setCancelled(true);
 
-    const food = FoodInfo.get(type);
-    if (!food) {
-      return;
+    let food = FOOD_INFO.get(type);
+
+    if (isCustomFood(item)) {
+      food = CUSTOM_FOOD_INFO.get(item.itemMeta.customModelData);
+      if (!food) return;
+    } else {
+      // Consume normal food items
+      if (!food) return;
+      addFoodPoints(player, food.foodPoints);
+      addSaturation(player, food.saturation);
+
+      // Add special effects from the food. (Poison from poisonous potato etc)
+      if (food.effect) food.effect(player, item);
     }
 
-    const maxFoodLevel = 20;
-    player.foodLevel = Math.min(
-      player.foodLevel + food.foodPoints,
-      maxFoodLevel,
-    );
-
-    const maxSaturation = Math.min(player.foodLevel, 20); // Max saturation is always equal to players foodlevel
-    player.saturation = Math.min(
-      player.saturation + food.saturation,
-      maxSaturation,
-    );
-
+    // Food points and saturation of the custom items are aplied in the consume event
     const consumeEvent = new PlayerItemConsumeEvent(player, item);
     Bukkit.server.pluginManager.callEvent(consumeEvent);
 
     // Empty the plate
-    itemframe.item = food.result || new ItemStack(Material.AIR);
+    itemframe.item = food?.result || new ItemStack(Material.AIR);
 
     playEatingEffects(itemframe.location, item);
   }
