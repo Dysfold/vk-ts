@@ -1,6 +1,4 @@
-import { Item } from 'net.md_5.bungee.api.chat.hover.content';
-import { Bukkit } from 'org.bukkit';
-import { Biome, Block, BlockFace } from 'org.bukkit.block';
+import { Biome, BlockFace } from 'org.bukkit.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
 import { PotionMeta } from 'org.bukkit.inventory.meta';
@@ -39,6 +37,7 @@ const BIOME_QUALITIES = new Map<Biome, WaterQuality>([
   [Biome.MOUNTAINS,             'CLEAR'],
 ]);
 
+// Minimum height for clear water quality in specific biomes, such as Mountains
 const CLEAR_WATER_HEIGHT = 110;
 
 const DIRECTIONS = [

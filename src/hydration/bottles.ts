@@ -12,7 +12,6 @@ import {
   PlayerInventory,
 } from 'org.bukkit.inventory';
 import { PotionMeta } from 'org.bukkit.inventory.meta';
-import { PotionData, PotionType } from 'org.bukkit.potion';
 import { isRightClick } from '../common/helpers/click';
 import { CustomItem } from '../common/items/CustomItem';
 import {
@@ -21,8 +20,6 @@ import {
   getWaterQuality,
   WaterQuality,
 } from './water-quality';
-
-const WATER_POTION_DATA = new PotionData(PotionType.WATER, false, false);
 
 const WineGlass = new CustomItem({
   name: 'Viinilasi',
@@ -95,15 +92,8 @@ because those items would otherwise become normal bottles without custom model d
 // Fill a bottle
 registerEvent(PlayerInteractEvent, async (event) => {
   if (event.item?.type !== Material.GLASS_BOTTLE) return;
-  // if (!event.item.itemMeta.hasCustomModelData()) {
-  //   // Default glass bottle
-
-  //   return;
-  // }
   if (!isRightClick(event.action)) return;
 
-  // Didn't compile? Could this be used instead of setCancelled?
-  //event.setUseItemInHand(Result.DENY);
   event.setCancelled(true);
   let bottleCanFill = false;
   let waterQuality: WaterQuality | undefined = undefined;
