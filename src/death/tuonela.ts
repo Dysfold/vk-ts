@@ -30,7 +30,7 @@ export async function startTuonela(player: Player) {
 }
 
 // TODO: Multiple spawnpoints in the Tuonela
-export function getTuonelaSpawnLocation(player: Player) {
+export function getTuonelaSpawnLocation() {
   return TUONELA_WORLD.spawnLocation;
 }
 
