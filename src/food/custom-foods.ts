@@ -9,8 +9,7 @@ const CUSTOM_FOOD_MATERIAL = Material.POISONOUS_POTATO;
 
 export function isCustomFood(item: ItemStack) {
   if (item.type !== CUSTOM_FOOD_MATERIAL) return false;
-  if (!item.itemMeta.hasCustomModelData()) return false;
-  return true;
+  return item.itemMeta.hasCustomModelData();
 }
 
 registerEvent(PlayerItemConsumeEvent, (event) => {
