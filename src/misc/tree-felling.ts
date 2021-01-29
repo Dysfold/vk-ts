@@ -1,4 +1,4 @@
-import { Material, TreeSpecies } from 'org.bukkit';
+import { GameMode, Material, TreeSpecies } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { Vector } from 'org.bukkit.util';
@@ -111,12 +111,13 @@ const LAYER_FACES = [
 const MAX_TREE_HEIGHT = 30;
 
 registerEvent(BlockBreakEvent, (event) => {
+  if (event.player.gameMode === GameMode.CREATIVE) return;
   const species = LOGS.get(event.block.type);
   if (!species) return;
   if (!isNaturalTree(event.block, species)) return;
   const blocks = getTree(event.block, species);
   if (!blocks) return;
-  collapse(blocks, event.block, species);
+  collapse(blocks, species);
 });
 
 function getTree(source: Block, species: TreeSpecies) {
@@ -160,7 +161,7 @@ function getNextLayerLogs(
 
 function isNaturalTree(source: Block, species: TreeSpecies) {
   const allowedBlocks = TREE_MATERIALS.get(species);
-  if (!allowedBlocks) return;
+  if (!allowedBlocks) return false;
 
   for (let i = 1; i < MAX_TREE_HEIGHT; i++) {
     const type = source.getRelative(BlockFace.UP, i).type;
@@ -168,13 +169,10 @@ function isNaturalTree(source: Block, species: TreeSpecies) {
       return true;
     }
   }
+  return false;
 }
 
-async function collapse(
-  layers: Map<string, Block>[],
-  source: Block,
-  species: TreeSpecies,
-) {
+async function collapse(layers: Map<string, Block>[], species: TreeSpecies) {
   const allowedBlocks = TREE_MATERIALS.get(species);
   if (!allowedBlocks) return;
 
