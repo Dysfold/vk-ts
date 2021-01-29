@@ -134,14 +134,16 @@ function setDefaultChannel(player: Player, channel: ChatChannel) {
 }
 
 // Redirect incoming chat messages to our chat system
-registerEvent(PlayerChatEvent, (event) => {
+registerEvent(PlayerChatEvent, async (event) => {
+  event.setCancelled(true);
+  await wait(1, 'ticks'); // Don't block the chat thread any longer than necessary
+
   // Figure out where the message should go
   const channel =
     parseChannelTag(event.message) ?? getDefaultChannel(event.player);
 
   // Our chat system handles it from this point
   channel.sendMessage(event.player, event.message);
-  event.setCancelled(true);
 });
 
 /**
@@ -162,7 +164,7 @@ function parseChannelTag(msg: string): ChatChannel | undefined {
 // Command to change and join/leave channels
 registerCommand(
   ['ch', 'channel', 'kanava'],
-  (sender, args) => {
+  (sender, _alias, args) => {
     const player = (sender as unknown) as Player;
     if (args.length == 1) {
       // One argument: change default channel
@@ -200,6 +202,7 @@ function changeChannel(player: Player, name: string) {
     player.sendMessage(`Kanavaa ${channel} ei ole olemassa`);
   } else {
     setDefaultChannel(player, channel);
+    player.sendMessage(`Puhut nyt kanavalla ${channel.name}`);
   }
 }
 
