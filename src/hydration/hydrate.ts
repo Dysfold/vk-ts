@@ -1,12 +1,11 @@
-import { Effect, EntityEffect, Material, Particle } from 'org.bukkit';
+import { Material, Particle } from 'org.bukkit';
 import { Levelled } from 'org.bukkit.block.data';
 import { Player } from 'org.bukkit.entity';
-import { Action } from 'org.bukkit.event.block';
 import {
   PlayerInteractEvent,
   PlayerItemConsumeEvent,
 } from 'org.bukkit.event.player';
-import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
+import { EquipmentSlot } from 'org.bukkit.inventory';
 import { LockedHandcuffs } from '../combat/handcuffs';
 import { isRightClick } from '../common/helpers/click';
 import {

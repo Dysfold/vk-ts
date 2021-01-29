@@ -30,6 +30,7 @@ export async function startTuonela(player: Player) {
 }
 
 // TODO: Multiple spawnpoints in the Tuonela
+// eslint-disable-next-line no-unused-vars
 export function getTuonelaSpawnLocation(player: Player) {
   return TUONELA_WORLD.spawnLocation;
 }
