@@ -104,6 +104,10 @@ const LAYER_FACES = [
   { face: BlockFace.NORTH_NORTH_WEST,     distance: 1 },
   { face: BlockFace.SOUTH_SOUTH_EAST,     distance: 1 },
   { face: BlockFace.SOUTH_SOUTH_WEST,     distance: 1 },
+  { face: BlockFace.EAST_SOUTH_EAST,     distance: 1 },
+  { face: BlockFace.EAST_NORTH_EAST,     distance: 1 },
+  { face: BlockFace.WEST_NORTH_WEST,     distance: 1 },
+  { face: BlockFace.WEST_SOUTH_WEST,     distance: 1 },
 
   { face: BlockFace.SELF,           distance: 1 },
 ];
