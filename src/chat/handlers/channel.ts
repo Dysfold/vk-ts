@@ -1,4 +1,3 @@
-import { text } from 'craftjs-plugin/chat';
 import { CHAT_CHANNELS } from '../channel';
 import { isChannelIgnored } from '../ignore';
 import { LOCAL_PIPELINE } from '../pipeline';

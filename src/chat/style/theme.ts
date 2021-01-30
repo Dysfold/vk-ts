@@ -1,3 +1,4 @@
+import { ChatColor } from 'net.md_5.bungee.api';
 import { Player } from 'org.bukkit.entity';
 import { dataHolder } from '../../common/datas/holder';
 
@@ -6,21 +7,17 @@ import { dataHolder } from '../../common/datas/holder';
  * In addition to giving players the choice about color themes, they help
  * ensure consistency of colors used by Valtakausi chat systems.
  *
- * All colors are in web-style RGB format, i.e. #RRGGBB. Alpha channel is not
- * supported by Minecraft.
+ * All colors are defined in web-style RGB format, i.e. #RRGGBB.
+ * Color strings are then 'compiled' to ChatColors for performance reasons,
+ * which is the reason why this is a generic interface.
  */
-export interface ChatTheme {
-  /**
-   * Not a color, but name of this chat theme.
-   */
-  name: string;
-
+interface Theme<T> {
   /**
    * Chat channel name color. Not shown in global.
    */
   channel: {
-    name: string;
-    parentheses: string;
+    name: T;
+    parentheses: T;
   };
 
   /**
@@ -32,34 +29,52 @@ export interface ChatTheme {
      * server admins.
      */
     name: {
-      normal: string;
-      leader: string;
-      admin: string;
+      normal: T;
+      leader: T;
+      admin: T;
     };
-    brackets: string;
+    brackets: T;
   };
 
   /**
    * Player name (and including ':') color.
    */
-  playerName: string;
+  playerName: T;
 
   /**
    * Base color of the chat message content.
    */
   message: {
-    normal: string;
+    normal: T;
 
     /**
      * Messages that mention the receiver are hightlighted.
      */
-    mention: string;
+    mention: T;
+  };
+
+  /**
+   * System message colors.
+   */
+  system: {
+    /**
+     * Status message color. Status messages are sent e.g. when chat channel
+     * changes.
+     */
+    status: T;
+
+    /**
+     * Error message color.
+     */
+    error: T;
   };
 }
 
-export const CHAT_THEMES: Record<string, ChatTheme> = {
+/**
+ * Define new chat themes here.
+ */
+const CHAT_THEMES: Record<string, Theme<string>> = {
   default: {
-    name: 'Valtakausi',
     channel: { name: '#AAAAAA', parentheses: '#555555' },
     profession: {
       name: { normal: '#FFFFFF', leader: '#FFAA00', admin: '#55FFFF' },
@@ -70,11 +85,43 @@ export const CHAT_THEMES: Record<string, ChatTheme> = {
       normal: '#FFFFFF',
       mention: '#FFFF55',
     },
+    system: {
+      status: '#AAAAAA',
+      error: '#FF5555',
+    },
   },
 };
 
-export function getChatTheme(player: Player): ChatTheme {
-  return CHAT_THEMES[
+/**
+ * Recursively parses strings to ChatColors with a bunch of magic tricks.
+ * @param record Chat theme(s) with color strings.
+ */
+function compileThemes(record: Record<string, Record<string, any> | string>) {
+  const compiled: Record<string, Record<string, any> | ChatColor> = {};
+  for (const [key, value] of Object.entries(record)) {
+    compiled[key] =
+      typeof value == 'string' ? ChatColor.of(value) : compileThemes(value);
+  }
+  return compiled;
+}
+
+/**
+ * Chat themes contain most colors used by Valtakausi for chat messages.
+ * In addition to giving players the choice about color themes, they help
+ * ensure consistency of colors used by Valtakausi chat systems.
+ *
+ * This type represents chat themes that have been compiled to use ChatColors
+ * instead of hex strings.
+ */
+export type ChatTheme = Theme<ChatColor>;
+
+/**
+ * Themes that have been compiled to use ChatColors.
+ */
+const COMPILED_THEMES = compileThemes(CHAT_THEMES) as Record<string, ChatTheme>;
+
+export function getChatTheme(player: Player): Theme<ChatColor> {
+  return COMPILED_THEMES[
     dataHolder(player).get('chat.theme', 'string') ?? 'default'
   ];
 }
