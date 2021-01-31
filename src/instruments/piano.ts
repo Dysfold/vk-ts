@@ -8,7 +8,7 @@ import { Directional } from 'org.bukkit.material';
 import { Vector } from 'org.bukkit.util';
 import { Note, NoteName } from './Note';
 
-const PIANO = Material.BROWN_GLAZED_TERRACOTTA;
+export const PIANO = Material.BROWN_GLAZED_TERRACOTTA;
 const MAX_PIANO_WIDTH = 5;
 const MAX_OCTAVE = 4;
 const NOTES_PER_BLOCK = 12;
@@ -24,15 +24,20 @@ const KEYS_VERTICAL_MIN = 0.62;
 const KEYS = new Map<NoteName, number>([
   ['C', 6],
   ['C#', 7],
+  ['Db', 7],
   ['D', 8],
   ['D#', 9],
+  ['Eb', 9],
   ['E', 10],
   ['F', 11],
   ['F#', 12],
+  ['Gb', 12],
   ['G', 13],
   ['G#', 14],
+  ['Ab', 14],
   ['A', 15],
   ['A#', 16],
+  ['Hb', 16],
   ['H', 17],
 ]);
 
@@ -40,14 +45,17 @@ const KEYS = new Map<NoteName, number>([
 registerCommand('piano', (sender, _label, args) => {
   if (sender instanceof Player) {
     const player = sender as Player;
-    const note = new Note(
-      args[0] as NoteName,
-      Number(args[1]),
-      Number(args[2]),
-    );
-    playNote(player.location, note);
+    playArgs(player, args);
   }
 });
+async function playArgs(player: Player, args: string) {
+  const bpm = 120;
+  for (const arg of args) {
+    const note = new Note(arg);
+    playNote(player.location, note);
+    await wait(note.getMillis(bpm), 'millis');
+  }
+}
 
 export function playNote(loc: Location, note: Note) {
   let noteNumber = KEYS.get(note.name);
