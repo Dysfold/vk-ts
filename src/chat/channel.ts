@@ -275,7 +275,10 @@ function changeChannel(player: Player, name: string) {
   }
   setIgnoreChannel(player, channel, false); // Automatically join ignored channel
   setDefaultChannel(player, channel);
-  statusMessage(player, `Puhut nyt kanavalla ${channel.names[0]}`);
+  statusMessage(
+    player,
+    channel.messages.speaking ?? `Puhut nyt kanavalla ${channel.names[0]}`,
+  );
 }
 
 // Generate commands for all channel aliases
