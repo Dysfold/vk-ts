@@ -18,11 +18,21 @@ const MAX_DISTANCE = 3;
 
 setInterval(() => {
   musicians.forEach((loc, player) => {
+    if (!player.isOnline()) {
+      musicians.delete(player);
+      return;
+    }
+    if (player.world !== loc.world) {
+      musicians.delete(player);
+      return;
+    }
     if (player.location.distance(loc) > MAX_DISTANCE) {
       musicians.delete(player);
+      player.sendActionBar('Olet liian kaukana nuoteista');
+      return;
     }
   });
-});
+}, 1000);
 
 // Play sheet music with piano
 registerEvent(PlayerInteractEntityEvent, async (event) => {
