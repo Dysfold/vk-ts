@@ -11,8 +11,21 @@ const SHEET_MATERIALS = new Set([
   Material.WRITABLE_BOOK,
 ]);
 
+const musicians = new Map<Player, Location>();
+
+// Max distance to the instrument
+const MAX_DISTANCE = 3;
+
+setInterval(() => {
+  musicians.forEach((loc, player) => {
+    if (player.location.distance(loc) > MAX_DISTANCE) {
+      musicians.delete(player);
+    }
+  });
+});
+
 // Play sheet music with piano
-registerEvent(PlayerInteractEntityEvent, (event) => {
+registerEvent(PlayerInteractEntityEvent, async (event) => {
   if (!(event.rightClicked instanceof ItemFrame)) return;
   const frame = event.rightClicked;
   if (!frame.item) return;
@@ -20,14 +33,29 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
   const item = frame.item;
   if (!SHEET_MATERIALS.has(item.type)) return;
   event.setCancelled(true);
-  playNotesFromBook(frame.location, item);
+  const player = event.player;
+  const location = frame.location.toCenterLocation();
+  if (musicians.has(player)) return;
+  musicians.set(player, location);
+  await playNotesFromBook(location, item, player);
+  musicians.delete(player);
 });
 
-async function playNotesFromBook(location: Location, book: ItemStack) {
+async function playNotesFromBook(
+  location: Location,
+  book: ItemStack,
+  player: Player,
+) {
   const bookMeta = book.itemMeta as BookMeta;
   const pageCount = bookMeta.pageCount;
   if (pageCount < 2) return; // Book needs to have more than 1 page
 
+  // Bpm is formatted like this:
+  //
+  // bpm
+  // 120
+  //
+  // Where "120" can be any number for bpm and it has to be on the line after the "bmp" text
   const firstPage = bookMeta.getPage(1);
   const strings = firstPage.split('\n');
   const bpmIndex = strings.indexOf('bpm');
@@ -37,9 +65,15 @@ async function playNotesFromBook(location: Location, book: ItemStack) {
     const page = bookMeta.getPage(2);
     const noteStrings = page.split(' ');
     for (const noteString of noteStrings) {
+      if (noteString === '' || noteString === '\n') continue;
       const note = new Note(noteString);
       if (!note.isPause) playNote(location, note);
+      // Particle may be added later if wanted
+      //location.world.spawnParticle(Particle.NOTE, location, 0);
       await wait(note.getMillis(bpm), 'millis');
+      if (!musicians.has(player)) {
+        break;
+      }
     }
   }
 }
@@ -50,6 +84,6 @@ registerCommand('playmusic', (sender) => {
     const player = sender as Player;
     const item = player.inventory.itemInMainHand;
     if (!SHEET_MATERIALS.has(item.type)) return;
-    playNotesFromBook(player.location, item);
+    playNotesFromBook(player.location, item, player);
   }
 });

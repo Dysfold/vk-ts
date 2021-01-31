@@ -39,6 +39,8 @@ const KEYS = new Map<NoteName, number>([
   ['A#', 16],
   ['Hb', 16],
   ['H', 17],
+  ['Bb', 16],
+  ['B', 17],
 ]);
 
 // Command for sound testing

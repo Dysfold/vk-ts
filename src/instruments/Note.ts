@@ -15,7 +15,9 @@ export type NoteName =
   | 'A'
   | 'A#'
   | 'Hb'
-  | 'H';
+  | 'H'
+  | 'Bb'
+  | 'B';
 
 const PAUSE = '-';
 
@@ -37,13 +39,13 @@ const NOTE_NAMES = new Set([
   'A#',
   'Hb',
   'H',
+  'Bb',
+  'B',
 ]);
 
 export type Accidental = '#' | 'b';
 
 const ACCIDENTALS = new Set(['#', 'b']);
-
-export type NoteLength = '.25' | '.5' | '1' | '2' | '3' | '4';
 
 const MS_PER_MIN = 60 * 1000;
 
