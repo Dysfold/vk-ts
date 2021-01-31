@@ -1,6 +1,6 @@
 import { Material, Particle } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
-import { EntityType, Item, ItemFrame } from 'org.bukkit.entity';
+import { Item, ItemFrame } from 'org.bukkit.entity';
 import { Action, BlockBreakEvent } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import {
@@ -9,7 +9,12 @@ import {
   PlayerInventory,
 } from 'org.bukkit.inventory';
 import { Vector } from 'org.bukkit.util';
+import {
+  getItemFrame,
+  spawnInvisibleItemFrame,
+} from '../common/helpers/itemframes';
 import { CustomItem } from '../common/items/CustomItem';
+import { getEmptyBottle } from '../hydration/bottles';
 import { Bowl } from './Bowl';
 
 const INGREDIENT_PICKUP_DELAY = 5; // Seconds
@@ -156,7 +161,7 @@ Bowl.event(
     const blockUp = bowl.getRelative(BlockFace.UP);
     if (!blockUp.isEmpty()) return;
 
-    const frame = getItemFrame(bowl, BlockFace.UP);
+    const frame = getItemFrame(bowl.getRelative(BlockFace.DOWN), BlockFace.UP);
     if (frame) {
       // There was already a dough in the bowl
       const frameItem = frame.item;
@@ -201,7 +206,6 @@ function dropItem(block: Block, item: ItemStack) {
   return drop;
 }
 
-const GLASS_BOTTLE = new ItemStack(Material.GLASS_BOTTLE);
 function bake(block: Block) {
   const center = block.location.add(0.5, 0.1, 0.5);
   const entities = block.world.getNearbyEntities(center, 0.3, 0.3, 0.3);
@@ -219,10 +223,18 @@ function bake(block: Block) {
     // Check if the recipe contains the incredients
     if (types.every((i) => recipe.ingredients.includes(i))) {
       drops.forEach((drop) => {
-        if (drop.type === Material.POTION) dropItem(block, GLASS_BOTTLE);
+        if (drop.type === Material.POTION) {
+          const empty = getEmptyBottle(drop);
+          dropItem(block, empty);
+        }
         drop.amount--;
       });
-      const frame = summonItemFrame(block, BlockFace.UP, recipe.dough.create());
+      const frame = spawnInvisibleItemFrame(
+        block.getRelative(BlockFace.DOWN),
+        BlockFace.UP,
+        recipe.dough.create(),
+      );
+      if (!frame) return;
       if (recipe.risingTime && recipe.doughRisen) {
         risingDoughs.set(frame, {
           seconds: recipe.risingTime,
@@ -234,38 +246,11 @@ function bake(block: Block) {
   }
   block.world.spawnParticle(
     Particle.CLOUD,
-    block.location.add(0.5, 0.1, 0.5),
+    block.location.add(0.5, 0.3, 0.5),
     5,
     0.2,
     0.2,
     0.2,
     0,
   );
-}
-
-// TODO: Common api for item frames?qq
-function summonItemFrame(block: Block, face: BlockFace, item: ItemStack) {
-  const loc = block.getRelative(face).location;
-  const frame = block.world.spawnEntity(
-    loc,
-    EntityType.ITEM_FRAME,
-  ) as ItemFrame;
-  frame.facingDirection = face;
-  frame.setVisible(false);
-  frame.setItem(item, false); // false = no sound
-  return frame;
-}
-
-function getItemFrame(block: Block, face: BlockFace) {
-  const loc = block.getRelative(face).location.add(0.5, 0, 0.5);
-  const entities = block.world.getNearbyEntities(loc, 0.5, 0.5, 0.5);
-  for (const entity of entities) {
-    if (entity.type !== EntityType.ITEM_FRAME) continue;
-    const frame = entity as ItemFrame;
-    const hangedBlock = entity.location.block.getRelative(frame.attachedFace);
-    if (hangedBlock.location.equals(block.location)) {
-      return frame;
-    }
-  }
-  return undefined;
 }

@@ -1,6 +1,8 @@
-import { Material } from 'org.bukkit';
+import { Bukkit, Material } from 'org.bukkit';
+import { ItemFrame } from 'org.bukkit.entity';
 import { BlockPlaceEvent } from 'org.bukkit.event.block';
 import { CustomBlock } from '../common/blocks/CustomBlock';
+import { isCustomItemFrame } from '../common/helpers/itemframes';
 import { CustomItem } from '../common/items/CustomItem';
 
 export const Bowl = new CustomBlock({
@@ -17,6 +19,19 @@ Bowl.onBreak(async (event) => {
     event.block.location.add(0.5, 0.5, 0.5),
     BowlItem.create(),
   );
+  const entities = event.block.world.getNearbyEntities(
+    event.block.location.add(0.5, 0, 0.5),
+    0.3,
+    0.3,
+    0.3,
+  );
+  for (const entity of entities) {
+    if (entity instanceof ItemFrame) {
+      if (isCustomItemFrame(entity)) {
+        entity.remove();
+      }
+    }
+  }
   return true;
 });
 

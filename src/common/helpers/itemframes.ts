@@ -52,3 +52,8 @@ export function getItemFrame(block: Block, face: BlockFace) {
   }
   return undefined;
 }
+
+// Custom itemframe is spawned by code
+export function isCustomItemFrame(frame: ItemFrame) {
+  return !frame.isVisible() && !frame.isCustomNameVisible();
+}
