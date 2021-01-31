@@ -9,7 +9,7 @@ import { ChatTheme, getChatTheme } from '../style/theme';
  */
 export function deliveryHandler(
   formatter: (msg: ChatMessage, theme: ChatTheme) => BaseComponent[],
-) {
+): (msg: ChatMessage, receiver: Player) => void {
   return (msg: ChatMessage, receiver: Player) => {
     receiver.sendMessage(...formatter(msg, getChatTheme(receiver)));
   };

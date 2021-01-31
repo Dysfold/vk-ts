@@ -1,6 +1,14 @@
 import { Player } from 'org.bukkit.entity';
 import { ChatChannel } from './channel';
 
+export enum PipelineStage {
+  CREATED = 0,
+  COMMON_GLOBAL = 1,
+  CHANNEL_GLOBAL = 2,
+  COMMON_LOCAL = 3,
+  CHANNEL_LOCAL = 4,
+}
+
 export class ChatMessage {
   /**
    * Who sent the message.
@@ -18,6 +26,11 @@ export class ChatMessage {
   readonly content: string;
 
   /**
+   * Where this message currently is in the chat pipeline.
+   */
+  stage: PipelineStage;
+
+  /**
    * If this message should be discarded before next pipeline step.
    */
   discard: boolean;
@@ -31,20 +44,48 @@ export class ChatMessage {
     this.sender = sender;
     this.channel = channel;
     this.content = content;
+    this.stage = PipelineStage.CREATED;
     this.discard = false;
     this.userData = {};
   }
 
-  data<T>(type: new (...args: T[]) => T): T {
-    const value = this.userData[type.name];
-    if (!value) {
-      throw new Error(`missing ChatMessage data of type ${type.name}`);
-    }
-    return value;
+  data<T>(type: (props: T) => T): T | undefined {
+    return this.userData[type.name];
   }
 
-  setData(data: { new (...args: any[]): any }) {
-    this.userData[data.constructor.name] = data;
+  setData<T>(type: (props: T) => T, props: T) {
+    this.userData[type.name] = type(props);
+  }
+
+  /**
+   * Transfers this message to another chat channel. Stages that have been
+   * fully completed will not be re-executed, but the current stage will be.
+   * @param channel Channel to transfer to.
+   * @param receiver Optional receiver. When present, local pipelines of new
+   * channel are run for only that player instead of all online players.
+   */
+  transfer(channel: ChatChannel, receiver?: Player) {
+    channel.handleMessage(this.shallowClone(), receiver);
+    this.discard = true; // Discard on old channel only
+  }
+
+  enterStage(stage: PipelineStage): boolean {
+    if (this.stage > stage) {
+      return false;
+    }
+    this.stage = stage;
+    return true;
+  }
+
+  /**
+   * Creates a shallow clone of this message.
+   */
+  shallowClone(): ChatMessage {
+    const msg = new ChatMessage(this.sender, this.channel, this.content);
+    msg.stage = this.stage;
+    msg.discard = this.discard;
+    msg.userData = this.userData;
+    return msg;
   }
 }
 

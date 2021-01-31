@@ -9,8 +9,15 @@ import {
   GLOBAL_PIPELINE,
   LocalPipeline,
   LOCAL_PIPELINE,
+  PipelineStage,
 } from './pipeline';
 import { errorMessage, statusMessage } from './system';
+
+interface ChannelMessages {
+  speaking: string;
+  join?: string;
+  leave?: string;
+}
 
 export class ChatChannel {
   /**
@@ -25,6 +32,11 @@ export class ChatChannel {
   readonly names: string[];
 
   /**
+   * Messages to use when speaking/joining/leaving etc. this channel.
+   */
+  readonly messages: ChannelMessages;
+
+  /**
    * Pipeline that messages to this channel pass through once.
    */
   readonly global: ChatPipeline;
@@ -35,9 +47,10 @@ export class ChatChannel {
    */
   readonly local: LocalPipeline;
 
-  constructor(id: string, names: string[]) {
+  constructor(id: string, names: string[], messages: ChannelMessages) {
     this.id = id;
     this.names = names;
+    this.messages = messages;
     this.global = new ChatPipeline();
     this.local = new LocalPipeline();
   }
@@ -52,29 +65,50 @@ export class ChatChannel {
   }
 
   /**
-   * Passes a message through all chat handlers for this channel.
+   * Passes a message through chat handlers for all stages that it has not
+   * already passed through.
    * @param msg Message to handle.
+   * @param receiver Receiving player, if the message is already in local stages.
    */
-  private handleMessage(msg: ChatMessage) {
+  handleMessage(msg: ChatMessage, receiver?: Player) {
     // Global pipelines are executed at most once per message
     // Discarding (probably) prevents anyone from seeing the message
-    if (!GLOBAL_PIPELINE.handleMessage(msg)) {
+    if (
+      msg.enterStage(PipelineStage.COMMON_GLOBAL) &&
+      !GLOBAL_PIPELINE.handleMessage(msg)
+    ) {
       return; // Discarded
     }
-    if (!this.global.handleMessage(msg)) {
+    if (
+      msg.enterStage(PipelineStage.CHANNEL_GLOBAL) &&
+      !this.global.handleMessage(msg)
+    ) {
       return; // Discarded
     }
 
     // Local pipelines are executed once per online player
     // Discarding is used to control who can see the message
-    for (const player of Bukkit.onlinePlayers) {
-      msg.discard = false; // Clear potential discard status from previous player
-      if (!LOCAL_PIPELINE.handleMessage(msg, player)) {
-        continue; // Discarded
+    if (receiver) {
+      this.handleLocal(msg.shallowClone(), receiver);
+    } else {
+      for (const player of Bukkit.onlinePlayers) {
+        this.handleLocal(msg.shallowClone(), player);
       }
-      if (!this.local.handleMessage(msg, player)) {
-        continue;
-      }
+    }
+  }
+
+  private handleLocal(msg: ChatMessage, player: Player) {
+    if (
+      msg.enterStage(PipelineStage.COMMON_LOCAL) &&
+      !LOCAL_PIPELINE.handleMessage(msg, player)
+    ) {
+      return; // Discarded
+    }
+    if (
+      msg.enterStage(PipelineStage.CHANNEL_LOCAL) &&
+      !this.local.handleMessage(msg, player)
+    ) {
+      return; // Discarded
     }
   }
 }
@@ -84,9 +118,17 @@ export class ChatChannel {
  * Channels that are only used internally don't have to be added here.
  */
 export const CHAT_CHANNELS = {
-  whisper: new ChatChannel('whisper', ['kuiskaa', 'k', 'whisper', 'w']),
-  local: new ChatChannel('local', ['local', 'l', 'paikallinen', 'lähi']),
-  global: new ChatChannel('global', ['global', 'g', 'julkinen']),
+  whisper: new ChatChannel('whisper', ['kuiskaa', 'k', 'whisper', 'w'], {
+    speaking: 'Puhut nyt kuiskaus-kanavalla',
+  }),
+  local: new ChatChannel('local', ['local', 'l', 'paikallinen', 'lähi'], {
+    speaking: 'Puhut nyt paikallisella kanavalla',
+  }),
+  global: new ChatChannel('global', ['global', 'g', 'julkinen'], {
+    speaking: 'Puhut nyt julkisella kanavalla',
+    join: 'Liityit julkiselle kanavalle',
+    leave: 'Poistuit julkiselta kanavalta',
+  }),
 };
 
 /**

@@ -47,15 +47,15 @@ export function ignoreChannel(
 ) {
   // Don't allow leaving channels that are not ignorable
   if (!IGNORABLE_CHANNELS.has(channel.id) && !status) {
-    errorMessage(player, `Kanavalta ${channel} ei voi poistua`);
+    errorMessage(player, `Kanavalta ${channel.names[0]} ei voi poistua`);
   }
 
   setIgnoreChannel(player, channel, status);
   statusMessage(
     player,
     !status
-      ? `Liityit kanavalle ${channel.names[0]}`
-      : `Poistuit kanavalta ${channel.names[0]}`,
+      ? channel.messages.join ?? `Liityit kanavalle ${channel.names[0]}`
+      : channel.messages.leave ?? `Poistuit kanavalta ${channel.names[0]}`,
   );
 }
 
