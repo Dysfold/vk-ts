@@ -1,4 +1,4 @@
-import { Bukkit, Material } from 'org.bukkit';
+import { Material } from 'org.bukkit';
 import { ItemFrame } from 'org.bukkit.entity';
 import { BlockPlaceEvent } from 'org.bukkit.event.block';
 import { CustomBlock } from '../common/blocks/CustomBlock';
