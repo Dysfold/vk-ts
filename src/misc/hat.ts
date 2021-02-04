@@ -17,7 +17,7 @@ import {
 import { Pipe, equipPipe } from './pipe';
 import { isRightClick } from '../common/helpers/click';
 
-const HAT_MATERIAL = Material.LEATHER_BOOTS;
+export const HAT_MATERIAL = Material.LEATHER_BOOTS;
 const HELMET_SLOT = 39;
 
 function isHat(item: ItemStack | null) {
