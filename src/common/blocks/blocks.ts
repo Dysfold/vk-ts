@@ -6,7 +6,7 @@ import { BlockBreakEvent } from 'org.bukkit.event.block';
 
 const CUSTOM_DATA_KEY = 'cd';
 
-function purgeCustomData(block: Block) {
+export function purgeCustomData(block: Block) {
   dataHolder(block).delete(CUSTOM_DATA_KEY);
 }
 
