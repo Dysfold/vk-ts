@@ -5,7 +5,7 @@ import { PotionMeta } from 'org.bukkit.inventory.meta';
 import { PotionData, PotionType } from 'org.bukkit.potion';
 import { giveItem } from '../common/helpers/inventory';
 import { CustomItem } from '../common/items/CustomItem';
-import { getFullBottle } from '../hydration/bottles';
+import { Mug } from '../hydration/bottles';
 import { HAT_MATERIAL } from './hat';
 
 // TODO: Use better and more interesting items (when implemented)
@@ -15,7 +15,7 @@ const bottleMeta = BOTTLE.itemMeta as PotionMeta;
 bottleMeta.basePotionData = new PotionData(PotionType.WATER);
 BOTTLE.itemMeta = bottleMeta;
 
-const MUG = getFullBottle(2);
+const MUG = Mug.create();
 const mugMeta = MUG.itemMeta as PotionMeta;
 mugMeta.basePotionData = new PotionData(PotionType.WATER);
 MUG.itemMeta = mugMeta;

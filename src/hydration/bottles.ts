@@ -21,39 +21,39 @@ import {
   WaterQuality,
 } from './water-quality';
 
-const WineGlass = new CustomItem({
+export const WineGlass = new CustomItem({
   name: 'Viinilasi',
   id: 1,
   modelId: 1,
   type: Material.POTION,
 });
-const WineGlassEmpty = new CustomItem({
+export const WineGlassEmpty = new CustomItem({
   name: 'Viinilasi',
   id: 1,
   modelId: 1,
   type: Material.GLASS_BOTTLE,
 });
 
-const Mug = new CustomItem({
+export const Mug = new CustomItem({
   name: 'Muki',
   id: 2,
   modelId: 2,
   type: Material.POTION,
 });
-const MugEmpty = new CustomItem({
+export const MugEmpty = new CustomItem({
   name: 'Muki',
   id: 2,
   modelId: 2,
   type: Material.GLASS_BOTTLE,
 });
 
-const Scoop = new CustomItem({
+export const Scoop = new CustomItem({
   name: 'Kauha',
   id: 3,
   modelId: 3,
   type: Material.POTION,
 });
-const ScoopEmpty = new CustomItem({
+export const ScoopEmpty = new CustomItem({
   name: 'Kauha',
   id: 3,
   modelId: 3,
