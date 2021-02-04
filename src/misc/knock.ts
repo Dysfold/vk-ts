@@ -23,7 +23,6 @@ registerEvent(PlayerInteractEvent, (event) => {
     switch (type) {
       case Material.ACACIA_DOOR:
       case Material.BIRCH_DOOR:
-      case Material.CRIMSON_DOOR:
       case Material.DARK_OAK_DOOR:
       case Material.JUNGLE_DOOR:
       case Material.OAK_DOOR:

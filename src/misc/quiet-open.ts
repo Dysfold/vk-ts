@@ -1,9 +1,11 @@
 import { Door, Gate } from 'org.bukkit.block.data.type';
+import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { Saw } from './saw';
 
 registerEvent(PlayerInteractEvent, (event) => {
   const block = event.clickedBlock;
+  if (event.action !== Action.RIGHT_CLICK_BLOCK) return;
   if (!block) return;
   if (event.player.isSneaking()) return;
 

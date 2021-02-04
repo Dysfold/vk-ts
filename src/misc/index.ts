@@ -39,4 +39,5 @@ require('./tree-felling');
 require('./fishing');
 require('./farmland-trampling');
 require('./announcements');
+require('./secret-doors');
 require('./applause');
