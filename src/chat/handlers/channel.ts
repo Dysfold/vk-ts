@@ -1,3 +1,4 @@
+import { style } from 'craftjs-plugin/chat';
 import { CHAT_CHANNELS } from '../channel';
 import { isChannelIgnored } from '../ignore';
 import { LOCAL_PIPELINE } from '../pipeline';
@@ -48,24 +49,28 @@ CHAT_CHANNELS.global.local.addHandler('leakToLocal', 0, (msg, receiver) => {
   }
 });
 
+// Global channel
+
 CHAT_CHANNELS.global.local.addHandler(
   'deliverMessage',
   DELIVER_PRIORITY,
   deliveryHandler((msg, theme) => [
     ...formatProfession(msg.sender, theme),
     formatSender(msg.sender, theme),
-    formatMessage(msg.content, theme),
+    formatMessage(msg, theme),
   ]),
 );
+
+// Local channel
 
 CHAT_CHANNELS.local.local.addHandler(
   'rangeCheck',
   0,
   rangeCheckHandler({
     normal: { clear: 25, max: 32, scramble: [0, 0.7] },
-    shout: { clear: 30, max: 36, scramble: [0, 0.8] },
-    sitting: { clear: 15, max: 20, scramble: [0, 0.8] },
-    speaker: { clear: 100, max: 120, scramble: [0, 0.9] },
+    shout: { clear: 30, max: 36, scramble: [0, 0.7] },
+    sitting: { clear: 15, max: 20, scramble: [0, 0.7] },
+    speaker: { clear: 100, max: 120, scramble: [0, 0.6] },
   }),
 );
 
@@ -76,6 +81,26 @@ CHAT_CHANNELS.local.local.addHandler(
     ...formatChannel('Paikallinen', theme),
     ...formatProfession(msg.sender, theme),
     formatSender(msg.sender, theme),
-    formatMessage(msg.content, theme),
+    formatMessage(msg, theme),
+  ]),
+);
+
+// Whisper channel
+CHAT_CHANNELS.whisper.local.addHandler(
+  'rangeCheck',
+  0,
+  rangeCheckHandler({
+    normal: { clear: 4, max: 6, scramble: [0, 0.8] },
+    sitting: { clear: 2, max: 3, scramble: [0, 0.8] },
+  }),
+);
+
+CHAT_CHANNELS.whisper.local.addHandler(
+  'deliverMessage',
+  DELIVER_PRIORITY,
+  deliveryHandler((msg, theme) => [
+    ...formatChannel('Kuiskaus', theme),
+    formatSender(msg.sender, theme),
+    style('italic', formatMessage(msg, theme)),
   ]),
 );
