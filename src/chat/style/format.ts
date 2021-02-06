@@ -1,4 +1,4 @@
-import { color, text } from 'craftjs-plugin/chat';
+import { color, text, tooltip } from 'craftjs-plugin/chat';
 import { Player } from 'org.bukkit.entity';
 import { chanceOf } from '../../common/helpers/math';
 import { RangeCheck } from '../handlers/range';
@@ -18,7 +18,7 @@ export function formatProfession(player: Player, theme: ChatTheme) {
   const { brackets, name } = theme.profession;
   return [
     color(brackets, text('[')),
-    color(name.normal, text('Testaaja')),
+    color(name.normal, tooltip(text('Testaa palvelinta'), text('Testaaja'))),
     color(brackets, text('] ')),
   ];
 }

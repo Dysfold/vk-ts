@@ -9,6 +9,7 @@ import {
   formatSender,
 } from '../style/format';
 import { deliveryHandler } from './delivery';
+import { playChatSound, showChatBubble } from './effect';
 import { rangeCheckHandler } from './range';
 
 const IgnoreResult = (props: {
@@ -39,6 +40,9 @@ LOCAL_PIPELINE.addHandler('markIgnored', 0, (msg, receiver) => {
  */
 const DELIVER_PRIORITY = 9999;
 
+CHAT_CHANNELS.global.global.addHandler('chatBubble', 9999, showChatBubble);
+CHAT_CHANNELS.global.global.addHandler('chatSound', 9999, playChatSound);
+
 /**
  * For players who have ignored global, transfer messages to local channel.
  * If the receiver is out of range, they won't see/hear anything.
@@ -62,6 +66,9 @@ CHAT_CHANNELS.global.local.addHandler(
 );
 
 // Local channel
+
+CHAT_CHANNELS.local.global.addHandler('chatBubble', 9999, showChatBubble);
+CHAT_CHANNELS.local.global.addHandler('chatSound', 9999, playChatSound);
 
 CHAT_CHANNELS.local.local.addHandler(
   'rangeCheck',
