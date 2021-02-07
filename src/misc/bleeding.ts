@@ -20,7 +20,7 @@ import { DamageCause } from 'org.bukkit.event.entity.EntityDamageEvent';
  * @author Juffel
  */
 
-const TIMER_DELAY = 1000; // timer delay in millia
+const TIMER_DELAY = 1000; // timer delay in millis
 const BLOOD_MATERIAL = Material.DEAD_BUBBLE_CORAL_FAN; // blood material
 const PARTICLE_DATA = Material.REDSTONE_BLOCK.createBlockData(); // block data for the blood particle
 const PARTICLE_AMOUNT = 5; // amount of particles
@@ -148,17 +148,13 @@ class BleedTask {
 // Active tasks by entity id
 const tasks = new Map<number, BleedTask>();
 
-function getTask(entity: Entity): BleedTask | undefined {
-  return tasks.get(entity.entityId);
-}
-
 /**
  * Create, or continue a bleed task
  * @param entity Preferably a living target
  * @param amount Amount of blood spillage
  */
 function createBleedTask(entity: Entity, amount: number) {
-  let task = getTask(entity);
+  let task = tasks.get(entity.entityId);
 
   // Increase bleeding amount of a existing task
   if (task) {
@@ -170,7 +166,7 @@ function createBleedTask(entity: Entity, amount: number) {
   // Create a new task
   task = new BleedTask(entity, amount, (error: Error) => {
     if (error) {
-      log.error('[misc/bleeding] timer terminated with an error: ${error}');
+      log.error('[misc/bleeding] timer terminated with an error: ' + error);
     }
 
     tasks.delete(entity.entityId);
