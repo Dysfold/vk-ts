@@ -1,5 +1,4 @@
 import { ParticleBuilder } from 'com.destroystokyo.paper';
-import { AtomicMoveNotSupportedException } from 'java.nio.file';
 import { Location, Material, Particle } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { Waterlogged } from 'org.bukkit.block.data';
