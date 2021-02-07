@@ -1,5 +1,6 @@
-import { Material } from 'org.bukkit';
+import { Location, Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
+import { Waterlogged } from 'org.bukkit.block.data';
 import { ArmorStand, Entity, EntityType, Player } from 'org.bukkit.entity';
 import {
   EntityDamageByEntityEvent,
@@ -8,12 +9,16 @@ import {
 } from 'org.bukkit.event.entity';
 import { SpawnReason } from 'org.bukkit.event.entity.CreatureSpawnEvent';
 import { DamageCause } from 'org.bukkit.event.entity.EntityDamageEvent';
+import { PlayerInteractAtEntityEvent } from 'org.bukkit.event.player';
 import { ChunkUnloadEvent } from 'org.bukkit.event.world';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { SkullMeta } from 'org.bukkit.inventory.meta';
 import { EulerAngle } from 'org.bukkit.util';
+import { chanceOf, minMax } from '../common/helpers/math';
 import { CustomItem } from '../common/items/CustomItem';
 import { HIDDEN_MATERIAL } from '../misc/heart-of-the-sea';
+
+const BLOOD_MATERIAL = Material.DEAD_BUBBLE_CORAL_FAN;
 
 const Body = new CustomItem({
   id: 1,
@@ -57,8 +62,6 @@ const BodyPierced = new CustomItem({
   type: HIDDEN_MATERIAL,
 });
 
-const BODY_NAME = '#BODY';
-
 // prettier-ignore
 const BODIES = new Map([
     // Broken legs
@@ -81,6 +84,7 @@ const BODIES = new Map([
 
     // Green body
     [DamageCause.POISON,                BodyPoisoned],
+    [DamageCause.MAGIC,                 BodyPoisoned],
 
     // Holes in the body
     [DamageCause.PROJECTILE,            BodyPierced]
@@ -103,24 +107,24 @@ export async function spawnCorpse(event: PlayerDeathEvent) {
   armorstand.setArms(true);
   armorstand.setCustomNameVisible(false);
   armorstand.addDisabledSlots(...EquipmentSlot.values());
-  armorstand.customName = BODY_NAME;
+  armorstand.customName = '' + new Date().getTime(); // Used to calculate the actual age of the corpse
   armorstand.setGravity(false);
 
   // Move the corpse to ground
-  const block = loc.block;
+  const block = loc.block.getRelative(BlockFace.UP);
   if (block.isPassable()) {
     let i = 0;
     for (i = 0; i < 100; i++) {
       if (!block.getRelative(BlockFace.DOWN, i).isPassable()) break;
     }
     const newLoc = loc.add(0, -i, 0);
-    newLoc.y = Math.floor(newLoc.y) - 0.4;
+    newLoc.y = Math.floor(newLoc.y) + 0.6;
     armorstand.teleport(newLoc);
   }
 
   // Edit position
   armorstand.headPose = new EulerAngle(4.88, 0, 0);
-  armorstand.rightArmPose = new EulerAngle(0, 0, 0);
+  armorstand.rightArmPose = new EulerAngle(0.01, 0.01, 0.01);
 
   const body = getBody(event.entity.lastDamageCause?.cause).create();
   armorstand.setItem(EquipmentSlot.HAND, body);
@@ -131,15 +135,37 @@ export async function spawnCorpse(event: PlayerDeathEvent) {
   skullMeta.owningPlayer = player;
   head.itemMeta = skullMeta;
   armorstand.setItem(EquipmentSlot.HEAD, head);
+
+  spawnBlood(armorstand.eyeLocation);
+}
+
+function spawnBlood(location: Location) {
+  const center = location.block;
+  for (let dx = -2; dx <= 2; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dz = -2; dz <= 2; dz++) {
+        const block = center.getRelative(dx, dy, dz);
+        if (block.type !== Material.AIR) continue;
+        if (!block.getRelative(BlockFace.DOWN).type.isOccluding()) continue;
+
+        const distance = block.location.toCenterLocation().distance(location);
+        const bloodChance = 1 - minMax(distance, 1, 3);
+        if (!chanceOf(bloodChance)) continue;
+
+        // Place the blood block
+        block.type = BLOOD_MATERIAL;
+        const data = block.blockData as Waterlogged;
+        data.setWaterlogged(false);
+        block.blockData = data;
+      }
+    }
+  }
 }
 
 // Remove drops from corpse
 registerEvent(EntityDeathEvent, (event) => {
-  if (event.entity.type !== EntityType.ARMOR_STAND) return;
-  const armorstand = event.entity;
-  if (armorstand.customName !== BODY_NAME) return;
+  if (!isCorpse(event.entity)) return;
 
-  // The armorstand was a corpse
   event.setShouldPlayDeathSound(false);
   event.setCancelled(true);
   event.entity.remove();
@@ -158,16 +184,21 @@ registerEvent(EntityDamageByEntityEvent, (event) => {
 
 // Kill old armorstands when the chunk unloads
 const CORPSE_MAX_AGE_HOURS = 24;
-const CORPSE_MAX_AGE_TICKS = CORPSE_MAX_AGE_HOURS * 60 * 60 * 20;
+const CORPSE_MAX_AGE_MILLIS = CORPSE_MAX_AGE_HOURS * 60 * 60 * 1000;
 registerEvent(ChunkUnloadEvent, async (event) => {
   for (const entity of event.chunk.entities) {
     if (isCorpse(entity)) {
-      if (entity.ticksLived > CORPSE_MAX_AGE_TICKS) entity.remove();
+      const age = getCorpseAge(entity);
+      if (age === undefined) {
+        entity.remove();
+      } else if (age > CORPSE_MAX_AGE_MILLIS) {
+        entity.remove();
+      }
     }
   }
 });
 
-function isCorpse(entity: Entity) {
+function isCorpse(entity: Entity): entity is ArmorStand {
   if (entity?.type !== EntityType.ARMOR_STAND) return false;
   const armorstand = entity as ArmorStand;
   if (armorstand.getItem(EquipmentSlot.HEAD).type !== Material.PLAYER_HEAD)
@@ -175,4 +206,29 @@ function isCorpse(entity: Entity) {
   if (armorstand.getItem(EquipmentSlot.HAND).type !== HIDDEN_MATERIAL)
     return false;
   return true;
+}
+
+// TODO: Add more and better information about the corpse
+// Display information about the corpse to the player
+registerEvent(PlayerInteractAtEntityEvent, (event) => {
+  if (!isCorpse(event.rightClicked)) return;
+  const age = getCorpseAge(event.rightClicked);
+  if (!age) return;
+  const hours = Math.floor(age / 1000 / 60 / 60);
+
+  // TODO: Make the information more abstract
+  if (!hours) {
+    event.player.sendActionBar('Tämä henkilö on kuollut äskettäin');
+  } else {
+    event.player.sendActionBar(
+      `Ruumis näyttää maanneen tässä jo noin ${hours} tuntia`,
+    );
+  }
+});
+
+function getCorpseAge(armorstand: ArmorStand) {
+  if (!armorstand.customName) return undefined;
+  const spawnTime = Number.parseInt(armorstand.customName);
+  if (isNaN(spawnTime)) return undefined;
+  return new Date().getTime() - spawnTime;
 }

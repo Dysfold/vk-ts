@@ -21,39 +21,39 @@ import {
   WaterQuality,
 } from './water-quality';
 
-const WineGlass = new CustomItem({
+export const WineGlass = new CustomItem({
   name: 'Viinilasi',
   id: 1,
   modelId: 1,
   type: Material.POTION,
 });
-const WineGlassEmpty = new CustomItem({
+export const WineGlassEmpty = new CustomItem({
   name: 'Viinilasi',
   id: 1,
   modelId: 1,
   type: Material.GLASS_BOTTLE,
 });
 
-const Mug = new CustomItem({
+export const Mug = new CustomItem({
   name: 'Muki',
   id: 2,
   modelId: 2,
   type: Material.POTION,
 });
-const MugEmpty = new CustomItem({
+export const MugEmpty = new CustomItem({
   name: 'Muki',
   id: 2,
   modelId: 2,
   type: Material.GLASS_BOTTLE,
 });
 
-const Scoop = new CustomItem({
+export const Scoop = new CustomItem({
   name: 'Kauha',
   id: 3,
   modelId: 3,
   type: Material.POTION,
 });
-const ScoopEmpty = new CustomItem({
+export const ScoopEmpty = new CustomItem({
   name: 'Kauha',
   id: 3,
   modelId: 3,
@@ -74,11 +74,19 @@ export function canBreak(item: ItemStack): boolean {
   return true;
 }
 
-export function getFullBottle(modelId: number) {
+export function getFullBottle(item: ItemStack) {
+  const modelId = item?.itemMeta.hasCustomModelData()
+    ? item?.itemMeta.customModelData
+    : 0;
+
   return BOTTLES.get(modelId)?.full || new ItemStack(Material.POTION);
 }
 
-export function getEmptyBottle(modelId: number) {
+export function getEmptyBottle(item?: ItemStack) {
+  const modelId = item?.itemMeta.hasCustomModelData()
+    ? item?.itemMeta.customModelData
+    : 0;
+
   return BOTTLES.get(modelId)?.empty || new ItemStack(Material.GLASS_BOTTLE);
 }
 
@@ -136,9 +144,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
 
   if (bottleCanFill) {
     // Get corresponding customitem
-    const oldMeta = event.item.itemMeta;
-    const modelId = oldMeta.hasCustomModelData() ? oldMeta.customModelData : 0;
-    const potion = getFullBottle(modelId);
+    const potion = getFullBottle(event.item);
     const meta = potion.itemMeta;
     meta.displayName = '';
 
@@ -182,9 +188,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
   block.blockData = levelled;
 
   // Player is filling a cauldron with custom bottle
-  const meta = event.item.itemMeta;
-  const modelId = meta.hasCustomModelData() ? meta.customModelData : 0;
-  const bottle = getEmptyBottle(modelId);
+  const bottle = getEmptyBottle(event.item);
 
   // Wait 1 millis so we dont fire bottle fill event
   await wait(1, 'millis');
@@ -202,8 +206,7 @@ registerEvent(PlayerItemConsumeEvent, (event) => {
   if (event.item.type !== Material.POTION) return;
   if (!event.item.itemMeta.hasCustomModelData()) return; // Default bottle
 
-  const modelId = event.item.itemMeta.customModelData;
-  const replacement = getEmptyBottle(modelId);
+  const replacement = getEmptyBottle(event.item);
 
   event.replacement = replacement;
 });

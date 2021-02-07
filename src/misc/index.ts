@@ -39,5 +39,7 @@ require('./tree-felling');
 require('./fishing');
 require('./farmland-trampling');
 require('./announcements');
+require('./starting-items');
+require('./secret-doors');
 require('./applause');
 require('./bleeding');
