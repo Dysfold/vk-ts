@@ -1,6 +1,6 @@
 import { Particle } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
-import { dataHolder } from '../../common/datas/holder';
+import { getChatOption } from '../options';
 import { ChatMessage } from '../pipeline';
 
 /**
@@ -32,20 +32,23 @@ const CHAT_SOUNDS: Record<string, ChatSounds> = {
     normal: ['minecraft:entity.wandering_trader.ambient'],
     question: ['minecraft:entity.wandering_trader.trade'],
   },
+
+  pillager: {
+    normal: ['entity.pillager.ambient'],
+    question: ['entity.pillager.ambient'],
+  },
 };
 
 function getChatSounds(player: Player) {
-  return CHAT_SOUNDS[
-    dataHolder(player).get('chat.sound.voice', 'string') ?? 'default'
-  ];
+  return CHAT_SOUNDS[getChatOption(player, 'voice')];
 }
 
 function getVoicePitch(player: Player) {
-  const name = dataHolder(player).get('chat.sound.pitch', 'string') ?? 'medium';
+  const name = getChatOption(player, 'pitch');
   if (name == 'low') {
-    return 0.97;
+    return 0.96;
   } else if (name == 'high') {
-    return 1.04;
+    return 1.05;
   } else {
     return 1;
   }
