@@ -37,6 +37,11 @@ export class ChatChannel {
   readonly messages: ChannelMessages;
 
   /**
+   * Whether or not this channel can be heard accross different worlds.
+   */
+  readonly crossWorlds: boolean;
+
+  /**
    * Pipeline that messages to this channel pass through once.
    */
   readonly global: ChatPipeline;
@@ -47,10 +52,16 @@ export class ChatChannel {
    */
   readonly local: LocalPipeline;
 
-  constructor(id: string, names: string[], messages: ChannelMessages) {
+  constructor(
+    id: string,
+    names: string[],
+    crossWorlds: boolean,
+    messages: ChannelMessages,
+  ) {
     this.id = id;
     this.names = names;
     this.messages = messages;
+    this.crossWorlds = crossWorlds;
     this.global = new ChatPipeline();
     this.local = new LocalPipeline();
   }
@@ -91,7 +102,9 @@ export class ChatChannel {
     if (receiver) {
       this.handleLocal(msg.shallowClone(), receiver);
     } else {
-      for (const player of Bukkit.onlinePlayers) {
+      for (const player of this.crossWorlds
+        ? Bukkit.onlinePlayers
+        : msg.sender.world.players) {
         this.handleLocal(msg.shallowClone(), player);
       }
     }
@@ -118,13 +131,18 @@ export class ChatChannel {
  * Channels that are only used internally don't have to be added here.
  */
 export const CHAT_CHANNELS = {
-  whisper: new ChatChannel('whisper', ['kuiskaa', 'k', 'whisper', 'w'], {
+  whisper: new ChatChannel('whisper', ['kuiskaa', 'k', 'whisper', 'w'], false, {
     speaking: 'Puhut nyt kuiskaus-kanavalla',
   }),
-  local: new ChatChannel('local', ['local', 'l', 'paikallinen', 'lähi'], {
-    speaking: 'Puhut nyt paikallisella kanavalla',
-  }),
-  global: new ChatChannel('global', ['global', 'g', 'julkinen'], {
+  local: new ChatChannel(
+    'local',
+    ['local', 'l', 'paikallinen', 'lähi'],
+    false,
+    {
+      speaking: 'Puhut nyt paikallisella kanavalla',
+    },
+  ),
+  global: new ChatChannel('global', ['global', 'g', 'julkinen'], false, {
     speaking: 'Puhut nyt julkisella kanavalla',
     join: 'Liityit julkiselle kanavalle',
     leave: 'Poistuit julkiselta kanavalta',
