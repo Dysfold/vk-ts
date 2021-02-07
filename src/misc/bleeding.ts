@@ -1,60 +1,123 @@
-import { Location, Material } from 'org.bukkit';
+import { ParticleBuilder } from 'com.destroystokyo.paper';
+import { AtomicMoveNotSupportedException } from 'java.nio.file';
+import { Location, Material, Particle } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { Waterlogged } from 'org.bukkit.block.data';
-import { Damageable, EntityType } from 'org.bukkit.entity';
+import { Entity, EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { EntityDamageEvent } from 'org.bukkit.event.entity';
 import { DamageCause } from 'org.bukkit.event.entity.EntityDamageEvent';
 
 /**
- * Creates a bleeding effect for given entity
+ * Add a bleeding effect for damageable entities by randomly generating blood puddles and splashes around entity
+ *
+ * Currently implemented features:
+ *
+ *  - Damage amount is relative to how much and how long entity will bleed
+ *  - Bleeding duration and intensity are increased when entity is damaged again while already bleeding
+ *  - Bleeding will exponentially decrease
+ *  - Armor, clothing etc... will reduce bleeding amount
+ *
+ * @author Juffel
  */
-class BleedTask {
-  private entity: Damageable;
-  public duration = 0.0;
-  public severity = 0.0;
 
+const TIMER_DELAY = 1000; // timer delay in millia
+const BLOOD_MATERIAL = Material.DEAD_BUBBLE_CORAL_FAN; // blood material
+const PARTICLE_DATA = Material.REDSTONE_BLOCK.createBlockData(); // block data for the blood particle
+const PARTICLE_AMOUNT = 5; // amount of particles
+
+// entities that don't bleed
+const ENTITY_BLACKLIST = [
+  EntityType.CREEPER,
+  EntityType.SKELETON,
+  EntityType.SPIDER,
+  EntityType.CAVE_SPIDER,
+  EntityType.ENDERMAN,
+  EntityType.SLIME,
+  EntityType.SHULKER,
+  EntityType.GHAST,
+  EntityType.STRAY,
+  EntityType.VEX,
+  EntityType.TROPICAL_FISH,
+  EntityType.PUFFERFISH,
+  EntityType.SQUID,
+];
+
+const TIME_STEP = 0.5; // control how long the bleeding continues
+const COEFFICIENT = 0.72; // control how intensely the bleeding amount decreases at each step
+
+class BleedTask {
+  private entity: Entity;
+  private amount_actual = 0.0;
+
+  amount = 0.0; // setpoint for the bleeding amount
+
+  /**
+   * Create a bleeding effect for given entity
+   * @param amount Amount of blood spillage
+   * @param callback Exit callback
+   */
   constructor(
-    entity: Damageable,
-    duration: number,
-    severity: number,
+    entity: Entity,
+    amount: number,
     callback: (error: Error) => void,
   ) {
     this.entity = entity;
-    this.duration = duration;
-    this.severity = severity;
+    this.amount = amount;
+
+    let time_step = 0.0;
 
     const handle = setInterval(() => {
       try {
-        // Tick
-        this.bleed();
+        this.tick(time_step);
 
-        // Trigger timer to exit
-        if (this.duration-- < 1) throw undefined;
+        time_step += TIME_STEP;
+
+        // Trigger timer to exit when bleeding stops or entity dies
+        if (this.amount_actual <= 0.1 || this.entity.isDead()) throw undefined;
       } catch (error) {
-        // Shutdown timer
         clearInterval(handle);
         callback(error);
       }
-    }, 1000);
+    }, TIMER_DELAY);
   }
 
   /**
-   * Spawn blood around given location
+   * Spawn blood particles at location.
+   *
+   * * Note that this method relies on Paper API
    */
-  spawnBlood(location: Location, radius: number, chance: number) {
+  spawnBloodParticles(location: Location, count: number) {
+    new ParticleBuilder(Particle.BLOCK_DUST)
+      .location(location)
+      .data(PARTICLE_DATA)
+      .count(count)
+      .spawn();
+  }
+
+  /**
+   * Spawn blood puddles and splashes
+   * @param radius Distance from the location outwards
+   * @param probability Probability of a puddle to form
+   */
+  spawnBlood(location: Location, radius: number, probability: number) {
     const origin = location.block;
 
     for (let x = -radius; x <= radius; x++) {
       for (let z = -radius; z <= radius; z++) {
-        // Randomly splutter blood
-        if (Math.random() > chance) continue;
+        if (Math.random() > probability) continue;
 
         // Compare against squared radius to check that point is inside circle
         if (x * x + z * z > radius * radius) continue;
 
+        // Splatter blood
+        this.spawnBloodParticles(
+          location.clone().add(0.0, 0.8, 0.0),
+          PARTICLE_AMOUNT,
+        );
+
         const block = origin.getRelative(x, 0.0, z);
 
-        // Check that block is valid
+        // Check that block and location is valid
         if (
           !block.type.isAir() ||
           !block.getRelative(BlockFace.UP).type.isAir() ||
@@ -62,8 +125,8 @@ class BleedTask {
         )
           return;
 
-        // Place blood
-        block.type = Material.DEAD_BUBBLE_CORAL_FAN;
+        // Form a puddle
+        block.type = BLOOD_MATERIAL;
         const data = block.blockData as Waterlogged;
         data.setWaterlogged(false);
         block.blockData = data;
@@ -72,74 +135,68 @@ class BleedTask {
   }
 
   /**
-   * Handle tick
-   * 
-   * TODO: Decrease bloodloss; if (severity > min) severity-=0.1...
+   * Handle timer cycle
    */
-  bleed() {
-    this.entity.sendMessage(
-      'You are bleeding for ' +
-        this.duration +
-        ' seconds at a rate of ' +
-        Math.fround(this.severity),
-    );
+  tick(time_step: number) {
+    // Spawn blood at exponential rate
+    this.amount_actual = this.amount * Math.pow(COEFFICIENT, time_step);
 
-    this.spawnBlood(this.entity.location, 1.0, this.severity);
+    this.spawnBlood(this.entity.location, 1.0, this.amount_actual);
   }
 }
 
-// Store active tasks by entity id
+// Active tasks by entity id
 const tasks = new Map<number, BleedTask>();
 
-/**
- * Causes entity to bleed for a given time
- * @param entity Damageable entity
- * @param duration Duration in seconds
- * @param severity Blood amount in the range of 0.0 to 1.0
- */
-function startEntityBleed(
-  entity: Damageable,
-  duration: number,
-  severity: number,
-) {
-  if (
-    tasks.has(entity.entityId) &&
-    tasks.get(entity.entityId)!.duration > 0.0
-  ) {
-    // Increase duration and severity if entity is damaged again while bleeding
-    const task = tasks.get(entity.entityId);
-    task!.duration += 1.0;
-    task!.severity += 0.1;
-  } else {
-    // Create new task for entity
-    tasks.set(
-      entity.entityId,
-      new BleedTask(entity, duration, severity, (error: Error) => {
-        if (error) {
-          log.error('[misc/bleeding] timer terminated with an error: ' + error);
-        }
+function getTask(entity: Entity): BleedTask | undefined {
+  return tasks.get(entity.entityId);
+}
 
-        // Remove task
-        tasks.delete(entity.entityId);
-      }),
-    );
+/**
+ * Create, or continue a bleed task
+ * @param entity Preferably a living target
+ * @param amount Amount of blood spillage
+ */
+function createBleedTask(entity: Entity, amount: number) {
+  let task = getTask(entity);
+
+  // Increase bleeding amount of a existing task
+  if (task) {
+    task.amount += amount;
+
+    return;
   }
+
+  // Create a new task
+  task = new BleedTask(entity, amount, (error: Error) => {
+    if (error) {
+      log.error('[misc/bleeding] timer terminated with an error: ${error}');
+    }
+
+    tasks.delete(entity.entityId);
+  });
+
+  tasks.set(entity.entityId, task);
 }
 
 registerEvent(EntityDamageEvent, (event) => {
-  if (event.entityType == EntityType.PLAYER) {
-    switch (event.cause) {
-      case DamageCause.CUSTOM:
-      case DamageCause.PROJECTILE:
-      case DamageCause.ENTITY_ATTACK:
-        startEntityBleed(
-          event.entity as Damageable,
-          3.0,
-          event.finalDamage / 12.0,
-        );
-        break;
-      default:
-        return;
-    }
-  }
+  // Filter entities
+  if (
+    !(event.entity instanceof LivingEntity) ||
+    ENTITY_BLACKLIST.includes(event.entityType)
+  )
+    return;
+
+  // Filter cause
+  if (
+    event.cause != DamageCause.CUSTOM &&
+    event.cause != DamageCause.PROJECTILE &&
+    event.cause != DamageCause.ENTITY_ATTACK
+  )
+    return;
+
+  // Create or continue bleed task on entity
+  // Damage is divided by 20 to get the estimated bleeding amount
+  // Final damage is used to reduce bleeding for entities that, for example, wear armor or clothing
+  createBleedTask(event.entity, event.finalDamage / 20.0);
 });
