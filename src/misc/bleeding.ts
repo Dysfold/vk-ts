@@ -11,9 +11,9 @@ import { DamageCause } from 'org.bukkit.event.entity.EntityDamageEvent';
  *
  * Currently implemented features:
  *
- *  - Damage amount is relative to how much and how long entity will bleed
+ *  - Damage amount is relative to how much and how long the entity will bleed
  *  - Bleeding duration and intensity are increased when entity is damaged again while already bleeding
- *  - Bleeding will exponentially decrease
+ *  - Bleeding exponentially decreases
  *  - Armor, clothing etc... will reduce bleeding amount
  *
  * @author Juffel
@@ -24,8 +24,8 @@ const BLOOD_MATERIAL = Material.DEAD_BUBBLE_CORAL_FAN; // blood material
 const PARTICLE_DATA = Material.REDSTONE_BLOCK.createBlockData(); // block data for the blood particle
 const PARTICLE_AMOUNT = 5; // amount of particles
 
-// entities that don't bleed
-const ENTITY_BLACKLIST = [
+// list of entities that don't bleed
+const ENTITY_BLACKLIST = new Set([
   EntityType.CREEPER,
   EntityType.SKELETON,
   EntityType.SPIDER,
@@ -39,20 +39,20 @@ const ENTITY_BLACKLIST = [
   EntityType.TROPICAL_FISH,
   EntityType.PUFFERFISH,
   EntityType.SQUID,
-];
+]);
 
 const TIME_STEP = 0.5; // control how long the bleeding continues
 const COEFFICIENT = 0.72; // control how intensely the bleeding amount decreases at each step
 
 class BleedTask {
   private entity: Entity;
-  private amount_actual = 0.0;
+  private amountActual = 0.0;
 
   amount = 0.0; // setpoint for the bleeding amount
 
   /**
    * Create a bleeding effect for given entity
-   * @param amount Amount of blood spillage
+   * @param amount Amount of blood spillage, where 1.0 is the most and 0.0 the least
    * @param callback Exit callback
    */
   constructor(
@@ -72,7 +72,7 @@ class BleedTask {
         time_step += TIME_STEP;
 
         // Trigger timer to exit when bleeding stops or entity dies
-        if (this.amount_actual <= 0.1 || this.entity.isDead()) throw undefined;
+        if (this.amountActual <= 0.1 || this.entity.isDead()) throw undefined;
       } catch (error) {
         clearInterval(handle);
         callback(error);
@@ -138,9 +138,9 @@ class BleedTask {
    */
   tick(time_step: number) {
     // Spawn blood at exponential rate
-    this.amount_actual = this.amount * Math.pow(COEFFICIENT, time_step);
+    this.amountActual = this.amount * Math.pow(COEFFICIENT, time_step);
 
-    this.spawnBlood(this.entity.location, 1.0, this.amount_actual);
+    this.spawnBlood(this.entity.location, 1.0, this.amountActual);
   }
 }
 
@@ -150,7 +150,7 @@ const tasks = new Map<number, BleedTask>();
 /**
  * Create, or continue a bleed task
  * @param entity Preferably a living target
- * @param amount Amount of blood spillage
+ * @param amount Amount of blood spillage, where 1.0 is the most and 0.0 the least
  */
 function createBleedTask(entity: Entity, amount: number) {
   let task = tasks.get(entity.entityId);
@@ -178,15 +178,15 @@ registerEvent(EntityDamageEvent, (event) => {
   // Filter entities
   if (
     !(event.entity instanceof LivingEntity) ||
-    ENTITY_BLACKLIST.includes(event.entityType)
+    ENTITY_BLACKLIST.has(event.entityType)
   )
     return;
 
   // Filter cause
   if (
-    event.cause != DamageCause.CUSTOM &&
-    event.cause != DamageCause.PROJECTILE &&
-    event.cause != DamageCause.ENTITY_ATTACK
+    event.cause !== DamageCause.CUSTOM &&
+    event.cause !== DamageCause.PROJECTILE &&
+    event.cause !== DamageCause.ENTITY_ATTACK
   )
     return;
 
