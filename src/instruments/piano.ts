@@ -1,6 +1,5 @@
 import { Location, Material } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
-import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot } from 'org.bukkit.inventory';
@@ -42,22 +41,6 @@ const KEYS = new Map<NoteName, number>([
   ['Bb', 16],
   ['B', 17],
 ]);
-
-// Command for sound testing
-registerCommand('piano', (sender, _label, args) => {
-  if (sender instanceof Player) {
-    const player = sender as Player;
-    playArgs(player, args);
-  }
-});
-async function playArgs(player: Player, args: string) {
-  const bpm = 120;
-  for (const arg of args) {
-    const note = new Note(arg);
-    playNote(player.location, note);
-    await wait(note.getMillis(bpm), 'millis');
-  }
-}
 
 export function playNote(loc: Location, note: Note) {
   let noteNumber = KEYS.get(note.name);
