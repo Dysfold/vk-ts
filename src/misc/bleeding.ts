@@ -2,19 +2,20 @@ import { ParticleBuilder } from 'com.destroystokyo.paper';
 import { Location, Material, Particle } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { Waterlogged } from 'org.bukkit.block.data';
-import { Entity, EntityType, LivingEntity, Player } from 'org.bukkit.entity';
+import { Entity, EntityType, LivingEntity } from 'org.bukkit.entity';
 import { EntityDamageEvent } from 'org.bukkit.event.entity';
 import { DamageCause } from 'org.bukkit.event.entity.EntityDamageEvent';
 
 /**
- * Add a bleeding effect for damageable entities by randomly generating blood puddles and splashes around entity
+ * Adds a bleeding effect for damageable entities by randomly generating blood puddles and splashes around entity
  *
  * Currently implemented features:
  *
- *  - Damage amount is relative to how much and how long the entity will bleed
- *  - Bleeding duration and intensity are increased when entity is damaged again while already bleeding
- *  - Bleeding exponentially decreases
- *  - Armor, clothing etc... will reduce bleeding amount
+ * - Damage amount and health determine how much the entity bleeds
+ * - Injured entities bleed more violently when damaged again
+ * - Bleeding exponentially decreases if not injured
+ * - Armor, clothing etc... will affect bleeding amount
+ * - It is now possible to determine entity health just by looking how much they bleed
  *
  * @author Juffel
  */
@@ -24,7 +25,7 @@ const BLOOD_MATERIAL = Material.DEAD_BUBBLE_CORAL_FAN; // blood material
 const PARTICLE_DATA = Material.REDSTONE_BLOCK.createBlockData(); // block data for the blood particle
 const PARTICLE_AMOUNT = 5; // amount of particles
 
-// list of entities that don't bleed
+// list of living entities that don't bleed
 const ENTITY_BLACKLIST = new Set([
   EntityType.CREEPER,
   EntityType.SKELETON,
@@ -42,17 +43,17 @@ const ENTITY_BLACKLIST = new Set([
 ]);
 
 const TIME_STEP = 0.5; // control how long the bleeding continues
-const COEFFICIENT = 0.72; // control how intensely the bleeding amount decreases at each step
+const COEFFICIENT = 0.69; // control how intensely the bleeding amount decreases at each step
 
 class BleedTask {
   private entity: Entity;
-  private amountActual = 0.0;
+  private time = 0.0;
 
   amount = 0.0; // setpoint for the bleeding amount
 
   /**
    * Create a bleeding effect for given entity
-   * @param amount Amount of blood spillage, where 1.0 is the most and 0.0 the least
+   * @param amount initial bleeding amount from the range of 0.0 to 1.0
    * @param callback Exit callback
    */
   constructor(
@@ -63,21 +64,40 @@ class BleedTask {
     this.entity = entity;
     this.amount = amount;
 
-    let time_step = 0.0;
-
     const handle = setInterval(() => {
       try {
-        this.tick(time_step);
+        if (!this.tick()) throw undefined;
 
-        time_step += TIME_STEP;
-
-        // Trigger timer to exit when bleeding stops or entity dies
-        if (this.amountActual <= 0.1 || this.entity.isDead()) throw undefined;
+        this.time += TIME_STEP;
       } catch (error) {
         clearInterval(handle);
         callback(error);
       }
     }, TIMER_DELAY);
+  }
+
+  /**
+   * Handle timer cycle
+   */
+  tick() {
+    // Spawn blood at exponential rate
+    const chance = this.amount * Math.pow(COEFFICIENT, this.time);
+
+    this.spawnBlood(this.entity.location, 1.0, chance);
+
+    // Stop task if entity either stops bleeding or dies
+    return chance > 0.1 && !this.entity.isDead();
+  }
+
+  /**
+   * Increases bleeding amount and duration
+   * @param amount from the range of 0.0 to 1.0
+   */
+  extend(amount: number) {
+    // Cap value to 1.0
+    this.amount = Math.max(0.0, Math.min(this.amount + amount, 1.0));
+
+    this.time = 0.0;
   }
 
   /**
@@ -95,8 +115,8 @@ class BleedTask {
 
   /**
    * Spawn blood puddles and splashes
-   * @param radius Distance from the location outwards
-   * @param probability Probability of a puddle to form
+   * @param radius blood spawn radius from the entity outwards
+   * @param probability
    */
   spawnBlood(location: Location, radius: number, probability: number) {
     const origin = location.block;
@@ -132,32 +152,22 @@ class BleedTask {
       }
     }
   }
-
-  /**
-   * Handle timer cycle
-   */
-  tick(time_step: number) {
-    // Spawn blood at exponential rate
-    this.amountActual = this.amount * Math.pow(COEFFICIENT, time_step);
-
-    this.spawnBlood(this.entity.location, 1.0, this.amountActual);
-  }
 }
 
 // Active tasks by entity id
 const tasks = new Map<number, BleedTask>();
 
 /**
- * Create, or continue a bleed task
- * @param entity Preferably a living target
- * @param amount Amount of blood spillage, where 1.0 is the most and 0.0 the least
+ * Sets entity bleeding or extends bleeding duration and amount
+ * @param entity
+ * @param amount from the range of 0.0 to 1.0
  */
-function createBleedTask(entity: Entity, amount: number) {
+function setBleeding(entity: Entity, amount: number) {
   let task = tasks.get(entity.entityId);
 
-  // Increase bleeding amount of a existing task
   if (task) {
-    task.amount += amount;
+    // Increase bleeding amount and duration
+    task.extend(amount);
 
     return;
   }
@@ -175,13 +185,6 @@ function createBleedTask(entity: Entity, amount: number) {
 }
 
 registerEvent(EntityDamageEvent, (event) => {
-  // Filter entities
-  if (
-    !(event.entity instanceof LivingEntity) ||
-    ENTITY_BLACKLIST.has(event.entityType)
-  )
-    return;
-
   // Filter cause
   if (
     event.cause !== DamageCause.CUSTOM &&
@@ -190,8 +193,12 @@ registerEvent(EntityDamageEvent, (event) => {
   )
     return;
 
-  // Create or continue bleed task on entity
-  // Damage is divided by 20 to get the estimated bleeding amount
-  // Final damage is used to reduce bleeding for entities that, for example, wear armor or clothing
-  createBleedTask(event.entity, event.finalDamage / 20.0);
+  // Filter entities
+  if (
+    !(event.entity instanceof LivingEntity) ||
+    ENTITY_BLACKLIST.has(event.entityType)
+  )
+    return;
+
+  setBleeding(event.entity, event.finalDamage / event.entity.health);
 });
