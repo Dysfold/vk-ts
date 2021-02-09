@@ -42,3 +42,4 @@ require('./announcements');
 require('./starting-items');
 require('./secret-doors');
 require('./applause');
+require('./player-record');
