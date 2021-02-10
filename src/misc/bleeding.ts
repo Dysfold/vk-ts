@@ -3,7 +3,7 @@ import { Location, Material, Particle } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { Waterlogged } from 'org.bukkit.block.data';
 import { Entity, EntityType, LivingEntity } from 'org.bukkit.entity';
-import { EntityDamageEvent } from 'org.bukkit.event.entity';
+import { EntityDamageEvent, EntityDeathEvent } from 'org.bukkit.event.entity';
 import { DamageCause } from 'org.bukkit.event.entity.EntityDamageEvent';
 
 /**
@@ -85,8 +85,8 @@ class BleedTask {
 
     this.spawnBlood(this.entity.location, 1.0, chance);
 
-    // Stop task if entity either stops bleeding or dies
-    return chance > 0.1 && !this.entity.isDead();
+    // Stop task if entity either stops bleeding, dies or is removed
+    return chance > 0.1 && this.entity.isValid();
   }
 
   /**
@@ -201,4 +201,18 @@ registerEvent(EntityDamageEvent, (event) => {
     return;
 
   setBleeding(event.entity, event.finalDamage / event.entity.health);
+});
+
+/**
+ * Stop bleeding when player dies
+ * Even though bleeding should stop when !entity.isValid(), there could still be situations where player respawns between timer cycles and death is not registered
+ */
+registerEvent(EntityDeathEvent, (event) => {
+  if (event.entityType === EntityType.PLAYER) {
+    const task = tasks.get(event.entity.entityId);
+
+    if (task) {
+      task.amount = 0.0;
+    }
+  }
 });
