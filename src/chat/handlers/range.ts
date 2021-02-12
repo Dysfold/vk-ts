@@ -1,4 +1,5 @@
 import { ArmorStand, Player } from 'org.bukkit.entity';
+import { SpeakerStaff } from '../items';
 import { ChatMessage } from '../pipeline';
 import { IsMention } from './mention';
 
@@ -70,8 +71,9 @@ export function rangeCheckHandler(
   return (msg: ChatMessage, receiver: Player) => {
     const sender = msg.sender;
     let opts;
-    // TODO speaker staff support
-    if (sender.vehicle instanceof ArmorStand) {
+    if (SpeakerStaff.check(sender.inventory.itemInMainHand)) {
+      opts = options.speaker ?? options.normal;
+    } else if (sender.vehicle instanceof ArmorStand) {
       opts = options.sitting ?? options.normal;
     } else if (msg.content.includes('!')) {
       opts = options.shout ?? options.normal;

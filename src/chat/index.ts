@@ -1,5 +1,6 @@
 require('./channel');
 require('./ignore');
+require('./items');
 require('./join-message');
 require('./options');
 require('./pipeline');
