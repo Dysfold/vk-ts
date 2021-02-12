@@ -20,9 +20,22 @@ const CHAT_OPTIONS: Record<string, ChatOption> = {
     ['low', 'Matala'],
     ['high', 'Korkea'],
   ],
+  mentionSound: [
+    'Ääni mainittaessa',
+    ['default', 'Oletus'],
+    ['bell', 'Kellopeli'],
+    ['silent', 'Ei ääntä'],
+  ],
+  mentionStyle: [
+    'Korosta mainittaessa',
+    ['default', 'Koko viesti'],
+    ['alternative', 'Lähettäjän nimi'],
+    ['none', 'Ei mitään'],
+  ],
 };
 const VISIBLE_OPTIONS: [string, (keyof ChatOptions)[]][] = [
-  ['Äänet', ['voice', 'pitch']],
+  ['Äänet', ['voice', 'pitch', 'mentionSound']],
+  ['Ulkoasu', ['mentionStyle']],
 ];
 
 /**
@@ -73,6 +86,10 @@ registerCommand(
   },
 );
 
+/**
+ * Renders player's chat options to them.
+ * @param player Player to render.
+ */
 function renderOptions(player: Player) {
   player.sendMessage(
     color('#AAAAAA', text('=========== Chatin asetukset ===========')),

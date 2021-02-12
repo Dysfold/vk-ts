@@ -60,7 +60,7 @@ CHAT_CHANNELS.global.local.addHandler(
   DELIVER_PRIORITY,
   deliveryHandler((msg, theme) => [
     ...formatProfession(msg.sender, theme),
-    formatSender(msg.sender, theme),
+    formatSender(msg, theme),
     formatMessage(msg, theme),
   ]),
 );
@@ -87,7 +87,7 @@ CHAT_CHANNELS.local.local.addHandler(
   deliveryHandler((msg, theme) => [
     ...formatChannel('Paikallinen', theme),
     ...formatProfession(msg.sender, theme),
-    formatSender(msg.sender, theme),
+    formatSender(msg, theme),
     formatMessage(msg, theme),
   ]),
 );
@@ -107,7 +107,7 @@ CHAT_CHANNELS.whisper.local.addHandler(
   DELIVER_PRIORITY,
   deliveryHandler((msg, theme) => [
     ...formatChannel('Kuiskaus', theme),
-    formatSender(msg.sender, theme),
+    formatSender(msg, theme),
     style('italic', formatMessage(msg, theme)),
   ]),
 );

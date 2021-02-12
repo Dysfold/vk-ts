@@ -39,7 +39,15 @@ interface Theme<T> {
   /**
    * Player name (and including ':') color.
    */
-  playerName: T;
+  playerName: {
+    normal: T;
+
+    /**
+     * When mentionStyle chat option is 'alternative', sender of messages
+     * that mention the receiver is highlighted with this color.
+     */
+    mention: T;
+  };
 
   /**
    * Base color of the chat message content.
@@ -48,7 +56,8 @@ interface Theme<T> {
     normal: T;
 
     /**
-     * Messages that mention the receiver are hightlighted.
+     * When mentionStyle chat option is 'default', messages that mention the
+     * receiver are highlighted with this color.
      */
     mention: T;
   };
@@ -80,7 +89,10 @@ const CHAT_THEMES: Record<string, Theme<string>> = {
       name: { normal: '#FFFFFF', leader: '#FFAA00', admin: '#55FFFF' },
       brackets: '#555555',
     },
-    playerName: '#AAAAAA',
+    playerName: {
+      normal: '#AAAAAA',
+      mention: '#FF55FF',
+    },
     message: {
       normal: '#FFFFFF',
       mention: '#FFFF55',

@@ -1,6 +1,7 @@
 import { color, text, tooltip } from 'craftjs-plugin/chat';
 import { Player } from 'org.bukkit.entity';
 import { chanceOf } from '../../common/helpers/math';
+import { IsMention } from '../handlers/mention';
 import { RangeCheck } from '../handlers/range';
 import { ChatMessage } from '../pipeline';
 import { ChatTheme } from './theme';
@@ -23,8 +24,13 @@ export function formatProfession(player: Player, theme: ChatTheme) {
   ];
 }
 
-export function formatSender(player: Player, theme: ChatTheme) {
-  return color(theme.playerName, text(player.name + ': '));
+export function formatSender(msg: ChatMessage, theme: ChatTheme) {
+  // Alternative mention format support
+  const nameColor =
+    msg.data(IsMention) == 'alternative'
+      ? theme.playerName.mention
+      : theme.playerName.normal;
+  return color(nameColor, text(msg.sender.name + ': '));
 }
 
 const SCRAMBLE_CHARS = [',', '.', "'", ' '];
@@ -47,5 +53,9 @@ export function formatMessage(msg: ChatMessage, theme: ChatTheme) {
   } else {
     content = msg.content;
   }
-  return color(theme.message.normal, text(content));
+  const msgColor =
+    msg.data(IsMention) == 'default'
+      ? theme.message.mention
+      : theme.message.normal;
+  return color(msgColor, text(content));
 }

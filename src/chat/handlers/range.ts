@@ -1,5 +1,6 @@
 import { ArmorStand, Player } from 'org.bukkit.entity';
 import { ChatMessage } from '../pipeline';
+import { IsMention } from './mention';
 
 interface Range {
   /**
@@ -86,6 +87,11 @@ export function rangeCheckHandler(
         scrambleFactor: computeScramble(opts, range),
       };
       msg.setData(RangeCheck, result);
+
+      // Eliminate mentions if the message is scrambled
+      if (result.scrambleFactor > 0) {
+        msg.setData(IsMention, 'scramble-prevents');
+      }
     } else {
       msg.discard = true; // Not visible
     }
