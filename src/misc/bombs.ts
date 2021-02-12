@@ -1,4 +1,4 @@
-import { Material, Particle, Sound, Location } from 'org.bukkit';
+import { Material, Particle, Sound, Location, SoundCategory } from 'org.bukkit';
 import {
   PlayerAttemptPickupItemEvent,
   PlayerInteractEvent,
@@ -13,9 +13,11 @@ import * as yup from 'yup';
 import { Item, Player } from 'org.bukkit.entity';
 import { giveItem } from '../common/helpers/inventory';
 import { isRightClick } from '../common/helpers/click';
+import { Damageable, ItemMeta } from 'org.bukkit.inventory.meta';
 
 const FUZE_TICK_DELAY = 500; // ms
 const SMOKE_PARTICLE_COUNT = 400;
+const SMOKE_SPAWN_DELAY = 1000; // ms
 const BOMB_VEL_MULTIPLIER = 0.5;
 
 const Bomb = new CustomItem({
@@ -87,7 +89,7 @@ async function deploySmoke(loc: Location) {
       0.8,
       0,
     );
-    await wait(1000, 'millis');
+    await wait(SMOKE_SPAWN_DELAY, 'millis');
   }
 }
 
@@ -139,6 +141,24 @@ function dropBomb(player: Player, item: ItemStack) {
   tickFuzeThenDetonate(droppedBomb);
 }
 
+function useFlintAndSteel(player: Player, item: ItemStack) {
+  const meta = (item.itemMeta as unknown) as Damageable;
+  meta.damage++;
+  item.itemMeta = (meta as unknown) as ItemMeta;
+
+  // Check if the tools breaks. 64 -> broken item
+  if (meta.damage >= 64) {
+    item.amount = 0;
+    player.world.playSound(
+      player.location,
+      Sound.ENTITY_ITEM_BREAK,
+      SoundCategory.PLAYERS,
+      1,
+      1,
+    );
+  }
+}
+
 registerEvent(PlayerInteractEvent, (event) => {
   if (!event.item) return;
   if (!isRightClick(event.action)) return;
@@ -151,10 +171,14 @@ registerEvent(PlayerInteractEvent, (event) => {
 
   if (offHand.type === Material.FLINT_AND_STEEL) {
     if (Bomb.check(mainHand)) {
+      player.swingMainHand();
+      useFlintAndSteel(player, offHand);
       dropBomb(player, mainHand);
     }
   } else if (mainHand.type === Material.FLINT_AND_STEEL) {
     if (Bomb.check(offHand)) {
+      player.swingOffHand();
+      useFlintAndSteel(player, mainHand);
       dropBomb(player, offHand);
     }
   }
