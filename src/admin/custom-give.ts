@@ -17,6 +17,8 @@ const CUSTOM_ITEM_TYPES = new Map([
   ['card', Material.PRISMARINE_CRYSTALS],
   ['shield', Material.SHIELD],
   ['drinks', Material.POTION],
+  ['nostack', Material.GOLDEN_HORSE_ARMOR],
+  ['colorable', Material.LEATHER_HORSE_ARMOR],
 ]);
 const ALIASES = [...CUSTOM_ITEM_TYPES.keys()];
 
