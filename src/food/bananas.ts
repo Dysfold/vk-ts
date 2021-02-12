@@ -2,9 +2,9 @@ import { Material } from 'org.bukkit';
 import { LeavesDecayEvent } from 'org.bukkit.event.block';
 import { CustomItem } from '../common/items/CustomItem';
 
-const Banana = new CustomItem({
+export const Banana = new CustomItem({
   id: 5,
-  type: Material.DRIED_KELP,
+  type: Material.POISONOUS_POTATO,
   modelId: 5,
   name: 'Banaani',
 });
