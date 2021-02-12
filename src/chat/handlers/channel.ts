@@ -8,6 +8,7 @@ import {
   formatProfession,
   formatSender,
 } from '../style/format';
+import { detectApplause } from './applause';
 import { deliveryHandler } from './delivery';
 import { playChatSound, showChatBubble } from './effect';
 import { rangeCheckHandler } from './range';
@@ -42,6 +43,7 @@ const DELIVER_PRIORITY = 9999;
 
 CHAT_CHANNELS.global.global.addHandler('chatBubble', 9999, showChatBubble);
 CHAT_CHANNELS.global.global.addHandler('chatSound', 9999, playChatSound);
+CHAT_CHANNELS.global.global.addHandler('applause', 9999, detectApplause);
 
 /**
  * For players who have ignored global, transfer messages to local channel.
@@ -69,6 +71,7 @@ CHAT_CHANNELS.global.local.addHandler(
 
 CHAT_CHANNELS.local.global.addHandler('chatBubble', 9999, showChatBubble);
 CHAT_CHANNELS.local.global.addHandler('chatSound', 9999, playChatSound);
+CHAT_CHANNELS.local.global.addHandler('applause', 9999, detectApplause);
 
 CHAT_CHANNELS.local.local.addHandler(
   'rangeCheck',
