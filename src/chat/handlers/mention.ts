@@ -10,6 +10,8 @@ LOCAL_PIPELINE.addHandler('mentionPlayer', 999, (msg, receiver) => {
   if (msg.content.includes(receiver.name)) {
     playMentionSound(receiver);
     msg.setData(IsMention, getChatOption(receiver, 'mentionStyle')); // Save for formatter
+  } else {
+    msg.setData(IsMention, 'not-mention');
   }
 });
 
