@@ -6,7 +6,10 @@ export const IsMention = (props: string) => props;
 
 // Play mention sound and mark as mention for formatting
 LOCAL_PIPELINE.addHandler('mentionPlayer', 999, (msg, receiver) => {
-  if (msg.sender == receiver) return; // No self-mentions
+  if (msg.sender == receiver) {
+    msg.setData(IsMention, 'self-mention');
+    return; // No self-mentions
+  }
   if (msg.content.includes(receiver.name)) {
     playMentionSound(receiver);
     msg.setData(IsMention, getChatOption(receiver, 'mentionStyle')); // Save for formatter
