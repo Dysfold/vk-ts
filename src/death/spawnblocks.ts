@@ -8,7 +8,7 @@ import { dataView } from '../common/datas/view';
 import { locationToObj, objToLocation } from './helpers';
 
 const spawnBlockDatabaseEntry = new DatabaseEntry('spawns', 'spawnblocks-key');
-const spawnBlockData = dataType('spanwBlockData', {
+const spawnBlockData = dataType('spawnBlockData', {
   blocks: yup.array(
     yup
       .object({
