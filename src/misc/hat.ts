@@ -1,4 +1,4 @@
-import { GameMode, Material, SoundCategory, Sound } from 'org.bukkit';
+import { GameMode, Material, SoundCategory, Sound, Bukkit } from 'org.bukkit';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
 import {
   InventoryAction,
@@ -19,6 +19,7 @@ import { isRightClick } from '../common/helpers/click';
 
 export const HAT_MATERIAL = Material.LEATHER_BOOTS;
 const HELMET_SLOT = 39;
+const BOOTS_SLOT = 36;
 
 function isHat(item: ItemStack | null) {
   if (item?.type !== HAT_MATERIAL) return false;
@@ -50,21 +51,27 @@ registerEvent(PlayerInteractEvent, (event) => {
 
 // Shift click a hat to equip
 registerEvent(InventoryClickEvent, (event) => {
+  Bukkit.server.broadcastMessage('JE');
   if (!event.currentItem) return;
   if (!isHat(event.currentItem)) return;
   if (event.action !== InventoryAction.MOVE_TO_OTHER_INVENTORY) return;
   if (event.inventory.type !== InventoryType.CRAFTING) return;
   const inventory = event.whoClicked.inventory as PlayerInventory;
+  event.setCancelled(true);
   if (inventory.helmet) return;
   inventory.helmet = event.currentItem;
   event.currentItem.amount = 0;
-  event.setCancelled(true);
 });
 
 // Drag a hat to helmet slot
 registerEvent(InventoryClickEvent, (event) => {
   if (!event.cursor) return;
   if (!isHat(event.cursor)) return;
+  if (event.slot === BOOTS_SLOT) {
+    // Player tried to place hat to boots slot
+    event.setCancelled(true);
+    return;
+  }
   if (event.action !== InventoryAction.PLACE_ALL) return;
   if (event.slot !== HELMET_SLOT) return;
   const inventory = event.whoClicked.inventory as PlayerInventory;
