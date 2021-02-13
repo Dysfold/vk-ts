@@ -14,6 +14,10 @@ import { Item, Player } from 'org.bukkit.entity';
 import { giveItem } from '../common/helpers/inventory';
 import { isRightClick } from '../common/helpers/click';
 import { Damageable, ItemMeta } from 'org.bukkit.inventory.meta';
+import { BlockDispenseEvent } from 'org.bukkit.event.block';
+import { Vector } from 'org.bukkit.util';
+import { Directional } from 'org.bukkit.block.data';
+import { Dispenser } from 'org.bukkit.block';
 
 const FUZE_TICK_DELAY = 500; // ms
 const SMOKE_PARTICLE_COUNT = 400;
@@ -127,17 +131,12 @@ async function tickFuzeThenDetonate(droppedBomb: Item) {
   detonateBomb(droppedBomb);
 }
 
-function dropBomb(player: Player, item: ItemStack) {
-  const droppedBomb = player.world.dropItem(
-    player.location.add(0, 1.4, 0),
-    item,
-  );
+function dropBomb(loc: Location, vel: Vector, item: ItemStack) {
+  const droppedBomb = loc.world.dropItem(loc, item);
   item.amount--;
   droppedBomb.setInvulnerable(true);
-  droppedBomb.velocity = player.eyeLocation.direction.multiply(
-    BOMB_VEL_MULTIPLIER,
-  );
-  player.world.playSound(player.location, Sound.ITEM_FLINTANDSTEEL_USE, 1, 1);
+  droppedBomb.velocity = vel;
+  loc.world.playSound(loc, Sound.ITEM_FLINTANDSTEEL_USE, 1, 1);
   tickFuzeThenDetonate(droppedBomb);
 }
 
@@ -159,6 +158,7 @@ function useFlintAndSteel(player: Player, item: ItemStack) {
   }
 }
 
+// Player throw bomb event
 registerEvent(PlayerInteractEvent, (event) => {
   if (!event.item) return;
   if (!isRightClick(event.action)) return;
@@ -168,22 +168,41 @@ registerEvent(PlayerInteractEvent, (event) => {
   const inv = player.inventory as PlayerInventory;
   const offHand = inv.itemInOffHand;
   const mainHand = inv.itemInMainHand;
+  const eyeDir = player.eyeLocation.direction;
+  const dropLoc = player.location.add(0, 1.2, 0);
 
   if (offHand.type === Material.FLINT_AND_STEEL) {
     if (Bomb.check(mainHand)) {
       player.swingMainHand();
       useFlintAndSteel(player, offHand);
-      dropBomb(player, mainHand);
+      dropBomb(dropLoc, eyeDir.multiply(BOMB_VEL_MULTIPLIER), mainHand);
     }
   } else if (mainHand.type === Material.FLINT_AND_STEEL) {
     if (Bomb.check(offHand)) {
       player.swingOffHand();
       useFlintAndSteel(player, mainHand);
-      dropBomb(player, offHand);
+      dropBomb(dropLoc, eyeDir.multiply(BOMB_VEL_MULTIPLIER), offHand);
     }
   }
 });
 
+// Bomb dispense event
+registerEvent(BlockDispenseEvent, async (event) => {
+  const item = event.item;
+  if (!Bomb.check(item)) return;
+  event.setCancelled(true);
+  const vel = event.velocity;
+  const dispenser = event.block.state as Dispenser;
+  const blockdata = event.block.blockData as Directional;
+  const dispenseLoc = event.block.location
+    .toCenterLocation()
+    .add(blockdata.facing.direction);
+  await wait(1, 'ticks');
+  dispenser.inventory.removeItem(item);
+  dropBomb(dispenseLoc, vel, item);
+});
+
+// Prevent picking up lit bombs
 registerEvent(PlayerAttemptPickupItemEvent, (event) => {
   const bomb = Bomb.get(event.item.itemStack);
   if (bomb && bomb.lit) event.setCancelled(true);
