@@ -1,4 +1,4 @@
-import { GameMode, Material, SoundCategory, Sound, Bukkit } from 'org.bukkit';
+import { GameMode, Material, Sound, SoundCategory } from 'org.bukkit';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
 import {
   InventoryAction,
@@ -14,8 +14,8 @@ import {
   ItemStack,
   PlayerInventory,
 } from 'org.bukkit.inventory';
-import { Pipe, equipPipe } from './pipe';
 import { isRightClick } from '../common/helpers/click';
+import { equipPipe, Pipe } from './pipe';
 
 export const HAT_MATERIAL = Material.LEATHER_BOOTS;
 const HELMET_SLOT = 39;
@@ -51,7 +51,6 @@ registerEvent(PlayerInteractEvent, (event) => {
 
 // Shift click a hat to equip
 registerEvent(InventoryClickEvent, (event) => {
-  Bukkit.server.broadcastMessage('JE');
   if (!event.currentItem) return;
   if (!isHat(event.currentItem)) return;
   if (event.action !== InventoryAction.MOVE_TO_OTHER_INVENTORY) return;
