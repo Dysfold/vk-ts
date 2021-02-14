@@ -18,11 +18,7 @@ import { BlockDispenseEvent } from 'org.bukkit.event.block';
 import { Vector } from 'org.bukkit.util';
 import { Directional } from 'org.bukkit.block.data';
 import { Dispenser } from 'org.bukkit.block';
-import {
-  EntityCombustEvent,
-  EntityDamageEvent,
-  EntityDeathEvent,
-} from 'org.bukkit.event.entity';
+import { EntityCombustEvent } from 'org.bukkit.event.entity';
 
 const FUZE_TICK_DELAY = 500; // ms
 const SMOKE_PARTICLE_COUNT = 400;
