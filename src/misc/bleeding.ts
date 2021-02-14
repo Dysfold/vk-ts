@@ -42,40 +42,40 @@ const ENTITY_WHITELIST = new Set([
   EntityType.DOLPHIN,
   EntityType.DONKEY,
   EntityType.DROWNED,
-  /* EntityType.EVOKER, */
+  EntityType.EVOKER,
   EntityType.FOX,
-  /* EntityType.GIANT */
-  /* EntityType.HOGLIN, */
+  EntityType.GIANT,
+  EntityType.HOGLIN,
   EntityType.HORSE,
   EntityType.HUSK,
-  /* EntityType.ILLUSIONER, */
+  EntityType.ILLUSIONER,
   EntityType.LLAMA,
   EntityType.MULE,
   EntityType.OCELOT,
   EntityType.PANDA,
   EntityType.PARROT,
   EntityType.PIG,
-  /* EntityType.PIGLIN, */
-  /* EntityType.PIGLIN_BRUTE, */
-  /* EntityType.PILLAGER, */
+  EntityType.PIGLIN,
+  EntityType.PIGLIN_BRUTE,
+  EntityType.PILLAGER,
   EntityType.PLAYER,
   EntityType.POLAR_BEAR,
   EntityType.RABBIT,
-  /* EntityType.RAVAGER, */
+  EntityType.RAVAGER,
   EntityType.SHEEP,
-  /* EntityType.STRIDER, */
+  EntityType.STRIDER,
   EntityType.TRADER_LLAMA,
   EntityType.TURTLE,
-  /* EntityType.VILLAGER, */
-  /* EntityType.WANDERING_TRADER, */
-  /* EntityType.VINDICATOR, */
+  EntityType.VILLAGER,
+  EntityType.WANDERING_TRADER,
+  EntityType.VINDICATOR,
   EntityType.WITCH,
   EntityType.WOLF,
-  /* EntityType.ZOGLIN, */
+  EntityType.ZOGLIN,
   EntityType.ZOMBIE,
   EntityType.ZOMBIE_HORSE,
   EntityType.ZOMBIE_VILLAGER,
-  /* EntityType.ZOMBIFIED_PIGLIN, */
+  EntityType.ZOMBIFIED_PIGLIN,
 ]);
 
 class BleedTask {
