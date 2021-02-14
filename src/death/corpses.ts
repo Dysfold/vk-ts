@@ -1,4 +1,4 @@
-import { Location, Material } from 'org.bukkit';
+import { Location, Material, Bukkit } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { Waterlogged } from 'org.bukkit.block.data';
 import { ArmorStand, Entity, EntityType, Player } from 'org.bukkit.entity';
@@ -139,6 +139,7 @@ export async function spawnCorpse(event: PlayerDeathEvent) {
   spawnBlood(armorstand.eyeLocation);
 }
 
+// TODO: Remove this and use spawnBlood function from misc/bleeding, when implemented
 function spawnBlood(location: Location) {
   const center = location.block;
   for (let dx = -2; dx <= 2; dx++) {
@@ -188,15 +189,36 @@ const CORPSE_MAX_AGE_MILLIS = CORPSE_MAX_AGE_HOURS * 60 * 60 * 1000;
 registerEvent(ChunkUnloadEvent, async (event) => {
   for (const entity of event.chunk.entities) {
     if (isCorpse(entity)) {
-      const age = getCorpseAge(entity);
-      if (age === undefined) {
-        entity.remove();
-      } else if (age > CORPSE_MAX_AGE_MILLIS) {
-        entity.remove();
-      }
+      tryDespawnCorpse(entity);
     }
   }
 });
+
+// Remove old corpses (Some chunks might never unload so this is the only way to despawn)
+// We dont need to despawn those armorstands that often, so long delay is ok
+const DESPAWN_INTERVAL_HOURS = 3;
+setInterval(() => {
+  checkAllCorpsesForDespawning();
+}, DESPAWN_INTERVAL_HOURS * 60 * 60 * 1000);
+
+function checkAllCorpsesForDespawning() {
+  for (const world of Bukkit.server.worlds) {
+    for (const entity of world.getEntitiesByClass(ArmorStand)) {
+      if (isCorpse(entity as Entity)) {
+        tryDespawnCorpse(entity as ArmorStand);
+      }
+    }
+  }
+}
+
+function tryDespawnCorpse(corpse: ArmorStand) {
+  const age = getCorpseAge(corpse);
+  if (age === undefined) {
+    corpse.remove();
+  } else if (age > CORPSE_MAX_AGE_MILLIS) {
+    corpse.remove();
+  }
+}
 
 function isCorpse(entity: Entity): entity is ArmorStand {
   if (entity?.type !== EntityType.ARMOR_STAND) return false;
@@ -232,3 +254,6 @@ function getCorpseAge(armorstand: ArmorStand) {
   if (isNaN(spawnTime)) return undefined;
   return new Date().getTime() - spawnTime;
 }
+
+// Despawn old armodstands on refresh
+checkAllCorpsesForDespawning();
