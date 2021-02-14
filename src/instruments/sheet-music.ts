@@ -80,10 +80,8 @@ async function playNotesFromBook(
       if (!note.isPause) playNote(location, note);
       // Particle may be added later if wanted
       //location.world.spawnParticle(Particle.NOTE, location, 0);
+      if (!musicians.has(player)) return;
       await wait(note.getMillis(bpm), 'millis');
-      if (!musicians.has(player)) {
-        break;
-      }
     }
   }
 }
