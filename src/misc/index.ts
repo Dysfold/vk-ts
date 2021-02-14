@@ -42,4 +42,5 @@ require('./announcements');
 require('./starting-items');
 require('./secret-doors');
 require('./applause');
+require('./player-record');
 require('./horse_armor_items');
