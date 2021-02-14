@@ -4,6 +4,7 @@ import {
   InventoryAction,
   InventoryClickEvent,
   InventoryType,
+  InventoryDragEvent,
 } from 'org.bukkit.event.inventory';
 import {
   PlayerInteractAtEntityEvent,
@@ -110,3 +111,23 @@ function playEquipSound(player: Player) {
     1,
   );
 }
+
+// Prevent hat equipping with hotbar buttons
+registerEvent(InventoryClickEvent, (event) => {
+  if (event.inventory.type !== InventoryType.CRAFTING) return;
+  if (event.hotbarButton !== -1) {
+    if (event.slot !== BOOTS_SLOT) return;
+    const swapped = event.whoClicked.inventory.getItem(event.hotbarButton);
+    if (isHat(swapped)) {
+      event.setCancelled(true);
+      return;
+    }
+  }
+});
+
+// Drag a hat to boots slot
+registerEvent(InventoryDragEvent, (event) => {
+  if (event.inventory.type !== InventoryType.CRAFTING) return;
+  if (!event.inventorySlots.contains(BOOTS_SLOT)) return;
+  if (isHat(event.oldCursor)) event.setCancelled(true);
+});
