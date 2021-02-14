@@ -16,7 +16,7 @@ import { SkullMeta } from 'org.bukkit.inventory.meta';
 import { EulerAngle } from 'org.bukkit.util';
 import { chanceOf, minMax } from '../common/helpers/math';
 import { CustomItem } from '../common/items/CustomItem';
-import { HIDDEN_MATERIAL } from '../misc/heart-of-the-sea';
+import { HIDDEN_MATERIAL } from '../misc/hidden-items';
 
 const BLOOD_MATERIAL = Material.DEAD_BUBBLE_CORAL_FAN;
 
