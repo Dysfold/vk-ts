@@ -35,6 +35,7 @@ registerEvent(InventoryClickEvent, (event) => {
 
 // Shift click a horse armor to equip or use hotbar button
 registerEvent(InventoryClickEvent, (event) => {
+  if (!(event.inventory.holder instanceof Horse)) return;
   if (event.hotbarButton !== -1) {
     // Player used hotbar button to swap items
     if (event.slot !== HORSE_ARMOR_SLOT) return;
@@ -47,7 +48,6 @@ registerEvent(InventoryClickEvent, (event) => {
 
   if (!isHorseArmorCustomItem(event.currentItem)) return;
   if (event.action !== InventoryAction.MOVE_TO_OTHER_INVENTORY) return;
-  if (!(event.inventory.holder instanceof Horse)) return;
   event.setCancelled(true);
 });
 
