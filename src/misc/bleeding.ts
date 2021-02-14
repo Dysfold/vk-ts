@@ -2,9 +2,10 @@ import { ParticleBuilder } from 'com.destroystokyo.paper';
 import { Location, Material, Particle } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { Waterlogged } from 'org.bukkit.block.data';
-import { Entity, EntityType, LivingEntity } from 'org.bukkit.entity';
+import { Entity, EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { EntityDamageEvent, EntityDeathEvent } from 'org.bukkit.event.entity';
 import { DamageCause } from 'org.bukkit.event.entity.EntityDamageEvent';
+import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 
 /**
  * Adds a bleeding effect for damageable entities by randomly generating blood puddles and splashes around entity
@@ -16,6 +17,7 @@ import { DamageCause } from 'org.bukkit.event.entity.EntityDamageEvent';
  * - Bleeding exponentially decreases if not injured
  * - Armor, clothing etc... will affect bleeding amount
  * - It is now possible to determine entity health just by looking how much they bleed
+ * - Blood loss causes nausea on players
  *
  * @author Juffel
  */
@@ -24,26 +26,54 @@ const TIMER_DELAY = 1000; // timer delay in millis
 const BLOOD_MATERIAL = Material.DEAD_BUBBLE_CORAL_FAN; // blood material
 const PARTICLE_DATA = Material.REDSTONE_BLOCK.createBlockData(); // block data for the blood particle
 const PARTICLE_AMOUNT = 5; // amount of particles
+const TIME_STEP = 0.7; // control how long the bleeding continues. Higher is faster
+const COEFFICIENT = 0.55; // control how intensely the bleeding amount decreases at each step. Lower is faster
+const NAUSEA_LIMIT = 0.79; // add nausea if blood loss amount exceeds this value
+const NAUSEA_DURATION = 15; // nausea duration in seconds
 
-// list of living entities that don't bleed
-const ENTITY_BLACKLIST = new Set([
-  EntityType.CREEPER,
-  EntityType.SKELETON,
-  EntityType.SPIDER,
-  EntityType.CAVE_SPIDER,
-  EntityType.ENDERMAN,
-  EntityType.SLIME,
-  EntityType.SHULKER,
-  EntityType.GHAST,
-  EntityType.STRAY,
-  EntityType.VEX,
-  EntityType.TROPICAL_FISH,
-  EntityType.PUFFERFISH,
-  EntityType.SQUID,
+// list of living entities that should bleed
+const ENTITY_WHITELIST = new Set([
+  EntityType.CAT,
+  EntityType.CHICKEN,
+  EntityType.COW,
+  EntityType.DOLPHIN,
+  EntityType.DONKEY,
+  EntityType.DROWNED,
+  /* EntityType.EVOKER, */
+  EntityType.FOX,
+  /* EntityType.GIANT */
+  /* EntityType.HOGLIN, */
+  EntityType.HORSE,
+  EntityType.HUSK,
+  /* EntityType.ILLUSIONER, */
+  EntityType.LLAMA,
+  EntityType.MULE,
+  EntityType.OCELOT,
+  EntityType.PANDA,
+  EntityType.PARROT,
+  EntityType.PIG,
+  EntityType.PIGLIN,
+  EntityType.PIGLIN_BRUTE,
+  /* EntityType.PILLAGER, */
+  EntityType.PLAYER,
+  EntityType.POLAR_BEAR,
+  EntityType.RABBIT,
+  /* EntityType.RAVAGER, */
+  EntityType.SHEEP,
+  /* EntityType.STRIDER, */
+  EntityType.TRADER_LLAMA,
+  EntityType.TURTLE,
+  /* EntityType.VILLAGER, */
+  /* EntityType.WANDERING_TRADER, */
+  /* EntityType.VINDICATOR, */
+  EntityType.WITCH,
+  EntityType.WOLF,
+  /* EntityType.ZOGLIN, */
+  EntityType.ZOMBIE,
+  EntityType.ZOMBIE_HORSE,
+  EntityType.ZOMBIE_VILLAGER,
+  /* EntityType.ZOMBIFIED_PIGLIN, */
 ]);
-
-const TIME_STEP = 0.5; // control how long the bleeding continues
-const COEFFICIENT = 0.69; // control how intensely the bleeding amount decreases at each step
 
 class BleedTask {
   private entity: Entity;
@@ -83,7 +113,13 @@ class BleedTask {
     // Spawn blood at exponential rate
     const chance = this.amount * Math.pow(COEFFICIENT, this.time);
 
+    // Spawn particles and blood
     this.spawnBlood(this.entity.location, 1.0, chance);
+
+    // Make player nauseous if loses a lot of blood
+    if (this.amount > NAUSEA_LIMIT) {
+      this.addConfusion(NAUSEA_DURATION);
+    }
 
     // Stop task if entity either stops bleeding, dies or is removed
     return chance > 0.1 && this.entity.isValid();
@@ -152,6 +188,19 @@ class BleedTask {
       }
     }
   }
+
+  /**
+   * Add nausea if a lot of blood is lost
+   */
+  addConfusion(duration: number) {
+    if (this.entity.type == EntityType.PLAYER) {
+      const player = (this.entity as unknown) as Player;
+      if (player.hasPotionEffect(PotionEffectType.CONFUSION)) return;
+      player.addPotionEffect(
+        new PotionEffect(PotionEffectType.CONFUSION, duration * 20, 1),
+      );
+    }
+  }
 }
 
 // Active tasks by entity id
@@ -196,7 +245,7 @@ registerEvent(EntityDamageEvent, (event) => {
   // Filter entities
   if (
     !(event.entity instanceof LivingEntity) ||
-    ENTITY_BLACKLIST.has(event.entityType)
+    !ENTITY_WHITELIST.has(event.entityType)
   )
     return;
 
