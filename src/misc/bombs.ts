@@ -1,4 +1,4 @@
-import { Material, Particle, Sound, Location, SoundCategory } from 'org.bukkit';
+import { Material, Particle, Sound, Location } from 'org.bukkit';
 import {
   PlayerAttemptPickupItemEvent,
   PlayerInteractEvent,
@@ -13,12 +13,12 @@ import * as yup from 'yup';
 import { EntityType, Item, Player } from 'org.bukkit.entity';
 import { giveItem } from '../common/helpers/inventory';
 import { isRightClick } from '../common/helpers/click';
-import { Damageable, ItemMeta } from 'org.bukkit.inventory.meta';
 import { BlockDispenseEvent } from 'org.bukkit.event.block';
 import { Vector } from 'org.bukkit.util';
 import { Directional } from 'org.bukkit.block.data';
 import { Dispenser } from 'org.bukkit.block';
 import { EntityCombustEvent } from 'org.bukkit.event.entity';
+import { useFlintAndSteel } from '../common/helpers/items';
 
 const FUZE_TICK_DELAY = 500; // ms
 const SMOKE_PARTICLE_COUNT = 400;
@@ -139,24 +139,6 @@ function dropBomb(loc: Location, vel: Vector, item: ItemStack) {
   droppedBomb.velocity = vel;
   loc.world.playSound(loc, Sound.ITEM_FLINTANDSTEEL_USE, 1, 1);
   tickFuzeThenDetonate(droppedBomb);
-}
-
-function useFlintAndSteel(player: Player, item: ItemStack) {
-  const meta = (item.itemMeta as unknown) as Damageable;
-  meta.damage++;
-  item.itemMeta = (meta as unknown) as ItemMeta;
-
-  // Check if the tools breaks. 64 -> broken item
-  if (meta.damage >= 64) {
-    item.amount = 0;
-    player.world.playSound(
-      player.location,
-      Sound.ENTITY_ITEM_BREAK,
-      SoundCategory.PLAYERS,
-      1,
-      1,
-    );
-  }
 }
 
 // Player throw bomb event
