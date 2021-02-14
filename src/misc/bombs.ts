@@ -10,7 +10,7 @@ import {
 } from 'org.bukkit.inventory';
 import { CustomItem } from '../common/items/CustomItem';
 import * as yup from 'yup';
-import { Item, Player } from 'org.bukkit.entity';
+import { EntityType, Item, Player } from 'org.bukkit.entity';
 import { giveItem } from '../common/helpers/inventory';
 import { isRightClick } from '../common/helpers/click';
 import { Damageable, ItemMeta } from 'org.bukkit.inventory.meta';
@@ -18,6 +18,11 @@ import { BlockDispenseEvent } from 'org.bukkit.event.block';
 import { Vector } from 'org.bukkit.util';
 import { Directional } from 'org.bukkit.block.data';
 import { Dispenser } from 'org.bukkit.block';
+import {
+  EntityCombustEvent,
+  EntityDamageEvent,
+  EntityDeathEvent,
+} from 'org.bukkit.event.entity';
 
 const FUZE_TICK_DELAY = 500; // ms
 const SMOKE_PARTICLE_COUNT = 400;
@@ -206,4 +211,13 @@ registerEvent(BlockDispenseEvent, async (event) => {
 registerEvent(PlayerAttemptPickupItemEvent, (event) => {
   const bomb = Bomb.get(event.item.itemStack);
   if (bomb && bomb.lit) event.setCancelled(true);
+});
+
+registerEvent(EntityCombustEvent, (event) => {
+  if (event.entityType !== EntityType.DROPPED_ITEM) return;
+  const item = event.entity as Item;
+  const bomb = Bomb.get(item.itemStack);
+  if (bomb && bomb.lit) {
+    item.remove(); // This will detonate the bomb
+  }
 });
