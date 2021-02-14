@@ -31,6 +31,9 @@ const COEFFICIENT = 0.55; // control how intensely the bleeding amount decreases
 const NAUSEA_LIMIT = 0.79; // add nausea if blood loss amount exceeds this value
 const NAUSEA_DURATION = 15; // nausea duration in seconds
 
+// worlds where bleeding should be disabled
+const WORLD_BLACKLIST = new Set(['Tuonela']);
+
 // list of living entities that should bleed
 const ENTITY_WHITELIST = new Set([
   EntityType.CAT,
@@ -52,8 +55,8 @@ const ENTITY_WHITELIST = new Set([
   EntityType.PANDA,
   EntityType.PARROT,
   EntityType.PIG,
-  EntityType.PIGLIN,
-  EntityType.PIGLIN_BRUTE,
+  /* EntityType.PIGLIN, */
+  /* EntityType.PIGLIN_BRUTE, */
   /* EntityType.PILLAGER, */
   EntityType.PLAYER,
   EntityType.POLAR_BEAR,
@@ -241,6 +244,9 @@ registerEvent(EntityDamageEvent, (event) => {
     event.cause !== DamageCause.ENTITY_ATTACK
   )
     return;
+
+  // Filter world
+  if (WORLD_BLACKLIST.has(event.entity.world.name)) return;
 
   // Filter entities
   if (
