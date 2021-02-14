@@ -1,4 +1,4 @@
-import { Material } from 'org.bukkit';
+import { Material, GameMode } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { CustomItem } from '../common/items/CustomItem';
@@ -28,6 +28,7 @@ const Scythe = new CustomItem({
 
 registerEvent(BlockBreakEvent, (event) => {
   if (!CROPS.has(event.block.type)) return;
+  if (event.player.gameMode === GameMode.CREATIVE) return;
   if (Sickle.check(event.player.itemInHand)) return;
   if (Scythe.check(event.player.itemInHand)) {
     useScythe(event.block);

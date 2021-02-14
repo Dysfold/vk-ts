@@ -16,9 +16,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
   event.setCancelled(true);
 
   // Remove water from the item
-  const meta = event.item.itemMeta;
-  const modelId = meta.hasCustomModelData() ? meta.customModelData : 0;
-  const replacement = getEmptyBottle(modelId);
+  const replacement = getEmptyBottle(event.item);
   await wait(1, 'ticks');
 
   if (event.hand === EquipmentSlot.HAND) {

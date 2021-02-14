@@ -13,15 +13,17 @@ registerEvent(ProjectileHitEvent, (event) => {
 
   if (!block) return;
 
-  // Call BlockBreakEvent for grief prevention
   if (!(arrow.shooter instanceof Player)) return;
-  const blockBreakEvent = new BlockBreakEvent(block, arrow.shooter);
-  Bukkit.server.pluginManager.callEvent(blockBreakEvent);
-  if (blockBreakEvent.isCancelled()) return;
 
   // Break glass blocks and panes if arrow exceeds BREAK_VELOCITY
   if (block.type.toString().includes('GLASS')) {
     if (arrow.velocity.length() <= BREAK_VELOCITY) return;
+
+    // Call BlockBreakEvent for grief prevention
+    const blockBreakEvent = new BlockBreakEvent(block, arrow.shooter);
+    Bukkit.server.pluginManager.callEvent(blockBreakEvent);
+    if (blockBreakEvent.isCancelled()) return;
+
     // Play break effects
     const data = block.blockData;
     block.world.playSound(block.location, Sound.BLOCK_GLASS_BREAK, 1, 1);

@@ -1,9 +1,10 @@
-import { GameMode, Material, SoundCategory, Sound } from 'org.bukkit';
+import { GameMode, Material, Sound, SoundCategory } from 'org.bukkit';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
 import {
   InventoryAction,
   InventoryClickEvent,
   InventoryType,
+  InventoryDragEvent,
 } from 'org.bukkit.event.inventory';
 import {
   PlayerInteractAtEntityEvent,
@@ -14,11 +15,12 @@ import {
   ItemStack,
   PlayerInventory,
 } from 'org.bukkit.inventory';
-import { Pipe, equipPipe } from './pipe';
 import { isRightClick } from '../common/helpers/click';
+import { equipPipe, Pipe } from './pipe';
 
-const HAT_MATERIAL = Material.LEATHER_BOOTS;
+export const HAT_MATERIAL = Material.LEATHER_BOOTS;
 const HELMET_SLOT = 39;
+const BOOTS_SLOT = 36;
 
 function isHat(item: ItemStack | null) {
   if (item?.type !== HAT_MATERIAL) return false;
@@ -55,16 +57,21 @@ registerEvent(InventoryClickEvent, (event) => {
   if (event.action !== InventoryAction.MOVE_TO_OTHER_INVENTORY) return;
   if (event.inventory.type !== InventoryType.CRAFTING) return;
   const inventory = event.whoClicked.inventory as PlayerInventory;
+  event.setCancelled(true);
   if (inventory.helmet) return;
   inventory.helmet = event.currentItem;
   event.currentItem.amount = 0;
-  event.setCancelled(true);
 });
 
 // Drag a hat to helmet slot
 registerEvent(InventoryClickEvent, (event) => {
   if (!event.cursor) return;
   if (!isHat(event.cursor)) return;
+  if (event.slot === BOOTS_SLOT) {
+    // Player tried to place hat to boots slot
+    event.setCancelled(true);
+    return;
+  }
   if (event.action !== InventoryAction.PLACE_ALL) return;
   if (event.slot !== HELMET_SLOT) return;
   const inventory = event.whoClicked.inventory as PlayerInventory;
@@ -104,3 +111,23 @@ function playEquipSound(player: Player) {
     1,
   );
 }
+
+// Prevent hat equipping with hotbar buttons
+registerEvent(InventoryClickEvent, (event) => {
+  if (event.inventory.type !== InventoryType.CRAFTING) return;
+  if (event.hotbarButton !== -1) {
+    if (event.slot !== BOOTS_SLOT) return;
+    const swapped = event.whoClicked.inventory.getItem(event.hotbarButton);
+    if (isHat(swapped)) {
+      event.setCancelled(true);
+      return;
+    }
+  }
+});
+
+// Drag a hat to boots slot
+registerEvent(InventoryDragEvent, (event) => {
+  if (event.inventory.type !== InventoryType.CRAFTING) return;
+  if (!event.inventorySlots.contains(BOOTS_SLOT)) return;
+  if (isHat(event.oldCursor)) event.setCancelled(true);
+});
