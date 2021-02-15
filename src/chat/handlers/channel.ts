@@ -114,3 +114,14 @@ CHAT_CHANNELS.whisper.local.addHandler(
     style('italic', formatMessage(msg, theme)),
   ]),
 );
+
+// Channel of the dead (Tuonela)
+CHAT_CHANNELS.tuonela.local.addHandler(
+  'deliverMessage',
+  DELIVER_PRIORITY,
+  deliveryHandler((msg, theme) => [
+    ...formatChannel('Tuonela', theme),
+    formatSender(msg, theme),
+    formatMessage(msg, theme),
+  ]),
+);

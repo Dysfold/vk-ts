@@ -1,7 +1,11 @@
 import { Bukkit } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
-import { PlayerChatEvent } from 'org.bukkit.event.player';
+import {
+  PlayerChangedWorldEvent,
+  PlayerChatEvent,
+} from 'org.bukkit.event.player';
 import { dataHolder } from '../common/datas/holder';
+import { TUONELA_WORLD } from '../death/tuonela';
 import { ignoreChannel, IGNORABLE_CHANNELS, setIgnoreChannel } from './ignore';
 import {
   ChatMessage,
@@ -12,6 +16,11 @@ import {
   PipelineStage,
 } from './pipeline';
 import { errorMessage, statusMessage } from './system';
+import {
+  isChannelAllowed,
+  setChannelChatPolicy,
+  setWorldChatPolicy,
+} from './worlds';
 
 interface ChannelMessages {
   speaking: string;
@@ -37,9 +46,9 @@ export class ChatChannel {
   readonly messages: ChannelMessages;
 
   /**
-   * Whether or not this channel can be heard accross different worlds.
+   * Permission needed to listen to or talk in this channel.
    */
-  readonly crossWorlds: boolean;
+  readonly permission?: string;
 
   /**
    * Pipeline that messages to this channel pass through once.
@@ -55,13 +64,13 @@ export class ChatChannel {
   constructor(
     id: string,
     names: string[],
-    crossWorlds: boolean,
     messages: ChannelMessages,
+    permission?: string,
   ) {
     this.id = id;
     this.names = names;
     this.messages = messages;
-    this.crossWorlds = crossWorlds;
+    this.permission = permission;
     this.global = new ChatPipeline();
     this.local = new LocalPipeline();
   }
@@ -72,6 +81,10 @@ export class ChatChannel {
    * @param msg The message.
    */
   sendMessage(sender: Player, msg: string) {
+    if (this.permission && !sender.hasPermission(this.permission)) {
+      errorMessage(sender, 'Sinulla ei ole oikeutta puhua tällä kanavalla');
+      return;
+    }
     this.handleMessage(new ChatMessage(sender, this, msg));
   }
 
@@ -102,9 +115,7 @@ export class ChatChannel {
     if (receiver) {
       this.handleLocal(msg.shallowClone(), receiver);
     } else {
-      for (const player of this.crossWorlds
-        ? Bukkit.onlinePlayers
-        : msg.sender.world.players) {
+      for (const player of Bukkit.onlinePlayers) {
         this.handleLocal(msg.shallowClone(), player);
       }
     }
@@ -131,21 +142,24 @@ export class ChatChannel {
  * Channels that are only used internally don't have to be added here.
  */
 export const CHAT_CHANNELS = {
-  whisper: new ChatChannel('whisper', ['kuiskaa', 'k', 'whisper', 'w'], false, {
+  whisper: new ChatChannel('whisper', ['kuiskaa', 'k', 'whisper', 'w'], {
     speaking: 'Puhut nyt kuiskaus-kanavalla',
   }),
-  local: new ChatChannel(
-    'local',
-    ['local', 'l', 'paikallinen', 'lähi'],
-    false,
+  local: new ChatChannel('local', ['local', 'l', 'paikallinen', 'lähi'], {
+    speaking: 'Puhut nyt paikallisella kanavalla',
+  }),
+  global: new ChatChannel(
+    'global',
+    ['global', 'g', 'julkinen'],
     {
-      speaking: 'Puhut nyt paikallisella kanavalla',
+      speaking: 'Puhut nyt julkisella kanavalla',
+      join: 'Liityit julkiselle kanavalle',
+      leave: 'Poistuit julkiselta kanavalta',
     },
+    'vk.chat.global',
   ),
-  global: new ChatChannel('global', ['global', 'g', 'julkinen'], false, {
-    speaking: 'Puhut nyt julkisella kanavalla',
-    join: 'Liityit julkiselle kanavalle',
-    leave: 'Poistuit julkiselta kanavalta',
+  tuonela: new ChatChannel('tuonela', ['tuonela'], {
+    speaking: '', // No messages for entering this channel
   }),
 };
 
@@ -153,6 +167,10 @@ export const CHAT_CHANNELS = {
  * Default chat channel for new players.
  */
 const DEFAULT_CHANNEL = CHAT_CHANNELS.local;
+
+// Tuonela chat in world of the dead only
+setWorldChatPolicy(TUONELA_WORLD, [CHAT_CHANNELS.tuonela]);
+setChannelChatPolicy(CHAT_CHANNELS.tuonela, 'deny-implied');
 
 function getChatChannel(id: string | null) {
   return (
@@ -288,7 +306,15 @@ registerCommand(
 function changeChannel(player: Player, name: string) {
   const channel = CHANNEL_NAMES[name];
   if (!channel) {
-    errorMessage(player, `Kanavaa ${channel} ei ole olemassa`);
+    errorMessage(player, `Kanavaa ${name} ei ole olemassa`);
+    return;
+  }
+  if (channel.permission && !player.hasPermission(channel.permission)) {
+    errorMessage(player, `Sinulla ei ole oikeutta puhua kanavalla ${name}`);
+    return;
+  }
+  if (!isChannelAllowed(channel, player.world)) {
+    errorMessage(player, `Et kuule kanavaa ${name} täällä`);
     return;
   }
   setIgnoreChannel(player, channel, false); // Automatically join ignored channel
@@ -319,3 +345,35 @@ for (const [name, channel] of Object.entries(CHANNEL_NAMES)) {
     },
   );
 }
+
+// Move players between channels when they change between worlds
+registerEvent(PlayerChangedWorldEvent, (event) => {
+  const world = event.player.world; // To world
+  if (!isChannelAllowed(getDefaultChannel(event.player), world)) {
+    // Default channel?
+    if (isChannelAllowed(DEFAULT_CHANNEL, world)) {
+      changeChannel(event.player, DEFAULT_CHANNEL.id);
+      return;
+    }
+
+    // Try to find a channel that is allowed
+    // Multiple choices? Choose randomly
+    for (const channel of Object.values(CHAT_CHANNELS)) {
+      if (isChannelAllowed(channel, world)) {
+        changeChannel(event.player, channel.id);
+        return;
+      }
+    }
+
+    // If all else fails, there is VOID (and don't message about it)
+    setDefaultChannel(event.player, VOID_CHANNEL);
+  }
+});
+
+/**
+ * Channel that does not deliver messages to anyone.
+ */
+const VOID_CHANNEL = new ChatChannel('internal_void', ['void'], {
+  speaking: '',
+});
+VOID_CHANNEL.global.addHandler('discardAll', 0, (msg) => (msg.discard = true));
