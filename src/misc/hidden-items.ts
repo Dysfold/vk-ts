@@ -15,7 +15,7 @@ export const HIDDEN_MATERIAL = Material.HEART_OF_THE_SEA;
  * Colorable custom items are in leather horse armor and
  * colorable items with modelId >= 1000, are reserved for hidden or forbidden items
  */
-import { COLORABLE_MATERIAL } from './horse_armor_items';
+import { COLORABLE_MATERIAL } from './horse-armor-items';
 
 function isHiddenItem(item: ItemStack | null) {
   if (!item) return false;
