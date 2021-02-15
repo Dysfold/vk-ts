@@ -77,6 +77,12 @@ export function setChannelChatPolicy(
   channelPolicies.set(channel.id, policy);
 }
 
+/**
+ * Sets the chat namespace of a world. Even messages in same channel cannot be
+ * heard in different namespaced worlds.
+ * @param world World.
+ * @param namespace Namespace (arbitrary string name).
+ */
 export function setChatNamespace(world: World, namespace: string) {
   namespaces.set(world.name, namespace);
 }
