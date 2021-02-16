@@ -3,9 +3,8 @@ import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { ItemStack, PlayerInventory } from 'org.bukkit.inventory';
-import { Damageable, ItemMeta } from 'org.bukkit.inventory.meta';
-import { CustomItem } from '../common/items/CustomItem';
 import { useFlintAndSteel } from '../common/helpers/items';
+import { CustomItem } from '../common/items/CustomItem';
 
 export const DriedTobacco = new CustomItem({
   id: 11,
