@@ -43,5 +43,6 @@ require('./bombs');
 require('./starting-items');
 require('./secret-doors');
 require('./applause');
+require('./bleeding');
 require('./player-record');
 require('./horse-armor-items');
