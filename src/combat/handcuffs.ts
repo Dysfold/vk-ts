@@ -22,7 +22,17 @@ import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import * as yup from 'yup';
 import { CustomItem } from '../common/items/CustomItem';
 
-const draggedPlayers = new Map<Player, Player>();
+const draggedPlayers = new Map<
+  Player /* Who is being dragged */,
+  Player /* Who is dragging */
+>();
+
+/**
+ * @param dragged Player who is currently being dragged
+ */
+export function stopDragging(dragged: Player) {
+  draggedPlayers.delete(dragged);
+}
 
 const Handcuffs = new CustomItem({
   id: 2,
@@ -162,7 +172,8 @@ registerEvent(PlayerDeathEvent, (event) => {
 
   if (LockedHandcuffs.check(offHandItem)) {
     if (event.drops.removeValue(offHandItem)) {
-      player.world.dropItem(player.location, HandcuffsItem);
+      const drop = player.world.dropItem(player.location, HandcuffsItem);
+      drop.setInvulnerable(true);
     }
   }
   if (LockedHandcuffs.check(mainHandItem)) {
