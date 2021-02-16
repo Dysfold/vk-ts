@@ -16,7 +16,7 @@ export const DriedTobacco = new CustomItem({
 export const Pipe = new CustomItem({
   id: 24,
   modelId: 24,
-  type: Material.DIAMOND_HOE,
+  type: Material.LEATHER_BOOTS,
   name: 'Piippu',
 });
 
