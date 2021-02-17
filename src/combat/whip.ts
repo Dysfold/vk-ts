@@ -1,4 +1,4 @@
-import { Location, Material } from 'org.bukkit';
+import { Location } from 'org.bukkit';
 import { EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
 import {

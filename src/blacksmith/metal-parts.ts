@@ -1,4 +1,3 @@
-import { Material } from 'org.bukkit';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 
