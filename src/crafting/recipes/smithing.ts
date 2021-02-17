@@ -4,6 +4,7 @@ import { Material } from 'org.bukkit';
 import { makeDamaged } from '../../blacksmith/damaged-tools';
 import { shapedRecipe } from './utilities/shaped-recipe';
 import { HotIronBlade } from '../../blacksmith/blacksmith';
+import { VkItem } from '../../common/items/VkItem';
 
 shapedRecipe({
   key: 'iron_sword_part',
@@ -16,5 +17,5 @@ shapedRecipe({
 shapelessRecipe({
   key: 'iron_sword',
   ingredients: [IronSwordPart.create(), Material.STICK],
-  result: makeDamaged(Material.IRON_SWORD),
+  result: makeDamaged(VkItem.SWORD),
 });

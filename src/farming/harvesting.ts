@@ -2,6 +2,7 @@ import { Material, GameMode } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 export const CROPS = new Map<Material, { hasDrops: boolean }>([
   [Material.WHEAT, { hasDrops: true }],
@@ -15,14 +16,14 @@ const CHANCE_WITHOUT_TOOL = 0.02;
 const Sickle = new CustomItem({
   id: 1,
   name: 'Sirppi',
-  type: Material.IRON_HOE,
+  type: VkItem.TOOL,
   modelId: 1,
 });
 
 const Scythe = new CustomItem({
   id: 2,
   name: 'Viitake',
-  type: Material.IRON_HOE,
+  type: VkItem.TOOL,
   modelId: 2,
 });
 

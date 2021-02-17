@@ -1,14 +1,12 @@
-import { Material } from 'org.bukkit';
 import { PlayerItemConsumeEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { giveItem } from '../common/helpers/inventory';
 import { CUSTOM_FOOD_INFO } from './FoodInfo';
 import { addFoodPoints, addSaturation } from './helpers';
-
-const CUSTOM_FOOD_MATERIAL = Material.POISONOUS_POTATO;
+import { VkItem } from '../common/items/VkItem';
 
 export function isCustomFood(item: ItemStack) {
-  if (item.type !== CUSTOM_FOOD_MATERIAL) return false;
+  if (item.type !== VkItem.FOOD) return false;
   return item.itemMeta.hasCustomModelData();
 }
 

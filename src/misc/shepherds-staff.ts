@@ -1,8 +1,8 @@
-import { Material } from 'org.bukkit';
 import { EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, PlayerInventory } from 'org.bukkit.inventory';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 const FORCE = 0.5;
 const MAX_FORCE_UPWARDS = 0.2;
@@ -12,7 +12,7 @@ const cooldowns = new Set<Player>();
 const ShepherdsStaff = new CustomItem({
   id: 4,
   modelId: 4,
-  type: Material.IRON_HOE,
+  type: VkItem.TOOL,
   name: 'Paimensauva',
 });
 

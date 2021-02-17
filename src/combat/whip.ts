@@ -11,6 +11,7 @@ import {
 import { EquipmentSlot, PlayerInventory } from 'org.bukkit.inventory';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 const MAX_WHIP_DISTANCE = 3;
 
@@ -22,7 +23,7 @@ export const Whip = new CustomItem({
   id: 10,
   modelId: 10,
   name: 'Ruoska',
-  type: Material.IRON_HOE,
+  type: VkItem.TOOL,
 });
 
 Whip.event(

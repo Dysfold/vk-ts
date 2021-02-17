@@ -17,8 +17,9 @@ import {
 } from 'org.bukkit.inventory';
 import { isRightClick } from '../common/helpers/click';
 import { equipPipe, Pipe } from './pipe';
+import { VkItem } from '../common/items/VkItem';
 
-export const HAT_MATERIAL = Material.LEATHER_BOOTS;
+export const HAT_MATERIAL = VkItem.HAT;
 const HELMET_SLOT = 39;
 const BOOTS_SLOT = 36;
 

@@ -9,6 +9,7 @@ import {
   PlayerInventory,
 } from 'org.bukkit.inventory';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 const GRINDSTONE_EFFIENCY = 0.1;
 const GRINDSTONE_DURATION = 1; // Seconds
@@ -21,8 +22,8 @@ const TOOLS = new Set([
   Material.IRON_PICKAXE,
   Material.IRON_AXE,
   Material.IRON_SHOVEL,
-  Material.IRON_SWORD,
-  Material.IRON_HOE,
+  VkItem.SWORD,
+  VkItem.TOOL,
   Material.SHEARS,
   // TODO: Add more tools
 ]);
@@ -30,7 +31,7 @@ const TOOLS = new Set([
 export const HandGrindstone = new CustomItem({
   id: 1,
   name: 'Hiomakivi',
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
   modelId: 1,
 });
 

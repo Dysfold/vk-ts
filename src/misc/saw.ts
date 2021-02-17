@@ -12,6 +12,7 @@ import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 export const Saw = new CustomBlock({
   type: Material.WARPED_FENCE_GATE,
@@ -20,7 +21,7 @@ export const Saw = new CustomBlock({
 export const HandSaw = new CustomItem({
   id: 5,
   name: 'Käsisaha',
-  type: Material.IRON_HOE,
+  type: VkItem.TOOL,
   modelId: 5,
 });
 

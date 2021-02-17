@@ -21,6 +21,7 @@ import {
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import * as yup from 'yup';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 const draggedPlayers = new Map<
   Player /* Who is being dragged */,
@@ -37,7 +38,7 @@ export function stopDragging(dragged: Player) {
 const Handcuffs = new CustomItem({
   id: 2,
   name: 'Käsiraudat',
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
   modelId: 2,
 });
 const HandcuffsItem = Handcuffs.create();
@@ -45,7 +46,7 @@ const HandcuffsItem = Handcuffs.create();
 export const LockedHandcuffs = new CustomItem({
   id: 3,
   name: 'Lukitut käsiraudat',
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
   modelId: 3,
   data: {
     key: yup.string(),
@@ -55,7 +56,7 @@ export const LockedHandcuffs = new CustomItem({
 const Key = new CustomItem({
   id: 4,
   name: 'Avain',
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
   modelId: 4,
 });
 

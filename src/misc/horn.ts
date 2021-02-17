@@ -1,14 +1,15 @@
-import { Material, Sound, SoundCategory } from 'org.bukkit';
+import { Sound, SoundCategory } from 'org.bukkit';
+import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot } from 'org.bukkit.inventory';
 import { CustomItem } from '../common/items/CustomItem';
-import { Player } from 'org.bukkit.entity';
+import { VkItem } from '../common/items/VkItem';
 
 const GoldenHorn = new CustomItem({
   id: 5,
   name: 'Kultainen torvi',
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
   modelId: 5,
 });
 
