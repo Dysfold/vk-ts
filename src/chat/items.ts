@@ -1,5 +1,4 @@
 import { Material } from 'org.bukkit';
-import { Player } from 'org.bukkit.entity';
 import { CustomItem } from '../common/items/CustomItem';
 
 /**
@@ -10,10 +9,4 @@ export const SpeakerStaff = new CustomItem({
   type: Material.GOLDEN_HORSE_ARMOR,
   name: 'Puhujankeppi',
   modelId: 1,
-});
-
-registerCommand('speakerstaff', (sender) => {
-  if (sender instanceof Player) {
-    sender.inventory.addItem(SpeakerStaff.create());
-  }
 });
