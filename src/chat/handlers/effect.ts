@@ -1,4 +1,4 @@
-import { Particle } from 'org.bukkit';
+import { Particle, SoundCategory } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { getChatOption } from '../options';
 import { ChatMessage } from '../pipeline';
@@ -68,6 +68,7 @@ export function playChatSound(msg: ChatMessage) {
   msg.sender.world.playSound(
     msg.sender.location,
     sound,
+    SoundCategory.PLAYERS,
     1,
     getVoicePitch(msg.sender),
   );
