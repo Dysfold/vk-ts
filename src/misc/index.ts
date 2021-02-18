@@ -46,3 +46,4 @@ require('./applause');
 require('./bleeding');
 require('./player-record');
 require('./horse-armor-items');
+require('./boiling');
