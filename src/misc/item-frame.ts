@@ -9,9 +9,8 @@ import {
   PlayerInteractEvent,
 } from 'org.bukkit.event.player';
 import { PlayerInventory } from 'org.bukkit.inventory';
-import { chanceOf } from '../common/helpers/math';
 import { Hammer } from '../blacksmith/blacksmith';
-import { WhitelistToggleEvent } from 'com.destroystokyo.paper.event.server';
+import { chanceOf } from '../common/helpers/math';
 
 // Remove drop from invisible item frames
 // and remove the item, if it was hidden item (heart of the sea)
