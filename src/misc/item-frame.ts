@@ -11,6 +11,7 @@ import {
 import { PlayerInventory } from 'org.bukkit.inventory';
 import { chanceOf } from '../common/helpers/math';
 import { Hammer } from '../blacksmith/blacksmith';
+import { WhitelistToggleEvent } from 'com.destroystokyo.paper.event.server';
 
 // Remove drop from invisible item frames
 // and remove the item, if it was hidden item (heart of the sea)
@@ -73,7 +74,10 @@ registerEvent(EntityDamageByEntityEvent, (event) => {
   const entity = event.entity;
   if (!(entity instanceof ItemFrame)) return;
   const damager = event.damager;
-  if (!(damager instanceof Player)) event.setCancelled(true);
+  if (!(damager instanceof Player)) {
+    event.setCancelled(true);
+    return;
+  }
 
   const player = (damager as unknown) as Player;
 
