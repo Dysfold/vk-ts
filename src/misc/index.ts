@@ -20,7 +20,7 @@ require('./throwables');
 require('./breeding');
 require('./sauna');
 require('./firespread');
-require('./itemframe');
+require('./item-frame');
 require('./shepherds-staff');
 require('./horn');
 require('./armorstand-pose');
