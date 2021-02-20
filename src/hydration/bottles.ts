@@ -1,7 +1,7 @@
-import { Material } from 'org.bukkit';
+import { Material, Bukkit } from 'org.bukkit';
 import { Levelled, Waterlogged } from 'org.bukkit.block.data';
-import { Player } from 'org.bukkit.entity';
-import { Action } from 'org.bukkit.event.block';
+import { Player, Entity } from 'org.bukkit.entity';
+import { Action, CauldronLevelChangeEvent } from 'org.bukkit.event.block';
 import {
   PlayerInteractEvent,
   PlayerItemConsumeEvent,
@@ -20,6 +20,8 @@ import {
   getWaterQuality,
   WaterQuality,
 } from './water-quality';
+import { ChangeReason } from 'org.bukkit.event.block.CauldronLevelChangeEvent';
+import { Block } from 'org.bukkit.block';
 
 export const WineGlass = new CustomItem({
   name: 'Viinilasi',
@@ -118,6 +120,13 @@ registerEvent(PlayerInteractEvent, async (event) => {
       // TODO 1.17: Check if the cauldroin contains water instead of lava :)
       if (blockData.level > 0) {
         bottleCanFill = true;
+
+        // Call cauldron level change event because the level changes
+        if (
+          !checkCauldronEvent(clickedBlock, event.player, blockData.level, -1)
+        )
+          return;
+
         // Decrease the level of the cauldron
         blockData.level--;
         clickedBlock.blockData = blockData;
@@ -183,6 +192,9 @@ registerEvent(PlayerInteractEvent, async (event) => {
     return;
   }
 
+  // Call cauldron level change event because the level changes
+  if (!checkCauldronEvent(block, event.player, levelled.level, 1)) return;
+
   // Fill the cauldron
   levelled.level++;
   block.blockData = levelled;
@@ -232,4 +244,31 @@ function giveItem(player: Player, item: ItemStack, hand: EquipmentSlot | null) {
   if (leftOver.size()) {
     player.world.dropItem(player.location, leftOver.get(0));
   }
+}
+
+/**
+ * Call CauldonLevelChangeEvent
+ * @param block The cauldron
+ * @param player Who clicked
+ * @param oldLevel Level of the cauldron
+ * @param change How much the level did change? -1 or +1
+ */
+export function checkCauldronEvent(
+  block: Block,
+  player: Player,
+  oldLevel: number,
+  change: -1 | 1,
+) {
+  const reason =
+    change === 1 ? ChangeReason.BOTTLE_EMPTY : ChangeReason.BOTTLE_FILL;
+
+  const cauldronEvent = new CauldronLevelChangeEvent(
+    block,
+    (player as unknown) as Entity,
+    reason,
+    oldLevel,
+    oldLevel + change,
+  );
+  Bukkit.server.pluginManager.callEvent(cauldronEvent);
+  return !cauldronEvent.isCancelled();
 }

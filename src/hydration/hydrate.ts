@@ -14,6 +14,7 @@ import {
   getWaterQuality,
   WaterQuality,
 } from './water-quality';
+import { checkCauldronEvent } from './bottles';
 
 const Hydration = {
   MAX: 0.99,
@@ -67,6 +68,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
     const cauldronData = block.blockData as Levelled;
     const waterLevel = cauldronData.level;
     if (waterLevel) {
+      if (!checkCauldronEvent(block, player, cauldronData.level, -1)) return;
       cauldronData.level = waterLevel - 1;
       block.blockData = cauldronData;
     } else {
