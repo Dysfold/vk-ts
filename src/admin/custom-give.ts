@@ -1,4 +1,4 @@
-import { Material, Bukkit } from 'org.bukkit';
+import { Material } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
@@ -19,7 +19,6 @@ registerCommand(
         Material.getMaterial(args[0]);
       const id = Number.parseInt(args[1]);
 
-      Bukkit.server.broadcastMessage('JEE ' + args[0]);
       const name = args[2] || undefined;
       const modelId = Number.parseInt(args[3]) || id;
 
