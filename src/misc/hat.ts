@@ -17,8 +17,9 @@ import {
 } from 'org.bukkit.inventory';
 import { isRightClick } from '../common/helpers/click';
 import { equipPipe, Pipe } from './pipe';
+import { VkItem } from '../common/items/VkItem';
 
-export const HAT_MATERIAL = Material.LEATHER_BOOTS;
+export const HAT_MATERIAL = VkItem.HAT;
 const HELMET_SLOT = 39;
 const BOOTS_SLOT = 36;
 
@@ -54,6 +55,7 @@ registerEvent(PlayerInteractEvent, (event) => {
 registerEvent(InventoryClickEvent, (event) => {
   if (!event.currentItem) return;
   if (!isHat(event.currentItem)) return;
+  if (event.slot === HELMET_SLOT) return;
   if (event.action !== InventoryAction.MOVE_TO_OTHER_INVENTORY) return;
   if (event.inventory.type !== InventoryType.CRAFTING) return;
   const inventory = event.whoClicked.inventory as PlayerInventory;

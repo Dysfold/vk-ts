@@ -16,6 +16,7 @@ import {
 import { CustomItem } from '../common/items/CustomItem';
 import { getEmptyBottle } from '../hydration/bottles';
 import { Bowl } from './Bowl';
+import { VkItem } from '../common/items/VkItem';
 
 const INGREDIENT_PICKUP_DELAY = 5; // Seconds
 
@@ -43,19 +44,19 @@ const DOUGH_COOKIE = new CustomItem({
 
 // Dough items for furnace
 const DOUGH_BREAD_ITEM = new CustomItem({
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
   id: 6,
   modelId: 6,
   name: 'Leipätaikina',
 });
 const DOUGH_COOKIE_ITEM = new CustomItem({
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
   id: 7,
   modelId: 7,
   name: 'Keksitaikina',
 });
 const DOUGH_PUMPKIN_PIE_ITEM = new CustomItem({
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
   id: 8,
   modelId: 8,
   name: 'Kurpitsapiirakkataikina',

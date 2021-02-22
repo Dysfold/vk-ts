@@ -4,12 +4,13 @@ import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { PlayerInventory } from 'org.bukkit.inventory';
 import { BookMeta } from 'org.bukkit.inventory.meta';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 const SealingWax = new CustomItem({
   name: 'Sinettivaha',
   id: 9,
   modelId: 9,
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
 });
 
 SealingWax.event(

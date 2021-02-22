@@ -1,10 +1,11 @@
 import { Material } from 'org.bukkit';
 import { LeavesDecayEvent } from 'org.bukkit.event.block';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 export const Banana = new CustomItem({
   id: 5,
-  type: Material.POISONOUS_POTATO,
+  type: VkItem.FOOD,
   modelId: 5,
   name: 'Banaani',
 });
