@@ -5,18 +5,19 @@ import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { ItemStack, PlayerInventory } from 'org.bukkit.inventory';
 import { useFlintAndSteel } from '../common/helpers/items';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 export const DriedTobacco = new CustomItem({
   id: 11,
   modelId: 11,
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
   name: 'Kuivattu tupakka',
 });
 
 export const Pipe = new CustomItem({
   id: 24,
   modelId: 24,
-  type: Material.LEATHER_BOOTS,
+  type: VkItem.HAT,
   name: 'Piippu',
 });
 

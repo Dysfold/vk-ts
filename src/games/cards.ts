@@ -10,6 +10,7 @@ import * as yup from 'yup';
 import { Action } from 'org.bukkit.event.block';
 import { isRightClick } from '../common/helpers/click';
 import { giveItem } from '../common/helpers/inventory';
+import { VkItem } from '../common/items/VkItem';
 
 const ZERO_VECTOR = new Vector();
 const PICKUP_DELAY = 12000; // TICKS -> 10 minutes
@@ -29,7 +30,7 @@ const shuffleCooldowns = new Set<Player>();
 const FullDeck = new CustomItem({
   id: 56,
   name: ChatColor.RESET + 'Korttipakka',
-  type: Material.PRISMARINE_CRYSTALS,
+  type: VkItem.CARD,
   modelId: 56,
   data: {
     cards: yup.array<string>(),
@@ -38,7 +39,7 @@ const FullDeck = new CustomItem({
 const HalfDeck = new CustomItem({
   id: 57,
   name: ChatColor.RESET + 'Korttipakka',
-  type: Material.PRISMARINE_CRYSTALS,
+  type: VkItem.CARD,
   modelId: 57,
   data: {
     cards: yup.array<string>(),
@@ -47,7 +48,7 @@ const HalfDeck = new CustomItem({
 const LowDeck = new CustomItem({
   id: 58,
   name: ChatColor.RESET + 'Korttipakka',
-  type: Material.PRISMARINE_CRYSTALS,
+  type: VkItem.CARD,
   modelId: 58,
   data: {
     cards: yup.array<string>(),
@@ -60,7 +61,7 @@ const LowDeck = new CustomItem({
 const HiddenCard = new CustomItem({
   id: 55,
   name: ChatColor.RESET + 'Pelikortti',
-  type: Material.PRISMARINE_CRYSTALS,
+  type: VkItem.CARD,
   modelId: 55,
   data: {
     cardID: yup.string(),
@@ -77,7 +78,7 @@ for (let modelID = 1; modelID <= MAX_CARDS_IN_DECK; modelID++) {
     new CustomItem({
       id: modelID,
       name: ChatColor.RESET + `Pelikortti [${cardID}]`,
-      type: Material.PRISMARINE_CRYSTALS,
+      type: VkItem.CARD,
       modelId: modelID,
     }),
   );
@@ -368,7 +369,7 @@ function isDeck(item: ItemStack): boolean {
 }
 
 function isCard(item: ItemStack): boolean {
-  return item.type === Material.PRISMARINE_CRYSTALS && !isDeck(item);
+  return item.type === VkItem.CARD && !isDeck(item);
 }
 // ######################
 

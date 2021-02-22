@@ -1,26 +1,10 @@
 import { Material } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
-const CUSTOM_ITEM_TYPES = new Map([
-  ['misc', Material.SHULKER_SHELL],
-  ['tool', Material.IRON_HOE],
-  ['sword', Material.IRON_SWORD],
-  ['hat', Material.LEATHER_BOOTS],
-  ['food', Material.POISONOUS_POTATO],
-  ['throwable', Material.SNOWBALL],
-  ['bottle', Material.GLASS_BOTTLE],
-  ['hidden', Material.HEART_OF_THE_SEA],
-  ['molten', Material.IRON_INGOT],
-  ['smithing', Material.BLAZE_ROD],
-  ['money', Material.PRISMARINE_SHARD],
-  ['card', Material.PRISMARINE_CRYSTALS],
-  ['shield', Material.SHIELD],
-  ['drinks', Material.POTION],
-  ['nostack', Material.GOLDEN_HORSE_ARMOR],
-  ['colorable', Material.LEATHER_HORSE_ARMOR],
-]);
-const ALIASES = [...CUSTOM_ITEM_TYPES.keys()];
+const CUSTOM_ITEM_TYPES = new Map(Object.entries(VkItem));
+const ALIASES = Object.keys(VkItem).map((key) => key.toLowerCase());
 
 registerCommand(
   'customitem',

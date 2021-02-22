@@ -5,12 +5,13 @@ import { Action, BlockPistonRetractEvent } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 const MoneyMold = new CustomItem({
   name: 'Rahamuotti',
   id: 10,
   modelId: 10,
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
 });
 
 // Block pushed by piston
@@ -37,98 +38,97 @@ const RAW_MATERIALS: { [id: string]: ItemStack[] } = {
   ],
 };
 
-const COIN_MATERIAL = Material.PRISMARINE_SHARD;
 const COIN_A_0_01 = new CustomItem({
   id: 1,
   modelId: 1,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_A_0_1 = new CustomItem({
   id: 2,
   modelId: 2,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_A_1 = new CustomItem({
   id: 3,
   modelId: 3,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_A_10 = new CustomItem({
   id: 4,
   modelId: 4,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_A_100 = new CustomItem({
   id: 5,
   modelId: 5,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_A_1000 = new CustomItem({
   id: 6,
   modelId: 6,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 
 const COIN_B_0_01 = new CustomItem({
   id: 7,
   modelId: 7,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_B_0_1 = new CustomItem({
   id: 8,
   modelId: 8,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_B_1 = new CustomItem({
   id: 9,
   modelId: 9,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_B_10 = new CustomItem({
   id: 10,
   modelId: 10,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_B_100 = new CustomItem({
   id: 11,
   modelId: 11,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_B_1000 = new CustomItem({
   id: 12,
   modelId: 12,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 
 const COIN_C_0_01 = new CustomItem({
   id: 13,
   modelId: 13,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_C_0_1 = new CustomItem({
   id: 14,
   modelId: 14,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_C_1 = new CustomItem({
   id: 15,
   modelId: 15,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_C_10 = new CustomItem({
   id: 16,
   modelId: 16,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_C_100 = new CustomItem({
   id: 17,
   modelId: 17,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 const COIN_C_1000 = new CustomItem({
   id: 18,
   modelId: 18,
-  type: COIN_MATERIAL,
+  type: VkItem.MONEY,
 });
 
 // Infromation about the name of the currency
