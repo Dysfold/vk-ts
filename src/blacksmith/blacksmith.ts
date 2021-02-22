@@ -224,7 +224,6 @@ function copyDamage(from: ItemStack, to: ItemStack) {
 // Place iron on anvil
 registerEvent(PlayerInteractEvent, (event) => {
   if (event.clickedBlock?.type !== Material.ANVIL) return;
-  if (event.blockFace !== BlockFace.UP) return;
   if (!isRightClick(event.action)) return;
   const tool = event.item;
   if (!tool) return;
@@ -240,11 +239,7 @@ registerEvent(PlayerInteractEvent, (event) => {
       const meta = smeltedItem.itemMeta;
       meta.displayName = ''; // Displayname would hover on top of the itemframe
       smeltedItem.itemMeta = meta;
-      const frame = spawnInvisibleItemFrame(
-        anvil,
-        event.blockFace,
-        smeltedItem,
-      );
+      const frame = spawnInvisibleItemFrame(anvil, BlockFace.UP, smeltedItem);
       if (!frame) return;
       frame.rotation = getAnvilFrameRotation(anvil.blockData as Directional);
 
