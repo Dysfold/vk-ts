@@ -204,6 +204,8 @@ async function collapse(layers: Map<string, Block>[], species: TreeSpecies) {
       fallingBlock.setHurtEntities(true);
       fallingBlock.setDropItem(false);
       fallingBlock.velocity = new Vector();
+
+      // Falling blocks will break leaves (misc/falling-blocks.ts)
     }
     // Delay between layers
     await wait(1, 'ticks');

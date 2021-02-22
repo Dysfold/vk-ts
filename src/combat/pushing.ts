@@ -2,6 +2,7 @@ import { Material } from 'org.bukkit';
 import { EntityType, Player } from 'org.bukkit.entity';
 import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
 import { Vector } from 'org.bukkit.util';
+import { isHandcuffed } from './handcuffs';
 
 const cooldowns = new Set<Player>();
 const MAX_DISTANCE = 1.6;
@@ -16,6 +17,7 @@ registerEvent(PlayerInteractEntityEvent, async (event) => {
   if (pusher.itemInHand.type !== Material.AIR) return;
   if (target.isSneaking()) return;
   if (pusher.isSneaking()) return;
+  if (!isHandcuffed(target)) return; // Handcuffed players can be dragged, not pushed
   if (cooldowns.has(pusher)) return;
   const distance = pusher.location.distance(clicked.location);
   if (distance > MAX_DISTANCE) return;

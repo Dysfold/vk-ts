@@ -25,7 +25,7 @@ registerCommand(
     sender.sendMessage('§6--------------------------------------');
     sender.sendMessage(`§eValtakauden pelaajaennätys on ${view.count}`);
     const name =
-      Bukkit.getPlayer(UUID.fromString(view?.playerUUID))?.name ||
+      Bukkit.getOfflinePlayer(UUID.fromString(view?.playerUUID))?.name ||
       'tuntematon pelaaja';
     sender.sendMessage(
       `§eEnnätyksen rikkoi ${name} ${getDateString(view.time)}`,

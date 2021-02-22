@@ -54,6 +54,7 @@ registerEvent(PlayerInteractEvent, (event) => {
 registerEvent(InventoryClickEvent, (event) => {
   if (!event.currentItem) return;
   if (!isHat(event.currentItem)) return;
+  if (event.slot === HELMET_SLOT) return;
   if (event.action !== InventoryAction.MOVE_TO_OTHER_INVENTORY) return;
   if (event.inventory.type !== InventoryType.CRAFTING) return;
   const inventory = event.whoClicked.inventory as PlayerInventory;

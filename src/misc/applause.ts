@@ -43,7 +43,7 @@ registerCommand(
   },
 );
 
-async function clap(player: Player, claps: number, delay = 0.3) {
+export async function clap(player: Player, claps: number, delay = 0.3) {
   for (let i = 0; i < claps; i++) {
     const pitch = 1.1 + Math.random() * 0.15;
     player.world.playSound(

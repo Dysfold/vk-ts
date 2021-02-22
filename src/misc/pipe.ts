@@ -3,7 +3,7 @@ import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { ItemStack, PlayerInventory } from 'org.bukkit.inventory';
-import { Damageable, ItemMeta } from 'org.bukkit.inventory.meta';
+import { useFlintAndSteel } from '../common/helpers/items';
 import { CustomItem } from '../common/items/CustomItem';
 
 export const DriedTobacco = new CustomItem({
@@ -76,24 +76,6 @@ export function equipPipe(player: Player) {
     startSmoking(player);
   }
   return true;
-}
-
-function useFlintAndSteel(player: Player, item: ItemStack) {
-  const meta = (item.itemMeta as unknown) as Damageable;
-  meta.damage++;
-  item.itemMeta = (meta as unknown) as ItemMeta;
-
-  // Check if the tools breaks. 64 -> broken item
-  if (meta.damage >= 64) {
-    item.amount = 0;
-    player.world.playSound(
-      player.location,
-      Sound.ENTITY_ITEM_BREAK,
-      SoundCategory.PLAYERS,
-      1,
-      1,
-    );
-  }
 }
 
 function startSmoking(player: Player) {
