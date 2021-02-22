@@ -45,5 +45,6 @@ require('./secret-doors');
 require('./applause');
 require('./bleeding');
 require('./player-record');
+require('./tooth-removal');
 require('./horse-armor-items');
 require('./falling-blocks');
