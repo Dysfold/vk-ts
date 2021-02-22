@@ -272,7 +272,6 @@ async function shuffleDeck(
   secondDeck: ItemStack,
   player: Player,
 ) {
-  if(!isDeck(deck)) return;
   shuffleCooldowns.add(player);
   const d = getDeck(deck);
   if (!d) return;
@@ -479,7 +478,7 @@ function clickedOnce(
   }
 
   // LEFT CLICK EVENTS - SHUFFLE / COMBINE / SPLIT DECK / INSERT CARD
-  if (isDeck(mainHandItem)) {
+  if (isDeck(mainHandItem) && isDeck(offHandItem)) {
     if (player.isSneaking()) {
       shuffleDeck(offHandItem, mainHandItem, player);
     } else {
