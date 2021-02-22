@@ -13,7 +13,7 @@ const Tooth = new CustomItem({
   name: 'vk.tooth',
 });
 
-const COOLDOWN_DELAY = 30; // Seconds
+const COOLDOWN_DELAY = 60; // Seconds
 const cooldowns = new Set<Player>();
 
 Pliers.event(
