@@ -272,7 +272,7 @@ async function shuffleDeck(
   secondDeck: ItemStack,
   player: Player,
 ) {
-  if(!deck) return;
+  if(!isDeck(deck)) return;
   shuffleCooldowns.add(player);
   const d = getDeck(deck);
   if (!d) return;
