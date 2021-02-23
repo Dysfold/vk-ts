@@ -2,6 +2,7 @@ import { PlayerToggleSneakEvent } from 'org.bukkit.event.player';
 import { Particle } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 
+const MESSAGE_RADIUS = 10;
 const HUG_COOLDOWN = 1250; // milliseconds
 const hugCooldowns = new Set<Player>();
 
@@ -17,7 +18,7 @@ registerEvent(PlayerToggleSneakEvent, async (event) => {
         player.sendMessage(`§fPelaaja §7${event.player.name} §fhalaa sinua §4❤`)
         event.player.world.spawnParticle(Particle.HEART, event.player.eyeLocation.add(0,0.5,0), 1)
         player.world.spawnParticle(Particle.HEART, player.eyeLocation.add(0,0.5,0), 1)
-        for(var nearbyPlayer of event.player.location.getNearbyPlayers(10)) {
+        for(var nearbyPlayer of event.player.location.getNearbyPlayers(MESSAGE_RADIUS)) {
             if(nearbyPlayer == event.player || nearbyPlayer == player) continue;
             nearbyPlayer.sendMessage(`§7${event.player.name} §fhalaa pelaajaa §7${player.name} §4❤`)
         }
