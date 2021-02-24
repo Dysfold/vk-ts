@@ -10,7 +10,13 @@ import {
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { giveItem } from '../common/helpers/inventory';
 
-const PLACABLE_MATERIALS = new Set([Material.GLASS_BOTTLE, Material.POTION]);
+const PLACABLE_MATERIALS = new Set([
+  Material.GLASS_BOTTLE,
+  Material.POTION,
+  Material.BOOK,
+  Material.WRITABLE_BOOK,
+  Material.WRITTEN_BOOK,
+]);
 
 const SURFACES = new Set([
   Material.OAK_PLANKS,
@@ -19,12 +25,20 @@ const SURFACES = new Set([
   Material.JUNGLE_PLANKS,
   Material.ACACIA_PLANKS,
   Material.DARK_OAK_PLANKS,
+
   Material.OAK_SLAB,
   Material.SPRUCE_SLAB,
   Material.BIRCH_SLAB,
   Material.JUNGLE_SLAB,
   Material.ACACIA_SLAB,
   Material.DARK_OAK_SLAB,
+
+  Material.OAK_STAIRS,
+  Material.SPRUCE_STAIRS,
+  Material.BIRCH_STAIRS,
+  Material.JUNGLE_STAIRS,
+  Material.ACACIA_STAIRS,
+  Material.DARK_OAK_STAIRS,
 ]);
 
 /**
@@ -62,6 +76,7 @@ registerEvent(PlayerInteractEvent, (event) => {
 
   spawnHolderArmorStand(location, event.item);
   event.item.amount--;
+  event.setCancelled(true);
 });
 
 /**
