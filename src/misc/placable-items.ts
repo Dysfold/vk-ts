@@ -142,10 +142,12 @@ function spawnHolderArmorStand(loc: Location, item: ItemStack) {
     EntityType.ARMOR_STAND,
   ) as ArmorStand;
 
+  const clone = item.clone();
+  clone.amount = 1;
   armorStand.setSilent(true);
   armorStand.setVisible(false);
   armorStand.teleport(loc);
-  armorStand.setItem(EquipmentSlot.HEAD, item);
+  armorStand.setItem(EquipmentSlot.HEAD, clone);
   armorStand.setCanPickupItems(false);
   armorStand.setCollidable(false);
   armorStand.setSilent(true);
