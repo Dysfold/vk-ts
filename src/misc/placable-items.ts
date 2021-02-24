@@ -1,5 +1,4 @@
-import { color, text } from 'craftjs-plugin/chat';
-import { Location, Material, SoundCategory } from 'org.bukkit';
+import { GameMode, Location, Material, SoundCategory } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
@@ -81,7 +80,7 @@ registerEvent(PlayerInteractEvent, (event) => {
   }
 
   spawnHolderArmorStand(location, event.item);
-  event.item.amount--;
+  if (event.player.gameMode !== GameMode.CREATIVE) event.item.amount--;
   event.setCancelled(true);
 });
 
@@ -124,7 +123,7 @@ function containsTooManyItems(location: Location) {
 }
 
 function warnTooManyItems(player: Player) {
-  player.sendMessage(color('#D44E39', text('Tähän ei mahdu uutta esinettä')));
+  player.sendActionBar('§cTähän ei mahdu uutta esinettä');
 }
 
 /**
@@ -136,6 +135,8 @@ function spawnHolderArmorStand(loc: Location, item: ItemStack) {
   const tempLoc = loc.clone();
   tempLoc.y = 1000;
   // Clever hack to make the teleport instant ":)"
+  // If the armorstand is ~75 blocks away,
+  // the teleportation will not have an animation
   tempLoc.x += 75;
   const armorStand = loc.world.spawnEntity(
     tempLoc,
@@ -181,7 +182,7 @@ registerEvent(PlayerInteractAtEntityEvent, (event) => {
   )
     return;
   if (event.rightClicked.type !== EntityType.ARMOR_STAND) return;
-  const armorStand = event.rightClicked as ArmorStand;
+  let armorStand = event.rightClicked as ArmorStand;
   if (!armorStand.isInvisible()) return;
   if (!armorStand.isValid()) return;
 
@@ -189,6 +190,13 @@ registerEvent(PlayerInteractAtEntityEvent, (event) => {
   // This makes the picking up more realistic
   const location = getClickedLocation(event.player);
   if (!location) return;
+  const entities = location.getNearbyEntities(0.15, 0.15, 0.15);
+  for (const entity of entities) {
+    if (entity.type === EntityType.ARMOR_STAND) {
+      armorStand = entity as ArmorStand;
+      break;
+    }
+  }
   const distance = location.distance(armorStand.location);
   if (distance > 0.3) return;
 
