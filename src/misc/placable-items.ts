@@ -16,6 +16,12 @@ const PLACABLE_MATERIALS = new Set([
   Material.BOOK,
   Material.WRITABLE_BOOK,
   Material.WRITTEN_BOOK,
+
+  Material.BOWL,
+  Material.BEETROOT_SOUP,
+  Material.SUSPICIOUS_STEW,
+  Material.MUSHROOM_STEW,
+  Material.RABBIT_STEW,
 ]);
 
 const SURFACES = new Set([
