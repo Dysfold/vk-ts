@@ -1,11 +1,11 @@
 import { CustomBlock } from './CustomBlock';
 import { Material, Bukkit } from 'org.bukkit';
-import { test } from 'zora';
 import { setBlock } from './blocks';
 import { dataHolder } from '../datas/holder';
 import * as yup from 'yup';
 import { Directional } from 'org.bukkit.material';
 import { BlockFace } from 'org.bukkit.block';
+import { test } from 'craftjs-plugin';
 
 const TestBlock1 = new CustomBlock({
   type: Material.STRUCTURE_BLOCK,
@@ -70,15 +70,15 @@ test('Custom block with block states', (t) => {
   TestBlock3.create(block);
   t.truthy(TestBlock3.check(block), 'custom block with block states created');
   const facing = ((block.blockData as unknown) as Directional).facing;
-  t.notSame(facing, BlockFace.UP, 'block facing is valid #1');
-  t.notSame(facing, BlockFace.DOWN, 'block facing is valid #2');
+  t.isNot(facing, BlockFace.UP, 'block facing is valid #1');
+  t.isNot(facing, BlockFace.DOWN, 'block facing is valid #2');
 });
 
 test('Custom block variant', (t) => {
   TestBlock4.create(block);
   t.truthy(TestBlock4.check(block), 'custom block variant created');
   t.truthy(TestBlock3.check(block), 'custom block variant matches parent');
-  t.same(
+  t.is(
     ((block.blockData as unknown) as Directional).facing,
     BlockFace.SOUTH,
     'custom block variant override works',

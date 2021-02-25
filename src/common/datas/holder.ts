@@ -271,7 +271,13 @@ class BukkitHolder extends DataHolder {
         this.container.set(containerKey, PersistentDataType.INTEGER, value);
         break;
       case 'number':
-        this.container.set(containerKey, PersistentDataType.DOUBLE, value);
+        this.container.set(
+          containerKey,
+          PersistentDataType.DOUBLE,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore: Interop API not exposed yet (CraftJS#44)
+          __interop.toDouble(value),
+        );
         break;
       case 'string':
         this.container.set(containerKey, PersistentDataType.STRING, value);

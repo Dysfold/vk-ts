@@ -1,11 +1,11 @@
-import { test } from 'zora';
 import { ItemStack } from 'org.bukkit.inventory';
 import { Material } from 'org.bukkit';
 import { dataView, saveView, deleteView } from './view';
 import { dataHolder, dataType } from './holder';
 import * as yup from 'yup';
+import { test } from 'craftjs-plugin';
 
-const TestA = dataType('TestA', {
+const TestA = dataType('test_a', {
   bool: yup.boolean().default(true).required(),
   num: yup.number().default(42).required(),
   str: yup.string().default('foo').required(),
@@ -16,7 +16,7 @@ const TestA = dataType('TestA', {
     .required(),
 });
 
-const TestB = dataType('TestB', {
+const TestB = dataType('test_b', {
   bool: yup.boolean().default(true).required(),
   num: yup.number().default(42).required(),
   str: yup.string().default('foo').required(),

@@ -1,8 +1,8 @@
-import { test } from 'zora';
 import { CustomItem } from './CustomItem';
 import { Material } from 'org.bukkit';
 import { generateLoot } from './drops';
 import { ItemStack } from 'org.bukkit.inventory';
+import { test } from 'craftjs-plugin';
 
 const TestItem = new CustomItem({
   id: 0,

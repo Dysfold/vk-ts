@@ -1,8 +1,8 @@
-import { test } from 'zora';
 import { CustomItem } from './CustomItem';
 import { Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
 import * as yup from 'yup';
+import { test } from 'craftjs-plugin';
 
 const TestItem = new CustomItem({
   id: 0,
@@ -58,11 +58,11 @@ test('CustomItems workflow', (t) => {
   );
 
   const invalidItem = new ItemStack(Material.DIRT);
-  t.notOk(
+  t.falsy(
     TestItem.get(invalidItem),
     'CustomItem.get() on an invalid item returns undefined',
   );
-  t.deepEqual(
+  t.eq(
     TestItem.get(test1)?.counter,
     0,
     `CustomItem.get() on unmodified item returns it's default data`,
@@ -78,12 +78,10 @@ test('CustomItems workflow', (t) => {
     `Mutating object returned by CustomItem.get() mutates the item's data`,
   );
 
-  try {
-    TestItem.set(invalidItem, { counter: 10 });
-    t.ok('CustomItem.set() on an invalid item does not throw error');
-  } catch (e) {
-    t.fail(e);
-  }
+  t.doesNotThrow(
+    () => TestItem.set(invalidItem, { counter: 10 }),
+    'CustomItem.set() on an invalid item does not throw error',
+  );
 
   TestItem.set(test1, { counter: 5 });
   t.eq(
@@ -117,5 +115,5 @@ test('CustomItem method overriding', (t) => {
     'CustomItem.create() overloading changes the output of CustomItem.create()',
   );
 
-  t.notOk(TestItem3.check(item), 'CustomItem.check() overloading should work');
+  t.falsy(TestItem3.check(item), 'CustomItem.check() overloading should work');
 });
