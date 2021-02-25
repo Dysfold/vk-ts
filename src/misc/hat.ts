@@ -1,10 +1,11 @@
 import { GameMode, Material, Sound, SoundCategory } from 'org.bukkit';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
+import { BlockDispenseArmorEvent } from 'org.bukkit.event.block';
 import {
   InventoryAction,
   InventoryClickEvent,
-  InventoryType,
   InventoryDragEvent,
+  InventoryType,
 } from 'org.bukkit.event.inventory';
 import {
   PlayerInteractAtEntityEvent,
@@ -16,8 +17,8 @@ import {
   PlayerInventory,
 } from 'org.bukkit.inventory';
 import { isRightClick } from '../common/helpers/click';
-import { equipPipe, Pipe } from './pipe';
 import { VkItem } from '../common/items/VkItem';
+import { equipPipe, Pipe } from './pipe';
 
 export const HAT_MATERIAL = VkItem.HAT;
 const HELMET_SLOT = 39;
@@ -28,6 +29,12 @@ function isHat(item: ItemStack | null) {
   if (item.itemMeta.hasCustomModelData()) return true;
   return false; // The item was not a custom item
 }
+
+// Prevent dispensing a hat to boots-slot
+registerEvent(BlockDispenseArmorEvent, (event) => {
+  if (!isHat(event.item)) return;
+  event.setCancelled(true);
+});
 
 // Equip hat with right click
 registerEvent(PlayerInteractEvent, (event) => {
