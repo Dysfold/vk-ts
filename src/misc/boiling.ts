@@ -1,4 +1,4 @@
-import { Color, DyeColor, Location, Material, Sound } from 'org.bukkit';
+import { DyeColor, Location, Material, Sound } from 'org.bukkit';
 import { Levelled } from 'org.bukkit.block.data';
 import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
 import * as yup from 'yup';
@@ -18,6 +18,7 @@ import { SpawnReason } from 'org.bukkit.event.entity.CreatureSpawnEvent';
 import { LeatherArmorMeta } from 'org.bukkit.inventory.meta';
 import { ItemSpawnEvent } from 'org.bukkit.event.entity';
 import { VkItem } from '../common/items/VkItem';
+import { EventPriority } from 'org.bukkit.event';
 
 /**
  * Define ingredient schema
@@ -56,7 +57,7 @@ export const BrewBucket = new CustomItem({
   id: 1,
   type: VkItem.COLORABLE,
   modelId: 1,
-  name: 'Seos',
+  name: 'Sotkua',
   data: {
     ingredients: yup.array().of(IngredientSchema.required()).required(),
   },
@@ -75,12 +76,12 @@ type Ingredient = {
 type IngredientProperties = {
   color?: DyeColor; // ingredient effect on the brew color
   description?: string; // short description about the ingredient
-  soluble?: boolean; // ingredient is easily soluble and doesn't require heat
-  heatDestroy?: boolean; // ingredient cannot withstand heat
+  soluble?: boolean; // ingredient is easily soluble and doesn't require heat to dissolve
+  destroy?: boolean; // ingredient cannot withstand heat
 };
 
 /**
- * List of valid ingredients and their properties
+ * Static list of valid ingredients and their properties
  */
 const INGREDIENTS: Ingredient = {
   APPLE: { color: DyeColor.RED, description: 'hedelmiä' },
@@ -108,7 +109,7 @@ const INGREDIENTS: Ingredient = {
     color: DyeColor.WHITE,
     description: 'hiivaa',
     soluble: true,
-    heatDestroy: true,
+    destroy: true,
   },
   TWISTING_VINES: {
     color: DyeColor.GREEN,
@@ -221,8 +222,8 @@ Brew.event(
   PlayerInteractEntityEvent,
   (event) => (event.rightClicked as ItemFrame).item,
   async (event) => {
-    // Stop item from rotating
-    event.setCancelled(true);
+    // Return if cancelled by the validation event
+    if (event.isCancelled()) return;
 
     // Check if main hand
     if (event.hand != EquipmentSlot.HAND) return;
@@ -233,11 +234,14 @@ Brew.event(
 
     const itemFrameItem = itemFrame.item;
 
-    // List ingredients if clicked with a empty scoop
-    if (ScoopEmpty.check(item)) {
-      const ingredients = Brew.get(itemFrameItem)?.ingredients;
+    const brew = Brew.get(itemFrameItem);
 
-      if (!ingredients || ingredients.length < 1) {
+    if (!brew || !brew.ingredients) return;
+
+    // Describe ingredients if clicked with a empty scoop
+    if (ScoopEmpty.check(item)) {
+      // If none ingredients
+      if (brew.ingredients.length < 1) {
         event.player.sendMessage('Padassa on pelkkää vettä');
         return;
       }
@@ -245,7 +249,7 @@ Brew.event(
       // Generate descriptions from the ingredients
       const descriptions = [
         ...new Set(
-          ingredients
+          brew.ingredients
             .filter((value) => {
               return INGREDIENTS[value.name].description;
             })
@@ -255,12 +259,12 @@ Brew.event(
         ),
       ];
 
-      // Generate list and replace the last delimeter with 'ja'
+      // Join descriptions into one string and replace the last delimeter with 'ja'
       const description = descriptions.join(', ').replace(/,([^,]*)$/, ' ja$1');
 
       event.player.sendMessage(`Seoksessa vaikuttaisi olevan ${description}`);
 
-      event.player.playSound(
+      event.player.world.playSound(
         itemFrame.location,
         Sound.ITEM_BUCKET_FILL_FISH,
         1.0,
@@ -272,13 +276,8 @@ Brew.event(
 
     const properties = INGREDIENTS[item.type.toString()];
 
-    // If not a ingredient
+    // Return if not a valid ingredient
     if (!properties) return;
-
-    const brew = Brew.get(itemFrameItem);
-
-    // If not a valid brew (should never happen, but makes typechecker happy)
-    if (!brew || !brew.ingredients) return;
 
     // Is the cauldron on top of a heat source
     const isWaterBoiling = hasHeatSource(objToLocation(brew.cauldron));
@@ -286,8 +285,8 @@ Brew.event(
     // Return if the ingredient is not easily soluble and the water is not boiling
     if (!properties.soluble && !isWaterBoiling) return;
 
-    // Cap ingredient amount
-    if (brew.ingredients.length >= 24) {
+    // Limit ingredient amount
+    if (brew.ingredients.length >= 18) {
       event.player.sendMessage('Pata on täysi');
       return;
     }
@@ -295,10 +294,10 @@ Brew.event(
     // Add ingredient to brew
     brew.ingredients.push({
       name: item.type.toString(),
-      perished: properties.heatDestroy && isWaterBoiling, // set ingredient perished if it gets destroyed by the heat and the cauldron is on stove
+      perished: properties.destroy && isWaterBoiling, // set ingredient perished if it gets destroyed by the heat and the cauldron is on stove
     });
 
-    // Update color
+    // Update brew color
     if (properties && properties.color) {
       const meta = itemFrameItem.itemMeta as LeatherArmorMeta;
       meta.color = properties.color.color.mixColors(meta.color);
@@ -312,7 +311,7 @@ Brew.event(
     item.amount -= 1;
 
     // Alternative sound effect
-    // event.player.playSound(
+    // event.player.world.playSound(
     //   itemFrame.location,
     //   Sound.ENTITY_ITEM_PICKUP,
     //   0.2,
@@ -320,7 +319,7 @@ Brew.event(
     // );
 
     // Splash sound effect
-    event.player.playSound(
+    event.player.world.playSound(
       itemFrame.location,
       Sound.ENTITY_GENERIC_SPLASH,
       0.5,
@@ -330,23 +329,20 @@ Brew.event(
 );
 
 /**
- * (Fallback) Prevent brew item from spawning
- */
-Brew.event(
-  ItemSpawnEvent,
-  (event) => event.entity.itemStack,
-  async (event) => {
-    event.setCancelled(true);
-  },
-);
-
-/**
- * Put brew into a bucket
+ * Default behaviour for player interaction with a brew.
+ * Can be cancelled by some other feature for custom behaviour.
+ * Possible cases could be custom foods, drinks, potions etc...
+ *
+ * TODO: set event priority to highest to be called last
+ * TODO: set event property ignoreCancelled
  */
 Brew.event(
   PlayerInteractEntityEvent,
   (event) => (event.rightClicked as ItemFrame).item,
   async (event) => {
+    // Return if cancelled by the validator or some other feature
+    if (event.isCancelled()) return;
+
     // Check that player clicked with main hand
     if (event.hand != EquipmentSlot.HAND) return;
 
@@ -355,10 +351,8 @@ Brew.event(
     // Check that the item in main hand is a empty bucket
     if (itemInMainHand.type != Material.BUCKET) return;
 
+    // No need to check entity type because it is already handled by the lower priority event
     const itemFrame = event.rightClicked as ItemFrame;
-
-    // Dead is the same thing as removed. Prevents creating duplicate buckets from one cauldron (macro usage)
-    if (itemFrame.isDead()) return;
 
     const brew = Brew.get(itemFrame.item);
 
@@ -397,8 +391,37 @@ Brew.event(
     // Add new bucket
     event.player.inventory.addItem(brewBucketItem);
 
-    // Play sound
-    event.player.playSound(cauldron.location, Sound.ITEM_BUCKET_FILL, 1.0, 1.0);
+    event.player.world.playSound(
+      cauldron.location,
+      Sound.ITEM_BUCKET_FILL,
+      1.0,
+      1.0,
+    );
+  },
+);
+
+/**
+ * Validates player interaction with a itemframe that contains a brew item.
+ */
+registerEvent(
+  PlayerInteractEntityEvent,
+  (event) => {
+    const itemFrame = event.rightClicked as ItemFrame;
+
+    // Validate entity
+    if (!itemFrame) return;
+
+    const itemFrameItem = itemFrame.item;
+
+    // Validate item
+    if (!itemFrameItem) return;
+
+    // Validate custom item
+    // Prevents player from interacting with a entity that is marked for removal
+    if (Brew.check(itemFrameItem)) event.setCancelled(itemFrame.isDead());
+  },
+  {
+    priority: EventPriority.LOWEST,
   },
 );
 
@@ -423,7 +446,8 @@ registerEvent(BlockPlaceEvent, (event) => {
 });
 
 /**
- * Spawn a brew on cauldron if it's being filled with water and already has a heat source
+ * Spawn a brew on cauldron if it's being filled with water and already has a heat source.
+ * Also prevents removing or adding water
  */
 registerEvent(CauldronLevelChangeEvent, (event) => {
   const brewItem = getBrewItemAt(event.block.location.add(0.0, 1.0, 0.0));
@@ -452,6 +476,17 @@ registerEvent(BlockBreakEvent, (event) => {
 
   removeBrewItemFrom(event.block.location.add(0.0, 1.0, 0.0));
 });
+
+/**
+ * (Fallback) Prevent brew item from spawning
+ */
+Brew.event(
+  ItemSpawnEvent,
+  (event) => event.entity.itemStack,
+  async (event) => {
+    event.setCancelled(true);
+  },
+);
 
 // /**
 //  * Represents a cauldron that is used for boiling or mixing ingredients
