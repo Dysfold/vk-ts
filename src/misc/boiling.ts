@@ -17,33 +17,27 @@ import { locationToObj, objToLocation } from '../death/helpers';
 import { SpawnReason } from 'org.bukkit.event.entity.CreatureSpawnEvent';
 import { LeatherArmorMeta } from 'org.bukkit.inventory.meta';
 import { ItemSpawnEvent } from 'org.bukkit.event.entity';
-
-// /**
-//  * Represents a cauldron that is used for boiling or mixing ingredients
-//  */
-// const Cauldron = new CustomBlock({
-//   type: Material.CAULDRON,
-//   data: {
-//     ingredients: yup
-//       .array()
-//       .of(
-//         yup.object().shape({
-//           name: yup.string().required(),
-//         }),
-//       )
-//       .default([]),
-//   },
-// });
+import { VkItem } from '../common/items/VkItem';
 
 /**
- * Represents the liquid on a cauldron
+ * Define ingredient schema
+ */
+const IngredientSchema = yup
+  .object({
+    name: yup.string().required(), // name of the ingredient material
+    perished: yup.boolean().optional(), // some ingredients might get ruined by the heat
+  })
+  .required();
+
+/**
+ * Brew in a cauldron
  */
 export const Brew = new CustomItem({
   id: 1000,
-  type: Material.LEATHER_HORSE_ARMOR, // TODO: change to VkItem
+  type: VkItem.COLORABLE,
   modelId: 1000,
   data: {
-    ingredients: yup.array().of(yup.string().required()).default([]),
+    ingredients: yup.array().of(IngredientSchema.required()).default([]),
     cauldron: yup
       .object({
         x: yup.number().required(),
@@ -56,57 +50,73 @@ export const Brew = new CustomItem({
 });
 
 /**
- * Represents a brew on a bucket
+ * Brew in a bucket
  */
 export const BrewBucket = new CustomItem({
   id: 1,
-  type: Material.LEATHER_HORSE_ARMOR, // TODO: VkItem
+  type: VkItem.COLORABLE,
   modelId: 1,
-  name: 'Liejua',
+  name: 'Seos',
   data: {
-    ingredients: yup.array().of(yup.string().required()).optional(),
+    ingredients: yup.array().of(IngredientSchema.required()).required(),
   },
 });
 
-// enum Ingredient {
-//   'APPLE' = Color.RED.asRGB(),
-//   'BREAD' = Color.RED.asRGB(),
-//   'PORKCHOP' = Color.RED.asRGB(),
-//   'COD' = Color.RED.asRGB(),
-//   'SALMON' = Color.RED.asRGB(),
-//   'TROPICAL_FISH' = Color.RED.asRGB(),
-//   'PUFFERFISH' = Color.RED.asRGB(),
-//   'COOKIE' = Color.RED.asRGB(),
-//   'MELON_SLICE' = Color.RED.asRGB(),
-//   'BEEF' = Color.RED.asRGB(),
-//   'CHICKEN' = Color.RED.asRGB(),
-//   'CARROT' = Color.RED.asRGB(),
-//   'POTATO' = Color.RED.asRGB(),
-//   'RABBIT' = Color.RED.asRGB(),
-//   'MUTTON' = Color.RED.asRGB(),
-//   'SWEET_BERRIES' = Color.RED.asRGB(),
-//   'HONEYCOMB' = Color.RED.asRGB(),
-//   'BROWN_MUSHROOM' = Color.RED.asRGB(),
-//   'RED_MUSHROOM' = Color.RED.asRGB(),
-//   'SUGAR_CANE' = Color.RED.asRGB(),
-//   'EGG' = Color.RED.asRGB(),
-//   'SUGAR' = Color.RED.asRGB(),
-//   'NETHER_WART' = Color.RED.asRGB(),
-//   'TWISTING_VINES' = Color.RED.asRGB(),
-// }
+/**
+ * Define ingredient
+ */
+type Ingredient = {
+  [key: string]: IngredientProperties;
+};
 
-// Define all valid ingredients and effect on brew color
-// TODO: Add custom foods
-const INGREDIENTS = new Map<Material, Color | undefined>([
-  [Material.APPLE, Color.RED],
-  [Material.MELON_SLICE, Color.RED],
-  [Material.SWEET_BERRIES, Color.RED],
-  [Material.HONEYCOMB, Color.YELLOW],
-  [Material.SUGAR_CANE, DyeColor.BROWN.color],
-  [Material.SUGAR, Color.WHITE],
-  [Material.NETHER_WART, Color.WHITE],
-  [Material.TWISTING_VINES, Color.GREEN],
-]);
+/**
+ * Define properties for ingredient
+ */
+type IngredientProperties = {
+  color?: DyeColor; // ingredient effect on the brew color
+  description?: string; // short description about the ingredient
+  soluble?: boolean; // ingredient is easily soluble and doesn't require heat
+  heatDestroy?: boolean; // ingredient cannot withstand heat
+};
+
+/**
+ * List of valid ingredients and their properties
+ */
+const INGREDIENTS: Ingredient = {
+  APPLE: { color: DyeColor.RED, description: 'hedelmiä' },
+  PORKCHOP: { color: DyeColor.PINK, description: 'kalaa' },
+  COD: { color: DyeColor.PINK, description: 'kalaa' },
+  SALMON: { color: DyeColor.PINK, description: 'kalaa' },
+  TROPICAL_FISH: { color: DyeColor.PINK, description: 'kalaa' },
+  PUFFERFISH: { color: DyeColor.PINK, description: 'myrkkyä' },
+  MELON_SLICE: { color: DyeColor.RED, description: 'sokeria', soluble: true },
+  BEEF: { color: DyeColor.RED, description: 'lihaa' },
+  CHICKEN: { color: DyeColor.PINK, description: 'lihaa' },
+  CARROT: { color: DyeColor.ORANGE, description: 'juureksia' },
+  COCOA_BEANS: { color: DyeColor.BROWN, description: 'kahvia' },
+  POTATO: { color: DyeColor.YELLOW, description: 'juureksia' },
+  RABBIT: { color: DyeColor.RED, description: 'lihaa' },
+  MUTTON: { color: DyeColor.RED, description: 'lihaa' },
+  SWEET_BERRIES: { color: DyeColor.RED, description: 'marjoja' },
+  HONEYCOMB: { color: DyeColor.YELLOW, description: 'hunajaa' },
+  BROWN_MUSHROOM: { color: DyeColor.BROWN, description: 'sieniä' },
+  RED_MUSHROOM: { color: DyeColor.BROWN, description: 'myrkkyä' },
+  SUGAR_CANE: { color: DyeColor.BROWN, description: 'sokeria' },
+  EGG: { description: 'kananmunia' },
+  SUGAR: { color: DyeColor.WHITE, description: 'sokeria', soluble: true },
+  NETHER_WART: {
+    color: DyeColor.WHITE,
+    description: 'hiivaa',
+    soluble: true,
+    heatDestroy: true,
+  },
+  TWISTING_VINES: {
+    color: DyeColor.GREEN,
+    description: 'yrttejä',
+    soluble: true,
+  },
+  WHEAT: { color: DyeColor.YELLOW, description: 'viljaa' },
+};
 
 /**
  * Return a list of items frames at given location
@@ -115,7 +125,7 @@ const INGREDIENTS = new Map<Material, Color | undefined>([
 function getItemFramesAt(location: Location) {
   return location.getNearbyEntitiesByType(
     Class.forName('org.bukkit.entity.ItemFrame'),
-    1.0,
+    0.5,
   );
 }
 
@@ -137,7 +147,7 @@ function spawnBrewItemAt(location: Location) {
         // Face upwards
         itemFrame.setFacingDirection(BlockFace.UP, true);
 
-        // Prevent all damage (except from creative players) to the itemframe
+        // Prevent all damage except from creative players
         itemFrame.setInvulnerable(true);
 
         // Disable interaction with the environment
@@ -198,43 +208,14 @@ function removeBrewItemFrom(location: Location) {
  */
 function hasHeatSource(location: Location) {
   return (
-    location.subtract(0.0, 1.0, 0.0).block.type == Material.CAMPFIRE ||
-    (location.block.type == Material.FIRE &&
-      location.subtract(0.0, 1.0, 0.0).block.type == Material.NETHERRACK)
+    location.subtract(0.0, 1.0, 0.0).block.type === Material.CAMPFIRE ||
+    (location.block.type === Material.FIRE &&
+      location.subtract(0.0, 1.0, 0.0).block.type === Material.NETHERRACK)
   );
 }
 
-// /*
-//  * Custom Event System?
-//  *
-//  * Brew.event(BrewIngredientEvent, (event) => event.brewItemStack, async (event) => { event.player.sendMessage(`You put ${event.ingredient.name()} into the brew`) })
-//  */
-
-// /**
-//  * Called when player adds ingredients to a brew
-//  */
-// export class BrewIngredientEvent extends Event {
-//   player: Player;
-//   brewItemStack: ItemStack;
-//   brew: CustomItem<never>;
-//   ingredient: Material;
-
-//   constructor(
-//     player: Player,
-//     brewItemStack: ItemStack,
-//     brew: CustomItem<never>,
-//     ingredient: Material,
-//   ) {
-//     super();
-//     this.player = player;
-//     this.brewItemStack = brewItemStack;
-//     this.brew = brew;
-//     this.ingredient = ingredient;
-//   }
-// }
-
 /**
- * Add ingredients to a brew
+ * Handle player interaction with a brew cauldron
  */
 Brew.event(
   PlayerInteractEntityEvent,
@@ -254,25 +235,56 @@ Brew.event(
 
     // List ingredients if clicked with a empty scoop
     if (ScoopEmpty.check(item)) {
-      event.player.sendMessage(
-        `${Brew.get(itemFrameItem)?.ingredients?.toString()}`,
+      const ingredients = Brew.get(itemFrameItem)?.ingredients;
+
+      if (!ingredients || ingredients.length < 1) {
+        event.player.sendMessage('Padassa on pelkkää vettä');
+        return;
+      }
+
+      // Generate descriptions from the ingredients
+      const descriptions = [
+        ...new Set(
+          ingredients
+            .filter((value) => {
+              return INGREDIENTS[value.name].description;
+            })
+            .map((value) => {
+              return INGREDIENTS[value.name].description;
+            }),
+        ),
+      ];
+
+      // Generate list and replace the last delimeter with 'ja'
+      const description = descriptions.join(', ').replace(/,([^,]*)$/, ' ja$1');
+
+      event.player.sendMessage(`Seoksessa vaikuttaisi olevan ${description}`);
+
+      event.player.playSound(
+        itemFrame.location,
+        Sound.ITEM_BUCKET_FILL_FISH,
+        1.0,
+        1.0,
       );
+
       return;
     }
 
-    // // Check if item is a valid ingredient
-    // if (!(item.type.toString() in Ingredient)) return;
+    const properties = INGREDIENTS[item.type.toString()];
 
-    // const color = Color.fromRGB(
-    //   Ingredient[item.type.name() as keyof typeof Ingredient],
-    // );
-
-    // Check if the item is a valid ingredient
-    if (!INGREDIENTS.has(item.type)) return;
+    // If not a ingredient
+    if (!properties) return;
 
     const brew = Brew.get(itemFrameItem);
 
+    // If not a valid brew (should never happen, but makes typechecker happy)
     if (!brew || !brew.ingredients) return;
+
+    // Is the cauldron on top of a heat source
+    const isWaterBoiling = hasHeatSource(objToLocation(brew.cauldron));
+
+    // Return if the ingredient is not easily soluble and the water is not boiling
+    if (!properties.soluble && !isWaterBoiling) return;
 
     // Cap ingredient amount
     if (brew.ingredients.length >= 24) {
@@ -281,21 +293,17 @@ Brew.event(
     }
 
     // Add ingredient to brew
-    brew.ingredients.push(item.type.toString());
-
-    const color = INGREDIENTS.get(item.type);
+    brew.ingredients.push({
+      name: item.type.toString(),
+      perished: properties.heatDestroy && isWaterBoiling, // set ingredient perished if it gets destroyed by the heat and the cauldron is on stove
+    });
 
     // Update color
-    if (color) {
+    if (properties && properties.color) {
       const meta = itemFrameItem.itemMeta as LeatherArmorMeta;
-      //? Don't understand how color mixing works, but does a decent job
-      meta.color = Color.WHITE.mixColors(meta.color, color);
+      meta.color = properties.color.color.mixColors(meta.color);
       itemFrameItem.itemMeta = meta;
     }
-
-    // Update brew color
-    // const itemMeta = itemFrameItem.itemMeta as LeatherArmorMeta;
-    // const color = Ingredient[item.type.toString() as keyof typeof Ingredient];
 
     // Update item frame item after modify
     itemFrame.setItem(itemFrameItem, false);
@@ -322,7 +330,7 @@ Brew.event(
 );
 
 /**
- * Prevent brew item from spawning
+ * (Fallback) Prevent brew item from spawning
  */
 Brew.event(
   ItemSpawnEvent,
@@ -355,17 +363,24 @@ Brew.event(
     const brew = Brew.get(itemFrame.item);
 
     // Make type checker happy
-    if (!brew) return;
+    if (!brew || !brew.ingredients) return;
 
-    // Create new BrewBucket from Brew by copying the ingredients
-    const brewBucketItem = BrewBucket.create({
-      ingredients: brew.ingredients,
-    });
+    let brewBucketItem;
 
-    // Set color
-    const meta = brewBucketItem.itemMeta as LeatherArmorMeta;
-    meta.color = (itemFrame.item.itemMeta as LeatherArmorMeta).color;
-    brewBucketItem.itemMeta = meta;
+    // Create new bucket from brew. If brew has no ingredients, create a water bucket instead
+    if (brew.ingredients.length > 0) {
+      // Copy ingredients from brew to bucket
+      brewBucketItem = BrewBucket.create({
+        ingredients: brew.ingredients,
+      });
+
+      // Set color
+      const meta = brewBucketItem.itemMeta as LeatherArmorMeta;
+      meta.color = (itemFrame.item.itemMeta as LeatherArmorMeta).color;
+      brewBucketItem.itemMeta = meta;
+    } else {
+      brewBucketItem = new ItemStack(Material.WATER_BUCKET);
+    }
 
     // Set owning cauldron empty
     const cauldron = objToLocation(brew.cauldron).block;
@@ -386,29 +401,6 @@ Brew.event(
     event.player.playSound(cauldron.location, Sound.ITEM_BUCKET_FILL, 1.0, 1.0);
   },
 );
-
-// /**
-//  * Prevent brew item removal from the itemframe
-//  */
-// Brew.event(
-//   EntityDamageByEntityEvent,
-//   (event) => (event.entity as ItemFrame).item,
-//   async (event) => {
-//     event.setCancelled(true);
-//   },
-// );
-
-// /**
-//  * Prevent obstructed brew itemframe from breaking
-//  */
-// Brew.event(
-//   HangingBreakEvent,
-//   (event) => (event.entity as ItemFrame).item,
-//   async (event) => {
-//     log.info('ItemFrame wanted to break');
-//     event.setCancelled(true);
-//   },
-// );
 
 /**
  * Spawn brew on a full cauldron if a fire is lit under it
@@ -442,7 +434,7 @@ registerEvent(CauldronLevelChangeEvent, (event) => {
     return;
   }
 
-  // Brew can only spawn if cauldron's full
+  // Spawn brew only if cauldron's being filled to max
   if (event.newLevel < 3.0) return;
 
   // Check if there's a heat source under cauldron
@@ -460,6 +452,75 @@ registerEvent(BlockBreakEvent, (event) => {
 
   removeBrewItemFrom(event.block.location.add(0.0, 1.0, 0.0));
 });
+
+// /**
+//  * Represents a cauldron that is used for boiling or mixing ingredients
+//  */
+// const Cauldron = new CustomBlock({
+//   type: Material.CAULDRON,
+//   data: {
+//     ingredients: yup
+//       .array()
+//       .of(
+//         yup.object().shape({
+//           name: yup.string().required(),
+//         }),
+//       )
+//       .default([]),
+//   },
+// });
+
+// /*
+//  * Custom Event System?
+//  *
+//  * Brew.event(BrewIngredientEvent, (event) => event.brewItemStack, async (event) => { event.player.sendMessage(`You put ${event.ingredient.name()} into the brew`) })
+//  */
+
+// /**
+//  * Called when player adds ingredients to a brew
+//  */
+// export class BrewIngredientEvent extends Event {
+//   player: Player;
+//   brewItemStack: ItemStack;
+//   brew: CustomItem<never>;
+//   ingredient: Material;
+
+//   constructor(
+//     player: Player,
+//     brewItemStack: ItemStack,
+//     brew: CustomItem<never>,
+//     ingredient: Material,
+//   ) {
+//     super();
+//     this.player = player;
+//     this.brewItemStack = brewItemStack;
+//     this.brew = brew;
+//     this.ingredient = ingredient;
+//   }
+// }
+
+// /**
+//  * Prevent brew item removal from the itemframe
+//  */
+// Brew.event(
+//   EntityDamageByEntityEvent,
+//   (event) => (event.entity as ItemFrame).item,
+//   async (event) => {
+//     event.setCancelled(true);
+//   },
+// );
+
+// /**
+//  * Prevent obstructed brew itemframe from breaking
+//  */
+// Brew.event(
+//   HangingBreakEvent,
+//   (event) => (event.entity as ItemFrame).item,
+//   async (event) => {
+//     log.info('ItemFrame wanted to break');
+//     event.setCancelled(true);
+//   },
+// );
 
 // /**
 //  * Attempt to prevent brew from being bottled
