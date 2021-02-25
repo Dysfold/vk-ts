@@ -5,6 +5,7 @@ import { Action } from 'org.bukkit.event.block';
 import {
   PlayerInteractAtEntityEvent,
   PlayerInteractEvent,
+  PlayerArmorStandManipulateEvent,
 } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { giveItem } from '../common/helpers/inventory';

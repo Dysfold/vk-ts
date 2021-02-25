@@ -96,8 +96,9 @@ registerEvent(PlayerInteractAtEntityEvent, (event) => {
   if (entity.type !== EntityType.ARMOR_STAND) return;
   const inventory = event.player.inventory as PlayerInventory;
   if (!isHat(inventory.itemInMainHand)) return;
-  const itemInHand = inventory.itemInMainHand.clone() as ItemStack;
   const armorstand = entity as ArmorStand;
+  if (armorstand.isInvisible()) return;
+  const itemInHand = inventory.itemInMainHand.clone() as ItemStack;
   inventory.itemInMainHand = armorstand.helmet;
   armorstand.helmet = itemInHand;
   event.setCancelled(true);
