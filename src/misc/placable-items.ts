@@ -8,6 +8,12 @@ import {
 } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { giveItem } from '../common/helpers/inventory';
+import { EulerAngle } from 'org.bukkit.util';
+
+/**
+ * Allow specific items to be placed on the table as decorations.
+ * Items like: bottles, bowls, books
+ */
 
 const PLACABLE_MATERIALS = new Set([
   Material.GLASS_BOTTLE,
@@ -23,7 +29,7 @@ const PLACABLE_MATERIALS = new Set([
   Material.RABBIT_STEW,
 ]);
 
-const SURFACES = new Set([
+const TABLES = new Set([
   Material.OAK_PLANKS,
   Material.SPRUCE_PLANKS,
   Material.BIRCH_PLANKS,
@@ -59,7 +65,7 @@ function isPlacableItem(item: ItemStack | null): item is ItemStack {
  */
 function isValidSurface(block: Block | null): block is Block {
   if (!block) return false;
-  return SURFACES.has(block.type);
+  return TABLES.has(block.type);
 }
 
 /**
@@ -91,6 +97,8 @@ registerEvent(PlayerInteractEvent, (event) => {
 function getClickedLocation(player: Player) {
   const raytrace = player.rayTraceBlocks(4);
   if (!raytrace) return;
+  // Additional check for the material
+  if (!isValidSurface(raytrace.hitBlock)) return;
   const position = raytrace.hitPosition;
   return position.toLocation(
     player.world,
@@ -162,6 +170,9 @@ function spawnHolderArmorStand(loc: Location, item: ItemStack) {
     EquipmentSlot.HAND,
     EquipmentSlot.OFF_HAND,
   );
+
+  // Prevent texture overlapping
+  armorStand.headPose = new EulerAngle(0.005, 0.005, 0.005);
 
   loc.world.playSound(
     loc,
