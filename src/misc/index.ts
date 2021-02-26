@@ -47,6 +47,5 @@ require('./bleeding');
 require('./player-record');
 require('./tooth-removal');
 require('./horse-armor-items');
-require('./boiling');
 require('./falling-blocks');
 require('./hug');
