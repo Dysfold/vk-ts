@@ -1,4 +1,4 @@
-import { DyeColor, Location, Material, Sound } from 'org.bukkit';
+import { DyeColor, Location, Material, Sound, SoundCategory } from 'org.bukkit';
 import { Levelled } from 'org.bukkit.block.data';
 import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
 import * as yup from 'yup';
@@ -247,19 +247,11 @@ Brew.event(
       }
 
       // Generate descriptions from the ingredients
-      const descriptions = [
-        ...new Set(
-          brew.ingredients
-            .filter((value) => {
-              return INGREDIENTS[value.name].description;
-            })
-            .map((value) => {
-              return INGREDIENTS[value.name].description;
-            }),
-        ),
-      ];
+      const descriptions = brew.ingredients
+        .map((value) => INGREDIENTS[value.name].description) // map descriptions
+        .filter((value, index, self) => self.indexOf(value) == index); // filter unique
 
-      // Join descriptions into one string and replace the last delimeter with 'ja'
+      // Join descriptions into one string and replace the last delimiter with 'ja'
       const description = descriptions.join(', ').replace(/,([^,]*)$/, ' ja$1');
 
       event.player.sendMessage(`Seoksessa vaikuttaisi olevan ${description}`);
@@ -421,7 +413,7 @@ registerEvent(
     if (Brew.check(itemFrameItem)) event.setCancelled(itemFrame.isDead());
   },
   {
-    priority: EventPriority.LOWEST,
+    priority: EventPriority.LOWEST, // listen in lowest priority so that this event is fired first
   },
 );
 
