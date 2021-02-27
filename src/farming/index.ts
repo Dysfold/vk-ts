@@ -3,4 +3,4 @@ require('./egg');
 require('./grass');
 require('./crop-growth');
 require('./bonemeal');
-require('./hops');
+require('./custom-plants');

@@ -18,4 +18,5 @@ export const VkItem = {
   DRINK:        Material.POTION,
   UNSTACKABLE:  Material.GOLDEN_HORSE_ARMOR,
   COLORABLE:    Material.LEATHER_HORSE_ARMOR,
+  SEED:         Material.GRASS,
 };
