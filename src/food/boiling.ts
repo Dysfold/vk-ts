@@ -258,7 +258,8 @@ Brew.event(
 
       event.player.world.playSound(
         itemFrame.location,
-        Sound.ITEM_BUCKET_FILL_FISH,
+        'item.bucket.fill_fish',
+        SoundCategory.PLAYERS,
         1.0,
         1.0,
       );
@@ -313,7 +314,8 @@ Brew.event(
     // Splash sound effect
     event.player.world.playSound(
       itemFrame.location,
-      Sound.ENTITY_GENERIC_SPLASH,
+      'entity.generic.splash',
+      SoundCategory.PLAYERS,
       0.5,
       1.0,
     );
@@ -385,7 +387,8 @@ Brew.event(
 
     event.player.world.playSound(
       cauldron.location,
-      Sound.ITEM_BUCKET_FILL,
+      'item.bucket.fill',
+      SoundCategory.PLAYERS,
       1.0,
       1.0,
     );
