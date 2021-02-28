@@ -130,7 +130,8 @@ export type DataHolderStorage =
   | PersistentDataHolder
   | DatabaseEntry
   | ItemStack
-  | Block;
+  | Block
+  | OfflinePlayer;
 
 /**
  * Creates a persistent data holder backed by given storage.
