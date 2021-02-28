@@ -5,14 +5,16 @@ import * as yup from 'yup';
 import { Bukkit, OfflinePlayer } from 'org.bukkit';
 import { UUID } from 'java.util';
 import { isAdminAccount } from '../common/helpers/player';
+import { Player } from 'org.bukkit.entity';
 
 const playerLikesDataType = dataType('playerLikesData', {
-  playerUuidList: yup.array().of(yup.string()),
+  playerUuidList: yup.array().of(yup.string().required()),
 });
 
 const playerLikesType = dataType('playerLikes', {
   count: yup.number(),
-  date: yup.number(),
+  lastAutoRemoveDate: yup.number(),
+  cooldownEnds: yup.number(),
 });
 
 const view = dataView(
@@ -34,19 +36,8 @@ function getLiked() {
 /**
  * Sort the given list by likes
  */
-function sortLikeList(array: any[]): string[] {
-  return array.sort(function (a, b) {
-    if (!a || typeof a != 'string') {
-      return -1;
-    }
-    if (!b || typeof b != 'string') {
-      return 1;
-    }
-    return (
-      getLikes(Bukkit.getOfflinePlayer(UUID.fromString(b))) -
-      getLikes(Bukkit.getOfflinePlayer(UUID.fromString(a)))
-    );
-  });
+function sortLikeList(array: string[]): string[] {
+  return array.sort((a, b) => getLikes(Bukkit.getOfflinePlayer(UUID.fromString(b))) - getLikes(Bukkit.getOfflinePlayer(UUID.fromString(a))));
 }
 
 /*
@@ -62,7 +53,7 @@ function getLikes(player: OfflinePlayer): number {
  */
 function getLikeRemovalTimestamp(player: OfflinePlayer): number {
   const playerView = dataView(playerLikesType, dataHolder(player));
-  return playerView.date;
+  return playerView.lastAutoRemoveDate;
 }
 
 /*
@@ -70,7 +61,24 @@ function getLikeRemovalTimestamp(player: OfflinePlayer): number {
  */
 function setLikeRemovalTimestamp(player: OfflinePlayer): void {
   const playerView = dataView(playerLikesType, dataHolder(player));
-  playerView.date = Date.now();
+  playerView.lastAutoRemoveDate = Date.now();
+}
+
+/*
+ * Get cooldown expiration lastAutoRemoveDate of player
+ */
+function getCooldownTimestamp(player: OfflinePlayer): number {
+  const playerView = dataView(playerLikesType, dataHolder(player));
+  return playerView.cooldownEnds;
+}
+
+/*
+ * Set cooldown expiration lastAutoRemoveDate of player
+ */
+const COOLDOWN_TIME = 24 * 60 * 60 * 1000;
+function setCooldownTimestamp(player: OfflinePlayer): void {
+  const playerView = dataView(playerLikesType, dataHolder(player));
+  playerView.cooldownEnds = Date.now() + COOLDOWN_TIME;
 }
 /*
  * Add like to player
@@ -88,9 +96,6 @@ function addLike(uuid: string, callback: () => void) {
     return;
   }
   const lastUUID = view.playerUuidList[view.playerUuidList.length - 1];
-  if (lastUUID == undefined) {
-    return;
-  }
   const lastPlayer: OfflinePlayer = Bukkit.getOfflinePlayer(
     UUID.fromString(lastUUID),
   );
@@ -118,9 +123,6 @@ function removeLike(uuid: string, callback: () => void) {
     return;
   }
   const lastUUID = view.playerUuidList[view.playerUuidList.length - 1];
-  if (lastUUID == undefined) {
-    return;
-  }
   const lastPlayer: OfflinePlayer = Bukkit.getOfflinePlayer(
     UUID.fromString(lastUUID),
   );
@@ -136,6 +138,18 @@ function removeLike(uuid: string, callback: () => void) {
 const TIME_TO_DECREASE = 24 * 60 * 60 * 1000;
 function hasTimePassedToDecrease(timestamp: number): boolean {
   return timestamp - (Date.now() - TIME_TO_DECREASE) <= 0;
+}
+
+/**
+ * Calculates milliseconds to hours and minutes
+ */
+function calculateTime(duration: number) {
+  let minutes = Math.floor((duration / (1000 * 60)) % 60),
+    hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+  hours = hours < 10 ? 0 + hours : hours;
+  minutes = minutes < 10 ? 0 + minutes : minutes;
+
+  return { hours, minutes };
 }
 
 /**
@@ -192,6 +206,16 @@ registerCommand(
       );
       sender.sendMessage('§6--------------------------------------');
     } else {
+      if (!(sender instanceof Player)) return;
+      if (Date.now() < getCooldownTimestamp(sender as Player)) {
+        const time = calculateTime(
+          getCooldownTimestamp(sender as Player) - Date.now(),
+        );
+        sender.sendMessage(
+          `§6Voit tykätä uudelleen ${time.hours} tunnin ja ${time.minutes} minuutin kuluttua`,
+        );
+        return;
+      }
       if (args[0].toLowerCase() == sender.name.toLowerCase()) {
         sender.sendMessage('§6Tiedämme jo että pidät itsestäsi!');
       } else if (isAdminAccount(args[0].toLowerCase())) {
@@ -203,7 +227,8 @@ registerCommand(
           return;
         }
         addLike(player.uniqueId.toString(), () => {
-          sender.sendMessage(`§6Tykkäys onnistui!`);
+          sender.sendMessage(`§6Tykkäsit pelaajasta §e${player.name}§6!`);
+          setCooldownTimestamp(sender as Player);
         });
       }
     }
@@ -211,5 +236,6 @@ registerCommand(
   {
     permission: 'vk.like',
     description: 'Tykkää pelaajasta',
+    executableBy: 'players',
   },
 );
