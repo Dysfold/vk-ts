@@ -1,4 +1,4 @@
-import { Material } from 'org.bukkit';
+import { Material, SoundCategory, GameMode } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Ageable } from 'org.bukkit.block.data';
 import {
@@ -282,7 +282,15 @@ registerEvent(PlayerInteractEvent, (event) => {
   ageable.age = minAge;
   plantBlock.blockData = ageable;
 
-  event.item.amount--;
+  if (event.player.gameMode !== GameMode.CREATIVE) event.item.amount--;
+
+  block.world.playSound(
+    block.location,
+    'minecraft:item.crop.plant',
+    SoundCategory.BLOCKS,
+    1,
+    1,
+  );
 });
 
 /**
