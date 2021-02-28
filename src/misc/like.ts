@@ -156,7 +156,7 @@ function calculateTime(duration: number) {
  * Display player record of the server
  */
 registerCommand(
-  ['suosikit', 'records'],
+  ['suosikit', 'favourites'],
   (sender) => {
     sender.sendMessage('§6--------------------------------------');
     sender.sendMessage('§eValtakauden suosituimmat pelaajat:');
