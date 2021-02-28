@@ -1,8 +1,16 @@
 import { Material } from 'org.bukkit';
+import { Block } from 'org.bukkit.block';
 import { Ageable } from 'org.bukkit.block.data';
-import { BlockPlaceEvent, BlockSpreadEvent } from 'org.bukkit.event.block';
+import {
+  Action,
+  BlockBreakEvent,
+  BlockPlaceEvent,
+  BlockSpreadEvent,
+} from 'org.bukkit.event.block';
 import { ItemSpawnEvent } from 'org.bukkit.event.entity';
+import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
+import { chanceOf } from '../common/helpers/math';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 
@@ -11,8 +19,15 @@ interface Plant {
   minAge: number;
   maxAge: number;
   drops: ItemStack[];
+  /* From 0 to 1. 1 = always grows, 0 = never grows*/
+  growth?: number;
 }
 
+const PLANT_BLOCK = Material.TWISTING_VINES;
+
+/**
+ * Plant 1
+ */
 const ExamplePlant1Seeds = new CustomItem({
   id: 1,
   modelId: 1,
@@ -22,9 +37,13 @@ const ExamplePlant1: Plant = {
   seeds: ExamplePlant1Seeds,
   minAge: 0,
   maxAge: 2,
-  drops: [ExamplePlant1Seeds.create()],
+  drops: [ExamplePlant1Seeds.create(), new ItemStack(Material.WHEAT, 2)],
+  growth: 0.2,
 };
 
+/**
+ * Plant 2
+ */
 const ExamplePlant2Seeds = new CustomItem({
   id: 2,
   modelId: 2,
@@ -34,9 +53,12 @@ const ExamplePlant2: Plant = {
   seeds: ExamplePlant2Seeds,
   minAge: 3,
   maxAge: 5,
-  drops: [ExamplePlant2Seeds.create()],
+  drops: [ExamplePlant2Seeds.create(), new ItemStack(Material.APPLE, 5)],
 };
 
+/**
+ * Plant 3
+ */
 const ExamplePlant3Seeds = new CustomItem({
   id: 3,
   modelId: 3,
@@ -46,9 +68,12 @@ const ExamplePlant3: Plant = {
   seeds: ExamplePlant3Seeds,
   minAge: 6,
   maxAge: 8,
-  drops: [ExamplePlant3Seeds.create()],
+  drops: [ExamplePlant3Seeds.create(), new ItemStack(Material.CARROT, 3)],
 };
 
+/**
+ * Plant 4
+ */
 const ExamplePlant4Seeds = new CustomItem({
   id: 4,
   modelId: 4,
@@ -58,9 +83,12 @@ const ExamplePlant4: Plant = {
   seeds: ExamplePlant4Seeds,
   minAge: 9,
   maxAge: 11,
-  drops: [ExamplePlant4Seeds.create()],
+  drops: [ExamplePlant4Seeds.create(), new ItemStack(Material.GRASS)],
 };
 
+/**
+ * Plant 5
+ */
 const ExamplePlant5Seeds = new CustomItem({
   id: 5,
   modelId: 5,
@@ -70,9 +98,12 @@ const ExamplePlant5: Plant = {
   seeds: ExamplePlant5Seeds,
   minAge: 12,
   maxAge: 14,
-  drops: [ExamplePlant5Seeds.create()],
+  drops: [ExamplePlant5Seeds.create(), new ItemStack(Material.GRASS)],
 };
 
+/**
+ * Plant 6
+ */
 const ExamplePlant6Seeds = new CustomItem({
   id: 6,
   modelId: 6,
@@ -82,9 +113,12 @@ const ExamplePlant6: Plant = {
   seeds: ExamplePlant6Seeds,
   minAge: 15,
   maxAge: 17,
-  drops: [ExamplePlant6Seeds.create()],
+  drops: [ExamplePlant6Seeds.create(), new ItemStack(Material.GRASS)],
 };
 
+/**
+ * Plant 7
+ */
 const ExamplePlant7Seeds = new CustomItem({
   id: 7,
   modelId: 7,
@@ -94,9 +128,12 @@ const ExamplePlant7: Plant = {
   seeds: ExamplePlant7Seeds,
   minAge: 18,
   maxAge: 20,
-  drops: [ExamplePlant7Seeds.create()],
+  drops: [ExamplePlant7Seeds.create(), new ItemStack(Material.GRASS)],
 };
 
+/**
+ * Plant 8
+ */
 const ExamplePlant8Seeds = new CustomItem({
   id: 8,
   modelId: 8,
@@ -106,9 +143,12 @@ const ExamplePlant8: Plant = {
   seeds: ExamplePlant8Seeds,
   minAge: 21,
   maxAge: 25,
-  drops: [ExamplePlant8Seeds.create()],
+  drops: [ExamplePlant8Seeds.create(), new ItemStack(Material.GRASS)],
 };
 
+/**
+ * Plant 9
+ */
 const ExamplePlant9Seeds = new CustomItem({
   id: 9,
   modelId: 9,
@@ -118,10 +158,16 @@ const ExamplePlant9: Plant = {
   seeds: ExamplePlant9Seeds,
   minAge: 24,
   maxAge: 25,
-  drops: [ExamplePlant9Seeds.create()],
+  drops: [ExamplePlant9Seeds.create(), new ItemStack(Material.GRASS)],
 };
 
-const AGES = new Map<number /* Age of the plant */, Plant /* Plant info */>([
+/**
+ * Maps the age of the twisting vines to the corresponding plant
+ */
+const AGE_TO_PLANT = new Map<
+  number /* Age of the plant */,
+  Plant /* Plant info */
+>([
   [0, ExamplePlant1],
   [1, ExamplePlant1],
   [2, ExamplePlant1],
@@ -158,63 +204,144 @@ const AGES = new Map<number /* Age of the plant */, Plant /* Plant info */>([
   [25, ExamplePlant9],
 ]);
 
-const PLANTS = new Set(AGES.values());
+const PLANTS = new Set(AGE_TO_PLANT.values());
 
-// Custom growth for plants
+/**
+ * Custom growth of the custom plants
+ */
 registerEvent(BlockSpreadEvent, (event) => {
   const block = event.source;
-  if (block.type !== Material.TWISTING_VINES) return;
+  if (block.type !== PLANT_BLOCK) return;
   event.setCancelled(true);
 
-  const oldAgeable = block.blockData as Ageable;
+  const ageable = block.blockData as Ageable;
   const newAgeable = event.newState.blockData as Ageable;
 
-  const oldPlant = AGES.get(oldAgeable.age);
-  if (!oldPlant) return;
-  const newPlant = AGES.get(newAgeable.age);
+  const plant = AGE_TO_PLANT.get(ageable.age);
+  if (!plant) return;
+  const newPlant = AGE_TO_PLANT.get(newAgeable.age);
   if (!newPlant) return;
 
   // Plants are the same, if they have same minAge
-  if (oldPlant.minAge === newPlant.minAge) {
-    oldAgeable.age++;
-    block.blockData = oldAgeable;
-  }
+  if (plant.minAge !== newPlant.minAge) return;
+
+  // If the plant has custom growth rate, modify the growth
+  if (plant.growth && !chanceOf(plant.growth)) return;
+
+  ageable.age++;
+  block.blockData = ageable;
 });
 
-// Prevent regular twisting vines
+/**
+ * Prevent twisting vines items from being placed (removed from the game)
+ */
 registerEvent(BlockPlaceEvent, (event) => {
-  if (event.block.type === Material.TWISTING_VINES) {
+  if (event.block.type === PLANT_BLOCK) {
     event.setCancelled(true);
   }
 });
 
-// Prevent twisting vines items from dropping
+/**
+ * Prevent twisting vines items from dropping (removed from the game)
+ */
 registerEvent(ItemSpawnEvent, (event) => {
-  if (event.entity?.itemStack?.type === Material.TWISTING_VINES)
-    event.setCancelled(true);
+  if (event.entity?.itemStack?.type === PLANT_BLOCK) event.setCancelled(true);
 });
 
-// Place seeds on the fground
-registerEvent(BlockPlaceEvent, (event) => {
-  if (event.itemInHand.type !== VkItem.SEED) return;
-  const seed = event.itemInHand;
-  if (!seed.itemMeta.hasCustomModelData()) return;
-  const modelId = seed.itemMeta.customModelData;
-  if (!modelId) return;
+/**
+ * All blocks where custom plants can be planted
+ */
+const FARMLAND_BLOCKS = new Set([
+  Material.GRASS_BLOCK,
+  Material.DIRT,
+  Material.COARSE_DIRT,
+  Material.GRAVEL,
+]);
 
-  const minAge = getMinAge(event.itemInHand);
+/**
+ * Place seeds on the ground.
+ * Set the age of the twisting vines according to the seeds
+ */
+registerEvent(PlayerInteractEvent, (event) => {
+  if (event.action !== Action.RIGHT_CLICK_BLOCK) return;
+  if (!isCustomSeed(event.item)) return;
+
+  const block = event.clickedBlock;
+  if (!block) return;
+  const plantBlock = block.getRelative(event.blockFace);
+  if (plantBlock.type !== Material.AIR) return;
+  if (!FARMLAND_BLOCKS.has(block.type)) return;
+
+  const minAge = getMinAge(event.item);
   if (minAge === undefined) return;
 
-  event.block.type = Material.TWISTING_VINES;
-  const ageable = event.block.blockData as Ageable;
+  event.setCancelled(true);
+
+  plantBlock.type = PLANT_BLOCK;
+  const ageable = plantBlock.blockData as Ageable;
   ageable.age = minAge;
-  event.block.blockData = ageable;
+  plantBlock.blockData = ageable;
+
+  event.item.amount--;
 });
 
+/**
+ * Prevent player from placing this item as vanilla block (Pumpkin stem)
+ */
+registerEvent(BlockPlaceEvent, (event) => {
+  if (isCustomSeed(event.itemInHand)) {
+    event.setCancelled(true);
+  }
+});
+
+/**
+ * Check if this item is a custom seed item
+ * @param item Item to be checked
+ */
+function isCustomSeed(item: ItemStack | null): item is ItemStack {
+  if (!item) return false;
+  if (item.type !== VkItem.SEED) return false;
+  if (!item.itemMeta.hasCustomModelData()) return false;
+  return item.itemMeta.customModelData > 0;
+}
+
+/**
+ * Gets the age for the twisting vines
+ * @param seeds Seed item
+ */
 function getMinAge(seeds: ItemStack) {
   for (const plant of PLANTS) {
     if (plant.seeds.check(seeds)) {
       return plant.minAge;
     }
+  }
+}
+
+/**
+ * Drop items/seeds of the plant
+ */
+registerEvent(BlockBreakEvent, (event) => {
+  if (event.block.type !== PLANT_BLOCK) return;
+  const age = (event.block.blockData as Ageable).age;
+  const plant = AGE_TO_PLANT.get(age);
+  if (!plant) return;
+  if (age < plant.maxAge) {
+    dropSeeds(plant, event.block);
+    return;
+  } else {
+    dropDrops(plant, event.block);
+    return;
+  }
+});
+
+function dropSeeds(plant: Plant, block: Block) {
+  const dropLoc = block.location.toBlockLocation();
+  block.world.dropItemNaturally(dropLoc, plant.seeds.create());
+}
+
+function dropDrops(plant: Plant, block: Block) {
+  const dropLoc = block.location.toBlockLocation();
+  for (const drop of plant.drops) {
+    block.world.dropItemNaturally(dropLoc, drop);
   }
 }
