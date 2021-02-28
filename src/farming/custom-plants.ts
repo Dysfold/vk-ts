@@ -333,6 +333,7 @@ registerEvent(BlockBreakEvent, (event) => {
   const age = (event.block.blockData as Ageable).age;
   const plant = AGE_TO_PLANT.get(age);
   if (!plant) return;
+  if (event.isCancelled()) return;
   if (age < plant.maxAge) {
     dropSeeds(plant, event.block);
     return;
