@@ -63,9 +63,9 @@ export const ScoopEmpty = new CustomItem({
 });
 
 const BOTTLES = new Map<number, { full: ItemStack; empty: ItemStack }>([
-  [1, { full: WineGlass.create(), empty: WineGlassEmpty.create() }],
-  [2, { full: Mug.create(), empty: MugEmpty.create() }],
-  [3, { full: Scoop.create(), empty: ScoopEmpty.create() }],
+  [1, { full: WineGlass.create({}), empty: WineGlassEmpty.create({}) }],
+  [2, { full: Mug.create({}), empty: MugEmpty.create({}) }],
+  [3, { full: Scoop.create({}), empty: ScoopEmpty.create({}) }],
 ]);
 
 export function canBreak(item: ItemStack): boolean {

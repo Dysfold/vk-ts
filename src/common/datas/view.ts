@@ -1,4 +1,6 @@
 import { DataHolder, DataHolderStorage, dataHolder, DataType } from './holder';
+import { Data } from './yup-utils';
+import { ObjectShape } from 'yup/lib/object';
 
 /**
  * Creates a typed view into a data holder. The view contains values that were
@@ -17,16 +19,16 @@ import { DataHolder, DataHolderStorage, dataHolder, DataType } from './holder';
  * the changes. With autoSave enabled, this causes frequent validations.
  * @returns Typed view into the data holder.
  */
-export function dataView<T extends object>(
+export function dataView<T extends ObjectShape>(
   type: DataType<T>,
   source: DataHolder | DataHolderStorage,
   autoSave = true,
   validateRead = true,
   validateWrite = false,
-): T {
+): Data<T> {
   const holder = source instanceof DataHolder ? source : dataHolder(source);
   const obj: any =
-    holder.get(type.name, type, validateRead) ?? type.schema.default() ?? {};
+    holder.get(type.name, type, validateRead) ?? type.schema.getDefault();
 
   // Define proxy handler
   const handler: ProxyHandler<any> = {} as ProxyHandler<any>;
