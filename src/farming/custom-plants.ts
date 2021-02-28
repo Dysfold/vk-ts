@@ -1,5 +1,5 @@
 import { Material, SoundCategory, GameMode } from 'org.bukkit';
-import { Block } from 'org.bukkit.block';
+import { Block, BlockFace } from 'org.bukkit.block';
 import { Ageable } from 'org.bukkit.block.data';
 import {
   Action,
@@ -270,7 +270,9 @@ registerEvent(PlayerInteractEvent, (event) => {
   if (!block) return;
   const plantBlock = block.getRelative(event.blockFace);
   if (plantBlock.type !== Material.AIR) return;
-  if (!FARMLAND_BLOCKS.has(block.type)) return;
+
+  const ground = plantBlock.getRelative(BlockFace.DOWN);
+  if (!FARMLAND_BLOCKS.has(ground.type)) return;
 
   const minAge = getMinAge(event.item);
   if (minAge === undefined) return;
