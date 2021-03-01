@@ -121,10 +121,6 @@ function removeLike(uuid: string) {
     playerView.count--;
   }
   if (view.playerUuidList.includes(uuid)) return;
-  if (view.playerUuidList.length < 10) {
-    view.playerUuidList.push(uuid);
-    return;
-  }
   if (playerView.count == 0) {
     view.playerUuidList.removeValue(uuid);
   }
