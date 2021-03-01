@@ -1,5 +1,5 @@
 import { DatabaseEntry } from '../common/datas/database';
-import { dataType, dataHolder } from '../common/datas/holder';
+import { dataType } from '../common/datas/holder';
 import { dataView } from '../common/datas/view';
 import * as yup from 'yup';
 import { Bukkit, OfflinePlayer } from 'org.bukkit';
@@ -19,7 +19,7 @@ const PlayerLikes = dataType('playerLikes', {
 });
 
 const view = dataView(
-  playerLikesDataType,
+  LikedPlayers,
   new DatabaseEntry('player-likes', 'player-likes-key'),
 );
 
@@ -48,7 +48,7 @@ function sortLikeList(array: string[]): string[] {
  * Get likes of player
  */
 function getLikes(player: OfflinePlayer): number {
-  const playerView = dataView(playerLikesType, dataHolder(player));
+  const playerView = dataView(PlayerLikes, player);
   return playerView.count;
 }
 
@@ -56,7 +56,7 @@ function getLikes(player: OfflinePlayer): number {
  * Get last time of removed like of player
  */
 function getLikeRemovalTimestamp(player: OfflinePlayer): number {
-  const playerView = dataView(playerLikesType, dataHolder(player));
+  const playerView = dataView(PlayerLikes, player);
   return playerView.lastAutoRemoveDate;
 }
 
@@ -64,7 +64,7 @@ function getLikeRemovalTimestamp(player: OfflinePlayer): number {
  * Set last time of removed like of player
  */
 function setLikeRemovalTimestamp(player: OfflinePlayer): void {
-  const playerView = dataView(playerLikesType, dataHolder(player));
+  const playerView = dataView(PlayerLikes, player);
   playerView.lastAutoRemoveDate = Date.now();
 }
 
@@ -72,7 +72,7 @@ function setLikeRemovalTimestamp(player: OfflinePlayer): void {
  * Get cooldown expiration lastAutoRemoveDate of player
  */
 function getCooldownTimestamp(player: OfflinePlayer): number {
-  const playerView = dataView(playerLikesType, dataHolder(player));
+  const playerView = dataView(PlayerLikes, player);
   return playerView.cooldownEnds;
 }
 
@@ -81,16 +81,17 @@ function getCooldownTimestamp(player: OfflinePlayer): number {
  */
 const COOLDOWN_TIME = 24 * 60 * 60 * 1000;
 function setCooldownTimestamp(player: OfflinePlayer): void {
-  const playerView = dataView(playerLikesType, dataHolder(player));
+  const playerView = dataView(PlayerLikes, player);
   playerView.cooldownEnds = Date.now() + COOLDOWN_TIME;
 }
+
 /*
  * Add like to player
  */
 function addLike(sender: CommandSender, uuid: string) {
   if (!view.playerUuidList) view.playerUuidList = [];
   const player = uuidToOfflinePlayer(uuid);
-  const playerView = dataView(playerLikesType, dataHolder(player));
+  const playerView = dataView(PlayerLikes, player);
   if (!playerView.count || isNaN(playerView.count)) playerView.count = 0;
   playerView.count++;
   sender.sendMessage(`§6Tykkäsit pelaajasta §e${player.name}§6!`);
@@ -115,7 +116,7 @@ function addLike(sender: CommandSender, uuid: string) {
 function removeLike(uuid: string) {
   if (!view.playerUuidList) view.playerUuidList = [];
   const player = uuidToOfflinePlayer(uuid);
-  const playerView = dataView(playerLikesType, dataHolder(player));
+  const playerView = dataView(PlayerLikes, player);
   if (!playerView.count || isNaN(playerView.count)) playerView.count = 0;
   if (playerView.count != 0) {
     playerView.count--;
@@ -191,8 +192,8 @@ registerCommand(
     sender.sendMessage('§6--------------------------------------');
   },
   {
-    permission: 'vk.player-record',
-    description: 'Valtakauden pelaajaennätys',
+    permission: 'vk.like.toplist',
+    description: 'Valtakauden suosituimmat pelaajat',
   },
 );
 
@@ -228,6 +229,7 @@ registerCommand(
           return;
         }
         addLike(sender, player.uniqueId.toString());
+        setCooldownTimestamp(sender);
       }
     }
   },
