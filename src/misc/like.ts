@@ -227,7 +227,7 @@ registerCommand(
       } else if (isAdminAccount(player)) {
         sender.sendMessage('§6Et voi tykätä ylläpitotileistä!');
       } else {
-        if (!player || !player.uniqueId) {
+        if (!player || !player.uniqueId || !player.hasPlayedBefore()) {
           sender.sendMessage('§6Pelaajaa ei löydetty.');
           return;
         }
