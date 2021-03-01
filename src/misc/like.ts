@@ -12,7 +12,7 @@ const LikedPlayers = dataType('likedPlayers', {
   playerUuidList: yup.array().of(yup.string().required()),
 });
 
-const playerLikesType = dataType('playerLikes', {
+const PlayerLikes = dataType('playerLikes', {
   count: yup.number(),
   lastAutoRemoveDate: yup.number(),
   cooldownEnds: yup.number(),
