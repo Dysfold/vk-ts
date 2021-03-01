@@ -8,11 +8,11 @@ import { isAdminAccount } from '../common/helpers/player';
 import { Player } from 'org.bukkit.entity';
 import { CommandSender } from 'org.bukkit.command';
 
-const playerLikesDataType = dataType('playerLikesData', {
+const LikedPlayers = dataType('likedPlayers', {
   playerUuidList: yup.array().of(yup.string().required()),
 });
 
-const playerLikesType = dataType('playerLikes', {
+const PlayerLikes = dataType('playerLikes', {
   count: yup.number(),
   lastAutoRemoveDate: yup.number(),
   cooldownEnds: yup.number(),
@@ -223,7 +223,7 @@ registerCommand(
       } else if (isAdminAccount(player)) {
         sender.sendMessage('§6Et voi tykätä ylläpitotileistä!');
       } else {
-        if (!player || !player.uniqueId) {
+        if (!player || !player.uniqueId || !player.hasPlayedBefore()) {
           sender.sendMessage('§6Pelaajaa ei löydetty.');
           return;
         }
