@@ -6,6 +6,7 @@ import { Bukkit, OfflinePlayer } from 'org.bukkit';
 import { UUID } from 'java.util';
 import { isAdminAccount } from '../common/helpers/player';
 import { Player } from 'org.bukkit.entity';
+import { CommandSender } from 'org.bukkit.command';
 
 const playerLikesDataType = dataType('playerLikesData', {
   playerUuidList: yup.array().of(yup.string().required()),
@@ -37,7 +38,10 @@ function getLiked() {
  * Sort the given list by likes
  */
 function sortLikeList(array: string[]): string[] {
-  return array.sort((a, b) => getLikes(Bukkit.getOfflinePlayer(UUID.fromString(b))) - getLikes(Bukkit.getOfflinePlayer(UUID.fromString(a))));
+  return array.sort(
+    (a, b) =>
+      getLikes(uuidToOfflinePlayer(b)) - getLikes(uuidToOfflinePlayer(a)),
+  );
 }
 
 /*
@@ -83,13 +87,13 @@ function setCooldownTimestamp(player: OfflinePlayer): void {
 /*
  * Add like to player
  */
-function addLike(uuid: string, callback: () => void) {
+function addLike(sender: CommandSender, uuid: string) {
   if (!view.playerUuidList) view.playerUuidList = [];
-  const player = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
+  const player = uuidToOfflinePlayer(uuid);
   const playerView = dataView(playerLikesType, dataHolder(player));
   if (!playerView.count || isNaN(playerView.count)) playerView.count = 0;
   playerView.count++;
-  callback();
+  sender.sendMessage(`§6Tykkäsit pelaajasta §e${player.name}§6!`);
   if (view.playerUuidList.includes(uuid)) return;
   if (view.playerUuidList.length < 10) {
     view.playerUuidList.push(uuid);
@@ -108,32 +112,28 @@ function addLike(uuid: string, callback: () => void) {
 /*
  * Remove like from player
  */
-function removeLike(uuid: string, callback: () => void) {
+function removeLike(uuid: string) {
   if (!view.playerUuidList) view.playerUuidList = [];
-  const player = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
+  const player = uuidToOfflinePlayer(uuid);
   const playerView = dataView(playerLikesType, dataHolder(player));
   if (!playerView.count || isNaN(playerView.count)) playerView.count = 0;
   if (playerView.count != 0) {
     playerView.count--;
   }
-  callback();
   if (view.playerUuidList.includes(uuid)) return;
   if (view.playerUuidList.length < 10) {
     view.playerUuidList.push(uuid);
     return;
   }
-  const lastUUID = view.playerUuidList[view.playerUuidList.length - 1];
-  const lastPlayer: OfflinePlayer = Bukkit.getOfflinePlayer(
-    UUID.fromString(lastUUID),
-  );
-  if (playerView.count > getLikes(lastPlayer)) {
-    view.playerUuidList[view.playerUuidList.length - 1] = uuid;
+  if (playerView.count == 0) {
+    view.playerUuidList.removeValue(uuid);
   }
   view.playerUuidList = sortLikeList(view.playerUuidList);
 }
 
 /**
  * Has it been enough time to decrease likes
+ * @param timestamp The timestamp, if its 24h ago or more return true
  */
 const TIME_TO_DECREASE = 24 * 60 * 60 * 1000;
 function hasTimePassedToDecrease(timestamp: number): boolean {
@@ -142,6 +142,7 @@ function hasTimePassedToDecrease(timestamp: number): boolean {
 
 /**
  * Calculates milliseconds to hours and minutes
+ * @param duration Milliseconds to be converted
  */
 function calculateTime(duration: number) {
   let minutes = Math.floor((duration / (1000 * 60)) % 60),
@@ -153,6 +154,25 @@ function calculateTime(duration: number) {
 }
 
 /**
+ * UUID-string to offlineplayer
+ * @param uuid String UUID
+ */
+function uuidToOfflinePlayer(uuid: string): OfflinePlayer {
+  return Bukkit.getOfflinePlayer(UUID.fromString(uuid));
+}
+/**
+ * Refresh likes/remove one like once a day
+ * @param user String UUID of the liked player
+ */
+function refreshLikesOf(user: string): void {
+  if (
+    hasTimePassedToDecrease(getLikeRemovalTimestamp(uuidToOfflinePlayer(user)))
+  ) {
+    removeLike(user);
+    setLikeRemovalTimestamp(uuidToOfflinePlayer(user));
+  }
+}
+/**
  * Display player record of the server
  */
 registerCommand(
@@ -162,30 +182,14 @@ registerCommand(
     sender.sendMessage('§eValtakauden suosituimmat pelaajat:');
     sender.sendMessage(' ');
     let index = 0;
-    for (const user of getLiked()) {
-      if (!user) continue;
+    for (const uuid of getLiked()) {
+      if (!uuid) continue;
+      const player = uuidToOfflinePlayer(uuid);
       index++;
-      if (
-        hasTimePassedToDecrease(
-          getLikeRemovalTimestamp(
-            Bukkit.getOfflinePlayer(UUID.fromString(user)),
-          ),
-        )
-      ) {
-        removeLike(user, () => {
-          setLikeRemovalTimestamp(
-            Bukkit.getOfflinePlayer(UUID.fromString(user)),
-          );
-          return;
-        });
-      }
-      const name =
-        Bukkit.getOfflinePlayer(UUID.fromString(user))?.name ||
-        'tuntematon pelaaja';
+      refreshLikesOf(uuid);
+      const name = player.name || 'tuntematon pelaaja';
       sender.sendMessage(
-        `§eSijalla §6#${index} §eon ${name}, ${getLikes(
-          Bukkit.getOfflinePlayer(UUID.fromString(user)),
-        )} tykkäystä`,
+        `§eSijalla §6#${index} §eon ${name}, ${getLikes(player)} tykkäystä`,
       );
     }
     sender.sendMessage('§6--------------------------------------');
@@ -207,29 +211,27 @@ registerCommand(
       sender.sendMessage('§6--------------------------------------');
     } else {
       if (!(sender instanceof Player)) return;
-      if (Date.now() < getCooldownTimestamp(sender as Player)) {
+      const senderPlayer = sender as Player;
+      if (Date.now() < getCooldownTimestamp(senderPlayer)) {
         const time = calculateTime(
-          getCooldownTimestamp(sender as Player) - Date.now(),
+          getCooldownTimestamp(senderPlayer) - Date.now(),
         );
         sender.sendMessage(
           `§6Voit tykätä uudelleen ${time.hours} tunnin ja ${time.minutes} minuutin kuluttua`,
         );
         return;
       }
-      if (args[0].toLowerCase() == sender.name.toLowerCase()) {
+      const player = Bukkit.getOfflinePlayer(args[0]);
+      if (sender.name.toLowerCase() === args[0].toLowerCase()) {
         sender.sendMessage('§6Tiedämme jo että pidät itsestäsi!');
-      } else if (isAdminAccount(args[0].toLowerCase())) {
+      } else if (isAdminAccount(player)) {
         sender.sendMessage('§6Et voi tykätä ylläpitotileistä!');
       } else {
-        const player = Bukkit.getOfflinePlayer(args[0]);
         if (!player || !player.uniqueId) {
           sender.sendMessage('§6Pelaajaa ei löydetty.');
           return;
         }
-        addLike(player.uniqueId.toString(), () => {
-          sender.sendMessage(`§6Tykkäsit pelaajasta §e${player.name}§6!`);
-          setCooldownTimestamp(sender as Player);
-        });
+        addLike(sender, player.uniqueId.toString());
       }
     }
   },
