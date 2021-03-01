@@ -18,20 +18,20 @@ const PlayerLikes = dataType('playerLikes', {
   cooldownEnds: yup.number(),
 });
 
-const view = dataView(
+const topPlayers = dataView(
   LikedPlayers,
   new DatabaseEntry('player-likes', 'player-likes-key'),
 );
 
-if (!view.playerUuidList) view.playerUuidList = [];
+if (!topPlayers.playerUuidList) topPlayers.playerUuidList = [];
 
 /**
  * Get shape object of top 10 most liked playerUuidList
  */
 
 function getLiked() {
-  if (!view.playerUuidList || !view.playerUuidList) return [];
-  return sortLikeList(view.playerUuidList);
+  if (!topPlayers.playerUuidList || !topPlayers.playerUuidList) return [];
+  return sortLikeList(topPlayers.playerUuidList);
 }
 
 /**
@@ -89,43 +89,44 @@ function setCooldownTimestamp(player: OfflinePlayer): void {
  * Add like to player
  */
 function addLike(sender: CommandSender, uuid: string) {
-  if (!view.playerUuidList) view.playerUuidList = [];
+  if (!topPlayers.playerUuidList) topPlayers.playerUuidList = [];
   const player = uuidToOfflinePlayer(uuid);
   const playerView = dataView(PlayerLikes, player);
   if (!playerView.count || isNaN(playerView.count)) playerView.count = 0;
   playerView.count++;
   sender.sendMessage(`§6Tykkäsit pelaajasta §e${player.name}§6!`);
-  if (view.playerUuidList.includes(uuid)) return;
-  if (view.playerUuidList.length < 10) {
-    view.playerUuidList.push(uuid);
+  if (topPlayers.playerUuidList.includes(uuid)) return;
+  if (topPlayers.playerUuidList.length < 10) {
+    topPlayers.playerUuidList.push(uuid);
     return;
   }
-  const lastUUID = view.playerUuidList[view.playerUuidList.length - 1];
+  const lastUUID =
+    topPlayers.playerUuidList[topPlayers.playerUuidList.length - 1];
   const lastPlayer: OfflinePlayer = Bukkit.getOfflinePlayer(
     UUID.fromString(lastUUID),
   );
   if (playerView.count > getLikes(lastPlayer)) {
-    view.playerUuidList[view.playerUuidList.length - 1] = uuid;
+    topPlayers.playerUuidList[topPlayers.playerUuidList.length - 1] = uuid;
   }
-  view.playerUuidList = sortLikeList(view.playerUuidList);
+  topPlayers.playerUuidList = sortLikeList(topPlayers.playerUuidList);
 }
 
 /*
  * Remove like from player
  */
 function removeLike(uuid: string) {
-  if (!view.playerUuidList) view.playerUuidList = [];
+  if (!topPlayers.playerUuidList) topPlayers.playerUuidList = [];
   const player = uuidToOfflinePlayer(uuid);
   const playerView = dataView(PlayerLikes, player);
   if (!playerView.count || isNaN(playerView.count)) playerView.count = 0;
   if (playerView.count != 0) {
     playerView.count--;
   }
-  if (view.playerUuidList.includes(uuid)) return;
+  if (topPlayers.playerUuidList.includes(uuid)) return;
   if (playerView.count == 0) {
-    view.playerUuidList.removeValue(uuid);
+    topPlayers.playerUuidList.removeValue(uuid);
   }
-  view.playerUuidList = sortLikeList(view.playerUuidList);
+  topPlayers.playerUuidList = sortLikeList(topPlayers.playerUuidList);
 }
 
 /**
@@ -144,8 +145,8 @@ function hasTimePassedToDecrease(timestamp: number): boolean {
 function calculateTime(duration: number) {
   let minutes = Math.floor((duration / (1000 * 60)) % 60),
     hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
-  hours = hours < 10 ? 0 + hours : hours;
-  minutes = minutes < 10 ? 0 + minutes : minutes;
+  hours = hours < 10 ? hours : hours;
+  minutes = minutes < 10 ? minutes : minutes;
 
   return { hours, minutes };
 }
