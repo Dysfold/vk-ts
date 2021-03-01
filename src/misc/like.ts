@@ -8,7 +8,7 @@ import { isAdminAccount } from '../common/helpers/player';
 import { Player } from 'org.bukkit.entity';
 import { CommandSender } from 'org.bukkit.command';
 
-const playerLikesDataType = dataType('playerLikesData', {
+const LikedPlayers = dataType('likedPlayers', {
   playerUuidList: yup.array().of(yup.string().required()),
 });
 
