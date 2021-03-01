@@ -4,7 +4,7 @@ import { PlayerJoinEvent, PlayerQuitEvent } from 'org.bukkit.event.player';
 const MAX_PLAYERS = Bukkit.server.maxPlayers;
 
 registerEvent(PlayerJoinEvent, (event) => {
-  const name = event.player.displayName;
+  const name = event.player.name;
   const players = Bukkit.server.onlinePlayers.size();
 
   let msg;
@@ -18,7 +18,7 @@ registerEvent(PlayerJoinEvent, (event) => {
 });
 
 registerEvent(PlayerQuitEvent, (event) => {
-  const name = event.player.displayName;
+  const name = event.player.name;
   const players = Bukkit.server.onlinePlayers.size() - 1;
   const msg = `§e${name} poistui. Pelaajia paikalla: §6${players}/${MAX_PLAYERS}`;
   event.quitMessage = msg;
