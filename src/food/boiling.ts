@@ -20,12 +20,13 @@ import { LeatherArmorMeta } from 'org.bukkit.inventory.meta';
 import { ItemSpawnEvent } from 'org.bukkit.event.entity';
 import { VkItem } from '../common/items/VkItem';
 import { EventPriority } from 'org.bukkit.event';
+import { isCustomFood } from './custom-foods';
 
 /**
  * Define ingredient schema
  */
 export const IngredientSchema = yup.object({
-  name: yup.string().required(), // name of the ingredient material
+  name: yup.mixed<string | number>().required(), // name or modelId of the ingredient material
   dateAdded: yup.number().required(), // date when the ingredient was added
   waterTemp: yup.number().required(), // water temperature when the ingredient was added
 });
@@ -86,10 +87,10 @@ export const BrewBucket = new CustomItem({
 });
 
 /**
- * Define ingredient
+ * Define ingredient. Can be indexed by either material name or modelId
  */
 type Ingredient = {
-  [key: string]: IngredientProperties;
+  [x in string | number]: IngredientProperties;
 };
 
 /**
@@ -137,6 +138,14 @@ const INGREDIENTS: Ingredient = {
     description: 'yrttejä',
   },
   WHEAT: { color: DyeColor.YELLOW, description: 'viljaa' },
+  5: {
+    color: DyeColor.YELLOW,
+    description: 'sokeria',
+  },
+  8: {
+    color: DyeColor.BROWN,
+    description: 'suklaata',
+  },
 };
 
 /**
@@ -308,6 +317,15 @@ function setBrewHeatSource(brewItemFrame: ItemFrame, exists: boolean) {
 }
 
 /**
+ * Retrieve ingredient properties for item
+ */
+export function getIngredientProperties(item: ItemStack) {
+  return INGREDIENTS[
+    isCustomFood(item) ? item.itemMeta.customModelData : item.type.toString()
+  ];
+}
+
+/**
  * Handle player interaction with a brew
  */
 Brew.event(
@@ -381,7 +399,8 @@ Brew.event(
       return;
     }
 
-    const properties = INGREDIENTS[item.type.toString()];
+    // Retrieve ingredient properties
+    const properties = getIngredientProperties(item);
 
     // Return if not a valid ingredient
     if (!properties) return;
@@ -394,7 +413,9 @@ Brew.event(
 
     // Add ingredient to brew
     brew.ingredients.push({
-      name: item.type.toString(),
+      name: isCustomFood(item)
+        ? item.itemMeta.customModelData
+        : item.type.toString(),
       dateAdded: Date.now(),
       waterTemp,
     });
