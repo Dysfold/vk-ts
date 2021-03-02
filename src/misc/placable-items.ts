@@ -81,6 +81,8 @@ registerEvent(PlayerInteractEvent, (event) => {
   const location = getClickedLocation(event.player);
   if (!location) return;
 
+  event.setCancelled(true);
+
   if (containsTooManyItems(location)) {
     warnTooManyItems(event.player);
     return;
@@ -88,7 +90,6 @@ registerEvent(PlayerInteractEvent, (event) => {
 
   spawnHolderArmorStand(location, event.item);
   if (event.player.gameMode !== GameMode.CREATIVE) event.item.amount--;
-  event.setCancelled(true);
 });
 
 /**
