@@ -1,9 +1,10 @@
-import { DyeColor, Location, Material, Sound, SoundCategory } from 'org.bukkit';
+import { DyeColor, Location, Material, SoundCategory } from 'org.bukkit';
 import { Levelled } from 'org.bukkit.block.data';
 import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
 import * as yup from 'yup';
 import {
   BlockBreakEvent,
+  BlockFromToEvent,
   BlockPlaceEvent,
   CauldronLevelChangeEvent,
 } from 'org.bukkit.event.block';
@@ -23,12 +24,11 @@ import { EventPriority } from 'org.bukkit.event';
 /**
  * Define ingredient schema
  */
-const IngredientSchema = yup
-  .object({
-    name: yup.string().required(), // name of the ingredient material
-    perished: yup.boolean().optional(), // some ingredients might get ruined by the heat
-  })
-  .required();
+export const IngredientSchema = yup.object({
+  name: yup.string().required(), // name of the ingredient material
+  dateAdded: yup.number().required(), // date when the ingredient was added
+  waterTemp: yup.number().required(), // water temperature when the ingredient was added
+});
 
 /**
  * Brew in a cauldron
@@ -38,7 +38,11 @@ export const Brew = new CustomItem({
   type: VkItem.COLORABLE,
   modelId: 1000,
   data: {
-    ingredients: yup.array().of(IngredientSchema.required()).default([]),
+    ingredients: yup
+      .array()
+      .of(IngredientSchema.required())
+      .default([])
+      .required(), // list of ingredients
     cauldron: yup
       .object({
         x: yup.number().required(),
@@ -46,9 +50,27 @@ export const Brew = new CustomItem({
         z: yup.number().required(),
         worldId: yup.string().required(),
       })
-      .required(),
+      .required(), // location of owning cauldron
+    dateCreated: yup.number().required(), // date when the brew was created
+    heatSource: yup
+      .object({
+        exists: yup.boolean().optional(),
+        since: yup.number().required(),
+        temp: yup.number().required(),
+      })
+      .required(), // current brew heat source
   },
 });
+
+/**
+ * Brew schema for containers.
+ * Can be helpful for future use
+ */
+export const BrewContainerSchema = {
+  ingredients: yup.array().of(IngredientSchema).required(), // list of ingredients
+  date: yup.number().required(), // date when the brew was put into the container
+  temp: yup.number().required(), // brew temperature when the brew was put into the container
+};
 
 /**
  * Brew in a bucket
@@ -59,7 +81,7 @@ export const BrewBucket = new CustomItem({
   modelId: 1,
   name: 'Sotkua',
   data: {
-    ingredients: yup.array().of(IngredientSchema.required()).required(),
+    ...BrewContainerSchema,
   },
 });
 
@@ -76,8 +98,8 @@ type Ingredient = {
 type IngredientProperties = {
   color?: DyeColor; // ingredient effect on the brew color
   description?: string; // short description about the ingredient
-  soluble?: boolean; // ingredient is easily soluble and doesn't require heat to dissolve
-  destroy?: boolean; // ingredient cannot withstand heat
+  /* tempMin?: number; // minimum required temperature to dissolve */
+  tempMax?: number; // the highest temperature the ingredient can withstand
 };
 
 /**
@@ -90,11 +112,11 @@ const INGREDIENTS: Ingredient = {
   SALMON: { color: DyeColor.PINK, description: 'kalaa' },
   TROPICAL_FISH: { color: DyeColor.PINK, description: 'kalaa' },
   PUFFERFISH: { color: DyeColor.PINK, description: 'myrkkyä' },
-  MELON_SLICE: { color: DyeColor.RED, description: 'sokeria', soluble: true },
+  MELON_SLICE: { color: DyeColor.RED, description: 'sokeria' },
   BEEF: { color: DyeColor.RED, description: 'lihaa' },
   CHICKEN: { color: DyeColor.PINK, description: 'lihaa' },
   CARROT: { color: DyeColor.ORANGE, description: 'juureksia' },
-  COCOA_BEANS: { color: DyeColor.BROWN, description: 'kahvia' },
+  COCOA_BEANS: { color: DyeColor.BROWN, description: 'kaakaota' },
   POTATO: { color: DyeColor.YELLOW, description: 'juureksia' },
   RABBIT: { color: DyeColor.RED, description: 'lihaa' },
   MUTTON: { color: DyeColor.RED, description: 'lihaa' },
@@ -104,17 +126,15 @@ const INGREDIENTS: Ingredient = {
   RED_MUSHROOM: { color: DyeColor.BROWN, description: 'myrkkyä' },
   SUGAR_CANE: { color: DyeColor.BROWN, description: 'sokeria' },
   EGG: { description: 'kananmunia' },
-  SUGAR: { color: DyeColor.WHITE, description: 'sokeria', soluble: true },
+  SUGAR: { color: DyeColor.WHITE, description: 'sokeria' },
   NETHER_WART: {
     color: DyeColor.WHITE,
     description: 'hiivaa',
-    soluble: true,
-    destroy: true,
+    tempMax: 50.0,
   },
   TWISTING_VINES: {
     color: DyeColor.GREEN,
     description: 'yrttejä',
-    soluble: true,
   },
   WHEAT: { color: DyeColor.YELLOW, description: 'viljaa' },
 };
@@ -131,10 +151,10 @@ function getItemFramesAt(location: Location) {
 }
 
 /**
- * Create new brew at given block
+ * Create new brew itemframe at given location
  * @param location must be the location of a cauldron
  */
-function spawnBrewItemAt(location: Location) {
+export function spawnBrewItem(location: Location) {
   // Return if the face is obstructed
   if (!getItemFramesAt(location).isEmpty()) return;
 
@@ -168,6 +188,12 @@ function spawnBrewItemAt(location: Location) {
   // Create Brew item
   const itemFrameItem = Brew.create({
     cauldron: locationToObj(location.subtract(0.0, 1.0, 0.0)), // location of the owning cauldron
+    dateCreated: Date.now(),
+    heatSource: {
+      exists: true,
+      since: Date.now(),
+      temp: 20.0, // ? Could biome temperature be used here to get ambient temperature?
+    },
   });
 
   // Set default color
@@ -179,14 +205,12 @@ function spawnBrewItemAt(location: Location) {
 }
 
 /**
- * Attempt to retrieve a existing brew itemstack at given location
+ * Search and retrieve the first found brew itemframe
  * @param location
  */
-export function getBrewItemAt(location: Location): ItemStack | undefined {
-  // Return the first detected brew item
-  for (const entity of getItemFramesAt(location)) {
-    const itemFrame = entity as ItemFrame;
-    if (Brew.check(itemFrame.item)) return itemFrame.item;
+export function getBrewItemFrame(location: Location): ItemFrame | undefined {
+  for (const itemFrame of getItemFramesAt(location)) {
+    if (Brew.check(itemFrame.item)) return itemFrame;
   }
 
   return;
@@ -196,7 +220,7 @@ export function getBrewItemAt(location: Location): ItemStack | undefined {
  * Search and destroy itemframes containing a brew item
  * @param location
  */
-function removeBrewItemFrom(location: Location) {
+function removeBrewItem(location: Location) {
   // Check all detected frames
   for (const entity of getItemFramesAt(location)) {
     if (Brew.check((entity as ItemFrame).item)) entity.remove();
@@ -204,10 +228,13 @@ function removeBrewItemFrom(location: Location) {
 }
 
 /**
- * Check that location has a valid heat source
- * @param location expected to be the location of a cauldron
+ * Check that the given location has a valid heat source
+ * @param location
  */
-function hasHeatSource(location: Location) {
+export function hasValidHeatSource(location: Location): boolean {
+  // Create a clone of location (so we don't modify original)
+  // ? Is there a more clean way to do this
+  location = location.clone();
   return (
     location.subtract(0.0, 1.0, 0.0).block.type === Material.CAMPFIRE ||
     (location.block.type === Material.FIRE &&
@@ -216,7 +243,72 @@ function hasHeatSource(location: Location) {
 }
 
 /**
- * Handle player interaction with a brew cauldron
+ * Check that the location is of a cauldron and it has a valid heat source
+ * @param location expected to be the location of a cauldron
+ */
+export function isValidBrewStation(location: Location): boolean {
+  return (
+    location.block.type == Material.CAULDRON && hasValidHeatSource(location)
+  );
+}
+
+/**
+ * Newton's Law of Cooling. Was used to calculate the time of death, but works fine in here too!
+ * Result is in one decimal precision.
+ * @param time in seconds
+ */
+export function calculateTemp(
+  from: number,
+  to: number,
+  time: number,
+  constant: number,
+): number {
+  return (
+    Math.round((to + (from - to) * Math.pow(Math.E, constant * time)) * 10.0) /
+    10.0
+  );
+}
+
+/**
+ * Water temperature as the function of time
+ * @param time in seconds
+ */
+export function calculateWaterTemp(
+  from: number,
+  to: number,
+  time: number,
+): number {
+  return calculateTemp(from, to, time, -0.035);
+}
+
+/**
+ * Update brew heat source information
+ */
+function setBrewHeatSource(brewItemFrame: ItemFrame, exists: boolean) {
+  const brewItem = brewItemFrame.item;
+
+  const brew = Brew.get(brewItem);
+
+  if (!brew) return;
+
+  // Keep track of temperature
+  const temp = calculateWaterTemp(
+    brew.heatSource.temp,
+    brew.heatSource.exists ? 100.0 : 20.0,
+    (Date.now() - brew.heatSource.since) / 1000.0,
+  );
+
+  brew.heatSource = {
+    exists,
+    since: Date.now(),
+    temp,
+  };
+
+  brewItemFrame.setItem(brewItem, false);
+}
+
+/**
+ * Handle player interaction with a brew
  */
 Brew.event(
   PlayerInteractEntityEvent,
@@ -238,11 +330,31 @@ Brew.event(
 
     if (!brew || !brew.ingredients) return;
 
+    // Calculate current water temperature
+    const waterTemp = calculateWaterTemp(
+      brew.heatSource.temp,
+      brew.heatSource.exists ? 100.0 : 20.0,
+      (Date.now() - brew.heatSource.since) / 1000.0,
+    );
+
     // Describe ingredients if clicked with a empty scoop
     if (ScoopEmpty.check(item)) {
+      let description = '';
+
+      // Different water temperature states
+      if (waterTemp < 21) {
+        description = 'Vesi on haaleaa';
+      } else if (waterTemp > 20 && waterTemp < 41) {
+        description = 'Vesi on lämmintä';
+      } else if (waterTemp > 40 && waterTemp < 96) {
+        description = 'Vesi on kuumaa';
+      } else if (waterTemp > 95) {
+        description = 'Vesi on kiehuvaa';
+      }
+
       // If none ingredients
       if (brew.ingredients.length < 1) {
-        event.player.sendMessage('Padassa on pelkkää vettä');
+        event.player.sendMessage(description);
         return;
       }
 
@@ -252,9 +364,11 @@ Brew.event(
         .filter((value, index, self) => self.indexOf(value) == index); // filter unique
 
       // Join descriptions into one string and replace the last delimiter with 'ja'
-      const description = descriptions.join(', ').replace(/,([^,]*)$/, ' ja$1');
+      description +=
+        ' ja siinä vaikuttaisi olevan ' +
+        descriptions.join(', ').replace(/,([^,]*)$/, ' ja$1');
 
-      event.player.sendMessage(`Seoksessa vaikuttaisi olevan ${description}`);
+      event.player.sendMessage(description);
 
       event.player.world.playSound(
         itemFrame.location,
@@ -272,12 +386,6 @@ Brew.event(
     // Return if not a valid ingredient
     if (!properties) return;
 
-    // Is the cauldron on top of a heat source
-    const isWaterBoiling = hasHeatSource(objToLocation(brew.cauldron));
-
-    // Return if the ingredient is not easily soluble and the water is not boiling
-    if (!properties.soluble && !isWaterBoiling) return;
-
     // Limit ingredient amount
     if (brew.ingredients.length >= 18) {
       event.player.sendMessage('Pata on täysi');
@@ -287,7 +395,8 @@ Brew.event(
     // Add ingredient to brew
     brew.ingredients.push({
       name: item.type.toString(),
-      perished: properties.destroy && isWaterBoiling, // set ingredient perished if it gets destroyed by the heat and the cauldron is on stove
+      dateAdded: Date.now(),
+      waterTemp,
     });
 
     // Update brew color
@@ -360,6 +469,12 @@ Brew.event(
       // Copy ingredients from brew to bucket
       brewBucketItem = BrewBucket.create({
         ingredients: brew.ingredients,
+        date: Date.now(),
+        temp: calculateWaterTemp(
+          brew.heatSource.temp,
+          brew.heatSource.exists ? 100.0 : 20.0,
+          (Date.now() - brew.heatSource.since) / 1000.0,
+        ),
       });
 
       // Set color
@@ -421,7 +536,7 @@ registerEvent(
 );
 
 /**
- * Spawn brew on a full cauldron if a fire is lit under it
+ * Spawn brew on a full cauldron if a valid heat source is created under it
  */
 registerEvent(BlockPlaceEvent, (event) => {
   const block = event.block.getRelative(BlockFace.UP);
@@ -429,26 +544,34 @@ registerEvent(BlockPlaceEvent, (event) => {
   // Check if the block above is a cauldron
   if (block.type != Material.CAULDRON) return;
 
-  // Check if cauldron has a heat source
-  if (!hasHeatSource(block.location)) return;
+  // Check if cauldron has now a valid heat source
+  if (!hasValidHeatSource(block.location)) return;
 
   const data = block.blockData as Levelled;
 
   // Check that the cauldron is full
   if (data.level < data.maximumLevel) return;
 
-  spawnBrewItemAt(block.location.add(0.0, 1.0, 0.0));
+  const brewItemFrame = getBrewItemFrame(block.location.add(0.0, 1.0, 0.0));
+
+  if (brewItemFrame) {
+    setBrewHeatSource(brewItemFrame, true);
+  } else {
+    spawnBrewItem(block.location.add(0.0, 1.0, 0.0));
+  }
 });
 
 /**
  * Spawn a brew on cauldron if it's being filled with water and already has a heat source.
- * Also prevents removing or adding water
+ * Also prevents removing or adding water.
  */
 registerEvent(CauldronLevelChangeEvent, (event) => {
-  const brewItem = getBrewItemAt(event.block.location.add(0.0, 1.0, 0.0));
+  const brewItemFrame = getBrewItemFrame(
+    event.block.location.add(0.0, 1.0, 0.0),
+  );
 
   // Prevent adding or removing water
-  if (brewItem) {
+  if (brewItemFrame) {
     event.setCancelled(true);
     return;
   }
@@ -457,19 +580,49 @@ registerEvent(CauldronLevelChangeEvent, (event) => {
   if (event.newLevel < 3.0) return;
 
   // Check if there's a heat source under cauldron
-  if (!hasHeatSource(event.block.location)) return;
+  if (!hasValidHeatSource(event.block.location)) return;
 
   // Spawn new brew
-  spawnBrewItemAt(event.block.location.add(0.0, 1.0, 0.0));
+  spawnBrewItem(event.block.location.add(0.0, 1.0, 0.0));
 });
 
 /**
- * When a cauldron is broken, search and remove any itemframes containing a brew item
+ * Removes brew itemframes if a cauldron is broken.
+ * Updates heat source information if a heat source is broken.
  */
 registerEvent(BlockBreakEvent, (event) => {
-  if (event.block.type != Material.CAULDRON) return;
+  // Remove possible brew if a cauldron is broken
+  if (event.block.type == Material.CAULDRON) {
+    removeBrewItem(event.block.location.add(0.0, 1.0, 0.0));
+    return;
+  }
 
-  removeBrewItemFrom(event.block.location.add(0.0, 1.0, 0.0));
+  const location = event.block.location.add(0.0, 1.0, 0.0);
+
+  // Check if player broke the heat source of a brewing station
+  if (isValidBrewStation(location)) {
+    const brewItemFrame = getBrewItemFrame(location.add(0.0, 1.0, 0.0));
+
+    if (!brewItemFrame) return;
+
+    setBrewHeatSource(brewItemFrame, false);
+  }
+});
+
+/**
+ * Update heat source information if a other block destroys fire
+ */
+registerEvent(BlockFromToEvent, (event) => {
+  const location = event.toBlock.location.add(0.0, 1.0, 0.0);
+
+  // Check if the facing block acts as a heat source to a brewing station
+  if (!isValidBrewStation(location)) return;
+
+  const brewItemFrame = getBrewItemFrame(location.add(0.0, 1.0, 0.0));
+
+  if (!brewItemFrame) return;
+
+  setBrewHeatSource(brewItemFrame, false);
 });
 
 /**
