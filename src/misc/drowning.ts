@@ -19,4 +19,5 @@ setInterval(() => {
 
 function getWeight(swimmer: Player) {
   const items = swimmer.inventory.contents.length;
+  Bukkit.server.broadcastMessage('ITEMS ' + items);
 }
