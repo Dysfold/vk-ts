@@ -1,4 +1,4 @@
-import { Material, SoundCategory, GameMode } from 'org.bukkit';
+import { GameMode, Material, SoundCategory } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Ageable } from 'org.bukkit.block.data';
 import {
@@ -12,14 +12,17 @@ import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
 import { chanceOf } from '../common/helpers/math';
 import { CustomItem } from '../common/items/CustomItem';
+import { generateLoot, LootDrop } from '../common/items/drops';
 import { VkItem } from '../common/items/VkItem';
 
 interface Plant {
   seeds: CustomItem<{}>;
   minAge: number;
   maxAge: number;
-  drops: ItemStack[];
-  /* From 0 to 1. 1 = always grows, 0 = never grows*/
+  drops: LootDrop<unknown>[];
+  /**
+   * From 0 to 1. 1 = always grows, 0 = never grows
+   */
   growth?: number;
 }
 
@@ -28,62 +31,76 @@ const PLANT_BLOCK = Material.TWISTING_VINES;
 /**
  * Plant 1
  */
-const ExamplePlant1Seeds = new CustomItem({
+const BlueBerryPlantSeeds = new CustomItem({
   id: 1,
   modelId: 1,
   type: VkItem.SEED,
 });
-const ExamplePlant1: Plant = {
-  seeds: ExamplePlant1Seeds,
+const BlueBerryPlant: Plant = {
+  seeds: BlueBerryPlantSeeds,
   minAge: 0,
   maxAge: 2,
-  drops: [ExamplePlant1Seeds.create(), new ItemStack(Material.WHEAT, 2)],
+  drops: [
+    { item: BlueBerryPlantSeeds, rarity: 1, count: 1 },
+    { item: Material.SWEET_BERRIES, rarity: 1, count: 1 },
+    { item: Material.SWEET_BERRIES, rarity: 0.5, count: 1 },
+  ],
   growth: 0.2,
 };
 
 /**
  * Plant 2
  */
-const ExamplePlant2Seeds = new CustomItem({
+const CoffeeBushSeeds = new CustomItem({
   id: 2,
   modelId: 2,
   type: VkItem.SEED,
 });
-const ExamplePlant2: Plant = {
-  seeds: ExamplePlant2Seeds,
+const CoffeeBush: Plant = {
+  seeds: CoffeeBushSeeds,
   minAge: 3,
   maxAge: 5,
-  drops: [ExamplePlant2Seeds.create(), new ItemStack(Material.APPLE, 5)],
+  drops: [
+    { item: CoffeeBushSeeds, rarity: 1, count: 1 },
+    { item: Material.COCOA_BEANS, rarity: 1, count: 4 },
+  ],
 };
 
 /**
  * Plant 3
  */
-const ExamplePlant3Seeds = new CustomItem({
+const TobaccoPlantSeeds = new CustomItem({
   id: 3,
   modelId: 3,
   type: VkItem.SEED,
 });
-const ExamplePlant3: Plant = {
-  seeds: ExamplePlant3Seeds,
+const TobaccoPlant: Plant = {
+  seeds: TobaccoPlantSeeds,
   minAge: 6,
   maxAge: 8,
-  drops: [ExamplePlant3Seeds.create(), new ItemStack(Material.CARROT, 3)],
+  drops: [
+    { item: TobaccoPlantSeeds, rarity: 1, count: 1 },
+    { item: Material.KELP, rarity: 1, count: 4 },
+  ],
 };
 
 /**
  * Plant 4
  */
-const ExamplePlant4Seeds = new CustomItem({
+const HopsPlantSeeds = new CustomItem({
   id: 4,
   modelId: 4,
   type: VkItem.SEED,
 });
-const ExamplePlant4: Plant = {
-  seeds: ExamplePlant4Seeds,
+const HopsPlant: Plant = {
+  seeds: HopsPlantSeeds,
   minAge: 9,
   maxAge: 11,
-  drops: [ExamplePlant4Seeds.create(), new ItemStack(Material.GRASS)],
+  drops: [
+    { item: HopsPlantSeeds, rarity: 1, count: 1 },
+    { item: Material.VINE, rarity: 1, count: 1 },
+    { item: Material.VINE, rarity: 0.6, count: 1 },
+  ],
 };
 
 /**
@@ -98,7 +115,10 @@ const ExamplePlant5: Plant = {
   seeds: ExamplePlant5Seeds,
   minAge: 12,
   maxAge: 14,
-  drops: [ExamplePlant5Seeds.create(), new ItemStack(Material.GRASS)],
+  drops: [
+    { item: ExamplePlant5Seeds, rarity: 1, count: 1 },
+    { item: Material.APPLE, rarity: 1, count: 4 },
+  ],
 };
 
 /**
@@ -113,7 +133,10 @@ const ExamplePlant6: Plant = {
   seeds: ExamplePlant6Seeds,
   minAge: 15,
   maxAge: 17,
-  drops: [ExamplePlant6Seeds.create(), new ItemStack(Material.GRASS)],
+  drops: [
+    { item: ExamplePlant6Seeds, rarity: 1, count: 1 },
+    { item: Material.APPLE, rarity: 1, count: 4 },
+  ],
 };
 
 /**
@@ -128,7 +151,10 @@ const ExamplePlant7: Plant = {
   seeds: ExamplePlant7Seeds,
   minAge: 18,
   maxAge: 20,
-  drops: [ExamplePlant7Seeds.create(), new ItemStack(Material.GRASS)],
+  drops: [
+    { item: ExamplePlant7Seeds, rarity: 1, count: 1 },
+    { item: Material.APPLE, rarity: 1, count: 4 },
+  ],
 };
 
 /**
@@ -143,7 +169,10 @@ const ExamplePlant8: Plant = {
   seeds: ExamplePlant8Seeds,
   minAge: 21,
   maxAge: 25,
-  drops: [ExamplePlant8Seeds.create(), new ItemStack(Material.GRASS)],
+  drops: [
+    { item: ExamplePlant8Seeds, rarity: 1, count: 1 },
+    { item: Material.APPLE, rarity: 1, count: 4 },
+  ],
 };
 
 /**
@@ -158,53 +187,33 @@ const ExamplePlant9: Plant = {
   seeds: ExamplePlant9Seeds,
   minAge: 24,
   maxAge: 25,
-  drops: [ExamplePlant9Seeds.create(), new ItemStack(Material.GRASS)],
+  drops: [
+    { item: ExamplePlant9Seeds, rarity: 1, count: 1 },
+    { item: Material.APPLE, rarity: 1, count: 4 },
+  ],
 };
+
+const PLANTS = new Set([
+  BlueBerryPlant,
+  CoffeeBush,
+  TobaccoPlant,
+  HopsPlant,
+  ExamplePlant5,
+  ExamplePlant6,
+  ExamplePlant7,
+  ExamplePlant8,
+  ExamplePlant9,
+]);
 
 /**
  * Maps the age of the twisting vines to the corresponding plant
  */
-const AGE_TO_PLANT = new Map<
-  number /* Age of the plant */,
-  Plant /* Plant info */
->([
-  [0, ExamplePlant1],
-  [1, ExamplePlant1],
-  [2, ExamplePlant1],
-
-  [3, ExamplePlant2],
-  [4, ExamplePlant2],
-  [5, ExamplePlant2],
-
-  [6, ExamplePlant3],
-  [7, ExamplePlant3],
-  [8, ExamplePlant3],
-
-  [9, ExamplePlant4],
-  [10, ExamplePlant4],
-  [11, ExamplePlant4],
-
-  [12, ExamplePlant5],
-  [13, ExamplePlant5],
-  [14, ExamplePlant5],
-
-  [15, ExamplePlant6],
-  [16, ExamplePlant6],
-  [17, ExamplePlant6],
-
-  [18, ExamplePlant7],
-  [19, ExamplePlant7],
-  [20, ExamplePlant7],
-
-  [21, ExamplePlant8],
-  [22, ExamplePlant8],
-  [23, ExamplePlant8],
-
-  [24, ExamplePlant9],
-  [25, ExamplePlant9],
-]);
-
-const PLANTS = new Set(AGE_TO_PLANT.values());
+const AGE_TO_PLANT = new Map<number, Plant>();
+PLANTS.forEach((plant) => {
+  for (let age = plant.minAge; age <= plant.maxAge; age++) {
+    AGE_TO_PLANT.set(age, plant);
+  }
+});
 
 /**
  * Custom growth of the custom plants
@@ -352,7 +361,8 @@ function dropSeeds(plant: Plant, block: Block) {
 
 function dropDrops(plant: Plant, block: Block) {
   const dropLoc = block.location.toBlockLocation();
-  for (const drop of plant.drops) {
+  const drops = generateLoot(undefined, plant.drops);
+  for (const drop of drops) {
     block.world.dropItemNaturally(dropLoc, drop);
   }
 }
