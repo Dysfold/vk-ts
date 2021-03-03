@@ -4,6 +4,8 @@ import { ItemStack } from 'org.bukkit.inventory';
 import { minMax } from '../common/helpers/math';
 
 // Min weight to start drowning (with minimum force)
+// 1 full row of blocks is ~4600
+// Full inventory of blocks is ~18000
 const MIN_WEIGHT = 7000;
 // Weight for maximum drowning force
 const MAX_WEIGHT = 13000;
@@ -37,7 +39,7 @@ setInterval(() => {
 // Weight for each armor piece player is using
 const WORN_ARMOR_WEIGHT = 64;
 // Weight normal items in inventory
-const ITEM_WEIGHT = 1;
+const ITEM_WEIGHT = 6;
 // Weight blocks items in inventory
 const BLOCK_WEIGHT = 8;
 
@@ -50,6 +52,7 @@ function getWeight(swimmer: Player) {
   swimmer.inventory.armorContents.filter(
     (item) => (weight += item ? WORN_ARMOR_WEIGHT : 0),
   );
+  swimmer.sendMessage('...' + weight);
   return weight;
 }
 
