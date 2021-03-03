@@ -1,7 +1,7 @@
-import { OfflinePlayer } from "org.bukkit";
+import { OfflinePlayer } from 'org.bukkit';
 
 /**
- * @param name Name of the player.
+ * @param player Player to be checked.
  * @returns True of false.
  */
 export function isAdminAccount(player: OfflinePlayer) {

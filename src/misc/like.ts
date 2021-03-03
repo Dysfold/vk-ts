@@ -92,7 +92,7 @@ function addLike(sender: CommandSender, uuid: string) {
   if (!topPlayers.playerUuidList) topPlayers.playerUuidList = [];
   const player = uuidToOfflinePlayer(uuid);
   const playerView = dataView(PlayerLikes, player);
-  if (!playerView.count || isNaN(playerView.count)) playerView.count = 0;
+  if (!playerView.count) playerView.count = 0;
   playerView.count++;
   sender.sendMessage(`§6Tykkäsit pelaajasta §e${player.name}§6!`);
   if (topPlayers.playerUuidList.includes(uuid)) return;
@@ -118,7 +118,7 @@ function removeLike(uuid: string) {
   if (!topPlayers.playerUuidList) topPlayers.playerUuidList = [];
   const player = uuidToOfflinePlayer(uuid);
   const playerView = dataView(PlayerLikes, player);
-  if (!playerView.count || isNaN(playerView.count)) playerView.count = 0;
+  if (!playerView.count) playerView.count = 0;
   if (playerView.count != 0) {
     playerView.count--;
   }
@@ -143,7 +143,7 @@ function hasTimePassedToDecrease(timestamp: number): boolean {
  * @param duration Milliseconds to be converted
  */
 function calculateTime(duration: number) {
-  let minutes = Math.floor((duration / (1000 * 60)) % 60),
+  const minutes = Math.floor((duration / (1000 * 60)) % 60),
     hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
   return { hours, minutes };
 }
