@@ -11,13 +11,21 @@ registerEvent(EntityToggleSwimEvent, (event) => {
 
 setInterval(() => {
   for (const player of Bukkit.server.onlinePlayers) {
-    if (player.isSwimming()) {
-      continue;
+    if (isSwimming(player)) {
+      const weight = getWeight(player);
+      Bukkit.broadcastMessage('W ' + weight);
     }
   }
 }, 2000);
 
 function getWeight(swimmer: Player) {
-  const items = swimmer.inventory.contents.length;
-  Bukkit.server.broadcastMessage('ITEMS ' + items);
+  const items = swimmer.inventory.size;
+  const armorWeight = swimmer.inventory.armorContents.length * 64;
+  Bukkit.broadcastMessage('Items ' + items);
+  Bukkit.broadcastMessage('Armor ' + armorWeight);
+  return items + armorWeight;
+}
+
+function isSwimming(player: Player) {
+  return player.isInWater() && !player.isOnGround();
 }
