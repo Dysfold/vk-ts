@@ -1,4 +1,4 @@
-import { Bukkit } from 'org.bukkit';
+import { Bukkit, GameMode } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { ItemStack } from 'org.bukkit.inventory';
 import { minMax } from '../common/helpers/math';
@@ -61,6 +61,8 @@ function getWeight(swimmer: Player) {
  * @param player Player to be checked
  */
 function isSwimming(player: Player) {
+  if (player.gameMode === GameMode.CREATIVE) return false;
+  if (player.gameMode === GameMode.SPECTATOR) return false;
   return player.isInWater() && !player.isOnGround();
 }
 
