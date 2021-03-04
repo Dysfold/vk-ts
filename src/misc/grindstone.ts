@@ -10,6 +10,7 @@ import {
 } from 'org.bukkit.inventory';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
+import { Result } from 'org.bukkit.event.Event';
 
 const GRINDSTONE_EFFIENCY = 0.1;
 const GRINDSTONE_DURATION = 1; // Seconds
@@ -65,6 +66,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
   if (event.hand !== EquipmentSlot.HAND) return;
   const block = event.clickedBlock;
   if (!block || block.type !== Material.GRINDSTONE) return;
+  if (event.isBlockInHand()) return;
 
   event.setCancelled(true);
 
