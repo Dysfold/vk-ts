@@ -1,8 +1,12 @@
 import { DyeColor, Location, Material, SoundCategory } from 'org.bukkit';
 import { Levelled } from 'org.bukkit.block.data';
-import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
+import {
+  PlayerInteractEntityEvent,
+  PlayerInteractEvent,
+} from 'org.bukkit.event.player';
 import * as yup from 'yup';
 import {
+  Action,
   BlockBreakEvent,
   BlockFromToEvent,
   BlockPlaceEvent,
@@ -20,6 +24,7 @@ import { LeatherArmorMeta } from 'org.bukkit.inventory.meta';
 import { ItemSpawnEvent } from 'org.bukkit.event.entity';
 import { VkItem } from '../common/items/VkItem';
 import { EventPriority } from 'org.bukkit.event';
+import { Campfire } from 'org.bukkit.block.data.type';
 
 /**
  * Ingredient schema
@@ -288,27 +293,17 @@ export function spawnBrewItem(location: Location) {
   if (!getItemFramesAt(location).isEmpty()) return;
 
   // Spawn new itemframe
-  // ? This function states that the entity is created before spawning, but behaves differently (can see the itemframe flicker client side). Bug?
   const itemFrame = location.world.spawnEntity(
     location,
     EntityType.ITEM_FRAME,
     SpawnReason.CUSTOM,
     {
       accept(itemFrame: ItemFrame) {
-        // Face upwards
         itemFrame.setFacingDirection(BlockFace.UP, true);
-
-        // Set invisible
         itemFrame.setVisible(false);
-
-        // Prevent all damage except from creative players
         itemFrame.setInvulnerable(true);
-
-        // Disable interaction
-        itemFrame.setFixed(true);
-
-        // Prevent item from being dropped
         itemFrame.setSilent(true);
+        itemFrame.setFixed(true);
       },
     },
   ) as ItemFrame;
@@ -688,7 +683,8 @@ registerEvent(
 );
 
 /**
- * Spawn brew on a full cauldron if a valid heat source is created under it
+ * Spawn brew on a full cauldron if a valid heat source is created under it.
+ * Also detects if a campfire is extinguished
  */
 registerEvent(BlockPlaceEvent, (event) => {
   const block = event.block.getRelative(BlockFace.UP);
@@ -707,7 +703,14 @@ registerEvent(BlockPlaceEvent, (event) => {
   const brewItemFrame = getBrewItemFrame(block.location.add(0.0, 1.0, 0.0));
 
   if (brewItemFrame) {
-    setBrewHeatSource(brewItemFrame, true);
+    let state = true;
+
+    // Check campfire state
+    if (event.block.type === Material.CAMPFIRE) {
+      state = (event.block.blockData as Campfire).isLit();
+    }
+
+    setBrewHeatSource(brewItemFrame, state);
   } else {
     spawnBrewItem(block.location.add(0.0, 1.0, 0.0));
   }
@@ -768,6 +771,29 @@ registerEvent(BlockFromToEvent, (event) => {
   const location = event.toBlock.location.add(0.0, 1.0, 0.0);
 
   // Check if the facing block acts as a heat source to a brewing station
+  if (!isValidBrewStation(location)) return;
+
+  const brewItemFrame = getBrewItemFrame(location.add(0.0, 1.0, 0.0));
+
+  if (!brewItemFrame) return;
+
+  setBrewHeatSource(brewItemFrame, false);
+});
+
+/**
+ * Update heat source information if a campfire is about to get waterlogged
+ */
+registerEvent(PlayerInteractEvent, (event) => {
+  if (
+    event.action !== Action.RIGHT_CLICK_BLOCK ||
+    event.clickedBlock?.type !== Material.CAMPFIRE
+  )
+    return;
+
+  if (!event.item || event.item.type !== Material.WATER_BUCKET) return;
+
+  const location = event.clickedBlock.location.add(0.0, 1.0, 0.0);
+
   if (!isValidBrewStation(location)) return;
 
   const brewItemFrame = getBrewItemFrame(location.add(0.0, 1.0, 0.0));
