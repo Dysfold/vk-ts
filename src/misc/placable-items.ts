@@ -79,6 +79,7 @@ registerEvent(PlayerInteractEvent, (event) => {
 
   const location = getClickedLocation(event.player);
   if (!location) return;
+  if (!isValidSurface(location.block.getRelative(BlockFace.DOWN))) return;
 
   event.setCancelled(true);
 
@@ -99,7 +100,6 @@ function getClickedLocation(player: Player) {
   const raytrace = player.rayTraceBlocks(4);
   if (!raytrace) return;
   // Additional check for the material
-  if (!isValidSurface(raytrace.hitBlock)) return;
   const position = raytrace.hitPosition;
   return position.toLocation(
     player.world,
