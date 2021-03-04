@@ -49,5 +49,6 @@ require('./tooth-removal');
 require('./horse-armor-items');
 require('./falling-blocks');
 require('./hug');
+require('./placable-items');
 require('./rope');
 require('./like');
