@@ -1,4 +1,4 @@
-import { Location } from 'org.bukkit';
+import { Location, SoundCategory } from 'org.bukkit';
 import { EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
 import {
@@ -160,9 +160,24 @@ Whip.event(
 );
 
 function playWhipSound(location: Location) {
-  location.world.playSound(location, 'custom.whip', 1, 0.8);
+  location.world.playSound(
+    location,
+    'custom.whip',
+    SoundCategory.PLAYERS,
+    1,
+    0.8,
+  );
 }
 
+const HURT_SOUNDS = [
+  'custom.hurt',
+  'custom.hurt',
+  'custom.hurt',
+  'minecraft:entity.player.hurt',
+  'minecraft:entity.player.hurt',
+  'custom.scream',
+];
 function playHurtSound(location: Location) {
-  location.world.playSound(location, 'custom.hurt', 1, 1);
+  const sound = HURT_SOUNDS[Math.floor(Math.random() * HURT_SOUNDS.length)];
+  location.world.playSound(location, sound, SoundCategory.PLAYERS, 1, 1);
 }
