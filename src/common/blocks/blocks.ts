@@ -37,7 +37,10 @@ export function setBlock(
 }
 
 // Purge custom data when players break a block
-registerEvent(BlockBreakEvent, (event) => purgeCustomData(event.block));
+registerEvent(BlockBreakEvent, (event) => {
+  if (event.isCancelled()) return;
+  purgeCustomData(event.block);
+});
 // TODO explosions?
 
 // TODO cleanup function for purging any leftover custom data (if/when bugs happen in prod)

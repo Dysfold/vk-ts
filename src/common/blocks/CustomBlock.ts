@@ -252,6 +252,7 @@ export class CustomBlock<T extends {}> {
       BlockBreakEvent,
       (event) => event.block,
       async (event, block) => {
+        if (event.isCancelled()) return;
         const allowBreak = await callback(event, block);
         if (!allowBreak) {
           event.setCancelled(true); // Don't let player break this block
