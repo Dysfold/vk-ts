@@ -20,19 +20,34 @@ import { LeatherArmorMeta } from 'org.bukkit.inventory.meta';
 import { ItemSpawnEvent } from 'org.bukkit.event.entity';
 import { VkItem } from '../common/items/VkItem';
 import { EventPriority } from 'org.bukkit.event';
-import { isCustomFood } from './custom-foods';
 
 /**
- * Define ingredient schema
+ * Ingredient schema
  */
 export const IngredientSchema = yup.object({
-  name: yup.mixed<string | number>().required(), // name or modelId of the ingredient material
-  dateAdded: yup.number().required(), // date when the ingredient was added
-  waterTemp: yup.number().required(), // water temperature when the ingredient was added
+  /**
+   * Material name
+   */
+  name: yup.string().required(),
+
+  /**
+   * Material modelId for custom items
+   */
+  modelId: yup.number().optional(),
+
+  /**
+   * Date when the ingredient was added
+   */
+  date: yup.number().required(),
+
+  /**
+   * Temperature when the ingredient was added
+   */
+  temp: yup.number().required(),
 });
 
 /**
- * Brew in a cauldron
+ * Brew in a itemframe
  */
 export const Brew = new CustomItem({
   id: 1000,
@@ -43,7 +58,11 @@ export const Brew = new CustomItem({
       .array()
       .of(IngredientSchema.required())
       .default([])
-      .required(), // list of ingredients
+      .required(),
+
+    /**
+     * Location of the owning cauldron
+     */
     cauldron: yup
       .object({
         x: yup.number().required(),
@@ -51,26 +70,62 @@ export const Brew = new CustomItem({
         z: yup.number().required(),
         worldId: yup.string().required(),
       })
-      .required(), // location of owning cauldron
-    dateCreated: yup.number().required(), // date when the brew was created
+      .required(),
+
+    /**
+     * Date when the brew was created
+     */
+    date: yup.number().required(),
+
+    /**
+     * Current heat source information
+     */
     heatSource: yup
       .object({
+        /**
+         * Current state of the heat source.
+         * Indicates is the brew heating up or cooling down
+         */
         exists: yup.boolean().optional(),
+
+        /**
+         * Time since the heat source had changed.
+         * Used to calculate elapsed time for the calculateWaterTemp() function
+         */
         since: yup.number().required(),
+
+        /**
+         * Temperature at the time the heat source changed.
+         * Used as the initial value for the temperature function
+         */
         temp: yup.number().required(),
       })
-      .required(), // current brew heat source
+      .required(),
   },
 });
 
 /**
  * Brew schema for containers.
- * Can be helpful for future use
+ * Other features depending on boiling might find this useful
+ * @see BrewBucket for example
  */
 export const BrewContainerSchema = {
-  ingredients: yup.array().of(IngredientSchema).required(), // list of ingredients
-  date: yup.number().required(), // date when the brew was put into the container
-  temp: yup.number().required(), // brew temperature when the brew was put into the container
+  ingredients: yup.array().of(IngredientSchema).required(),
+
+  /**
+   * Date when the brew was put into this container
+   */
+  date: yup.number().required(),
+
+  /**
+   * Date when the brew was created
+   */
+  brewDate: yup.number().required(),
+
+  /**
+   * Brew temperature when put into this container
+   */
+  temp: yup.number().required(),
 };
 
 /**
@@ -87,28 +142,39 @@ export const BrewBucket = new CustomItem({
 });
 
 /**
- * Define ingredient. Can be indexed by either material name or modelId
+ * Define ingredient.
+ * Each ingredient can have multiple nested ingredients for each modelId
  */
-type Ingredient = {
-  [x in string | number]: IngredientProperties;
+export type Ingredient = {
+  [x in string | number]: Ingredient | IngredientProperties;
 };
 
 /**
  * Define properties for ingredient
  */
-type IngredientProperties = {
-  color?: DyeColor; // ingredient effect on the brew color
-  description?: string; // short description about the ingredient
-  /* tempMin?: number; // minimum required temperature to dissolve */
-  tempMax?: number; // the highest temperature the ingredient can withstand
+export type IngredientProperties = {
+  /**
+   * Ingredient effect on brew color
+   */
+  color?: DyeColor;
+
+  /**
+   * Short description about the ingredient
+   */
+  description?: string;
+
+  /**
+   * The highest temperature the ingredient can withstand
+   */
+  tempMax?: number;
 };
 
 /**
- * Static list of valid ingredients and their properties
+ * Static list of valid ingredients and their properties.
  */
-const INGREDIENTS: Ingredient = {
+export const INGREDIENTS: Ingredient = {
   APPLE: { color: DyeColor.RED, description: 'hedelmiä' },
-  PORKCHOP: { color: DyeColor.PINK, description: 'kalaa' },
+  PORKCHOP: { color: DyeColor.PINK, description: 'lihaa' },
   COD: { color: DyeColor.PINK, description: 'kalaa' },
   SALMON: { color: DyeColor.PINK, description: 'kalaa' },
   TROPICAL_FISH: { color: DyeColor.PINK, description: 'kalaa' },
@@ -138,15 +204,69 @@ const INGREDIENTS: Ingredient = {
     description: 'yrttejä',
   },
   WHEAT: { color: DyeColor.YELLOW, description: 'viljaa' },
-  5: {
-    color: DyeColor.YELLOW,
-    description: 'sokeria',
-  },
-  8: {
-    color: DyeColor.BROWN,
-    description: 'suklaata',
+  POISONOUS_POTATO: {
+    1: {
+      color: DyeColor.YELLOW,
+      description: 'juustoa',
+    },
+    2: {
+      color: DyeColor.BROWN,
+      description: 'lihaa',
+    },
+    5: {
+      color: DyeColor.YELLOW,
+      description: 'sokeria',
+    },
+    6: {
+      color: DyeColor.RED,
+      description: 'lihaa',
+    },
+    8: {
+      color: DyeColor.BROWN,
+      description: 'kaakaota',
+    },
+    19: {
+      color: DyeColor.RED,
+      description: 'hedelmiä',
+    },
+    20: {
+      color: DyeColor.RED,
+      description: 'marjoja',
+    },
+    21: {
+      color: DyeColor.LIME,
+      description: 'hedelmiä',
+    },
+    23: {
+      color: DyeColor.PINK,
+      description: 'lihaa',
+    },
+    26: {
+      color: DyeColor.BLUE,
+      description: 'marjoja',
+    },
+    28: {
+      color: DyeColor.BROWN,
+      description: 'kahvia',
+    },
   },
 };
+
+/**
+ * Retrieve ingredient properties for material
+ * @param name material name
+ * @param modelId for nested ingredients
+ */
+export function getIngredientProperties(
+  name: string,
+  modelId?: number,
+): IngredientProperties | undefined {
+  if (modelId /* && Object.values(VkItem).includes(Material.valueOf(name)) */) {
+    return (INGREDIENTS[name] as Ingredient)[modelId];
+  }
+
+  return INGREDIENTS[name];
+}
 
 /**
  * Return a list of items frames at given location
@@ -168,6 +288,7 @@ export function spawnBrewItem(location: Location) {
   if (!getItemFramesAt(location).isEmpty()) return;
 
   // Spawn new itemframe
+  // ? This function states that the entity is created before spawning, but behaves differently (can see the itemframe flicker client side). Bug?
   const itemFrame = location.world.spawnEntity(
     location,
     EntityType.ITEM_FRAME,
@@ -177,27 +298,25 @@ export function spawnBrewItem(location: Location) {
         // Face upwards
         itemFrame.setFacingDirection(BlockFace.UP, true);
 
+        // Set invisible
+        itemFrame.setVisible(false);
+
         // Prevent all damage except from creative players
         itemFrame.setInvulnerable(true);
 
-        // Disable interaction with the environment
+        // Disable interaction
         itemFrame.setFixed(true);
-
-        //itemFrame.itemDropChance = 0;
 
         // Prevent item from being dropped
         itemFrame.setSilent(true);
-
-        // Set invisible
-        itemFrame.setVisible(false);
       },
     },
   ) as ItemFrame;
 
-  // Create Brew item
+  // Create new brew item
   const itemFrameItem = Brew.create({
-    cauldron: locationToObj(location.subtract(0.0, 1.0, 0.0)), // location of the owning cauldron
-    dateCreated: Date.now(),
+    cauldron: locationToObj(location.subtract(0.0, 1.0, 0.0)),
+    date: Date.now(),
     heatSource: {
       exists: true,
       since: Date.now(),
@@ -317,12 +436,20 @@ function setBrewHeatSource(brewItemFrame: ItemFrame, exists: boolean) {
 }
 
 /**
- * Retrieve ingredient properties for item
+ * Create BrewContainerSchema from Brew
+ * @example BrewBucket.create(createBrewContainer(brew))
  */
-export function getIngredientProperties(item: ItemStack) {
-  return INGREDIENTS[
-    isCustomFood(item) ? item.itemMeta.customModelData : item.type.toString()
-  ];
+export function createBrewContainer(brew: any) {
+  return {
+    ingredients: brew.ingredients,
+    date: Date.now(),
+    brewDate: brew.date,
+    temp: calculateWaterTemp(
+      brew.heatSource.temp,
+      brew.heatSource.exists ? 100.0 : 20.0,
+      (Date.now() - brew.heatSource.since) / 1000.0,
+    ),
+  };
 }
 
 /**
@@ -360,9 +487,9 @@ Brew.event(
       let description = '';
 
       // Different water temperature states
-      if (waterTemp < 21) {
+      if (waterTemp < 25) {
         description = 'Vesi on haaleaa';
-      } else if (waterTemp > 20 && waterTemp < 41) {
+      } else if (waterTemp > 24 && waterTemp < 41) {
         description = 'Vesi on lämmintä';
       } else if (waterTemp > 40 && waterTemp < 96) {
         description = 'Vesi on kuumaa';
@@ -378,8 +505,12 @@ Brew.event(
 
       // Generate descriptions from the ingredients
       const descriptions = brew.ingredients
-        .map((value) => INGREDIENTS[value.name].description) // map descriptions
-        .filter((value, index, self) => self.indexOf(value) == index); // filter unique
+        .map(
+          (ingredient) =>
+            getIngredientProperties(ingredient.name, ingredient.modelId)
+              ?.description,
+        )
+        .filter((ingredient, index, self) => self.indexOf(ingredient) == index);
 
       // Join descriptions into one string and replace the last delimiter with 'ja'
       description +=
@@ -400,10 +531,17 @@ Brew.event(
     }
 
     // Retrieve ingredient properties
-    const properties = getIngredientProperties(item);
+    const properties = getIngredientProperties(
+      item.type.toString(),
+      item.itemMeta.hasCustomModelData()
+        ? item.itemMeta.customModelData
+        : undefined,
+    );
 
     // Return if not a valid ingredient
-    if (!properties) return;
+    // Somehow a custom item with modelId 0 is not undefined even though has no own data. Probably a TS feature because it has nested data.
+    // Prevented by just checking if it has one of the ingredient properties
+    if (!properties || !properties.description) return;
 
     // Limit ingredient amount
     if (brew.ingredients.length >= 18) {
@@ -413,11 +551,12 @@ Brew.event(
 
     // Add ingredient to brew
     brew.ingredients.push({
-      name: isCustomFood(item)
+      name: item.type.toString(),
+      modelId: item.itemMeta.hasCustomModelData()
         ? item.itemMeta.customModelData
-        : item.type.toString(),
-      dateAdded: Date.now(),
-      waterTemp,
+        : undefined,
+      date: Date.now(),
+      temp: waterTemp,
     });
 
     // Update brew color
@@ -453,7 +592,7 @@ Brew.event(
 );
 
 /**
- * Default behaviour for player interaction with a brew.
+ * Puts the brew into a bucket by default.
  * Can be cancelled by some other feature for custom behaviour.
  * Possible cases could be custom foods, drinks, potions etc...
  *
@@ -487,16 +626,8 @@ Brew.event(
 
     // Create new bucket from brew. If brew has no ingredients, create a water bucket instead
     if (brew.ingredients.length > 0) {
-      // Copy ingredients from brew to bucket
-      brewBucketItem = BrewBucket.create({
-        ingredients: brew.ingredients,
-        date: Date.now(),
-        temp: calculateWaterTemp(
-          brew.heatSource.temp,
-          brew.heatSource.exists ? 100.0 : 20.0,
-          (Date.now() - brew.heatSource.since) / 1000.0,
-        ),
-      });
+      // Copy ingredients from brew to brew bucket
+      brewBucketItem = BrewBucket.create(createBrewContainer(brew));
 
       // Set color
       const meta = brewBucketItem.itemMeta as LeatherArmorMeta;
