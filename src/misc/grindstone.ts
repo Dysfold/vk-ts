@@ -10,7 +10,6 @@ import {
 } from 'org.bukkit.inventory';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
-import { Result } from 'org.bukkit.event.Event';
 
 const GRINDSTONE_EFFIENCY = 0.1;
 const GRINDSTONE_DURATION = 1; // Seconds
