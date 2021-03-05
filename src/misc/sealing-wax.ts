@@ -5,7 +5,7 @@ import { BookMeta } from 'org.bukkit.inventory.meta';
 import { isLeftClick } from '../common/helpers/click';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
-import { envelopeWithLetter, envelopeSealed } from './paper-write';
+import { EnvelopeWithLetter, EnvelopeSealed } from './paper-write';
 
 const SealingWax = new CustomItem({
   name: 'Sinettivaha',
@@ -123,7 +123,7 @@ SealingWax.event(
     const envelopeItem = inventory.itemInOffHand;
 
     if (envelopeItem.type !== Material.PAPER) return;
-    const envelope = envelopeWithLetter.get(envelopeItem);
+    const envelope = EnvelopeWithLetter.get(envelopeItem);
     if (!envelope) return;
     if (envelopeItem.amount > wax.amount) {
       event.player.sendActionBar(
@@ -132,7 +132,7 @@ SealingWax.event(
       return;
     }
 
-    const newEnvelope = envelopeSealed.create({ letter: envelope.letter });
+    const newEnvelope = EnvelopeSealed.create({ letter: envelope.letter });
     const itemMeta = newEnvelope.itemMeta;
     // Symbol of the seal is the first character of the wax
     const symbol = wax.itemMeta.hasDisplayName()

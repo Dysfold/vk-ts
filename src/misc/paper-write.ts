@@ -30,7 +30,14 @@ const playersWriting: Player[] = [];
  * 5: Closed/sealed envelope
  */
 
-export const envelopeWithLetter = new CustomItem({
+const Envelope = new CustomItem({
+  id: 3,
+  name: 'Kirjekuori',
+  type: VkItem.PAPER,
+  modelId: 3,
+});
+
+export const EnvelopeWithLetter = new CustomItem({
   id: 4,
   name: 'Kirjekuori',
   type: VkItem.PAPER,
@@ -40,7 +47,7 @@ export const envelopeWithLetter = new CustomItem({
   },
 });
 
-export const envelopeSealed = new CustomItem({
+export const EnvelopeSealed = new CustomItem({
   id: 5,
   name: 'Suljettu Kirjekuori',
   type: VkItem.PAPER,
@@ -158,67 +165,80 @@ GLOBAL_PIPELINE.addHandler('detectWritingPaper', 0, detectWritingPaper);
 /**
  * Put paper inside envelope
  */
+Envelope.event(
+  PlayerInteractEvent,
+  (event) => event.player.inventory.itemInOffHand,
+  async (event) => {
+    if (!isRightClick(event.action)) return;
+    if (event.hand !== EquipmentSlot.HAND) return;
+    if (event.item?.type !== Material.PAPER) return;
+    // Check if player has feather
+    const inventory = event.player.inventory as PlayerInventory;
+    const offHand = inventory.itemInOffHand;
+    if (offHand.type !== Material.PAPER) return;
+    if (offHand.itemMeta.customModelData != 3) return;
+    if (event.item.itemMeta.customModelData != 1) return;
+    if (event.item.amount != 1) return;
+    if (!event.item.itemMeta || !event.item.itemMeta.lore) return;
+    event.player.sendActionBar('§7Laitoit kirjeen kirjekuoreen');
 
-registerEvent(PlayerInteractEvent, async (event) => {
-  if (!isRightClick(event.action)) return;
-  if (event.hand !== EquipmentSlot.HAND) return;
-  if (event.item?.type !== Material.PAPER) return;
-  // Check if player has feather
-  const inventory = event.player.inventory as PlayerInventory;
-  const offHand = inventory.itemInOffHand;
-  if (offHand.type !== Material.PAPER) return;
-  if (offHand.itemMeta.customModelData != 3) return;
-  if (event.item.itemMeta.customModelData != 1) return;
-  if (event.item.amount != 1) return;
-  if (!event.item.itemMeta || !event.item.itemMeta.lore) return;
-  event.player.sendActionBar('§7Laitoit kirjeen kirjekuoreen');
-
-  const envelope = envelopeWithLetter.create({
-    letter: ChatColor.stripColor(event.item.itemMeta.lore[0]),
-  });
-  inventory.itemInMainHand = envelope;
-  inventory.itemInOffHand.amount -= 1;
-});
+    const envelope = EnvelopeWithLetter.create({
+      letter: ChatColor.stripColor(event.item.itemMeta.lore[0]),
+    });
+    inventory.itemInMainHand = envelope;
+    inventory.itemInOffHand.amount -= 1;
+  },
+);
 
 /**
  * Open envelope
  */
-registerEvent(PlayerInteractEvent, async (event) => {
-  if (!isRightClick(event.action)) return;
-  if (event.hand !== EquipmentSlot.HAND) return;
-  if (event.item?.type !== Material.PAPER) return;
-  const inventory = event.player.inventory as PlayerInventory;
-  const offHand = inventory.itemInOffHand;
-  if (offHand.type !== Material.AIR) return;
-  if (!event.player.isSneaking()) return;
-  const notSealed = envelopeWithLetter.get(event.item);
-  const sealed = envelopeSealed.get(event.item);
-  console.log(notSealed);
-  console.log(sealed);
-  let letter;
-  if (notSealed) {
-    letter = new ItemStack(Material.PAPER);
+
+EnvelopeWithLetter.event(
+  PlayerInteractEvent,
+  (event) => event.item,
+  async (event) => {
+    if (!isRightClick(event.action)) return;
+    if (event.hand !== EquipmentSlot.HAND) return;
+    if (event.item?.type !== Material.PAPER) return;
+    const inventory = event.player.inventory as PlayerInventory;
+    const offHand = inventory.itemInOffHand;
+    if (offHand.type !== Material.AIR) return;
+    if (!event.player.isSneaking()) return;
+    const notSealed = EnvelopeWithLetter.get(event.item);
+    if (!notSealed) return;
+    const letter = new ItemStack(Material.PAPER);
     const itemMeta = letter.itemMeta;
     itemMeta.customModelData = 1;
     itemMeta.lore = [`§7${notSealed.letter}`];
     letter.itemMeta = itemMeta;
-    const envelope = new ItemStack(Material.PAPER);
-    const envelopeItemMeta = envelope.itemMeta;
-    envelopeItemMeta.customModelData = 3;
-    envelopeItemMeta.displayName = '§fKirjekuori';
-    envelope.itemMeta = envelopeItemMeta;
-    inventory.itemInOffHand = envelope;
+    inventory.itemInOffHand = Envelope.create();
+    inventory.itemInMainHand = letter;
     event.player.sendActionBar(
       '§7Otat varoivaisesti kirjeen ulos kirjekuoresta',
     );
-  } else if (sealed) {
-    letter = new ItemStack(Material.PAPER);
+  },
+);
+
+EnvelopeSealed.event(
+  PlayerInteractEvent,
+  (event) => event.item,
+  async (event) => {
+    if (!isRightClick(event.action)) return;
+    if (event.hand !== EquipmentSlot.HAND) return;
+    if (event.item?.type !== Material.PAPER) return;
+    const inventory = event.player.inventory as PlayerInventory;
+    const offHand = inventory.itemInOffHand;
+    if (offHand.type !== Material.AIR) return;
+    if (!event.player.isSneaking()) return;
+    const sealed = EnvelopeSealed.get(event.item);
+    if (!sealed) return;
+    const letter = new ItemStack(Material.PAPER);
     const itemMeta = letter.itemMeta;
     itemMeta.customModelData = 1;
     itemMeta.lore = [`§7${sealed.letter}`];
     letter.itemMeta = itemMeta;
-    event.player.sendActionBar('§7Rikot sinetin ja avaat kirjekuoren');
-  }
-  if (!letter) return;
-  inventory.itemInMainHand = letter;
-});
+    inventory.itemInMainHand = letter;
+    event.player.sendActionBar('§7Rikot sinetin ja revit kirjekuoren auki');
+  },
+);
