@@ -5,4 +5,3 @@ require('./Bowl');
 require('./bananas');
 require('./custom-foods');
 require('./mashed-potatoes');
-require('./boiling');
