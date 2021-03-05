@@ -19,4 +19,5 @@ export const VkItem = {
   UNSTACKABLE:  Material.GOLDEN_HORSE_ARMOR,
   COLORABLE:    Material.LEATHER_HORSE_ARMOR,
   SEED:         Material.PUMPKIN_SEEDS,
+  PAPER:        Material.PAPER,
 };
