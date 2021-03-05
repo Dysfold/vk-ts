@@ -21,6 +21,7 @@ import { spawnInvisibleItemFrame } from '../common/helpers/itemframes';
 import { CustomItem } from '../common/items/CustomItem';
 import { Damageable } from 'org.bukkit.inventory.meta';
 import { VkItem } from '../common/items/VkItem';
+import { equippedItem } from '../common/helpers/inventory';
 
 export const Pliers = new CustomItem({
   id: 9,
@@ -312,10 +313,7 @@ Hammer.event(
 
 Hammer.event(
   EntityDamageByEntityEvent,
-  (event) =>
-    event.damager.type === EntityType.PLAYER
-      ? ((event.damager as unknown) as Player).inventory.itemInMainHand
-      : null,
+  (event) => equippedItem(event.damager, EquipmentSlot.HAND),
   async (event) => {
     event.setCancelled(true);
     const entity = event.entity;

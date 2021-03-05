@@ -27,8 +27,8 @@ export function dataView<T extends ObjectShape>(
   validateWrite = false,
 ): Data<T> {
   const holder = source instanceof DataHolder ? source : dataHolder(source);
-  const obj: any =
-    holder.get(type.name, type, validateRead) ?? type.schema.getDefault();
+  const obj =
+    holder.get(type.name, type, validateRead) ?? type.schema.getDefault() ?? {};
 
   // Define proxy handler
   const handler: ProxyHandler<any> = {} as ProxyHandler<any>;
@@ -50,14 +50,15 @@ export function dataView<T extends ObjectShape>(
     };
   } else {
     // Save data to view for saveView
-    obj._self = obj;
-    obj._type = type;
-    obj._holder = holder;
-    obj._validateOnWrite = validateWrite;
+    const objAny: any = obj; // Ignore type safety for a moment...
+    objAny._self = obj;
+    objAny._type = type;
+    objAny._holder = holder;
+    objAny._validateOnWrite = validateWrite;
     // Just mark changed if anything changes
     handler['set'] = function (target, property, value) {
       target[property] = value;
-      obj._changed = true;
+      objAny._changed = true;
       return true;
     };
   }

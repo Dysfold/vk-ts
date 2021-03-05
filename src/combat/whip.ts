@@ -10,6 +10,7 @@ import {
 } from 'org.bukkit.event.player';
 import { EquipmentSlot, PlayerInventory } from 'org.bukkit.inventory';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
+import { equippedItem } from '../common/helpers/inventory';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 
@@ -59,9 +60,7 @@ Whip.event(
 
 Whip.event(
   EntityDamageByEntityEvent,
-  (event) =>
-    (((event.damager as unknown) as Player).inventory as PlayerInventory)
-      .itemInMainHand,
+  (event) => equippedItem(event.damager, EquipmentSlot.HAND),
   async (event) => {
     const player = (event.damager as unknown) as Player;
     if (whipPlayers.has(player)) return;
