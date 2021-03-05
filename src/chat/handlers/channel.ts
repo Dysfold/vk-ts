@@ -1,7 +1,8 @@
 import { style } from 'craftjs-plugin/chat';
+import { detectWritingPaper } from '../../misc/paper-write';
 import { CHAT_CHANNELS } from '../channel';
 import { isChannelIgnored } from '../ignore';
-import { LOCAL_PIPELINE } from '../pipeline';
+import { GLOBAL_PIPELINE, LOCAL_PIPELINE } from '../pipeline';
 import {
   formatChannel,
   formatMessage,
