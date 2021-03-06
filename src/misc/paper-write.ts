@@ -147,7 +147,7 @@ PaperSealed.event(
   },
 );
 
-async function handleMessage(msg: ChatMessage) {
+function handleMessage(msg: ChatMessage) {
   playersWriting.delete(msg.sender);
   const inventory = msg.sender.inventory as PlayerInventory;
   const mainHand = inventory.itemInMainHand;
@@ -195,14 +195,14 @@ async function handleMessage(msg: ChatMessage) {
  * Alternative interface for detecting writing paper hands.
  */
 
-export function detectWritingPaper(msg: ChatMessage) {
+function detectWritingPaper(msg: ChatMessage) {
   if (playersWriting.has(msg.sender)) {
     msg.discard = true;
     handleMessage(msg);
   }
 }
 
-GLOBAL_PIPELINE.addHandler('detectWritingPaper', 0, detectWritingPaper);
+GLOBAL_PIPELINE.addHandler('detectWritingPaper', -1, detectWritingPaper);
 
 /**
  * Put paper inside envelope
@@ -273,8 +273,11 @@ EnvelopeWithLetter.event(
     if (event.item?.type !== Material.PAPER) return;
     const inventory = event.player.inventory as PlayerInventory;
     const offHand = inventory.itemInOffHand;
-    if (offHand.type !== Material.AIR) return;
     if (!event.player.isSneaking()) return;
+    if (offHand.type !== Material.AIR) {
+      event.player.sendActionBar(`§7Toinen kätesi ei ole tyhjä.`);
+      return;
+    }
     const notSealed = EnvelopeWithLetter.get(event.item);
     if (!notSealed) return;
     const letter =
@@ -306,8 +309,11 @@ EnvelopeSealed.event(
     if (event.item?.type !== Material.PAPER) return;
     const inventory = event.player.inventory as PlayerInventory;
     const offHand = inventory.itemInOffHand;
-    if (offHand.type !== Material.AIR) return;
     if (!event.player.isSneaking()) return;
+    if (offHand.type !== Material.AIR) {
+      event.player.sendActionBar(`§7Toinen kätesi ei ole tyhjä.`);
+      return;
+    }
     const sealed = EnvelopeSealed.get(event.item);
     if (!sealed) return;
     const letter = PaperWritten.create();
