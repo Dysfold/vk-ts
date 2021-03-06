@@ -1,4 +1,4 @@
-import { Material, Sound } from 'org.bukkit';
+import { Material, SoundCategory } from 'org.bukkit';
 import {
   EquipmentSlot,
   ItemStack,
@@ -13,12 +13,11 @@ import { ChatMessage, GLOBAL_PIPELINE } from '../chat/pipeline';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 import * as yup from 'yup';
-import { isBuffer } from 'lodash';
 
 // Max length of text.
 const MAX_LENGTH = 128;
 
-const playersWriting: Player[] = [];
+const playersWriting: Set<Player> = new Set<Player>();
 
 /**
  * CustomModelData table of Paper
@@ -30,7 +29,21 @@ const playersWriting: Player[] = [];
  * 5: Closed/sealed envelope
  */
 
-const Envelope = new CustomItem({
+export const PaperWritten = new CustomItem({
+  id: 1,
+  name: 'Paperi',
+  type: VkItem.PAPER,
+  modelId: 1,
+});
+
+export const PaperSealed = new CustomItem({
+  id: 2,
+  name: 'Paperi',
+  type: VkItem.PAPER,
+  modelId: 2,
+});
+
+export const Envelope = new CustomItem({
   id: 3,
   name: 'Kirjekuori',
   type: VkItem.PAPER,
@@ -44,16 +57,18 @@ export const EnvelopeWithLetter = new CustomItem({
   modelId: 4,
   data: {
     letter: yup.string().required(),
+    wax: yup.array().of(yup.string().required()).required(),
   },
 });
 
 export const EnvelopeSealed = new CustomItem({
   id: 5,
-  name: 'Suljettu Kirjekuori',
+  name: 'Kirjekuori',
   type: VkItem.PAPER,
   modelId: 5,
   data: {
     letter: yup.string().required(),
+    wax: yup.array().of(yup.string().required()).required(),
   },
 });
 
@@ -69,7 +84,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
   const inventory = event.player.inventory as PlayerInventory;
   const offHand = inventory.itemInOffHand;
   if (offHand.type !== Material.FEATHER) return;
-  if (playersWriting.includes(event.player)) return;
+  if (playersWriting.has(event.player)) return;
   // Check if the paper already has something written on it
   if (event.item.itemMeta.lore) {
     event.player.sendActionBar('§7Tälle paperille on jo kirjoitettu jotakin.');
@@ -82,34 +97,58 @@ registerEvent(PlayerInteractEvent, async (event) => {
   event.player.sendMessage(
     color(ChatColor.GRAY, text('Kirjoita haluamasi teksti chattiin!')),
   );
-  playersWriting.push(event.player);
+  playersWriting.add(event.player);
 });
 
 /**
  * Reading paper contents
  */
-registerEvent(PlayerInteractEvent, async (event) => {
-  if (!isRightClick(event.action)) return;
-  if (event.hand !== EquipmentSlot.HAND) return;
-  if (event.item?.type !== Material.PAPER) return;
-  // Check if player has feather
-  const inventory = event.player.inventory as PlayerInventory;
-  const offHand = inventory.itemInOffHand;
-  if (offHand.type == Material.FEATHER) return;
-  if (playersWriting.includes(event.player)) return;
-  // Check if the paper already has something written on it
-  if (event.item.itemMeta.customModelData != 1) return;
-  if (event.item.itemMeta.lore) {
-    event.player.sendMessage(text('Paperilla lukee:'));
-    event.player.sendMessage(
-      color(ChatColor.WHITE, text(event.item.itemMeta.lore[0])),
-    );
-    return;
-  }
-});
+PaperWritten.event(
+  PlayerInteractEvent,
+  (event) => event.item,
+  async (event) => {
+    if (!event.item) return;
+    const inventory = event.player.inventory as PlayerInventory;
+    const offHand = inventory.itemInOffHand;
+    if (offHand.type == Material.FEATHER) return;
+    if (playersWriting.has(event.player)) return;
+    // Check if the paper already has something written on it
+    if (event.item.itemMeta.lore) {
+      event.player.sendMessage(text('Paperilla lukee:'));
+      event.player.sendMessage(
+        color(ChatColor.WHITE, text(event.item.itemMeta.lore[0])),
+      );
+    }
+  },
+);
+
+PaperSealed.event(
+  PlayerInteractEvent,
+  (event) => event.item,
+  async (event) => {
+    if (!event.item) return;
+    const inventory = event.player.inventory as PlayerInventory;
+    const offHand = inventory.itemInOffHand;
+    if (offHand.type == Material.FEATHER) return;
+    if (playersWriting.has(event.player)) return;
+    // Check if the paper already has something written on it
+    if (event.item.itemMeta.lore) {
+      event.player.sendMessage(text('Paperilla lukee:'));
+      event.player.sendMessage(
+        color(ChatColor.WHITE, text(event.item.itemMeta.lore[0])),
+      );
+      event.player.sendMessage(
+        color(
+          ChatColor.RED,
+          text(event.item.itemMeta.lore[1] + '' + event.item.itemMeta.lore[2]),
+        ),
+      );
+    }
+  },
+);
 
 async function handleMessage(msg: ChatMessage) {
-  playersWriting.removeValue(msg.sender);
+  playersWriting.delete(msg.sender);
   const inventory = msg.sender.inventory as PlayerInventory;
   const mainHand = inventory.itemInMainHand;
   const offHand = inventory.itemInOffHand;
@@ -132,15 +171,18 @@ async function handleMessage(msg: ChatMessage) {
     );
     return;
   }
-  const itemMeta = mainHand.itemMeta;
+  const letter = PaperWritten.create();
+  letter.amount = mainHand.amount;
+  const itemMeta = letter.itemMeta;
   // Add color to lore
   itemMeta.lore = [`§7${message}`];
-  itemMeta.customModelData = 1;
-  mainHand.itemMeta = itemMeta;
+  letter.itemMeta = itemMeta;
+  inventory.itemInMainHand = letter;
   msg.sender.sendActionBar('§7Kirjoittaminen onnistui!');
   msg.sender.playSound(
     msg.sender.location,
-    Sound.ENTITY_VILLAGER_WORK_CARTOGRAPHER,
+    'entity.villager.work_cartographer',
+    SoundCategory.PLAYERS,
     1,
     1,
   );
@@ -154,7 +196,7 @@ async function handleMessage(msg: ChatMessage) {
  */
 
 export function detectWritingPaper(msg: ChatMessage) {
-  if (playersWriting.includes(msg.sender)) {
+  if (playersWriting.has(msg.sender)) {
     msg.discard = true;
     handleMessage(msg);
   }
@@ -175,18 +217,46 @@ Envelope.event(
     // Check if player has feather
     const inventory = event.player.inventory as PlayerInventory;
     const offHand = inventory.itemInOffHand;
-    if (offHand.type !== Material.PAPER) return;
-    if (offHand.itemMeta.customModelData != 3) return;
-    if (event.item.itemMeta.customModelData != 1) return;
-    if (event.item.amount != 1) return;
-    if (!event.item.itemMeta || !event.item.itemMeta.lore) return;
-    event.player.sendActionBar('§7Laitoit kirjeen kirjekuoreen');
-
-    const envelope = EnvelopeWithLetter.create({
-      letter: ChatColor.stripColor(event.item.itemMeta.lore[0]),
-    });
-    inventory.itemInMainHand = envelope;
-    inventory.itemInOffHand.amount -= 1;
+    const paperWritten = PaperWritten.get(event.item);
+    const paperSealed = PaperSealed.get(event.item);
+    if (paperWritten) {
+      if (event.item.amount > offHand.amount) {
+        event.player.sendActionBar(
+          `Ei tarpeeksi kirjekuoria (${event.item.amount})`,
+        );
+        return;
+      }
+      if (!event.item.itemMeta || !event.item.itemMeta.lore) return;
+      event.player.sendActionBar('§7Laitoit kirjeen kirjekuoreen');
+      const envelope = EnvelopeWithLetter.create({
+        letter: ChatColor.stripColor(event.item.itemMeta.lore[0]),
+        wax: [],
+      });
+      envelope.amount = event.item.amount;
+      inventory.itemInMainHand = envelope;
+      inventory.itemInOffHand.amount -= event.item.amount;
+    } else if (paperSealed) {
+      if (event.item.amount > offHand.amount) {
+        event.player.sendActionBar(
+          `Ei tarpeeksi kirjekuoria (${event.item.amount})`,
+        );
+        return;
+      }
+      if (
+        !event.item.itemMeta ||
+        !event.item.itemMeta.lore ||
+        event.item.itemMeta.lore.length != 3
+      )
+        return;
+      event.player.sendActionBar('§7Laitoit kirjeen kirjekuoreen');
+      const envelope = EnvelopeWithLetter.create({
+        letter: ChatColor.stripColor(event.item.itemMeta.lore[0]),
+        wax: [event.item.itemMeta.lore[1], event.item.itemMeta.lore[2]],
+      });
+      envelope.amount = event.item.amount;
+      inventory.itemInMainHand = envelope;
+      inventory.itemInOffHand.amount -= event.item.amount;
+    }
   },
 );
 
@@ -207,12 +277,19 @@ EnvelopeWithLetter.event(
     if (!event.player.isSneaking()) return;
     const notSealed = EnvelopeWithLetter.get(event.item);
     if (!notSealed) return;
-    const letter = new ItemStack(Material.PAPER);
+    const letter =
+      notSealed.wax.length == 0 ? PaperWritten.create() : PaperSealed.create();
     const itemMeta = letter.itemMeta;
-    itemMeta.customModelData = 1;
-    itemMeta.lore = [`§7${notSealed.letter}`];
+    itemMeta.lore = [
+      `§7${notSealed.letter}`,
+      notSealed.wax[0],
+      notSealed.wax[1],
+    ];
     letter.itemMeta = itemMeta;
-    inventory.itemInOffHand = Envelope.create();
+    letter.amount = event.item.amount;
+    const envelope = Envelope.create();
+    envelope.amount = event.item.amount;
+    inventory.itemInOffHand = envelope;
     inventory.itemInMainHand = letter;
     event.player.sendActionBar(
       '§7Otat varoivaisesti kirjeen ulos kirjekuoresta',
@@ -233,10 +310,10 @@ EnvelopeSealed.event(
     if (!event.player.isSneaking()) return;
     const sealed = EnvelopeSealed.get(event.item);
     if (!sealed) return;
-    const letter = new ItemStack(Material.PAPER);
+    const letter = PaperWritten.create();
+    letter.amount = event.item.amount;
     const itemMeta = letter.itemMeta;
-    itemMeta.customModelData = 1;
-    itemMeta.lore = [`§7${sealed.letter}`];
+    itemMeta.lore = [`§7${sealed.letter}`, sealed.wax[0], sealed.wax[1]];
     letter.itemMeta = itemMeta;
     inventory.itemInMainHand = letter;
     event.player.sendActionBar('§7Rikot sinetin ja revit kirjekuoren auki');

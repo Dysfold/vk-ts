@@ -5,7 +5,7 @@ import { BookMeta } from 'org.bukkit.inventory.meta';
 import { isLeftClick } from '../common/helpers/click';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
-import { EnvelopeWithLetter, EnvelopeSealed } from './paper-write';
+import { EnvelopeWithLetter, EnvelopeSealed, PaperWritten, PaperSealed, Envelope } from './paper-write';
 
 const SealingWax = new CustomItem({
   name: 'Sinettivaha',
@@ -75,11 +75,9 @@ SealingWax.event(
     if (!wax) return;
 
     const paper = inventory.itemInOffHand;
-
-    if (paper.type !== Material.PAPER) return;
+    const letter = PaperWritten.get(paper);
+    if (!letter) return;
     const itemMeta = paper.itemMeta;
-    if (!itemMeta.hasCustomModelData()) return;
-    if (itemMeta.hasCustomModelData() && itemMeta.customModelData == 2) return;
     if (!itemMeta.lore) return;
     if (paper.amount > wax.amount) {
       event.player.sendActionBar(`Ei tarpeeksi sinettivahaa (${paper.amount})`);
@@ -97,9 +95,12 @@ SealingWax.event(
     if (symbol) lore.push(`johon on painettu symboli "${symbol}". `);
     else lore.push('jossa ei ole mitään merkintää. ');
 
-    itemMeta.lore = lore;
-    itemMeta.customModelData = 2;
-    paper.itemMeta = itemMeta;
+    const sealedLetter = PaperSealed.create();
+    sealedLetter.amount = paper.amount;
+    const sealedLetterItemMeta = sealedLetter.itemMeta;
+    sealedLetterItemMeta.lore = lore;
+    sealedLetter.itemMeta = sealedLetterItemMeta;
+    inventory.itemInOffHand = sealedLetter;
     event.setCancelled(true);
     wax.amount -= paper.amount;
   },
@@ -121,8 +122,6 @@ SealingWax.event(
     if (!wax) return;
 
     const envelopeItem = inventory.itemInOffHand;
-
-    if (envelopeItem.type !== Material.PAPER) return;
     const envelope = EnvelopeWithLetter.get(envelopeItem);
     if (!envelope) return;
     if (envelopeItem.amount > wax.amount) {
@@ -132,7 +131,10 @@ SealingWax.event(
       return;
     }
 
-    const newEnvelope = EnvelopeSealed.create({ letter: envelope.letter });
+    const newEnvelope = EnvelopeSealed.create({
+      letter: envelope.letter,
+      wax: envelope.wax,
+    });
     const itemMeta = newEnvelope.itemMeta;
     // Symbol of the seal is the first character of the wax
     const symbol = wax.itemMeta.hasDisplayName()
@@ -147,6 +149,7 @@ SealingWax.event(
 
     itemMeta.lore = lore;
     newEnvelope.itemMeta = itemMeta;
+    newEnvelope.amount = inventory.itemInOffHand.amount;
     inventory.itemInOffHand = newEnvelope;
     event.setCancelled(true);
     wax.amount -= envelopeItem.amount;
