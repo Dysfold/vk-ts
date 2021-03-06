@@ -14,7 +14,9 @@ import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 import * as yup from 'yup';
 
-// Max length of text.
+/**
+ * Max length of text.
+ */
 const MAX_LENGTH = 128;
 
 const playersWriting: Set<Player> = new Set<Player>();
