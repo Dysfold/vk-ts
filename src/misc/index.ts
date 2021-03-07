@@ -52,3 +52,4 @@ require('./hug');
 require('./placable-items');
 require('./rope');
 require('./like');
+require('./paper-write');
