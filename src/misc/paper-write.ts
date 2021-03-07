@@ -275,7 +275,12 @@ EnvelopeWithLetter.event(
     if (event.item?.type !== Material.PAPER) return;
     const inventory = event.player.inventory as PlayerInventory;
     const offHand = inventory.itemInOffHand;
-    if (!event.player.isSneaking()) return;
+    if (!event.player.isSneaking()) {
+      event.player.sendActionBar(
+        `§7Avaa kirjekuori oikeaklikkaamalla sitä kyykyssä!`,
+      );
+      return;
+    }
     if (offHand.type !== Material.AIR) {
       event.player.sendActionBar(`§7Toinen kätesi ei ole tyhjä.`);
       return;
@@ -314,7 +319,12 @@ EnvelopeSealed.event(
     if (event.hand !== EquipmentSlot.HAND) return;
     if (event.item?.type !== Material.PAPER) return;
     const inventory = event.player.inventory as PlayerInventory;
-    if (!event.player.isSneaking()) return;
+    if (!event.player.isSneaking()) {
+      event.player.sendActionBar(
+        `§7Avaa kirjekuori oikeaklikkaamalla sitä kyykyssä!`,
+      );
+      return;
+    }
     const sealed = EnvelopeSealed.get(event.item);
     if (!sealed) return;
     const letter =
