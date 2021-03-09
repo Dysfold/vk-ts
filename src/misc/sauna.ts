@@ -29,15 +29,16 @@ registerEvent(PlayerInteractEvent, async (event) => {
 });
 
 function playSaunaEffects(block: Block) {
-  const location = block.location.add(0.5, 1, 0.5);
+  const location = block.location.add(0.5, 0.8, 0.5);
   block.world.playSound(location, Sound.BLOCK_FIRE_EXTINGUISH, 1, 1);
-  for (let i = 0; i < 5; i++)
+  for (let i = 0; i < 20; i++) {
     block.world.spawnParticle(
       Particle.CLOUD,
       location,
       0,
-      0,
-      Math.random() * 0.1,
-      0,
+      Math.random() * 0.1 - 0.05,
+      Math.random() * 0.15, // Y
+      Math.random() * 0.1 - 0.05,
     );
+  }
 }
