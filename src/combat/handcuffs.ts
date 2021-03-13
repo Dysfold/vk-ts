@@ -16,7 +16,7 @@ import {
 import { EquipmentSlot } from 'org.bukkit.inventory';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import * as yup from 'yup';
-import { giveItem } from '../common/helpers/inventory';
+import { equippedItem, giveItem } from '../common/helpers/inventory';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 
@@ -230,7 +230,7 @@ LockedHandcuffs.event(
 // Prevent handcuffed player from attacking
 LockedHandcuffs.event(
   EntityDamageByEntityEvent,
-  (event) => ((event.damager as unknown) as Player).inventory.itemInOffHand,
+  (event) => equippedItem(event.damager, EquipmentSlot.OFF_HAND),
   async (event) => {
     ((event.damager as unknown) as Player).sendActionBar(
       'Et voi tehdä näin kahlittuna',

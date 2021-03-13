@@ -52,7 +52,7 @@ registerCommand(
 );
 
 registerCommand(
-  'smokeBomb',
+  'smokebomb',
   (sender) => {
     if (!(sender instanceof Player)) return;
     const player = sender as Player;
