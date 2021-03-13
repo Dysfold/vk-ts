@@ -15,7 +15,7 @@ const bottleMeta = BOTTLE.itemMeta as PotionMeta;
 bottleMeta.basePotionData = new PotionData(PotionType.WATER);
 BOTTLE.itemMeta = bottleMeta;
 
-const MUG = Mug.create();
+const MUG = Mug.create({});
 const mugMeta = MUG.itemMeta as PotionMeta;
 mugMeta.basePotionData = new PotionData(PotionType.WATER);
 MUG.itemMeta = mugMeta;
@@ -29,7 +29,7 @@ const FlatCap = new CustomItem({
 
 const ITEMS = [
   // First item is going to be placed on the main hand
-  FlatCap.create(),
+  FlatCap.create({}),
   new ItemStack(Material.COOKED_BEEF, 10),
   BOTTLE,
   MUG,

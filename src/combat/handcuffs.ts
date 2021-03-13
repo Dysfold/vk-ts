@@ -16,7 +16,7 @@ import {
 import { EquipmentSlot } from 'org.bukkit.inventory';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import * as yup from 'yup';
-import { giveItem } from '../common/helpers/inventory';
+import { equippedItem, giveItem } from '../common/helpers/inventory';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 
@@ -38,7 +38,7 @@ const Handcuffs = new CustomItem({
   type: VkItem.MISC,
   modelId: 2,
 });
-const HandcuffsItem = Handcuffs.create();
+const HandcuffsItem = Handcuffs.create({});
 
 export const LockedHandcuffs = new CustomItem({
   id: 3,
@@ -90,7 +90,7 @@ Handcuffs.event(
     // Add locked handcuffs to both hands
     const keycode = handcuffs.itemMeta.displayName;
     captiveInventory.itemInOffHand = LockedHandcuffs.create({ key: keycode });
-    captiveInventory.itemInMainHand = LockedHandcuffs.create(); // Mainhand handcuffs are only for visuals
+    captiveInventory.itemInMainHand = LockedHandcuffs.create({}); // Mainhand handcuffs are only for visuals
     handcuffs.amount -= 1;
 
     // Give player back the previous items from hands
@@ -143,7 +143,7 @@ function removeHandcuffs(from: Player, to: Player) {
   if (!(handcuffs?.key === keycode)) return false;
 
   // Remove Handcuffs
-  const openedHandcuffs = Handcuffs.create();
+  const openedHandcuffs = Handcuffs.create({});
   const meta = openedHandcuffs.itemMeta;
   // TODO: Make used handcuffs stackable with new ones
   //   Data:
@@ -230,7 +230,7 @@ LockedHandcuffs.event(
 // Prevent handcuffed player from attacking
 LockedHandcuffs.event(
   EntityDamageByEntityEvent,
-  (event) => ((event.damager as unknown) as Player).inventory.itemInOffHand,
+  (event) => equippedItem(event.damager, EquipmentSlot.OFF_HAND),
   async (event) => {
     ((event.damager as unknown) as Player).sendActionBar(
       'Et voi tehdä näin kahlittuna',

@@ -5,7 +5,12 @@ import { BookMeta } from 'org.bukkit.inventory.meta';
 import { isLeftClick } from '../common/helpers/click';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
-import { EnvelopeWithLetter, EnvelopeSealed, PaperWritten, PaperSealed, Envelope } from './paper-write';
+import {
+  EnvelopeWithLetter,
+  EnvelopeSealed,
+  PaperWritten,
+  PaperSealed,
+} from './paper-write';
 
 const SealingWax = new CustomItem({
   name: 'Sinettivaha',
@@ -95,7 +100,7 @@ SealingWax.event(
     if (symbol) lore.push(`johon on painettu symboli "${symbol}". `);
     else lore.push('jossa ei ole mitään merkintää. ');
 
-    const sealedLetter = PaperSealed.create();
+    const sealedLetter = PaperSealed.create({});
     sealedLetter.amount = paper.amount;
     const sealedLetterItemMeta = sealedLetter.itemMeta;
     sealedLetterItemMeta.lore = lore;

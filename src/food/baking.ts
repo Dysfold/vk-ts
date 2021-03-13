@@ -66,7 +66,7 @@ const RECIPES = [
   {
     dough: DOUGH_BREAD,
     doughRisen: DOUGH_BREAD_RISEN,
-    result: DOUGH_BREAD_ITEM.create(),
+    result: DOUGH_BREAD_ITEM.create({}),
     ingredients: [
       Material.PHANTOM_MEMBRANE,
       Material.NETHER_WART,
@@ -77,7 +77,7 @@ const RECIPES = [
   {
     dough: DOUGH_PUMPKIN_PIE,
     doughRisen: DOUGH_PUMPKIN_PIE,
-    result: DOUGH_PUMPKIN_PIE_ITEM.create(),
+    result: DOUGH_PUMPKIN_PIE_ITEM.create({}),
     ingredients: [
       Material.PUMPKIN,
       Material.SUGAR,
@@ -88,7 +88,7 @@ const RECIPES = [
   {
     dough: DOUGH_COOKIE,
     doughRisen: DOUGH_COOKIE,
-    result: DOUGH_COOKIE_ITEM.create(),
+    result: DOUGH_COOKIE_ITEM.create({}),
     ingredients: [
       Material.PHANTOM_MEMBRANE,
       Material.SUGAR,
@@ -233,13 +233,13 @@ function bake(block: Block) {
       const frame = spawnInvisibleItemFrame(
         block.getRelative(BlockFace.DOWN),
         BlockFace.UP,
-        recipe.dough.create(),
+        recipe.dough.create({}),
       );
       if (!frame) return;
       if (recipe.risingTime && recipe.doughRisen) {
         risingDoughs.set(frame, {
           seconds: recipe.risingTime,
-          risen: recipe.doughRisen.create(),
+          risen: recipe.doughRisen.create({}),
         });
       }
       break;

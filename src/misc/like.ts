@@ -13,7 +13,7 @@ const LikedPlayers = dataType('likedPlayers', {
 });
 
 const PlayerLikes = dataType('playerLikes', {
-  count: yup.number(),
+  count: yup.number().default(0),
   lastAutoRemoveDate: yup.number(),
   cooldownEnds: yup.number(),
 });
@@ -57,7 +57,7 @@ function getLikes(player: OfflinePlayer): number {
  */
 function getLikeRemovalTimestamp(player: OfflinePlayer): number {
   const playerView = dataView(PlayerLikes, player);
-  return playerView.lastAutoRemoveDate;
+  return playerView.lastAutoRemoveDate ?? -1;
 }
 
 /*
@@ -73,7 +73,7 @@ function setLikeRemovalTimestamp(player: OfflinePlayer): void {
  */
 function getCooldownTimestamp(player: OfflinePlayer): number {
   const playerView = dataView(PlayerLikes, player);
-  return playerView.cooldownEnds;
+  return playerView.cooldownEnds ?? -1;
 }
 
 /*

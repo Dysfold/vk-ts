@@ -7,7 +7,7 @@ import { UUID } from 'java.util';
 import { PlayerJoinEvent } from 'org.bukkit.event.player';
 
 const playerRecordData = dataType('playerRecordData', {
-  playerUUID: yup.string(),
+  playerUUID: yup.string().required(),
   count: yup.number().required().default(0),
   time: yup.number().required().default(0),
 });

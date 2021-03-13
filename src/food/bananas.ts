@@ -17,7 +17,7 @@ registerEvent(LeavesDecayEvent, (event) => {
   if (type !== Material.JUNGLE_LEAVES) return;
   if (Math.random() > BANANA_CHANCE) return;
 
-  const item = Banana.create();
+  const item = Banana.create({});
   const block = event.block;
 
   block.world.dropItem(block.location.add(0.5, 0.5, 0.5), item);

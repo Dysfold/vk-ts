@@ -41,7 +41,7 @@ const BlueBerryPlant: Plant = {
   minAge: 0,
   maxAge: 2,
   drops: [
-    { item: BlueBerryPlantSeeds, rarity: 1, count: 1 },
+    { item: BlueBerryPlantSeeds.create({}), rarity: 1, count: 1 },
     { item: Material.SWEET_BERRIES, rarity: 1, count: 1 },
     { item: Material.SWEET_BERRIES, rarity: 0.5, count: 1 },
   ],
@@ -61,7 +61,7 @@ const CoffeeBush: Plant = {
   minAge: 3,
   maxAge: 5,
   drops: [
-    { item: CoffeeBushSeeds, rarity: 1, count: 1 },
+    { item: CoffeeBushSeeds.create({}), rarity: 1, count: 1 },
     { item: Material.COCOA_BEANS, rarity: 1, count: 4 },
   ],
 };
@@ -79,7 +79,7 @@ const TobaccoPlant: Plant = {
   minAge: 6,
   maxAge: 8,
   drops: [
-    { item: TobaccoPlantSeeds, rarity: 1, count: 1 },
+    { item: TobaccoPlantSeeds.create({}), rarity: 1, count: 1 },
     { item: Material.KELP, rarity: 1, count: 4 },
   ],
 };
@@ -97,7 +97,7 @@ const HopsPlant: Plant = {
   minAge: 9,
   maxAge: 11,
   drops: [
-    { item: HopsPlantSeeds, rarity: 1, count: 1 },
+    { item: HopsPlantSeeds.create({}), rarity: 1, count: 1 },
     { item: Material.VINE, rarity: 1, count: 1 },
     { item: Material.VINE, rarity: 0.6, count: 1 },
   ],
@@ -116,7 +116,7 @@ const ExamplePlant5: Plant = {
   minAge: 12,
   maxAge: 14,
   drops: [
-    { item: ExamplePlant5Seeds, rarity: 1, count: 1 },
+    { item: ExamplePlant5Seeds.create({}), rarity: 1, count: 1 },
     { item: Material.APPLE, rarity: 1, count: 4 },
   ],
 };
@@ -134,7 +134,7 @@ const ExamplePlant6: Plant = {
   minAge: 15,
   maxAge: 17,
   drops: [
-    { item: ExamplePlant6Seeds, rarity: 1, count: 1 },
+    { item: ExamplePlant6Seeds.create({}), rarity: 1, count: 1 },
     { item: Material.APPLE, rarity: 1, count: 4 },
   ],
 };
@@ -152,7 +152,7 @@ const ExamplePlant7: Plant = {
   minAge: 18,
   maxAge: 20,
   drops: [
-    { item: ExamplePlant7Seeds, rarity: 1, count: 1 },
+    { item: ExamplePlant7Seeds.create({}), rarity: 1, count: 1 },
     { item: Material.APPLE, rarity: 1, count: 4 },
   ],
 };
@@ -170,7 +170,7 @@ const ExamplePlant8: Plant = {
   minAge: 21,
   maxAge: 25,
   drops: [
-    { item: ExamplePlant8Seeds, rarity: 1, count: 1 },
+    { item: ExamplePlant8Seeds.create({}), rarity: 1, count: 1 },
     { item: Material.APPLE, rarity: 1, count: 4 },
   ],
 };
@@ -188,7 +188,7 @@ const ExamplePlant9: Plant = {
   minAge: 24,
   maxAge: 25,
   drops: [
-    { item: ExamplePlant9Seeds, rarity: 1, count: 1 },
+    { item: ExamplePlant9Seeds.create({}), rarity: 1, count: 1 },
     { item: Material.APPLE, rarity: 1, count: 4 },
   ],
 };
@@ -356,7 +356,7 @@ registerEvent(BlockBreakEvent, (event) => {
 
 function dropSeeds(plant: Plant, block: Block) {
   const dropLoc = block.location.toBlockLocation();
-  block.world.dropItemNaturally(dropLoc, plant.seeds.create());
+  block.world.dropItemNaturally(dropLoc, plant.seeds.create({}));
 }
 
 function dropDrops(plant: Plant, block: Block) {

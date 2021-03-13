@@ -173,7 +173,7 @@ function handleMessage(msg: ChatMessage) {
     );
     return;
   }
-  const letter = PaperWritten.create();
+  const letter = PaperWritten.create({});
   letter.amount = mainHand.amount;
   const itemMeta = letter.itemMeta;
   // Add color to lore
@@ -283,7 +283,9 @@ EnvelopeWithLetter.event(
     const notSealed = EnvelopeWithLetter.get(event.item);
     if (!notSealed) return;
     const letter =
-      notSealed.wax.length == 0 ? PaperWritten.create() : PaperSealed.create();
+      notSealed.wax.length == 0
+        ? PaperWritten.create({})
+        : PaperSealed.create({});
     const itemMeta = letter.itemMeta;
     itemMeta.lore = [
       `§7${notSealed.letter}`,
@@ -292,7 +294,7 @@ EnvelopeWithLetter.event(
     ];
     letter.itemMeta = itemMeta;
     letter.amount = event.item.amount;
-    const envelope = Envelope.create();
+    const envelope = Envelope.create({});
     envelope.amount = event.item.amount;
     inventory.itemInOffHand = envelope;
     inventory.itemInMainHand = letter;
@@ -318,7 +320,7 @@ EnvelopeSealed.event(
     }
     const sealed = EnvelopeSealed.get(event.item);
     if (!sealed) return;
-    const letter = PaperWritten.create();
+    const letter = PaperWritten.create({});
     letter.amount = event.item.amount;
     const itemMeta = letter.itemMeta;
     itemMeta.lore = [`§7${sealed.letter}`, sealed.wax[0], sealed.wax[1]];
