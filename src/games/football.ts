@@ -21,7 +21,7 @@ const Football = new CustomItem({
   type: Material.SNOWBALL,
   modelId: 3,
 });
-const FootballItemStack = Football.create();
+const FootballItemStack = Football.create({});
 
 // Player can pick up the football by clicking on the ground with empty hand
 registerEvent(PlayerInteractEvent, (event) => {

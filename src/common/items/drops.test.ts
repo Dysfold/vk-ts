@@ -1,8 +1,8 @@
-import { test } from 'zora';
 import { CustomItem } from './CustomItem';
 import { Material } from 'org.bukkit';
 import { generateLoot } from './drops';
 import { ItemStack } from 'org.bukkit.inventory';
+import { test } from 'craftjs-plugin';
 
 const TestItem = new CustomItem({
   id: 0,
@@ -11,7 +11,7 @@ const TestItem = new CustomItem({
 
 test('Loot drops generate correctly', (t) => {
   const items = generateLoot(undefined, [
-    { item: TestItem, rarity: 1, count: 1 },
+    { item: TestItem.create({}), rarity: 1, count: 1 },
     { item: Material.STONE, rarity: 1, count: 129 },
     { item: new ItemStack(Material.STONE_BRICKS), rarity: 1, count: 2 },
   ]);

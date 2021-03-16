@@ -10,6 +10,8 @@ import { ItemMeta } from 'org.bukkit.inventory.meta';
 import { DatabaseEntry, getTable } from './database';
 import { Block } from 'org.bukkit.block';
 import { Table } from 'craftjs-plugin';
+import { ObjectShape } from 'yup/lib/object';
+import { Data, PartialData } from './yup-utils';
 
 /**
  * A custom data holder.
@@ -22,11 +24,11 @@ export abstract class DataHolder {
    * @param validateSchema If yup schema should be validated before returning.
    * @returns Object of given type or null.
    */
-  abstract get<T extends object>(
+  abstract get<T extends ObjectShape>(
     key: string,
     type: DataType<T>,
     validateSchema?: boolean,
-  ): T | null;
+  ): Data<T> | null;
 
   /**
    * Gets a boolean.
@@ -61,10 +63,10 @@ export abstract class DataHolder {
    * @param validateSchema If yup schema should be validated before setting.
    * Defaults to true.
    */
-  abstract set<T extends object>(
+  abstract set<T extends ObjectShape>(
     key: string,
     type: DataType<T>,
-    value: T,
+    value: PartialData<T> | Data<T>,
     validateSchema?: boolean,
   ): void;
 
@@ -104,7 +106,7 @@ export abstract class DataHolder {
 /**
  * Describes type of held data, in case it is not a class.
  */
-export interface DataType<T extends object> {
+export interface DataType<T extends ObjectShape> {
   /**
    * Type name.
    */
@@ -116,11 +118,11 @@ export interface DataType<T extends object> {
   schema: yup.ObjectSchema<T>;
 }
 
-export function dataType<T extends object>(
+export function dataType<T extends ObjectShape>(
   name: string,
-  schema: yup.ObjectSchemaDefinition<T>,
+  schema: T | undefined,
 ): DataType<T> {
-  return { name: name, schema: yup.object(schema) as yup.ObjectSchema<T> };
+  return { name: name, schema: yup.object(schema) };
 }
 
 /**
@@ -130,7 +132,8 @@ export type DataHolderStorage =
   | PersistentDataHolder
   | DatabaseEntry
   | ItemStack
-  | Block;
+  | Block
+  | OfflinePlayer;
 
 /**
  * Creates a persistent data holder backed by given storage.
@@ -166,24 +169,23 @@ function locationToString(location: Location) {
   return `${location.x},${location.y},${location.z}`;
 }
 
-function fromJson<T extends object>(
+function fromJson<T extends ObjectShape>(
   type: DataType<T>,
   json: string | null,
   validateSchema: boolean,
-): T | null {
+): Data<T> | null {
   if (json == null) {
     return null;
   }
   // Assign to default data from schema
   const schema = type.schema;
-  const obj = schema.default();
+  const obj = schema.getDefault();
   Object.assign(obj, JSON.parse(json));
 
   // Validate schema if requested
   if (validateSchema) {
-    const schema: yup.ObjectSchema = (type as any).schema;
     if (schema != undefined) {
-      schema.validateSync(obj);
+      return schema.validateSync(obj);
     } else {
       // Asked to validate, but couldn't do that
       console.warn(`Missing schema for ${type.name}`);
@@ -193,16 +195,16 @@ function fromJson<T extends object>(
   return obj;
 }
 
-function toJson<T extends object>(
+function toJson<T extends ObjectShape>(
   type: DataType<T>,
-  data: T,
+  data: PartialData<T>,
   validateSchema: boolean,
 ): string {
   // If asked, validate schema before creating JSON
   if (validateSchema) {
     const schema = type.schema;
     if (schema != undefined) {
-      schema.validateSync(data);
+      data = schema.validateSync(data);
     } else {
       // Asked to validate, but couldn't do that
       console.warn(`Missing schema for ${type.name}`);
@@ -270,7 +272,13 @@ class BukkitHolder extends DataHolder {
         this.container.set(containerKey, PersistentDataType.INTEGER, value);
         break;
       case 'number':
-        this.container.set(containerKey, PersistentDataType.DOUBLE, value);
+        this.container.set(
+          containerKey,
+          PersistentDataType.DOUBLE,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore: Interop API not exposed yet (CraftJS#44)
+          __interop.toDouble(value),
+        );
         break;
       case 'string':
         this.container.set(containerKey, PersistentDataType.STRING, value);

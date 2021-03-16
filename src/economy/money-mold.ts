@@ -148,28 +148,28 @@ interface Coin {
 
 const CURRENCY_ITEMS: { [id: string]: Coin[] } = {
   1: [
-    { item: COIN_A_0_01.create(), amount: 10, value: 0.01 },
-    { item: COIN_A_0_1.create(), amount: 10, value: 0.1 },
-    { item: COIN_A_1.create(), amount: 10, value: 1 },
-    { item: COIN_A_10.create(), amount: 10, value: 10 },
-    { item: COIN_A_100.create(), amount: 10, value: 100 },
-    { item: COIN_A_1000.create(), amount: 10, value: 1000 },
+    { item: COIN_A_0_01.create({}), amount: 10, value: 0.01 },
+    { item: COIN_A_0_1.create({}), amount: 10, value: 0.1 },
+    { item: COIN_A_1.create({}), amount: 10, value: 1 },
+    { item: COIN_A_10.create({}), amount: 10, value: 10 },
+    { item: COIN_A_100.create({}), amount: 10, value: 100 },
+    { item: COIN_A_1000.create({}), amount: 10, value: 1000 },
   ],
   2: [
-    { item: COIN_B_0_01.create(), amount: 10, value: 0.01 },
-    { item: COIN_B_0_1.create(), amount: 10, value: 0.1 },
-    { item: COIN_B_1.create(), amount: 10, value: 1 },
-    { item: COIN_B_10.create(), amount: 10, value: 10 },
-    { item: COIN_B_100.create(), amount: 10, value: 100 },
-    { item: COIN_B_1000.create(), amount: 10, value: 1000 },
+    { item: COIN_B_0_01.create({}), amount: 10, value: 0.01 },
+    { item: COIN_B_0_1.create({}), amount: 10, value: 0.1 },
+    { item: COIN_B_1.create({}), amount: 10, value: 1 },
+    { item: COIN_B_10.create({}), amount: 10, value: 10 },
+    { item: COIN_B_100.create({}), amount: 10, value: 100 },
+    { item: COIN_B_1000.create({}), amount: 10, value: 1000 },
   ],
   3: [
-    { item: COIN_C_0_01.create(), amount: 10, value: 0.01 },
-    { item: COIN_C_0_1.create(), amount: 10, value: 0.1 },
-    { item: COIN_C_1.create(), amount: 10, value: 1 },
-    { item: COIN_C_10.create(), amount: 10, value: 10 },
-    { item: COIN_C_100.create(), amount: 10, value: 100 },
-    { item: COIN_C_1000.create(), amount: 10, value: 1000 },
+    { item: COIN_C_0_01.create({}), amount: 10, value: 0.01 },
+    { item: COIN_C_0_1.create({}), amount: 10, value: 0.1 },
+    { item: COIN_C_1.create({}), amount: 10, value: 1 },
+    { item: COIN_C_10.create({}), amount: 10, value: 10 },
+    { item: COIN_C_100.create({}), amount: 10, value: 100 },
+    { item: COIN_C_1000.create({}), amount: 10, value: 1000 },
   ],
 };
 
@@ -284,7 +284,7 @@ registerCommand('rahamuotti', (sender, label, args) => {
 
   if (!unitPlural || !subunitPlural || !Number(model)) return;
 
-  const item = MoneyMold.create();
+  const item = MoneyMold.create({});
   const meta = item.itemMeta;
   const lore = [
     unitPlural.slice(0, -1),

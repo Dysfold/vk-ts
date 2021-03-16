@@ -6,7 +6,7 @@ import { DriedTobacco } from '../../misc/pipe';
 furnaceRecipe({
   key: 'hand_grindstone',
   input: Material.ANDESITE,
-  result: HandGrindstone.create(),
+  result: HandGrindstone.create({}),
   seconds: 10,
   furnaces: ['smelting', 'blasting'],
 });
@@ -14,7 +14,7 @@ furnaceRecipe({
 furnaceRecipe({
   key: 'dried_tobacco',
   input: Material.BEETROOT,
-  result: DriedTobacco.create(),
+  result: DriedTobacco.create({}),
   seconds: 30,
   furnaces: ['smelting', 'smoking'],
 });

@@ -17,7 +17,7 @@ const BowlItem = new CustomItem({
 Bowl.onBreak(async (event) => {
   event.block.world.dropItem(
     event.block.location.add(0.5, 0.5, 0.5),
-    BowlItem.create(),
+    BowlItem.create({}),
   );
   const entities = event.block.world.getNearbyEntities(
     event.block.location.add(0.5, 0, 0.5),

@@ -5,3 +5,5 @@ require('./crop-growth');
 require('./bonemeal');
 require('./hops');
 require('./coconut');
+require('./custom-plants');
+require('./custom-cactus');

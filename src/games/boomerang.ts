@@ -29,7 +29,7 @@ Boomerang.event(
   (event) => (event.entity instanceof Snowball ? event.entity.item : null),
   async (event) => {
     if (!(event.entity instanceof Snowball)) return;
-    event.entity.item = BoomerangSpin.create();
+    event.entity.item = BoomerangSpin.create({});
     await wait(0.2, 'seconds');
     flyingBoomerangs.add(event.entity);
     event.entity.velocity = event.entity.velocity.multiply(1.5);
@@ -56,7 +56,7 @@ Boomerang.event(
   (event) => (event.entity instanceof Snowball ? event.entity.item : null),
   async (event) => {
     if (!(event.entity instanceof Snowball)) return;
-    event.entity.item = BoomerangSpin.create();
+    event.entity.item = BoomerangSpin.create({});
     await wait(0.2, 'seconds');
     flyingBoomerangs.add(event.entity);
     event.entity.velocity = event.entity.velocity.multiply(1.5);
@@ -71,7 +71,7 @@ BoomerangSpin.event(
     if (!(entity instanceof Snowball)) return;
     if (!entity.isValid()) return;
     entity.remove();
-    entity.world.dropItemNaturally(entity.location, Boomerang.create());
+    entity.world.dropItemNaturally(entity.location, Boomerang.create({}));
   },
 );
 
@@ -85,7 +85,7 @@ BoomerangSpin.event(
     entity.remove();
     if (event.collidedWith instanceof Player) {
       // Player catches the boomerang
-      giveItem(event.collidedWith, Boomerang.create());
+      giveItem(event.collidedWith, Boomerang.create({}));
       entity.world.playSound(
         entity.location,
         Sound.BLOCK_WOOD_PLACE,
@@ -94,7 +94,7 @@ BoomerangSpin.event(
         2,
       );
     } else {
-      entity.world.dropItemNaturally(entity.location, Boomerang.create());
+      entity.world.dropItemNaturally(entity.location, Boomerang.create({}));
     }
   },
 );

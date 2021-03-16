@@ -31,7 +31,7 @@ registerCommand(
         name: name,
       });
 
-      player.inventory.addItem(item.create());
+      player.inventory.addItem(item.create({}));
     }
   },
   {
