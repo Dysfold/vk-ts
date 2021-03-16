@@ -230,7 +230,7 @@ Envelope.event(
       }
       if (!event.item.itemMeta || !event.item.itemMeta.lore) return;
       event.player.sendActionBar('§7Laitoit kirjeen kirjekuoreen');
-      const envelope = EnvelopeWithLetter.create({
+      const envelope = EnvelopeWithLetter.creMutta kylate({
         letter: ChatColor.stripColor(event.item.itemMeta.lore[0]),
         wax: [],
       });
@@ -275,7 +275,12 @@ EnvelopeWithLetter.event(
     if (event.item?.type !== Material.PAPER) return;
     const inventory = event.player.inventory as PlayerInventory;
     const offHand = inventory.itemInOffHand;
-    if (!event.player.isSneaking()) return;
+    if (!event.player.isSneaking()) {
+      event.player.sendActionBar(
+        `§7Avaa kirjekuori oikeaklikkaamalla sitä kyykyssä!`,
+      );
+      return;
+    }
     if (offHand.type !== Material.AIR) {
       event.player.sendActionBar(`§7Toinen kätesi ei ole tyhjä.`);
       return;
@@ -287,11 +292,15 @@ EnvelopeWithLetter.event(
         ? PaperWritten.create({})
         : PaperSealed.create({});
     const itemMeta = letter.itemMeta;
-    itemMeta.lore = [
-      `§7${notSealed.letter}`,
-      notSealed.wax[0],
-      notSealed.wax[1],
-    ];
+    if (notSealed.wax.length == 2) {
+      itemMeta.lore = [
+        `§7${notSealed.letter}`,
+        notSealed.wax[0],
+        notSealed.wax[1],
+      ];
+    } else {
+      itemMeta.lore = [`§7${notSealed.letter}`];
+    }
     letter.itemMeta = itemMeta;
     letter.amount = event.item.amount;
     const envelope = Envelope.create({});
@@ -312,18 +321,23 @@ EnvelopeSealed.event(
     if (event.hand !== EquipmentSlot.HAND) return;
     if (event.item?.type !== Material.PAPER) return;
     const inventory = event.player.inventory as PlayerInventory;
-    const offHand = inventory.itemInOffHand;
-    if (!event.player.isSneaking()) return;
-    if (offHand.type !== Material.AIR) {
-      event.player.sendActionBar(`§7Toinen kätesi ei ole tyhjä.`);
+    if (!event.player.isSneaking()) {
+      event.player.sendActionBar(
+        `§7Avaa kirjekuori oikeaklikkaamalla sitä kyykyssä!`,
+      );
       return;
     }
     const sealed = EnvelopeSealed.get(event.item);
     if (!sealed) return;
-    const letter = PaperWritten.create({});
+    const letter =
+      sealed.wax.length == 0 ? PaperWritten.create() : PaperSealed.create();
     letter.amount = event.item.amount;
     const itemMeta = letter.itemMeta;
-    itemMeta.lore = [`§7${sealed.letter}`, sealed.wax[0], sealed.wax[1]];
+    if (sealed.wax.length == 2) {
+      itemMeta.lore = [`§7${sealed.letter}`, sealed.wax[0], sealed.wax[1]];
+    } else {
+      itemMeta.lore = [`§7${sealed.letter}`];
+    }
     letter.itemMeta = itemMeta;
     inventory.itemInMainHand = letter;
     event.player.sendActionBar('§7Rikot sinetin ja revit kirjekuoren auki');
