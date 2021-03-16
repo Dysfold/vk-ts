@@ -65,6 +65,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
   if (event.hand !== EquipmentSlot.HAND) return;
   const block = event.clickedBlock;
   if (!block || block.type !== Material.GRINDSTONE) return;
+  if (event.isBlockInHand()) return;
 
   event.setCancelled(true);
 
