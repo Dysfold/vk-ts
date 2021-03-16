@@ -125,8 +125,9 @@ export class CustomItem<T extends ObjectShape> {
    * Create an ItemStack representing this CustomItem instance.
    * @param data If specified, this is the data that the created item
    * will have. If not, the default data will be used.
+   * @param amount Initial size of the created item stack.
    */
-  create(data: PartialData<T>) {
+  create(data: PartialData<T>, amount = 1): ItemStack {
     const item = new ItemStack(this.options.type);
     const meta = item.itemMeta;
     const holder = dataHolder(meta);
@@ -158,6 +159,11 @@ export class CustomItem<T extends ObjectShape> {
         item,
         defaultData ?? this.dataType.schema.validateSync(data),
       );
+    }
+
+    // Don't overwrite stack size set by create() unless necessary
+    if (amount != 1) {
+      item.amount = amount;
     }
     return item;
   }

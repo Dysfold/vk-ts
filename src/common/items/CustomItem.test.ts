@@ -113,7 +113,21 @@ test('CustomItem method overriding', (t) => {
     item.amount,
     3,
     'CustomItem.create() overloading changes the output of CustomItem.create()',
+    // and does not unnecessarily mess with amount
   );
 
   t.falsy(TestItem3.check(item), 'CustomItem.check() overloading should work');
+});
+
+test('CustomItem custom amount', (t) => {
+  t.eq(
+    TestItem.create({}, 42).amount,
+    42,
+    'CustomItem.create() properly sets custom amount',
+  );
+  t.eq(
+    TestItem.create({}).amount,
+    1,
+    'CustomItem.create() defaults to stack of 1',
+  );
 });
