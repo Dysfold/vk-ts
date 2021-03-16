@@ -18,7 +18,7 @@ const CoconutItem = new CustomItem({
  * Drop 2 coconut items
  */
 CoconutBlock.onBreak(async (event) => {
-  const drop = CoconutItem.create();
+  const drop = CoconutItem.create({});
   drop.amount = 2;
   event.block.world.dropItem(event.block.location.add(0.5, 0.5, 0.5), drop);
   return true;
