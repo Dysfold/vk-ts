@@ -21,6 +21,7 @@ import { spawnInvisibleItemFrame } from '../common/helpers/itemframes';
 import { CustomItem } from '../common/items/CustomItem';
 import { Damageable } from 'org.bukkit.inventory.meta';
 import { VkItem } from '../common/items/VkItem';
+import { equippedItem } from '../common/helpers/inventory';
 
 export const Pliers = new CustomItem({
   id: 9,
@@ -127,7 +128,7 @@ function getPliersForItem(item: ItemStack): ItemStack | undefined {
   let pliers = undefined;
   PLIERS_ITEMS.forEach((value, key) => {
     if (value.check(item)) {
-      pliers = key.create();
+      pliers = key.create({});
     }
   });
   return pliers;
@@ -135,11 +136,11 @@ function getPliersForItem(item: ItemStack): ItemStack | undefined {
 
 // Iron ingot can form into these items
 const IRON_INGOT_DERIVATIVES = new Map<CustomItem<{}>, ItemStack>([
-  [HotIronBar, PliersAndIronBar.create()],
-  [HotIronBlade, PliersAndIronBlade.create()],
-  [HotIronIngot, PliersAndIronIngot.create()],
-  [HotIronPlate, PliersAndIronPlate.create()],
-  [HotIronStick, PliersAndIronStick.create()],
+  [HotIronBar, PliersAndIronBar.create({})],
+  [HotIronBlade, PliersAndIronBlade.create({})],
+  [HotIronIngot, PliersAndIronIngot.create({})],
+  [HotIronPlate, PliersAndIronPlate.create({})],
+  [HotIronStick, PliersAndIronStick.create({})],
 ]);
 const IRON_INGOT_DERIVATIVES_ARRAY = Array.from(IRON_INGOT_DERIVATIVES.keys());
 
@@ -192,7 +193,7 @@ Pliers.event(
 
     itemInOtherHand.amount--;
     // Keep the original damage of the pliers
-    const pliers = copyDamage(event.item, pliersWithItem.create());
+    const pliers = copyDamage(event.item, pliersWithItem.create({}));
     if (hand === EquipmentSlot.HAND) {
       inventory.itemInMainHand = pliers;
     } else {
@@ -234,7 +235,7 @@ registerEvent(PlayerInteractEvent, (event) => {
       // Place hot iron on the anvil
       const anvil = event.clickedBlock;
       if (!anvil) return;
-      const smeltedItem = smelted.create();
+      const smeltedItem = smelted.create({});
       const meta = smeltedItem.itemMeta;
       meta.displayName = ''; // Displayname would hover on top of the itemframe
       smeltedItem.itemMeta = meta;
@@ -244,7 +245,7 @@ registerEvent(PlayerInteractEvent, (event) => {
 
       // Give player empty pliers
       // Keep the original damage of the pliers
-      const emptyPliers = copyDamage(tool, Pliers.create());
+      const emptyPliers = copyDamage(tool, Pliers.create({}));
       if (event.hand === EquipmentSlot.HAND) {
         event.player.inventory.itemInMainHand = emptyPliers;
       } else {
@@ -274,7 +275,7 @@ async function hammerHit(frame: ItemFrame, player: Player) {
   IRON_INGOT_DERIVATIVES_ARRAY.forEach((iron, index) => {
     if (iron.check(item)) {
       const nextIndex = (index + 1) % IRON_INGOT_DERIVATIVES_ARRAY.length;
-      newIronItem = IRON_INGOT_DERIVATIVES_ARRAY[nextIndex].create();
+      newIronItem = IRON_INGOT_DERIVATIVES_ARRAY[nextIndex].create({});
 
       // Hide nametag from the item
       const meta = newIronItem.itemMeta;
@@ -312,10 +313,7 @@ Hammer.event(
 
 Hammer.event(
   EntityDamageByEntityEvent,
-  (event) =>
-    event.damager.type === EntityType.PLAYER
-      ? ((event.damager as unknown) as Player).inventory.itemInMainHand
-      : null,
+  (event) => equippedItem(event.damager, EquipmentSlot.HAND),
   async (event) => {
     event.setCancelled(true);
     const entity = event.entity;
@@ -457,10 +455,10 @@ PLIERS_ITEMS.forEach((iron, plier) => {
       const pliersInHand = event.player.inventory.itemInMainHand;
       event.player.inventory.itemInMainHand = copyDamage(
         pliersInHand,
-        Pliers.create(),
+        Pliers.create({}),
       );
 
-      const ironItem = iron.create();
+      const ironItem = iron.create({});
       if (event.player.inventory.addItem(ironItem).size()) {
         event.player.world.dropItem(event.player.location, ironItem);
       }

@@ -57,7 +57,7 @@ registerEvent(PlayerDropItemEvent, (event) => {
   const amount = item.amount;
 
   const face = Math.ceil(Math.random() * 6);
-  event.itemDrop.itemStack = DICES[face - 1].create();
+  event.itemDrop.itemStack = DICES[face - 1].create({});
   event.itemDrop.itemStack.amount = amount;
   event.itemDrop.pickupDelay = PICKUP_DELAY * 20;
 

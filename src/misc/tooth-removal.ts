@@ -34,7 +34,7 @@ Pliers.event(
     victim.damage(2);
     const tooth = victim.world.dropItemNaturally(
       victim.location.add(0, 1, 0),
-      Tooth.create(),
+      Tooth.create({}),
     );
     const velocity = victim.location.direction;
     velocity.y = 0;

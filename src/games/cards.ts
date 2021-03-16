@@ -33,7 +33,7 @@ const FullDeck = new CustomItem({
   type: VkItem.CARD,
   modelId: 56,
   data: {
-    cards: yup.array<string>(),
+    cards: yup.array(yup.string().required()),
   },
 });
 const HalfDeck = new CustomItem({
@@ -42,7 +42,7 @@ const HalfDeck = new CustomItem({
   type: VkItem.CARD,
   modelId: 57,
   data: {
-    cards: yup.array<string>(),
+    cards: yup.array(yup.string().required()),
   },
 });
 const LowDeck = new CustomItem({
@@ -51,7 +51,7 @@ const LowDeck = new CustomItem({
   type: VkItem.CARD,
   modelId: 58,
   data: {
-    cards: yup.array<string>(),
+    cards: yup.array(yup.string().required()),
   },
 });
 
@@ -64,7 +64,7 @@ const HiddenCard = new CustomItem({
   type: VkItem.CARD,
   modelId: 55,
   data: {
-    cardID: yup.string(),
+    cardID: yup.string().required(),
   },
 });
 
@@ -468,7 +468,7 @@ function clickedOnce(
       const card = CARDS.get(hiddenCard.cardID);
       if (!card) return;
 
-      player.inventory.itemInMainHand = card.create();
+      player.inventory.itemInMainHand = card.create({});
     } else if (isCard(mainHandItem)) {
       const cardID = getCardID(mainHandItem.itemMeta.customModelData);
       const hiddenCard = HiddenCard.create({ cardID: cardID });

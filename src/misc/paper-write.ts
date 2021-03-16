@@ -173,7 +173,7 @@ function handleMessage(msg: ChatMessage) {
     );
     return;
   }
-  const letter = PaperWritten.create();
+  const letter = PaperWritten.create({});
   letter.amount = mainHand.amount;
   const itemMeta = letter.itemMeta;
   // Add color to lore
@@ -230,7 +230,7 @@ Envelope.event(
       }
       if (!event.item.itemMeta || !event.item.itemMeta.lore) return;
       event.player.sendActionBar('§7Laitoit kirjeen kirjekuoreen');
-      const envelope = EnvelopeWithLetter.create({
+      const envelope = EnvelopeWithLetter.creMutta kylate({
         letter: ChatColor.stripColor(event.item.itemMeta.lore[0]),
         wax: [],
       });
@@ -288,7 +288,9 @@ EnvelopeWithLetter.event(
     const notSealed = EnvelopeWithLetter.get(event.item);
     if (!notSealed) return;
     const letter =
-      notSealed.wax.length == 0 ? PaperWritten.create() : PaperSealed.create();
+      notSealed.wax.length == 0
+        ? PaperWritten.create({})
+        : PaperSealed.create({});
     const itemMeta = letter.itemMeta;
     if (notSealed.wax.length == 2) {
       itemMeta.lore = [
@@ -301,7 +303,7 @@ EnvelopeWithLetter.event(
     }
     letter.itemMeta = itemMeta;
     letter.amount = event.item.amount;
-    const envelope = Envelope.create();
+    const envelope = Envelope.create({});
     envelope.amount = event.item.amount;
     inventory.itemInOffHand = envelope;
     inventory.itemInMainHand = letter;
