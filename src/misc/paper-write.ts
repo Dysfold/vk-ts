@@ -230,7 +230,7 @@ Envelope.event(
       }
       if (!event.item.itemMeta || !event.item.itemMeta.lore) return;
       event.player.sendActionBar('§7Laitoit kirjeen kirjekuoreen');
-      const envelope = EnvelopeWithLetter.creMutta kylate({
+      const envelope = EnvelopeWithLetter.create({
         letter: ChatColor.stripColor(event.item.itemMeta.lore[0]),
         wax: [],
       });
@@ -330,7 +330,7 @@ EnvelopeSealed.event(
     const sealed = EnvelopeSealed.get(event.item);
     if (!sealed) return;
     const letter =
-      sealed.wax.length == 0 ? PaperWritten.create() : PaperSealed.create();
+      sealed.wax.length == 0 ? PaperWritten.create({}) : PaperSealed.create({});
     letter.amount = event.item.amount;
     const itemMeta = letter.itemMeta;
     if (sealed.wax.length == 2) {
