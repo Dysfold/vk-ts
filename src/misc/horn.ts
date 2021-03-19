@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { Sound, SoundCategory } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
@@ -8,7 +9,7 @@ import { VkItem } from '../common/items/VkItem';
 
 const GoldenHorn = new CustomItem({
   id: 5,
-  name: 'Kultainen torvi',
+  name: translate('vk.golden_gorn'),
   type: VkItem.MISC,
 });
 

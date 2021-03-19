@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { Location, SoundCategory } from 'org.bukkit';
 import { EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
@@ -22,7 +23,7 @@ const whipPlayers = new Set<Player>();
 
 export const Whip = new CustomItem({
   id: 10,
-  name: 'Ruoska',
+  name: translate('vk.whip'),
   type: VkItem.TOOL,
 });
 

@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { Material, Particle, Sound, SoundCategory } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
@@ -10,13 +11,13 @@ import { VkItem } from '../common/items/VkItem';
 export const DriedTobacco = new CustomItem({
   id: 11,
   type: VkItem.MISC,
-  name: 'Kuivattu tupakka',
+  name: translate('vk.dried_tobacco'),
 });
 
 export const Pipe = new CustomItem({
   id: 24,
   type: VkItem.HAT,
-  name: 'Piippu',
+  name: translate('vk.pipe'),
 });
 
 const smokers = new Set<Player>();

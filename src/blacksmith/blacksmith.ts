@@ -22,81 +22,82 @@ import { CustomItem } from '../common/items/CustomItem';
 import { Damageable } from 'org.bukkit.inventory.meta';
 import { VkItem } from '../common/items/VkItem';
 import { equippedItem } from '../common/helpers/inventory';
+import { translate } from 'craftjs-plugin/chat';
 
 export const Pliers = new CustomItem({
   id: 9,
   type: VkItem.TOOL,
-  name: 'Pihdit',
+  name: translate('vk.pliers'),
 });
 
 export const Hammer = new CustomItem({
   id: 8,
   type: VkItem.TOOL,
-  name: 'Vasara',
+  name: translate('vk.hammer'),
 });
 
 // Pliers with items
 export const PliersAndIronBar = new CustomItem({
   id: 12,
   type: VkItem.TOOL,
-  name: 'Pihdit',
+  name: translate('vk.pliers'),
 });
 export const PliersAndIronBlade = new CustomItem({
   id: 13,
   type: VkItem.TOOL,
-  name: 'Pihdit',
+  name: translate('vk.pliers'),
 });
 export const PliersAndIronIngot = new CustomItem({
   id: 14,
   type: VkItem.TOOL,
-  name: 'Pihdit',
+  name: translate('vk.pliers'),
 });
 export const PliersAndIronNugget = new CustomItem({
   id: 15,
   type: VkItem.TOOL,
-  name: 'Pihdit',
+  name: translate('vk.pliers'),
 });
 export const PliersAndIronPlate = new CustomItem({
   id: 16,
   type: VkItem.TOOL,
-  name: 'Pihdit',
+  name: translate('vk.pliers'),
 });
 export const PliersAndIronStick = new CustomItem({
   id: 17,
   type: VkItem.TOOL,
-  name: 'Pihdit',
+  name: translate('vk.pliers'),
 });
 
 // Molten metal items
 export const HotIronIngot = new CustomItem({
   id: 1,
   type: VkItem.MOLTEN,
-  name: 'Kuuma rautaharkko',
+  name: translate('vk.hot_iron_ingot'),
 });
 export const HotIronBlade = new CustomItem({
   id: 2,
   type: VkItem.MOLTEN,
-  name: 'Kuuma rautaterä',
+  name: translate('vk.hot_iron_blade'),
 });
 export const HotIronStick = new CustomItem({
   id: 3,
   type: VkItem.MOLTEN,
-  name: 'Kuuma rautatikku',
+  name: translate('vk.hot_iron_stick'),
 });
 export const HotIronPlate = new CustomItem({
   id: 4,
   type: VkItem.MOLTEN,
-  name: 'Kuuma rautaharkko',
+  name: translate('vk.hot_iron_ingot'),
 });
 export const HotIronBar = new CustomItem({
   id: 5,
   type: VkItem.MOLTEN,
-  name: 'Kuuma rautaharkko',
+  name: translate('vk.hot_iron_ingot'),
 });
 export const HotIronNugget = new CustomItem({
   id: 6,
   type: VkItem.MOLTEN,
-  name: 'Kuuma rautaharkko',
+  name: translate('vk.hot_iron_ingot'),
 });
 
 // Pair pliers with corresponding molten items

@@ -22,36 +22,37 @@ import {
 } from './water-quality';
 import { ChangeReason } from 'org.bukkit.event.block.CauldronLevelChangeEvent';
 import { Block } from 'org.bukkit.block';
+import { translate } from 'craftjs-plugin/chat';
 
 export const WineGlass = new CustomItem({
-  name: 'Viinilasi',
+  name: translate('vk.wine_glass'),
   id: 1,
   type: Material.POTION,
 });
 export const WineGlassEmpty = new CustomItem({
-  name: 'Viinilasi',
+  name: translate('vk.wine_glass'),
   id: 1,
   type: Material.GLASS_BOTTLE,
 });
 
 export const Mug = new CustomItem({
-  name: 'Muki',
+  name: translate('vk.mug'),
   id: 2,
   type: Material.POTION,
 });
 export const MugEmpty = new CustomItem({
-  name: 'Muki',
+  name: translate('vk.mug'),
   id: 2,
   type: Material.GLASS_BOTTLE,
 });
 
 export const Scoop = new CustomItem({
-  name: 'Kauha',
+  name: translate('vk.scoop'),
   id: 3,
   type: Material.POTION,
 });
 export const ScoopEmpty = new CustomItem({
-  name: 'Kauha',
+  name: translate('vk.scoop'),
   id: 3,
   type: Material.GLASS_BOTTLE,
 });

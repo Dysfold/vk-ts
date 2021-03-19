@@ -5,11 +5,12 @@ import { Pliers } from '../blacksmith/blacksmith';
 import { isHandcuffed } from '../combat/handcuffs';
 import { CustomItem } from '../common/items/CustomItem';
 import { EquipmentSlot } from 'org.bukkit.inventory';
+import { translate } from 'craftjs-plugin/chat';
 
 const Tooth = new CustomItem({
   id: 18,
   type: Material.SHULKER_SHELL,
-  name: 'vk.tooth',
+  name: translate('vk.tooth'),
 });
 
 const COOLDOWN_DELAY = 60; // Seconds

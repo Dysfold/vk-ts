@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { Material, Particle } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
@@ -30,7 +31,7 @@ const TOOLS = new Set([
 
 export const HandGrindstone = new CustomItem({
   id: 1,
-  name: 'Hiomakivi',
+  name: translate('vk.hand_grindstone'),
   type: VkItem.MISC,
 });
 

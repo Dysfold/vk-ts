@@ -3,11 +3,12 @@ import { Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
 import * as yup from 'yup';
 import { test } from 'craftjs-plugin';
+import { text } from 'craftjs-plugin/chat';
 
 const TestItem = new CustomItem({
   id: 0,
   type: Material.STICK,
-  name: 'Test 1',
+  name: text('Test 1'),
   data: {
     counter: yup.number().default(0),
   },

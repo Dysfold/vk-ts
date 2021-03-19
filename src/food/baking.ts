@@ -17,6 +17,7 @@ import { CustomItem } from '../common/items/CustomItem';
 import { getEmptyBottle } from '../hydration/bottles';
 import { Bowl } from './Bowl';
 import { VkItem } from '../common/items/VkItem';
+import { translate } from 'craftjs-plugin/chat';
 
 const INGREDIENT_PICKUP_DELAY = 5; // Seconds
 
@@ -42,17 +43,17 @@ const DOUGH_COOKIE = new CustomItem({
 const DOUGH_BREAD_ITEM = new CustomItem({
   type: VkItem.MISC,
   id: 6,
-  name: 'Leipätaikina',
+  name: translate('vk.daugh_bread'),
 });
 const DOUGH_COOKIE_ITEM = new CustomItem({
   type: VkItem.MISC,
   id: 7,
-  name: 'Keksitaikina',
+  name: translate('vk.daugh_cookie'),
 });
 const DOUGH_PUMPKIN_PIE_ITEM = new CustomItem({
   type: VkItem.MISC,
   id: 8,
-  name: 'Kurpitsapiirakkataikina',
+  name: translate('vk.daugh_pumpkin_pie'),
 });
 
 const RECIPES = [

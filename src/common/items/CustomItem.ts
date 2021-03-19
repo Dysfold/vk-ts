@@ -6,6 +6,7 @@ import { dataView, saveView } from '../datas/view';
 import { ObjectShape } from 'yup/lib/object';
 import { isEmpty } from 'lodash';
 import { Data, PartialData } from '../datas/yup-utils';
+import { BaseComponent } from 'net.md_5.bungee.api.chat';
 
 const CUSTOM_DATA_KEY = 'cd';
 
@@ -30,7 +31,7 @@ type CustomItemOptions<T extends ObjectShape> = {
   /**
    * Display name of this item.
    */
-  name?: string;
+  name?: BaseComponent | BaseComponent[];
 
   /**
    * Schema definition for custom data associated with this item.
@@ -152,7 +153,9 @@ export class CustomItem<T extends ObjectShape> {
 
     // Set values to meta based on item options
     if (this.options.name != undefined) {
-      meta.displayName = this.options.name;
+      meta.displayNameComponent = Array.isArray(this.options.name)
+        ? this.options.name
+        : [this.options.name];
     }
     item.itemMeta = meta; // Set new meta to item
 

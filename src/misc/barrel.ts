@@ -4,6 +4,7 @@ import { setBlockDrops, bindItemBlock } from '../common/items/drops';
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { CustomItem } from '../common/items/CustomItem';
 import { BlockPlaceEvent } from 'org.bukkit.event.block';
+import { text, translate } from 'craftjs-plugin/chat';
 
 // Uses some of barrel block states for other blocks
 
@@ -30,7 +31,7 @@ const Bookshelf = new CustomBlock({
 });
 const BookshelfItem = new CustomItem({
   id: 1,
-  name: 'Kirjahylly',
+  name: translate('block.minecraft.bookshelf'),
   type: Material.BARREL,
 });
 bindItemBlock(BookshelfItem, {}, Bookshelf, {});
@@ -43,7 +44,7 @@ const Dresser = new CustomBlock({
 });
 const DresserItem = new CustomItem({
   id: 2,
-  name: 'Lipasto',
+  name: text('Lipasto'),
   type: Material.BARREL,
 });
 setBlockDrops(Dresser, [{ item: DresserItem.create({}), rarity: 1, count: 1 }]);

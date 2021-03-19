@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { GameMode, Material } from 'org.bukkit';
 import { EntityType, Player } from 'org.bukkit.entity';
 import {
@@ -34,14 +35,14 @@ export function stopDragging(dragged: Player) {
 
 const Handcuffs = new CustomItem({
   id: 2,
-  name: 'Käsiraudat',
+  name: translate('vk.handcuffs'),
   type: VkItem.MISC,
 });
 const HandcuffsItem = Handcuffs.create({});
 
 export const LockedHandcuffs = new CustomItem({
   id: 3,
-  name: 'Lukitut käsiraudat',
+  name: translate('vk.handcuffs_locked'),
   type: VkItem.MISC,
   data: {
     key: yup.string(),
@@ -50,7 +51,7 @@ export const LockedHandcuffs = new CustomItem({
 
 const Key = new CustomItem({
   id: 4,
-  name: 'Avain',
+  name: translate('vk.key'),
   type: VkItem.MISC,
 });
 

@@ -11,6 +11,7 @@ import { Action } from 'org.bukkit.event.block';
 import { isRightClick } from '../common/helpers/click';
 import { giveItem } from '../common/helpers/inventory';
 import { VkItem } from '../common/items/VkItem';
+import { text } from 'craftjs-plugin/chat';
 
 const ZERO_VECTOR = new Vector();
 const PICKUP_DELAY = 12000; // TICKS -> 10 minutes
@@ -29,7 +30,7 @@ const shuffleCooldowns = new Set<Player>();
  */
 const FullDeck = new CustomItem({
   id: 56,
-  name: ChatColor.RESET + 'Korttipakka',
+  name: text('Korttipakka'),
   type: VkItem.CARD,
   data: {
     cards: yup.array(yup.string().required()),
@@ -37,7 +38,7 @@ const FullDeck = new CustomItem({
 });
 const HalfDeck = new CustomItem({
   id: 57,
-  name: ChatColor.RESET + 'Korttipakka',
+  name: text('Korttipakka'),
   type: VkItem.CARD,
   data: {
     cards: yup.array(yup.string().required()),
@@ -45,7 +46,7 @@ const HalfDeck = new CustomItem({
 });
 const LowDeck = new CustomItem({
   id: 58,
-  name: ChatColor.RESET + 'Korttipakka',
+  name: text('Korttipakka'),
   type: VkItem.CARD,
   data: {
     cards: yup.array(yup.string().required()),
@@ -57,7 +58,7 @@ const LowDeck = new CustomItem({
  */
 const HiddenCard = new CustomItem({
   id: 55,
-  name: ChatColor.RESET + 'Pelikortti',
+  name: text('Pelikortti'),
   type: VkItem.CARD,
   data: {
     cardID: yup.string().required(),
@@ -73,7 +74,7 @@ for (let modelID = 1; modelID <= MAX_CARDS_IN_DECK; modelID++) {
     cardID,
     new CustomItem({
       id: modelID,
-      name: ChatColor.RESET + `Pelikortti [${cardID}]`,
+      name: text(`Pelikortti [${cardID}]`),
       type: VkItem.CARD,
     }),
   );

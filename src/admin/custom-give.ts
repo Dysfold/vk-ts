@@ -1,3 +1,4 @@
+import { text } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { CustomItem } from '../common/items/CustomItem';
@@ -19,14 +20,14 @@ registerCommand(
         Material.getMaterial(args[0]);
       const id = Number.parseInt(args[1]);
 
-      const name = args[2] || undefined;
+      const name = args[2];
 
       if (!type) return;
 
       const item = new CustomItem({
         id: id,
         type: type,
-        name: name,
+        name: name ? text(name) : undefined,
       });
 
       player.inventory.addItem(item.create({}));

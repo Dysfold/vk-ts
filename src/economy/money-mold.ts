@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { Location, Material } from 'org.bukkit';
 import { BlockFace, Dispenser } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
@@ -8,7 +9,7 @@ import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 
 const MoneyMold = new CustomItem({
-  name: 'Rahamuotti',
+  name: translate('vk.money_mold'),
   id: 10,
   type: VkItem.MISC,
 });
