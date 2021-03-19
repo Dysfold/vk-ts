@@ -10,14 +10,12 @@ import { CustomItem } from '../common/items/CustomItem';
 
 const Boomerang = new CustomItem({
   id: 2,
-  modelId: 2,
   name: 'vk.boomerang',
   type: Material.SNOWBALL,
 });
 
 const BoomerangSpin = new CustomItem({
   id: 4,
-  modelId: 4,
   name: 'vk.boomerang',
   type: Material.SNOWBALL,
 });

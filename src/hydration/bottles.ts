@@ -26,39 +26,33 @@ import { Block } from 'org.bukkit.block';
 export const WineGlass = new CustomItem({
   name: 'Viinilasi',
   id: 1,
-  modelId: 1,
   type: Material.POTION,
 });
 export const WineGlassEmpty = new CustomItem({
   name: 'Viinilasi',
   id: 1,
-  modelId: 1,
   type: Material.GLASS_BOTTLE,
 });
 
 export const Mug = new CustomItem({
   name: 'Muki',
   id: 2,
-  modelId: 2,
   type: Material.POTION,
 });
 export const MugEmpty = new CustomItem({
   name: 'Muki',
   id: 2,
-  modelId: 2,
   type: Material.GLASS_BOTTLE,
 });
 
 export const Scoop = new CustomItem({
   name: 'Kauha',
   id: 3,
-  modelId: 3,
   type: Material.POTION,
 });
 export const ScoopEmpty = new CustomItem({
   name: 'Kauha',
   id: 3,
-  modelId: 3,
   type: Material.GLASS_BOTTLE,
 });
 

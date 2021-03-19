@@ -22,43 +22,36 @@ const BLOOD_MATERIAL = Material.DEAD_BUBBLE_CORAL_FAN;
 
 const Body = new CustomItem({
   id: 1,
-  modelId: 1,
   type: HIDDEN_MATERIAL,
 });
 
 const BodyFallen = new CustomItem({
   id: 29,
-  modelId: 29,
   type: HIDDEN_MATERIAL,
 });
 
 const BodyExploded = new CustomItem({
   id: 30,
-  modelId: 30,
   type: HIDDEN_MATERIAL,
 });
 
 const BodyBurned = new CustomItem({
   id: 31,
-  modelId: 31,
   type: HIDDEN_MATERIAL,
 });
 
 const BodyWounded = new CustomItem({
   id: 32,
-  modelId: 32,
   type: HIDDEN_MATERIAL,
 });
 
 const BodyPoisoned = new CustomItem({
   id: 33,
-  modelId: 33,
   type: HIDDEN_MATERIAL,
 });
 
 const BodyPierced = new CustomItem({
   id: 34,
-  modelId: 34,
   type: HIDDEN_MATERIAL,
 });
 

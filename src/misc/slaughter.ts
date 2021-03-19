@@ -27,7 +27,6 @@ const Namehider = new CustomItem({
   id: 15,
   name: 'Namehider',
   type: Material.HEART_OF_THE_SEA,
-  modelId: 15,
 });
 
 const nameHiderItem = Namehider.create({});

@@ -33,7 +33,6 @@ const PLANT_BLOCK = Material.TWISTING_VINES;
  */
 const BlueBerryPlantSeeds = new CustomItem({
   id: 1,
-  modelId: 1,
   type: VkItem.SEED,
 });
 const BlueBerryPlant: Plant = {
@@ -53,7 +52,6 @@ const BlueBerryPlant: Plant = {
  */
 const CoffeeBushSeeds = new CustomItem({
   id: 2,
-  modelId: 2,
   type: VkItem.SEED,
 });
 const CoffeeBush: Plant = {
@@ -71,7 +69,6 @@ const CoffeeBush: Plant = {
  */
 const TobaccoPlantSeeds = new CustomItem({
   id: 3,
-  modelId: 3,
   type: VkItem.SEED,
 });
 const TobaccoPlant: Plant = {
@@ -89,7 +86,6 @@ const TobaccoPlant: Plant = {
  */
 const HopsPlantSeeds = new CustomItem({
   id: 4,
-  modelId: 4,
   type: VkItem.SEED,
 });
 const HopsPlant: Plant = {
@@ -108,7 +104,6 @@ const HopsPlant: Plant = {
  */
 const ExamplePlant5Seeds = new CustomItem({
   id: 5,
-  modelId: 5,
   type: VkItem.SEED,
 });
 const ExamplePlant5: Plant = {
@@ -126,7 +121,6 @@ const ExamplePlant5: Plant = {
  */
 const ExamplePlant6Seeds = new CustomItem({
   id: 6,
-  modelId: 6,
   type: VkItem.SEED,
 });
 const ExamplePlant6: Plant = {
@@ -144,7 +138,6 @@ const ExamplePlant6: Plant = {
  */
 const ExamplePlant7Seeds = new CustomItem({
   id: 7,
-  modelId: 7,
   type: VkItem.SEED,
 });
 const ExamplePlant7: Plant = {
@@ -162,7 +155,6 @@ const ExamplePlant7: Plant = {
  */
 const ExamplePlant8Seeds = new CustomItem({
   id: 8,
-  modelId: 8,
   type: VkItem.SEED,
 });
 const ExamplePlant8: Plant = {
@@ -180,7 +172,6 @@ const ExamplePlant8: Plant = {
  */
 const ExamplePlant9Seeds = new CustomItem({
   id: 9,
-  modelId: 9,
   type: VkItem.SEED,
 });
 const ExamplePlant9: Plant = {

@@ -36,7 +36,6 @@ const Handcuffs = new CustomItem({
   id: 2,
   name: 'Käsiraudat',
   type: VkItem.MISC,
-  modelId: 2,
 });
 const HandcuffsItem = Handcuffs.create({});
 
@@ -44,7 +43,6 @@ export const LockedHandcuffs = new CustomItem({
   id: 3,
   name: 'Lukitut käsiraudat',
   type: VkItem.MISC,
-  modelId: 3,
   data: {
     key: yup.string(),
   },
@@ -54,7 +52,6 @@ const Key = new CustomItem({
   id: 4,
   name: 'Avain',
   type: VkItem.MISC,
-  modelId: 4,
 });
 
 const MAX_CAPTURE_DISTANCE = 2;

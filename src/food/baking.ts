@@ -24,41 +24,34 @@ const INGREDIENT_PICKUP_DELAY = 5; // Seconds
 const DOUGH_BREAD = new CustomItem({
   type: Material.HEART_OF_THE_SEA,
   id: 16,
-  modelId: 16,
 });
 const DOUGH_BREAD_RISEN = new CustomItem({
   type: Material.HEART_OF_THE_SEA,
   id: 17,
-  modelId: 17,
 });
 const DOUGH_PUMPKIN_PIE = new CustomItem({
   type: Material.HEART_OF_THE_SEA,
   id: 19,
-  modelId: 19,
 });
 const DOUGH_COOKIE = new CustomItem({
   type: Material.HEART_OF_THE_SEA,
   id: 18,
-  modelId: 18,
 });
 
 // Dough items for furnace
 const DOUGH_BREAD_ITEM = new CustomItem({
   type: VkItem.MISC,
   id: 6,
-  modelId: 6,
   name: 'Leipätaikina',
 });
 const DOUGH_COOKIE_ITEM = new CustomItem({
   type: VkItem.MISC,
   id: 7,
-  modelId: 7,
   name: 'Keksitaikina',
 });
 const DOUGH_PUMPKIN_PIE_ITEM = new CustomItem({
   type: VkItem.MISC,
   id: 8,
-  modelId: 8,
   name: 'Kurpitsapiirakkataikina',
 });
 

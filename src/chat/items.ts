@@ -8,5 +8,4 @@ export const SpeakerStaff = new CustomItem({
   id: 1,
   type: Material.GOLDEN_HORSE_ARMOR,
   name: 'Puhujankeppi',
-  modelId: 1,
 });

@@ -11,7 +11,6 @@ const cooldowns = new Set<Player>();
 
 const ShepherdsStaff = new CustomItem({
   id: 4,
-  modelId: 4,
   type: VkItem.TOOL,
   name: 'Paimensauva',
 });

@@ -6,42 +6,36 @@ import { VkItem } from '../common/items/VkItem';
 
 const Dice1 = new CustomItem({
   id: 12,
-  modelId: 12,
   name: 'Noppa [1]',
   type: VkItem.MISC,
 });
 
 const Dice2 = new CustomItem({
   id: 13,
-  modelId: 13,
   name: 'Noppa [2]',
   type: VkItem.MISC,
 });
 
 const Dice3 = new CustomItem({
   id: 14,
-  modelId: 14,
   name: 'Noppa [3]',
   type: VkItem.MISC,
 });
 
 const Dice4 = new CustomItem({
   id: 15,
-  modelId: 15,
   name: 'Noppa [4]',
   type: VkItem.MISC,
 });
 
 const Dice5 = new CustomItem({
   id: 16,
-  modelId: 16,
   name: 'Noppa [5]',
   type: VkItem.MISC,
 });
 
 const Dice6 = new CustomItem({
   id: 17,
-  modelId: 17,
   name: 'Noppa [6]',
   type: VkItem.MISC,
 });

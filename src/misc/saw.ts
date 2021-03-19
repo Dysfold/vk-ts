@@ -22,7 +22,6 @@ export const HandSaw = new CustomItem({
   id: 5,
   name: 'Käsisaha',
   type: VkItem.TOOL,
-  modelId: 5,
 });
 
 const SAW_COOLDOWN_SECONDS = 1;

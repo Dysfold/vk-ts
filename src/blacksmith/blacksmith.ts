@@ -26,14 +26,12 @@ import { equippedItem } from '../common/helpers/inventory';
 export const Pliers = new CustomItem({
   id: 9,
   type: VkItem.TOOL,
-  modelId: 9,
   name: 'Pihdit',
 });
 
 export const Hammer = new CustomItem({
   id: 8,
   type: VkItem.TOOL,
-  modelId: 8,
   name: 'Vasara',
 });
 
@@ -41,37 +39,31 @@ export const Hammer = new CustomItem({
 export const PliersAndIronBar = new CustomItem({
   id: 12,
   type: VkItem.TOOL,
-  modelId: 12,
   name: 'Pihdit',
 });
 export const PliersAndIronBlade = new CustomItem({
   id: 13,
   type: VkItem.TOOL,
-  modelId: 13,
   name: 'Pihdit',
 });
 export const PliersAndIronIngot = new CustomItem({
   id: 14,
   type: VkItem.TOOL,
-  modelId: 14,
   name: 'Pihdit',
 });
 export const PliersAndIronNugget = new CustomItem({
   id: 15,
   type: VkItem.TOOL,
-  modelId: 15,
   name: 'Pihdit',
 });
 export const PliersAndIronPlate = new CustomItem({
   id: 16,
   type: VkItem.TOOL,
-  modelId: 16,
   name: 'Pihdit',
 });
 export const PliersAndIronStick = new CustomItem({
   id: 17,
   type: VkItem.TOOL,
-  modelId: 17,
   name: 'Pihdit',
 });
 
@@ -79,37 +71,31 @@ export const PliersAndIronStick = new CustomItem({
 export const HotIronIngot = new CustomItem({
   id: 1,
   type: VkItem.MOLTEN,
-  modelId: 1,
   name: 'Kuuma rautaharkko',
 });
 export const HotIronBlade = new CustomItem({
   id: 2,
   type: VkItem.MOLTEN,
-  modelId: 2,
   name: 'Kuuma rautaterä',
 });
 export const HotIronStick = new CustomItem({
   id: 3,
   type: VkItem.MOLTEN,
-  modelId: 3,
   name: 'Kuuma rautatikku',
 });
 export const HotIronPlate = new CustomItem({
   id: 4,
   type: VkItem.MOLTEN,
-  modelId: 4,
   name: 'Kuuma rautaharkko',
 });
 export const HotIronBar = new CustomItem({
   id: 5,
   type: VkItem.MOLTEN,
-  modelId: 5,
   name: 'Kuuma rautaharkko',
 });
 export const HotIronNugget = new CustomItem({
   id: 6,
   type: VkItem.MOLTEN,
-  modelId: 6,
   name: 'Kuuma rautaharkko',
 });
 

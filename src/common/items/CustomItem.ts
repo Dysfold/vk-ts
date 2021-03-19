@@ -7,7 +7,6 @@ import { ObjectShape } from 'yup/lib/object';
 import { isEmpty } from 'lodash';
 import { Data, PartialData } from '../datas/yup-utils';
 
-const CUSTOM_TYPE_KEY = 'ct';
 const CUSTOM_DATA_KEY = 'cd';
 
 type CustomItemOptions<T extends ObjectShape> = {
@@ -15,6 +14,13 @@ type CustomItemOptions<T extends ObjectShape> = {
    * Id of this custom item. Unique per Vanilla type/material.
    */
   id: number;
+
+  /**
+   * If this item has a custom model; defaults to true.
+   * Items with this set to false are assigned very large and likely unused
+   * CustomModelData values.
+   */
+  customModel?: boolean;
 
   /**
    * The Vanilla type/material used for this item.
@@ -25,12 +31,6 @@ type CustomItemOptions<T extends ObjectShape> = {
    * Display name of this item.
    */
   name?: string;
-
-  /**
-   * CustomModelData model identifier of this item. When set, client selects a
-   * model with matching id from resource pack.
-   */
-  modelId?: number;
 
   /**
    * Schema definition for custom data associated with this item.
@@ -77,12 +77,19 @@ export class CustomItem<T extends ObjectShape> {
   private options: CustomItemOptions<T>;
 
   /**
+   * CustomModelData to assign and check for this item.
+   */
+  private customModelData: number;
+
+  /**
    * Type of data associated with this item.
    */
   private dataType: DataType<T>;
 
   constructor(options: CustomItemOptions<T>) {
     this.options = options;
+    this.customModelData =
+      options.customModel !== false ? options.id : 100000 + options.id;
     checkItemId(options.type, options.id);
     this.dataType = dataType(CUSTOM_DATA_KEY, this.options.data);
   }
@@ -131,8 +138,8 @@ export class CustomItem<T extends ObjectShape> {
     const item = new ItemStack(this.options.type);
     const meta = item.itemMeta;
     const holder = dataHolder(meta);
-    // Unique identifier of this custom item
-    holder.set(CUSTOM_TYPE_KEY, 'integer', this.options.id);
+    // Unique identifier of this custom item (and possible a resource pack model)
+    meta.customModelData = this.customModelData;
 
     // Data overrides given as parameter
     let defaultData: Data<T> | undefined = undefined; // Created only if needed
@@ -146,9 +153,6 @@ export class CustomItem<T extends ObjectShape> {
     // Set values to meta based on item options
     if (this.options.name != undefined) {
       meta.displayName = this.options.name;
-    }
-    if (this.options.modelId != undefined) {
-      meta.customModelData = this.options.modelId;
     }
     item.itemMeta = meta; // Set new meta to item
 
@@ -227,7 +231,6 @@ export class CustomItem<T extends ObjectShape> {
     if (!this.options.type.equals(item.type)) {
       return false; // Item id is per Vanilla material
     }
-    const itemId = dataHolder(item.itemMeta).get(CUSTOM_TYPE_KEY, 'integer');
-    return itemId == this.options.id;
+    return item.itemMeta.customModelData == this.customModelData;
   }
 }

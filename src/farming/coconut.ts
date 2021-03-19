@@ -9,7 +9,6 @@ const CoconutBlock = new CustomBlock({
 
 const CoconutItem = new CustomItem({
   id: 22,
-  modelId: 22,
   name: 'vk.coconut',
   type: VkItem.FOOD,
 });

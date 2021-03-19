@@ -32,7 +32,6 @@ const BookshelfItem = new CustomItem({
   id: 1,
   name: 'Kirjahylly',
   type: Material.BARREL,
-  modelId: 1,
 });
 bindItemBlock(BookshelfItem, {}, Bookshelf, {});
 
@@ -46,7 +45,6 @@ const DresserItem = new CustomItem({
   id: 2,
   name: 'Lipasto',
   type: Material.BARREL,
-  modelId: 2,
 });
 setBlockDrops(Dresser, [{ item: DresserItem.create({}), rarity: 1, count: 1 }]);
 

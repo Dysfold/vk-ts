@@ -31,7 +31,6 @@ const FullDeck = new CustomItem({
   id: 56,
   name: ChatColor.RESET + 'Korttipakka',
   type: VkItem.CARD,
-  modelId: 56,
   data: {
     cards: yup.array(yup.string().required()),
   },
@@ -40,7 +39,6 @@ const HalfDeck = new CustomItem({
   id: 57,
   name: ChatColor.RESET + 'Korttipakka',
   type: VkItem.CARD,
-  modelId: 57,
   data: {
     cards: yup.array(yup.string().required()),
   },
@@ -49,7 +47,6 @@ const LowDeck = new CustomItem({
   id: 58,
   name: ChatColor.RESET + 'Korttipakka',
   type: VkItem.CARD,
-  modelId: 58,
   data: {
     cards: yup.array(yup.string().required()),
   },
@@ -62,7 +59,6 @@ const HiddenCard = new CustomItem({
   id: 55,
   name: ChatColor.RESET + 'Pelikortti',
   type: VkItem.CARD,
-  modelId: 55,
   data: {
     cardID: yup.string().required(),
   },
@@ -79,7 +75,6 @@ for (let modelID = 1; modelID <= MAX_CARDS_IN_DECK; modelID++) {
       id: modelID,
       name: ChatColor.RESET + `Pelikortti [${cardID}]`,
       type: VkItem.CARD,
-      modelId: modelID,
     }),
   );
 }

@@ -20,14 +20,12 @@ registerCommand(
       const id = Number.parseInt(args[1]);
 
       const name = args[2] || undefined;
-      const modelId = Number.parseInt(args[3]) || id;
 
       if (!type) return;
 
       const item = new CustomItem({
         id: id,
         type: type,
-        modelId: modelId,
         name: name,
       });
 
@@ -44,6 +42,6 @@ registerCommand(
       }
     },
     executableBy: 'players',
-    description: '/customitem <type> <id> <name?> <modelId?>',
+    description: '/customitem <type> <id> <name?>',
   },
 );

@@ -17,14 +17,12 @@ const Sickle = new CustomItem({
   id: 1,
   name: 'Sirppi',
   type: VkItem.TOOL,
-  modelId: 1,
 });
 
 const Scythe = new CustomItem({
   id: 2,
   name: 'Viitake',
   type: VkItem.TOOL,
-  modelId: 2,
 });
 
 registerEvent(BlockBreakEvent, (event) => {

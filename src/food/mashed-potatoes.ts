@@ -6,7 +6,6 @@ import { CustomItem } from '../common/items/CustomItem';
 
 const MashedPotatoes = new CustomItem({
   id: 4,
-  modelId: 4,
   type: Material.POISONOUS_POTATO,
   name: 'vk.mashed_potatoes',
 });

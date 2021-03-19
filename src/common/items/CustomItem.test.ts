@@ -34,6 +34,12 @@ const TestItem5 = new CustomItem({
   },
 });
 
+const TestItem6 = new CustomItem({
+  id: 6,
+  type: Material.STICK,
+  customModel: false,
+});
+
 test('CustomItems workflow', (t) => {
   const test1 = TestItem.create({});
   t.eq(
@@ -129,5 +135,18 @@ test('CustomItem custom amount', (t) => {
     TestItem.create({}).amount,
     1,
     'CustomItem.create() defaults to stack of 1',
+  );
+});
+
+test('CustomItem model ids', (t) => {
+  t.eq(
+    TestItem.create({}).itemMeta.customModelData,
+    0,
+    'CustomModelData is item id',
+  );
+  t.eq(
+    TestItem6.create({}).itemMeta.customModelData,
+    100006,
+    'CustomModelData is unused when customModel === false',
   );
 });

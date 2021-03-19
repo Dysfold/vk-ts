@@ -10,7 +10,6 @@ const GoldenHorn = new CustomItem({
   id: 5,
   name: 'Kultainen torvi',
   type: VkItem.MISC,
-  modelId: 5,
 });
 
 const hornUsers = new Set<Player>();

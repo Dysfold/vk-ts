@@ -19,7 +19,6 @@ const Football = new CustomItem({
   id: 3,
   name: 'Jalkapallo',
   type: Material.SNOWBALL,
-  modelId: 3,
 });
 const FootballItemStack = Football.create({});
 

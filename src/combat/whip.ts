@@ -22,7 +22,6 @@ const whipPlayers = new Set<Player>();
 
 export const Whip = new CustomItem({
   id: 10,
-  modelId: 10,
   name: 'Ruoska',
   type: VkItem.TOOL,
 });

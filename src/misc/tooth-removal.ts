@@ -8,7 +8,6 @@ import { EquipmentSlot } from 'org.bukkit.inventory';
 
 const Tooth = new CustomItem({
   id: 18,
-  modelId: 18,
   type: Material.SHULKER_SHELL,
   name: 'vk.tooth',
 });

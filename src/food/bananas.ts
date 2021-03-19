@@ -6,7 +6,6 @@ import { VkItem } from '../common/items/VkItem';
 export const Banana = new CustomItem({
   id: 5,
   type: VkItem.FOOD,
-  modelId: 5,
   name: 'Banaani',
 });
 

@@ -29,7 +29,6 @@ const Bomb = new CustomItem({
   id: 2,
   name: 'Lankapommi',
   type: Material.GOLDEN_HORSE_ARMOR,
-  modelId: 2,
   data: {
     lit: yup.boolean(),
     fuzeLeft: yup.number().required(),

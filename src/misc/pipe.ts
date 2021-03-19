@@ -9,14 +9,12 @@ import { VkItem } from '../common/items/VkItem';
 
 export const DriedTobacco = new CustomItem({
   id: 11,
-  modelId: 11,
   type: VkItem.MISC,
   name: 'Kuivattu tupakka',
 });
 
 export const Pipe = new CustomItem({
   id: 24,
-  modelId: 24,
   type: VkItem.HAT,
   name: 'Piippu',
 });

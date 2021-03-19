@@ -32,7 +32,6 @@ export const HandGrindstone = new CustomItem({
   id: 1,
   name: 'Hiomakivi',
   type: VkItem.MISC,
-  modelId: 1,
 });
 
 HandGrindstone.event(

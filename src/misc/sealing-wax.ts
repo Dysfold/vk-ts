@@ -15,7 +15,6 @@ import {
 const SealingWax = new CustomItem({
   name: 'Sinettivaha',
   id: 9,
-  modelId: 9,
   type: VkItem.MISC,
 });
 
