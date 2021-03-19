@@ -31,7 +31,7 @@ type CustomItemOptions<T extends ObjectShape> = {
   /**
    * Display name of this item.
    */
-  name?: BaseComponent | BaseComponent[];
+  name?: BaseComponent;
 
   /**
    * Schema definition for custom data associated with this item.
@@ -152,10 +152,10 @@ export class CustomItem<T extends ObjectShape> {
     } // else: don't bother applying default data, can get it later from this.data
 
     // Set values to meta based on item options
-    if (this.options.name != undefined) {
-      meta.displayNameComponent = Array.isArray(this.options.name)
-        ? this.options.name
-        : [this.options.name];
+    const component = this.options.name;
+    if (component != undefined) {
+      component.italic = false; // Explicitly disable italic item name
+      meta.displayNameComponent = [component];
     }
     item.itemMeta = meta; // Set new meta to item
 
