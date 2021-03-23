@@ -1,7 +1,7 @@
+import { Assert, test } from 'craftjs-plugin';
 import { Bukkit, Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
 import * as yup from 'yup';
-import { Assert, test } from 'zora';
 import { DatabaseEntry } from './database';
 import { dataHolder, DataHolder, dataType } from './holder';
 

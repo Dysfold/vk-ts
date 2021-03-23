@@ -7,7 +7,7 @@ shapedRecipe({
   key: 'itemstack_test',
   shape: ['G'],
   ingredients: {
-    G: HandSaw.create(),
+    G: HandSaw.create({}),
   },
   result: Material.STONE,
 });
@@ -28,7 +28,7 @@ shapedRecipe({
     S: Material.OAK_PLANKS,
     I: Material.IRON_INGOT,
   },
-  result: HandSaw.create(),
+  result: HandSaw.create({}),
 });
 
 shapedRecipe({

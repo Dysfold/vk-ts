@@ -126,7 +126,7 @@ export async function spawnCorpse(event: PlayerDeathEvent) {
   armorstand.headPose = new EulerAngle(4.88, 0, 0);
   armorstand.rightArmPose = new EulerAngle(0.01, 0.01, 0.01);
 
-  const body = getBody(event.entity.lastDamageCause?.cause).create();
+  const body = getBody(event.entity.lastDamageCause?.cause).create({});
   armorstand.setItem(EquipmentSlot.HAND, body);
 
   const player = event.entity as Player;

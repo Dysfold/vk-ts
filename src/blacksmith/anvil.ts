@@ -24,7 +24,7 @@ const ANVILS = new Set([
 ]);
 registerEvent(EntityChangeBlockEvent, async (event) => {
   if (!(event.entity as FallingBlock)) return;
-  if (ANVILS.has((event.entity as FallingBlock).blockData.material)) {
+  if (ANVILS.has((event.entity as FallingBlock).blockData?.material)) {
     // This is a hack. Other methods did not prevent every anvil type from breaking,
     // but this seems to fix every issue
     (event.entity as FallingBlock).fallDistance = -10000;

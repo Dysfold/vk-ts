@@ -25,7 +25,7 @@ registerEvent(BlockPistonExtendEvent, (event) => {
       // Replace potato with mashed potato
       if (itemStack.type === Material.POTATO) {
         const amount = itemStack.amount;
-        item.itemStack = MashedPotatoes.create();
+        item.itemStack = MashedPotatoes.create({});
         item.itemStack.amount = amount;
       }
     }

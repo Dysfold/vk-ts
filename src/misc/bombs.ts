@@ -32,7 +32,7 @@ const Bomb = new CustomItem({
   modelId: 2,
   data: {
     lit: yup.boolean(),
-    fuzeLeft: yup.number(),
+    fuzeLeft: yup.number().required(),
     isSmokeBomb: yup.boolean(),
   },
 });
@@ -52,7 +52,7 @@ registerCommand(
 );
 
 registerCommand(
-  'smokeBomb',
+  'smokebomb',
   (sender) => {
     if (!(sender instanceof Player)) return;
     const player = sender as Player;
