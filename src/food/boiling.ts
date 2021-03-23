@@ -267,6 +267,16 @@ export const INGREDIENTS: Ingredient = {
 };
 
 /**
+ * Water temperature stages
+ */
+ export enum WaterTemp {
+  LUKEWARM = 25,
+  WARM = 45,
+  HOT = 90,
+  BOILING = 100,
+}
+
+/**
  * Retrieve ingredient properties for material
  * @param name material name
  * @param modelId for nested ingredients
@@ -524,13 +534,13 @@ Brew.event(
       let description = '';
 
       // Describe water temperature
-      if (waterTemp < 25) {
+      if (waterTemp < WaterTemp.LUKEWARM) {
         description = 'Vesi on haaleaa';
-      } else if (waterTemp > 24 && waterTemp < 41) {
+      } else if (waterTemp < WaterTemp.WARM) {
         description = 'Vesi on lämmintä';
-      } else if (waterTemp > 40 && waterTemp < 96) {
+      } else if (waterTemp < WaterTemp.HOT) {
         description = 'Vesi on kuumaa';
-      } else if (waterTemp > 95) {
+      } else {
         description = 'Vesi on kiehuvaa';
       }
 
