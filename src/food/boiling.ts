@@ -319,6 +319,7 @@ function spawnBrewItem(location: Location) {
 
   // Create new brew item
   const itemFrameItem = Brew.create({
+    ingredients: [],
     cauldron: locationToObj(location.subtract(0.0, 1.0, 0.0)),
     date: Date.now(),
     heatSource: {
