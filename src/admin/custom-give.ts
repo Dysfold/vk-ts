@@ -3,6 +3,7 @@ import { Material } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
+import * as yup from 'yup';
 
 const CUSTOM_ITEM_TYPES = new Map(Object.entries(VkItem));
 const ALIASES = Object.keys(VkItem).map((key) => key.toLowerCase());
@@ -28,9 +29,12 @@ registerCommand(
         id: id,
         type: type,
         name: name ? text(name) : undefined,
+        data: {
+          source: yup.string(),
+        },
       });
 
-      player.inventory.addItem(item.create({}));
+      player.inventory.addItem(item.create({ source: 'custom-give' }));
     }
   },
   {

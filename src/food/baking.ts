@@ -11,8 +11,8 @@ import {
 import { Vector } from 'org.bukkit.util';
 import {
   getItemFrame,
-  spawnInvisibleItemFrame,
-} from '../common/helpers/itemframes';
+  spawnHiddenItemFrame,
+} from '../common/entities/item-frame';
 import { CustomItem } from '../common/items/CustomItem';
 import { getEmptyBottle } from '../hydration/bottles';
 import { Bowl } from './Bowl';
@@ -224,7 +224,7 @@ function bake(block: Block) {
         }
         drop.amount--;
       });
-      const frame = spawnInvisibleItemFrame(
+      const frame = spawnHiddenItemFrame(
         block.getRelative(BlockFace.DOWN),
         BlockFace.UP,
         recipe.dough.create({}),

@@ -17,7 +17,7 @@ import {
 } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { isRightClick } from '../common/helpers/click';
-import { spawnInvisibleItemFrame } from '../common/helpers/itemframes';
+import { spawnHiddenItemFrame } from '../common/entities/item-frame';
 import { CustomItem } from '../common/items/CustomItem';
 import { Damageable } from 'org.bukkit.inventory.meta';
 import { VkItem } from '../common/items/VkItem';
@@ -226,7 +226,7 @@ registerEvent(PlayerInteractEvent, (event) => {
       const meta = smeltedItem.itemMeta;
       meta.displayName = ''; // Displayname would hover on top of the itemframe
       smeltedItem.itemMeta = meta;
-      const frame = spawnInvisibleItemFrame(anvil, BlockFace.UP, smeltedItem);
+      const frame = spawnHiddenItemFrame(anvil, BlockFace.UP, smeltedItem);
       if (!frame) return;
       frame.rotation = getAnvilFrameRotation(anvil.blockData as Directional);
 

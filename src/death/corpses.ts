@@ -4,7 +4,6 @@ import { Waterlogged } from 'org.bukkit.block.data';
 import { ArmorStand, Entity, EntityType, Player } from 'org.bukkit.entity';
 import {
   EntityDamageByEntityEvent,
-  EntityDeathEvent,
   PlayerDeathEvent,
 } from 'org.bukkit.event.entity';
 import { SpawnReason } from 'org.bukkit.event.entity.CreatureSpawnEvent';
@@ -120,14 +119,20 @@ export async function spawnCorpse(event: PlayerDeathEvent) {
   armorstand.rightArmPose = new EulerAngle(0.01, 0.01, 0.01);
 
   const body = getBody(event.entity.lastDamageCause?.cause).create({});
-  armorstand.setItem(EquipmentSlot.HAND, body);
 
   const player = event.entity as Player;
   const head = new ItemStack(Material.PLAYER_HEAD);
   const skullMeta = head.itemMeta as SkullMeta;
   skullMeta.owningPlayer = player;
   head.itemMeta = skullMeta;
-  armorstand.setItem(EquipmentSlot.HEAD, head);
+
+  // Set "body" and head items and make them not drop
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const equipment = armorstand.equipment!;
+  equipment.itemInMainHand = body;
+  equipment.itemInMainHandDropChance = 0;
+  equipment.helmet = head;
+  equipment.helmetDropChance = 0;
 
   spawnBlood(armorstand.eyeLocation);
 }
@@ -156,16 +161,7 @@ function spawnBlood(location: Location) {
   }
 }
 
-// Remove drops from corpse
-registerEvent(EntityDeathEvent, (event) => {
-  if (!isCorpse(event.entity)) return;
-
-  event.setShouldPlayDeathSound(false);
-  event.setCancelled(true);
-  event.entity.remove();
-});
-
-// Destroy armorstands by clicking
+// Drop bones when corpses are destroyed
 registerEvent(EntityDamageByEntityEvent, (event) => {
   if (!isCorpse(event.entity)) return;
   const armorstand = event.entity as ArmorStand;
@@ -173,7 +169,6 @@ registerEvent(EntityDamageByEntityEvent, (event) => {
     armorstand.eyeLocation,
     new ItemStack(Material.BONE),
   );
-  armorstand.remove();
 });
 
 // Kill old armorstands when the chunk unloads

@@ -1,10 +1,11 @@
-import { GameMode, Material } from 'org.bukkit';
+import { GameMode, Location, Material } from 'org.bukkit';
 import {
   InventoryClickEvent,
   InventoryPickupItemEvent,
 } from 'org.bukkit.event.inventory';
 import { PlayerAttemptPickupItemEvent } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
+import { chanceOf } from '../common/helpers/math';
 
 /**
  * Prevent players from getting heart of the sea -items
@@ -17,7 +18,7 @@ export const HIDDEN_MATERIAL = Material.HEART_OF_THE_SEA;
  */
 import { COLORABLE_MATERIAL } from './horse-armor-items';
 
-function isHiddenItem(item: ItemStack | null) {
+export function isHiddenItem(item: ItemStack | null) {
   if (!item) return false;
 
   // Check if default hidden item
@@ -34,6 +35,22 @@ function isHiddenItem(item: ItemStack | null) {
     return true;
   }
   return false;
+}
+
+/**
+ * Drops an item if it exists, is not hidden and we are lucky.
+ * @param item The item to drop.
+ * @param location Location where to drop the item.
+ * @param chance Chance of dropping the item, mainly for armor stands.
+ */
+export function dropVisibleItem(
+  item: ItemStack | null,
+  location: Location,
+  chance = 1,
+) {
+  if (item && !item.type.isEmpty() && !isHiddenItem(item) && chanceOf(chance)) {
+    location.world.dropItemNaturally(location, item);
+  }
 }
 
 registerEvent(PlayerAttemptPickupItemEvent, (event) => {
