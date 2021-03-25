@@ -49,7 +49,7 @@ export function dropVisibleItem(
   chance = 1,
 ) {
   if (item && !item.type.isEmpty() && !isHiddenItem(item) && chanceOf(chance)) {
-    location.world.dropItemNaturally(location, item);
+    location.world.dropItem(location, item);
   }
 }
 
