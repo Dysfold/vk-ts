@@ -1,5 +1,6 @@
 import { Block, BlockFace } from 'org.bukkit.block';
 import { EntityType, ItemFrame } from 'org.bukkit.entity';
+import { SpawnReason } from 'org.bukkit.event.entity.CreatureSpawnEvent';
 import { ItemStack } from 'org.bukkit.inventory';
 
 /**
@@ -7,7 +8,7 @@ import { ItemStack } from 'org.bukkit.inventory';
  * @param block The cube to which the item frame is attached
  * @param face The Blockface to which the item frame is attached
  * @param item The itemstack to be placed
- * @returns The spawned item frame
+ * @returns The spawned item frame.
  */
 export function spawnInvisibleItemFrame(
   block: Block,
@@ -15,21 +16,29 @@ export function spawnInvisibleItemFrame(
   item: ItemStack,
 ) {
   const loc = block.getRelative(face).location;
+  // Use spawnEntity with a callback to prevent item frame flickering
+  // Requires ugly cast to any due to https://github.com/bensku/java-ts-bind/issues/2
+  let remove = false;
   const frame = block.world.spawnEntity(
     loc,
     EntityType.ITEM_FRAME,
+    SpawnReason.CUSTOM,
+    ((frame: ItemFrame) => {
+      if (!frame.setFacingDirection(face, false)) {
+        remove = true; // Remove after spawning and return null
+        // Continue to make frame invisible to avoid flickering
+      }
+
+      frame.setVisible(false);
+      frame.setSilent(true);
+      frame.setCustomNameVisible(false);
+      frame.setItem(item, false); // Spawn item without sound
+    }) as any,
   ) as ItemFrame;
-  frame.setVisible(false);
-  if (!frame.setFacingDirection(face, false)) {
+  if (remove) {
     frame.remove();
     return null;
   }
-  frame.setVisible(false);
-  frame.setItem(item, false); // false = no spawning sound
-  frame.setCustomNameVisible(false);
-  // Silent item frames shouldn't drop an item frame when destroyed
-  // This helps us to distinguish custom spawned item frames from playerspawned
-  frame.setSilent(true);
   return frame;
 }
 
