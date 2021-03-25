@@ -11,14 +11,14 @@ function handleDrops(entity: ArmorStand) {
   const eqp = entity.equipment;
   if (eqp) {
     // Drop all equipment that exists and is not hidden
-    // (and respect the drop chances)
+    // Armor stands don't, despite Javadoc, support drop rates for items
     const loc = entity.location;
-    dropVisibleItem(eqp.itemInMainHand, loc, eqp.itemInMainHandDropChance);
-    dropVisibleItem(eqp.itemInOffHand, loc, eqp.itemInOffHandDropChance);
-    dropVisibleItem(eqp.helmet, loc, eqp.helmetDropChance);
-    dropVisibleItem(eqp.chestplate, loc, eqp.chestplateDropChance);
-    dropVisibleItem(eqp.leggings, loc, eqp.leggingsDropChance);
-    dropVisibleItem(eqp.boots, loc, eqp.bootsDropChance);
+    dropVisibleItem(eqp.itemInMainHand, loc);
+    dropVisibleItem(eqp.itemInOffHand, loc);
+    dropVisibleItem(eqp.helmet, loc);
+    dropVisibleItem(eqp.chestplate, loc);
+    dropVisibleItem(eqp.leggings, loc);
+    dropVisibleItem(eqp.boots, loc);
   }
 }
 

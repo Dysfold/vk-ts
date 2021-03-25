@@ -15,7 +15,7 @@ import { SkullMeta } from 'org.bukkit.inventory.meta';
 import { EulerAngle } from 'org.bukkit.util';
 import { chanceOf, minMax } from '../common/helpers/math';
 import { CustomItem } from '../common/items/CustomItem';
-import { HIDDEN_MATERIAL } from '../misc/hidden-items';
+import { HIDDEN_MATERIAL, makeItemHidden } from '../misc/hidden-items';
 
 const BLOOD_MATERIAL = Material.DEAD_BUBBLE_CORAL_FAN;
 
@@ -129,10 +129,8 @@ export async function spawnCorpse(event: PlayerDeathEvent) {
   // Set "body" and head items and make them not drop
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const equipment = armorstand.equipment!;
-  equipment.itemInMainHand = body;
-  equipment.itemInMainHandDropChance = 0;
-  equipment.helmet = head;
-  equipment.helmetDropChance = 0;
+  equipment.itemInMainHand = makeItemHidden(body);
+  equipment.helmet = makeItemHidden(head);
 
   spawnBlood(armorstand.eyeLocation);
 }
