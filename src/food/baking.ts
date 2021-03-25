@@ -43,17 +43,17 @@ const DOUGH_COOKIE = new CustomItem({
 const DOUGH_BREAD_ITEM = new CustomItem({
   type: VkItem.MISC,
   id: 6,
-  name: translate('vk.daugh_bread'),
+  name: translate('vk.dough_bread'),
 });
 const DOUGH_COOKIE_ITEM = new CustomItem({
   type: VkItem.MISC,
   id: 7,
-  name: translate('vk.daugh_cookie'),
+  name: translate('vk.dough_cookie'),
 });
 const DOUGH_PUMPKIN_PIE_ITEM = new CustomItem({
   type: VkItem.MISC,
   id: 8,
-  name: translate('vk.daugh_pumpkin_pie'),
+  name: translate('vk.dough_pumpkin_pie'),
 });
 
 const RECIPES = [

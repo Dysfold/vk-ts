@@ -9,7 +9,7 @@ import { VkItem } from '../common/items/VkItem';
 
 const GoldenHorn = new CustomItem({
   id: 5,
-  name: translate('vk.golden_gorn'),
+  name: translate('vk.golden_horn'),
   type: VkItem.MISC,
 });
 

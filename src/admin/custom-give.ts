@@ -1,4 +1,4 @@
-import { text } from 'craftjs-plugin/chat';
+import { text, translate } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { CustomItem } from '../common/items/CustomItem';
@@ -28,7 +28,11 @@ registerCommand(
       const item = new CustomItem({
         id: id,
         type: type,
-        name: name ? text(name) : undefined,
+        name: name
+          ? name.startsWith('vk.')
+            ? translate(name)
+            : text(name)
+          : undefined,
         data: {
           source: yup.string(),
         },
