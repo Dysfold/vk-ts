@@ -1,4 +1,4 @@
-import { Player } from 'org.bukkit.entity';
+import { Entity, Player } from 'org.bukkit.entity';
 import {
   ItemStack,
   EquipmentSlot,
@@ -43,4 +43,21 @@ export function giveItem(
   if (leftOver.size()) {
     player.world.dropItem(player.location, leftOver.get(0));
   }
+}
+
+/**
+ * Gets the currently equipped item in given slot. Note that currently only
+ * players are supported - for all other entities, null is always returned.
+ * @param entity Entity to get equipment from.
+ * @param slot Equipment slot.
+ * @returns An equipped item or null.
+ */
+export function equippedItem(
+  entity: Entity,
+  slot: EquipmentSlot,
+): ItemStack | null {
+  if (entity instanceof Player) {
+    return entity.inventory.getItem(slot);
+  }
+  return null;
 }

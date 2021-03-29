@@ -39,6 +39,7 @@ registerEvent(BlockPlaceEvent, (event) => {
 
 registerEvent(BlockBreakEvent, (event) => {
   if (event.block.type !== SPAWN_BLOCK_TYPE) return;
+  if (event.isCancelled()) return;
   if (!deleteSpawnBlockAt(event.block.location)) return;
 
   event.player.sendTitle('', 'Spawn poistettu', 10, 40, 20);

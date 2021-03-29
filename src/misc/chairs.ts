@@ -1,7 +1,9 @@
 import { Material, Bukkit, SoundCategory } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Campfire, Stairs, Dispenser } from 'org.bukkit.block.data.type';
+import { EntityType } from 'org.bukkit.entity';
 import { BlockPlaceEvent, BlockDispenseEvent } from 'org.bukkit.event.block';
+import { ProjectileHitEvent } from 'org.bukkit.event.entity';
 import {
   PlayerBucketEmptyEvent,
   PlayerInteractEvent,
@@ -63,12 +65,26 @@ registerEvent(PlayerInteractEvent, (event) => {
 });
 // Dispense fire
 registerEvent(BlockDispenseEvent, (event) => {
-  if (event.item.type !== Material.FLINT_AND_STEEL) return;
+  if (
+    event.item.type !== Material.FLINT_AND_STEEL &&
+    event.item.type !== Material.FIRE_CHARGE
+  )
+    return;
   const dispenser = event.block.blockData as Dispenser;
   const blockAtFront = event.block.getRelative(dispenser.facing);
   if (isChair(blockAtFront)) {
     event.setCancelled(true);
   }
+});
+// Flaming arrows
+registerEvent(ProjectileHitEvent, async (event) => {
+  if (event.hitBlock?.type !== CHAIR) return;
+  if (event.entity.type !== EntityType.ARROW) return;
+  if (!event.entity.fireTicks) return;
+  const campfire = event.hitBlock.blockData as Campfire;
+  await wait(1, 'millis');
+  campfire.setLit(false);
+  event.hitBlock.blockData = campfire;
 });
 
 /**
@@ -112,7 +128,7 @@ ChairBlock.onBreak(async (event) => {
   event.block.type = Material.AIR;
   const drop = event.block.world.dropItemNaturally(
     event.block.location.add(0.5, 0, 0.5),
-    ChairItem.create(),
+    ChairItem.create({}),
   );
 
   // Adjust the velocity to be more natural

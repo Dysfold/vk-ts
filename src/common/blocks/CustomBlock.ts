@@ -1,13 +1,15 @@
 import { Material, Bukkit } from 'org.bukkit';
 import { Event } from 'org.bukkit.event';
 import { dataHolder, DataType, dataType } from '../datas/holder';
-import * as yup from 'yup';
 import { dataView, saveView } from '../datas/view';
 import { Block } from 'org.bukkit.block';
 import { BlockData } from 'org.bukkit.block.data';
 import { setBlock } from './blocks';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { Action, BlockBreakEvent, BlockEvent } from 'org.bukkit.event.block';
+import { ObjectShape } from 'yup/lib/object';
+import { Data, PartialData } from '../datas/yup-utils';
+import { isEmpty } from 'lodash';
 
 const CUSTOM_DATA_KEY = 'cd';
 
@@ -86,7 +88,7 @@ function parseBlockStates(type: Material, states: BlockStates) {
   return blockDatas;
 }
 
-type CustomBlockOptions<T extends {}> = {
+type CustomBlockOptions<T extends ObjectShape> = {
   /**
    * The Vanilla type/material used for this block.
    */
@@ -101,7 +103,7 @@ type CustomBlockOptions<T extends {}> = {
    * Schema definition for custom data associated with this block.
    * If not present, this block does not have custom data.
    */
-  data?: yup.ObjectSchemaDefinition<T>;
+  data?: T;
 
   /**
    * Callback for modifying this block after it has been created.
@@ -110,7 +112,7 @@ type CustomBlockOptions<T extends {}> = {
    * @param block Block with default changes applied.
    * @param data Custom data the block was created with.
    */
-  create?: (item: Block, data: T) => void;
+  create?: (item: Block, data: Data<T>) => void;
 
   /**
    * If specified, overrides the default function for checking if a block is
@@ -121,7 +123,7 @@ type CustomBlockOptions<T extends {}> = {
   check?: (block: Block) => boolean;
 };
 
-export class CustomBlock<T extends {}> {
+export class CustomBlock<T extends ObjectShape> {
   /**
    * Options of this block.
    */
@@ -145,7 +147,7 @@ export class CustomBlock<T extends {}> {
   /**
    * Tick handler for this block.
    */
-  private tickHandler?: (block: T) => Promise<boolean>;
+  private tickHandler?: (block: Data<T>) => Promise<boolean>;
 
   /**
    * Tick handler task id.
@@ -174,12 +176,7 @@ export class CustomBlock<T extends {}> {
       : undefined;
 
     // Create dataHolder data type
-    this.dataType = dataType(
-      CUSTOM_DATA_KEY,
-      this.options.data
-        ? this.options.data
-        : ({} as yup.ObjectSchemaDefinition<T>),
-    );
+    this.dataType = dataType(CUSTOM_DATA_KEY, this.options.data);
   }
 
   /**
@@ -200,7 +197,7 @@ export class CustomBlock<T extends {}> {
   event<E extends Event>(
     event: Newable<E>,
     blockPredicate: (event: E) => Block | null | undefined,
-    callback: (event: E, block: T) => Promise<void>,
+    callback: (event: E, block: Data<T>) => Promise<void>,
   ) {
     registerEvent(event, async (event) => {
       const block = blockPredicate(event); // Get Block
@@ -224,7 +221,7 @@ export class CustomBlock<T extends {}> {
    */
   onClick(
     type: 'right' | 'left',
-    callback: (event: PlayerInteractEvent, block: T) => Promise<void>,
+    callback: (event: PlayerInteractEvent, block: Data<T>) => Promise<void>,
   ) {
     this.event(
       PlayerInteractEvent,
@@ -246,12 +243,13 @@ export class CustomBlock<T extends {}> {
    * the block is allowed.
    * @param callback Event handler.
    */
-  onBreak(callback: (event: BlockEvent, data: T) => Promise<boolean>) {
+  onBreak(callback: (event: BlockEvent, data: Data<T>) => Promise<boolean>) {
     // TODO are there ways to break blocks that do not trigger this? EXPLOSIONS?
     this.event(
       BlockBreakEvent,
       (event) => event.block,
       async (event, block) => {
+        if (event.isCancelled()) return;
         const allowBreak = await callback(event, block);
         if (!allowBreak) {
           event.setCancelled(true); // Don't let player break this block
@@ -278,7 +276,7 @@ export class CustomBlock<T extends {}> {
   tick(
     interval: number,
     unit: TimeUnit = 'ticks',
-    callback: (block: T) => Promise<boolean>,
+    callback: (block: Data<T>) => Promise<boolean>,
   ) {
     switch (unit) {
       case 'millis':
@@ -335,17 +333,17 @@ export class CustomBlock<T extends {}> {
    * @param location Location of block.
    * @param data If specified, overrides parts of the default custom data.
    */
-  create(block: Block, data?: Partial<T>) {
+  create(block: Block, data: PartialData<T>) {
     setBlock(block, this.options.type, this.blockDatas); // Set Vanilla block
 
     const holder = dataHolder(block);
 
     // Data overrides given as parameter
-    let defaultData: T | undefined; // Created only if needed
-    if (data) {
-      defaultData = this.dataType.schema.default();
-      const allData = data ? { ...defaultData, ...data } : defaultData;
+    let defaultData: Data<T> | undefined = undefined; // Created only if needed
+    if (!isEmpty(data)) {
+      const allData = this.dataType.schema.validateSync(data);
       holder.set(CUSTOM_DATA_KEY, this.dataType, allData);
+      defaultData = allData;
       // Data available later with dataView
     } // else: don't bother applying default data, can get it later from this.data
 
@@ -354,7 +352,7 @@ export class CustomBlock<T extends {}> {
       // Give same default data if possible, generate if we didn't need it before
       return this.options.create(
         block,
-        defaultData ?? this.dataType.schema.default(),
+        defaultData ?? this.dataType.schema.validateSync(data),
       );
     }
     return block;
@@ -369,7 +367,7 @@ export class CustomBlock<T extends {}> {
    * @param block The block to fetch data from.
    * @returns Custom block data or undefined.
    */
-  get(block: Block | null | undefined): T | undefined {
+  get(block: Block | null | undefined): Data<T> | undefined {
     if (!block || !this.check(block)) {
       return undefined; // Not a custom block, or wrong custom block
     }
@@ -386,7 +384,7 @@ export class CustomBlock<T extends {}> {
    */
   set(
     block: Block | null | undefined,
-    data: Partial<T> | ((data: T) => Partial<T>),
+    data: Partial<Data<T>> | ((data: Data<T>) => Partial<Data<T>>),
   ): boolean {
     if (!block) {
       return false; // Not going to set anything to null
@@ -396,7 +394,7 @@ export class CustomBlock<T extends {}> {
     // (it might also be a tiny bit faster)
     const objData =
       holder.get(CUSTOM_DATA_KEY, this.dataType, false) ??
-      this.dataType.schema.default();
+      this.dataType.schema.getDefault();
 
     // Overwrite with given data
     Object.assign(objData, typeof data == 'function' ? data(objData) : data);

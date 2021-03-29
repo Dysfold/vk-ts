@@ -50,3 +50,7 @@ require('./horse-armor-items');
 require('./falling-blocks');
 require('./hug');
 require('./chairs');
+require('./placable-items');
+require('./rope');
+require('./like');
+require('./paper-write');

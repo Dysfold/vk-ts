@@ -30,7 +30,7 @@ const Namehider = new CustomItem({
   modelId: 15,
 });
 
-const nameHiderItem = Namehider.create();
+const nameHiderItem = Namehider.create({});
 
 addSlaughterableAnimal(EntityType.COW, [
   { item: Material.LEATHER, rarity: 0.3, count: 1 },
