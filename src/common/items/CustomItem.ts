@@ -234,6 +234,10 @@ export class CustomItem<T extends ObjectShape> {
     if (!this.options.type.equals(item.type)) {
       return false; // Item id is per Vanilla material
     }
-    return item.itemMeta.customModelData == this.customModelData;
+    const meta = item.itemMeta;
+    // Check if item has custom model data to avoid getCustomModelData() throwing
+    return (
+      meta.hasCustomModelData() && meta.customModelData == this.customModelData
+    );
   }
 }

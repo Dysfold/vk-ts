@@ -4,6 +4,7 @@ import { ItemStack } from 'org.bukkit.inventory';
 import * as yup from 'yup';
 import { test } from 'craftjs-plugin';
 import { text } from 'craftjs-plugin/chat';
+import { dataHolder, dataType } from '../datas/holder';
 
 const TestItem = new CustomItem({
   id: 0,
@@ -149,5 +150,31 @@ test('CustomItem model ids', (t) => {
     TestItem6.create({}).itemMeta.customModelData,
     100006,
     'CustomModelData is unused when customModel === false',
+  );
+});
+
+test('CustomItem.get() with no data', (t) => {
+  t.eq(
+    TestItem6.get(TestItem6.create({})),
+    {},
+    'custom item without data has {} as data',
+  );
+  t.eq(
+    TestItem6.get(new ItemStack(Material.STICK)),
+    undefined,
+    'non-custom item has undefined data',
+  );
+});
+
+test('CustomItem with extra data', (t) => {
+  const item = TestItem6.create({});
+  const extraType = dataType('cd', {
+    extra: yup.string(),
+  });
+  dataHolder(item).set('cd', extraType, { extra: 'works' });
+  t.eq(
+    TestItem6.get(item),
+    { extra: 'works' },
+    'CustomItem.get() returns data missing from schema',
   );
 });

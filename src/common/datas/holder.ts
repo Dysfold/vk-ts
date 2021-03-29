@@ -179,7 +179,7 @@ function fromJson<T extends ObjectShape>(
   }
   // Assign to default data from schema
   const schema = type.schema;
-  const obj = schema.getDefault();
+  const obj = schema.getDefault() ?? {};
   Object.assign(obj, JSON.parse(json));
 
   // Validate schema if requested
