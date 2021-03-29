@@ -1,8 +1,8 @@
-import { Material, Bukkit, SoundCategory } from 'org.bukkit';
+import { Material, SoundCategory } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
-import { Campfire, Stairs, Dispenser } from 'org.bukkit.block.data.type';
+import { Campfire, Dispenser, Stairs } from 'org.bukkit.block.data.type';
 import { EntityType } from 'org.bukkit.entity';
-import { BlockPlaceEvent, BlockDispenseEvent } from 'org.bukkit.event.block';
+import { BlockDispenseEvent, BlockPlaceEvent } from 'org.bukkit.event.block';
 import { ProjectileHitEvent } from 'org.bukkit.event.entity';
 import {
   PlayerBucketEmptyEvent,
