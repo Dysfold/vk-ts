@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { Material, GameMode } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
@@ -15,16 +16,14 @@ const CHANCE_WITHOUT_TOOL = 0.02;
 
 const Sickle = new CustomItem({
   id: 1,
-  name: 'Sirppi',
+  name: translate('vk.sickle'),
   type: VkItem.TOOL,
-  modelId: 1,
 });
 
 const Scythe = new CustomItem({
   id: 2,
-  name: 'Viitake',
+  name: translate('vk.scythe'),
   type: VkItem.TOOL,
-  modelId: 2,
 });
 
 registerEvent(BlockBreakEvent, (event) => {

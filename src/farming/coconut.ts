@@ -2,6 +2,7 @@ import { CustomItem } from '../common/items/CustomItem';
 import { Material } from 'org.bukkit';
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { VkItem } from '../common/items/VkItem';
+import { translate } from 'craftjs-plugin/chat';
 
 const CoconutBlock = new CustomBlock({
   type: Material.DEAD_BUBBLE_CORAL_WALL_FAN,
@@ -9,8 +10,7 @@ const CoconutBlock = new CustomBlock({
 
 const CoconutItem = new CustomItem({
   id: 22,
-  modelId: 22,
-  name: 'vk.coconut',
+  name: translate('vk.coconut'),
   type: VkItem.FOOD,
 });
 

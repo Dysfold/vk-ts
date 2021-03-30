@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { PlayerInventory } from 'org.bukkit.inventory';
@@ -13,9 +14,8 @@ import {
 } from './paper-write';
 
 const SealingWax = new CustomItem({
-  name: 'Sinettivaha',
+  name: translate('vk.sealing_wax'),
   id: 9,
-  modelId: 9,
   type: VkItem.MISC,
 });
 

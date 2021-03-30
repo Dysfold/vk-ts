@@ -4,7 +4,6 @@ import { Waterlogged } from 'org.bukkit.block.data';
 import { ArmorStand, Entity, EntityType, Player } from 'org.bukkit.entity';
 import {
   EntityDamageByEntityEvent,
-  EntityDeathEvent,
   PlayerDeathEvent,
 } from 'org.bukkit.event.entity';
 import { SpawnReason } from 'org.bukkit.event.entity.CreatureSpawnEvent';
@@ -16,49 +15,42 @@ import { SkullMeta } from 'org.bukkit.inventory.meta';
 import { EulerAngle } from 'org.bukkit.util';
 import { chanceOf, minMax } from '../common/helpers/math';
 import { CustomItem } from '../common/items/CustomItem';
-import { HIDDEN_MATERIAL } from '../misc/hidden-items';
+import { HIDDEN_MATERIAL, makeItemHidden } from '../misc/hidden-items';
 
 const BLOOD_MATERIAL = Material.DEAD_BUBBLE_CORAL_FAN;
 
 const Body = new CustomItem({
   id: 1,
-  modelId: 1,
   type: HIDDEN_MATERIAL,
 });
 
 const BodyFallen = new CustomItem({
   id: 29,
-  modelId: 29,
   type: HIDDEN_MATERIAL,
 });
 
 const BodyExploded = new CustomItem({
   id: 30,
-  modelId: 30,
   type: HIDDEN_MATERIAL,
 });
 
 const BodyBurned = new CustomItem({
   id: 31,
-  modelId: 31,
   type: HIDDEN_MATERIAL,
 });
 
 const BodyWounded = new CustomItem({
   id: 32,
-  modelId: 32,
   type: HIDDEN_MATERIAL,
 });
 
 const BodyPoisoned = new CustomItem({
   id: 33,
-  modelId: 33,
   type: HIDDEN_MATERIAL,
 });
 
 const BodyPierced = new CustomItem({
   id: 34,
-  modelId: 34,
   type: HIDDEN_MATERIAL,
 });
 
@@ -127,14 +119,18 @@ export async function spawnCorpse(event: PlayerDeathEvent) {
   armorstand.rightArmPose = new EulerAngle(0.01, 0.01, 0.01);
 
   const body = getBody(event.entity.lastDamageCause?.cause).create({});
-  armorstand.setItem(EquipmentSlot.HAND, body);
 
   const player = event.entity as Player;
   const head = new ItemStack(Material.PLAYER_HEAD);
   const skullMeta = head.itemMeta as SkullMeta;
   skullMeta.owningPlayer = player;
   head.itemMeta = skullMeta;
-  armorstand.setItem(EquipmentSlot.HEAD, head);
+
+  // Set "body" and head items and make them not drop
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const equipment = armorstand.equipment!;
+  equipment.itemInMainHand = makeItemHidden(body);
+  equipment.helmet = makeItemHidden(head);
 
   spawnBlood(armorstand.eyeLocation);
 }
@@ -163,16 +159,7 @@ function spawnBlood(location: Location) {
   }
 }
 
-// Remove drops from corpse
-registerEvent(EntityDeathEvent, (event) => {
-  if (!isCorpse(event.entity)) return;
-
-  event.setShouldPlayDeathSound(false);
-  event.setCancelled(true);
-  event.entity.remove();
-});
-
-// Destroy armorstands by clicking
+// Drop bones when corpses are destroyed
 registerEvent(EntityDamageByEntityEvent, (event) => {
   if (!isCorpse(event.entity)) return;
   const armorstand = event.entity as ArmorStand;
@@ -180,7 +167,6 @@ registerEvent(EntityDamageByEntityEvent, (event) => {
     armorstand.eyeLocation,
     new ItemStack(Material.BONE),
   );
-  armorstand.remove();
 });
 
 // Kill old armorstands when the chunk unloads

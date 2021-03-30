@@ -24,7 +24,6 @@ MUG.itemMeta = mugMeta;
 const FlatCap = new CustomItem({
   type: HAT_MATERIAL,
   id: 10,
-  modelId: 10,
 });
 
 const ITEMS = [

@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { Location, Material } from 'org.bukkit';
 import { BlockFace, Dispenser } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
@@ -8,9 +9,8 @@ import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 
 const MoneyMold = new CustomItem({
-  name: 'Rahamuotti',
+  name: translate('vk.money_mold'),
   id: 10,
-  modelId: 10,
   type: VkItem.MISC,
 });
 
@@ -40,94 +40,76 @@ const RAW_MATERIALS: { [id: string]: ItemStack[] } = {
 
 const COIN_A_0_01 = new CustomItem({
   id: 1,
-  modelId: 1,
   type: VkItem.MONEY,
 });
 const COIN_A_0_1 = new CustomItem({
   id: 2,
-  modelId: 2,
   type: VkItem.MONEY,
 });
 const COIN_A_1 = new CustomItem({
   id: 3,
-  modelId: 3,
   type: VkItem.MONEY,
 });
 const COIN_A_10 = new CustomItem({
   id: 4,
-  modelId: 4,
   type: VkItem.MONEY,
 });
 const COIN_A_100 = new CustomItem({
   id: 5,
-  modelId: 5,
   type: VkItem.MONEY,
 });
 const COIN_A_1000 = new CustomItem({
   id: 6,
-  modelId: 6,
   type: VkItem.MONEY,
 });
 
 const COIN_B_0_01 = new CustomItem({
   id: 7,
-  modelId: 7,
   type: VkItem.MONEY,
 });
 const COIN_B_0_1 = new CustomItem({
   id: 8,
-  modelId: 8,
   type: VkItem.MONEY,
 });
 const COIN_B_1 = new CustomItem({
   id: 9,
-  modelId: 9,
   type: VkItem.MONEY,
 });
 const COIN_B_10 = new CustomItem({
   id: 10,
-  modelId: 10,
   type: VkItem.MONEY,
 });
 const COIN_B_100 = new CustomItem({
   id: 11,
-  modelId: 11,
   type: VkItem.MONEY,
 });
 const COIN_B_1000 = new CustomItem({
   id: 12,
-  modelId: 12,
   type: VkItem.MONEY,
 });
 
 const COIN_C_0_01 = new CustomItem({
   id: 13,
-  modelId: 13,
   type: VkItem.MONEY,
 });
 const COIN_C_0_1 = new CustomItem({
   id: 14,
-  modelId: 14,
   type: VkItem.MONEY,
 });
 const COIN_C_1 = new CustomItem({
   id: 15,
-  modelId: 15,
   type: VkItem.MONEY,
 });
 const COIN_C_10 = new CustomItem({
   id: 16,
-  modelId: 16,
   type: VkItem.MONEY,
 });
 const COIN_C_100 = new CustomItem({
   id: 17,
-  modelId: 17,
   type: VkItem.MONEY,
 });
 const COIN_C_1000 = new CustomItem({
   id: 18,
-  modelId: 18,
   type: VkItem.MONEY,
 });
 

@@ -1,3 +1,4 @@
+import { text } from 'craftjs-plugin/chat';
 import { Material, Sound, Location, Particle } from 'org.bukkit';
 import { EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
@@ -25,9 +26,8 @@ const slaugtherSound = Sound.BLOCK_SLIME_BLOCK_STEP;
 
 const Namehider = new CustomItem({
   id: 15,
-  name: 'Namehider',
+  name: text('Namehider'),
   type: Material.HEART_OF_THE_SEA,
-  modelId: 15,
 });
 
 const nameHiderItem = Namehider.create({});

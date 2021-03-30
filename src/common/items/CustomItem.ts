@@ -6,8 +6,8 @@ import { dataView, saveView } from '../datas/view';
 import { ObjectShape } from 'yup/lib/object';
 import { isEmpty } from 'lodash';
 import { Data, PartialData } from '../datas/yup-utils';
+import { BaseComponent } from 'net.md_5.bungee.api.chat';
 
-const CUSTOM_TYPE_KEY = 'ct';
 const CUSTOM_DATA_KEY = 'cd';
 
 type CustomItemOptions<T extends ObjectShape> = {
@@ -17,6 +17,13 @@ type CustomItemOptions<T extends ObjectShape> = {
   id: number;
 
   /**
+   * If this item has a custom model; defaults to true.
+   * Items with this set to false are assigned very large and likely unused
+   * CustomModelData values.
+   */
+  customModel?: boolean;
+
+  /**
    * The Vanilla type/material used for this item.
    */
   type: Material;
@@ -24,13 +31,7 @@ type CustomItemOptions<T extends ObjectShape> = {
   /**
    * Display name of this item.
    */
-  name?: string;
-
-  /**
-   * CustomModelData model identifier of this item. When set, client selects a
-   * model with matching id from resource pack.
-   */
-  modelId?: number;
+  name?: BaseComponent;
 
   /**
    * Schema definition for custom data associated with this item.
@@ -77,12 +78,19 @@ export class CustomItem<T extends ObjectShape> {
   private options: CustomItemOptions<T>;
 
   /**
+   * CustomModelData to assign and check for this item.
+   */
+  private customModelData: number;
+
+  /**
    * Type of data associated with this item.
    */
   private dataType: DataType<T>;
 
   constructor(options: CustomItemOptions<T>) {
     this.options = options;
+    this.customModelData =
+      options.customModel !== false ? options.id : 100000 + options.id;
     checkItemId(options.type, options.id);
     this.dataType = dataType(CUSTOM_DATA_KEY, this.options.data);
   }
@@ -125,13 +133,14 @@ export class CustomItem<T extends ObjectShape> {
    * Create an ItemStack representing this CustomItem instance.
    * @param data If specified, this is the data that the created item
    * will have. If not, the default data will be used.
+   * @param amount Initial size of the created item stack.
    */
-  create(data: PartialData<T>) {
+  create(data: PartialData<T>, amount = 1): ItemStack {
     const item = new ItemStack(this.options.type);
     const meta = item.itemMeta;
     const holder = dataHolder(meta);
-    // Unique identifier of this custom item
-    holder.set(CUSTOM_TYPE_KEY, 'integer', this.options.id);
+    // Unique identifier of this custom item (and possible a resource pack model)
+    meta.customModelData = this.customModelData;
 
     // Data overrides given as parameter
     let defaultData: Data<T> | undefined = undefined; // Created only if needed
@@ -143,11 +152,10 @@ export class CustomItem<T extends ObjectShape> {
     } // else: don't bother applying default data, can get it later from this.data
 
     // Set values to meta based on item options
-    if (this.options.name != undefined) {
-      meta.displayName = this.options.name;
-    }
-    if (this.options.modelId != undefined) {
-      meta.customModelData = this.options.modelId;
+    const component = this.options.name;
+    if (component != undefined) {
+      component.italic = false; // Explicitly disable italic item name
+      meta.displayNameComponent = [component];
     }
     item.itemMeta = meta; // Set new meta to item
 
@@ -158,6 +166,11 @@ export class CustomItem<T extends ObjectShape> {
         item,
         defaultData ?? this.dataType.schema.validateSync(data),
       );
+    }
+
+    // Don't overwrite stack size set by create() unless necessary
+    if (amount != 1) {
+      item.amount = amount;
     }
     return item;
   }
@@ -221,7 +234,10 @@ export class CustomItem<T extends ObjectShape> {
     if (!this.options.type.equals(item.type)) {
       return false; // Item id is per Vanilla material
     }
-    const itemId = dataHolder(item.itemMeta).get(CUSTOM_TYPE_KEY, 'integer');
-    return itemId == this.options.id;
+    const meta = item.itemMeta;
+    // Check if item has custom model data to avoid getCustomModelData() throwing
+    return (
+      meta.hasCustomModelData() && meta.customModelData == this.customModelData
+    );
   }
 }

@@ -1,3 +1,4 @@
+import { text } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
 import { CustomItem } from '../common/items/CustomItem';
 
@@ -7,6 +8,5 @@ import { CustomItem } from '../common/items/CustomItem';
 export const SpeakerStaff = new CustomItem({
   id: 1,
   type: Material.GOLDEN_HORSE_ARMOR,
-  name: 'Puhujankeppi',
-  modelId: 1,
+  name: text('vk.speaker_stick'),
 });

@@ -33,30 +33,26 @@ const playersWriting: Set<Player> = new Set<Player>();
 
 export const PaperWritten = new CustomItem({
   id: 1,
-  name: 'Paperi',
+  name: text('Paperi'),
   type: VkItem.PAPER,
-  modelId: 1,
 });
 
 export const PaperSealed = new CustomItem({
   id: 2,
-  name: 'Paperi',
+  name: text('Paperi'),
   type: VkItem.PAPER,
-  modelId: 2,
 });
 
 export const Envelope = new CustomItem({
   id: 3,
-  name: 'Kirjekuori',
+  name: text('Kirjekuori'),
   type: VkItem.PAPER,
-  modelId: 3,
 });
 
 export const EnvelopeWithLetter = new CustomItem({
   id: 4,
-  name: 'Kirjekuori',
+  name: text('Kirjekuori'),
   type: VkItem.PAPER,
-  modelId: 4,
   data: {
     letter: yup.string().required(),
     wax: yup.array().of(yup.string().required()).required(),
@@ -65,9 +61,8 @@ export const EnvelopeWithLetter = new CustomItem({
 
 export const EnvelopeSealed = new CustomItem({
   id: 5,
-  name: 'Kirjekuori',
+  name: text('Kirjekuori'),
   type: VkItem.PAPER,
-  modelId: 5,
   data: {
     letter: yup.string().required(),
     wax: yup.array().of(yup.string().required()).required(),

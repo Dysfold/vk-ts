@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { EntityType, Item } from 'org.bukkit.entity';
@@ -6,9 +7,8 @@ import { CustomItem } from '../common/items/CustomItem';
 
 const MashedPotatoes = new CustomItem({
   id: 4,
-  modelId: 4,
   type: Material.POISONOUS_POTATO,
-  name: 'vk.mashed_potatoes',
+  name: translate('vk.mashed_potatoes'),
 });
 
 registerEvent(BlockPistonExtendEvent, (event) => {

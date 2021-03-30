@@ -1,7 +1,9 @@
+import { text, translate } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
+import * as yup from 'yup';
 
 const CUSTOM_ITEM_TYPES = new Map(Object.entries(VkItem));
 const ALIASES = Object.keys(VkItem).map((key) => key.toLowerCase());
@@ -19,19 +21,24 @@ registerCommand(
         Material.getMaterial(args[0]);
       const id = Number.parseInt(args[1]);
 
-      const name = args[2] || undefined;
-      const modelId = Number.parseInt(args[3]) || id;
+      const name = args[2];
 
       if (!type) return;
 
       const item = new CustomItem({
         id: id,
         type: type,
-        modelId: modelId,
-        name: name,
+        name: name
+          ? name.startsWith('vk.')
+            ? translate(name)
+            : text(name)
+          : undefined,
+        data: {
+          source: yup.string(),
+        },
       });
 
-      player.inventory.addItem(item.create({}));
+      player.inventory.addItem(item.create({ source: 'custom-give' }));
     }
   },
   {
@@ -44,6 +51,6 @@ registerCommand(
       }
     },
     executableBy: 'players',
-    description: '/customitem <type> <id> <name?> <modelId?>',
+    description: '/customitem <type> <id> <name?>',
   },
 );
