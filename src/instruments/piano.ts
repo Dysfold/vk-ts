@@ -1,4 +1,4 @@
-import { Location, Material } from 'org.bukkit';
+import { Location, Material, SoundCategory } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
@@ -58,7 +58,13 @@ function playNoteNumber(location: Location, note: number) {
 
   const pitch = 0.5 * 2 ** ((note - octave * KEYS_IN_OCTAVE) / KEYS_IN_OCTAVE);
 
-  location.world.playSound(location, `custom.piano${octave + 2}`, 2, pitch);
+  location.world.playSound(
+    location,
+    `custom.piano${octave + 2}`,
+    SoundCategory.RECORDS, // Noteblocks
+    2,
+    pitch,
+  );
 }
 
 export function playPianoChord(loc: Location, chord: number, minor = false) {
