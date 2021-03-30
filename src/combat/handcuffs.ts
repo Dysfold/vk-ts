@@ -32,7 +32,7 @@ export function stopDragging(dragged: Player) {
   draggedPlayers.delete(dragged);
 }
 
-const Handcuffs = new CustomItem({
+export const Handcuffs = new CustomItem({
   id: 2,
   name: 'Käsiraudat',
   type: VkItem.MISC,
@@ -50,7 +50,7 @@ export const LockedHandcuffs = new CustomItem({
   },
 });
 
-const Key = new CustomItem({
+export const Key = new CustomItem({
   id: 4,
   name: 'Avain',
   type: VkItem.MISC,
