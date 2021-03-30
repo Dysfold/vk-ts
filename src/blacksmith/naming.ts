@@ -1,9 +1,8 @@
 import { TranslatableComponent } from 'net.md_5.bungee.api.chat';
-import { Bukkit } from 'org.bukkit';
 import { EntityType, Player } from 'org.bukkit.entity';
 import { PrepareAnvilEvent } from 'org.bukkit.event.inventory';
 import { ItemStack } from 'org.bukkit.inventory';
-import { Key, Handcuffs } from '../combat/handcuffs';
+import { Handcuffs, Key } from '../combat/handcuffs';
 
 // TODO: Allow renaming of locks
 function isAllowedItem(item: ItemStack) {
