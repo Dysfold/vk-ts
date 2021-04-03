@@ -102,16 +102,20 @@ registerEvent(BlockBreakEvent, (event) => {
 registerEvent(PlayerInteractEvent, (event) => {
   if (!isRightClick(event.action)) return;
   if (!event.clickedBlock) return;
+  if (!event.player.isSneaking()) return;
   if (event.hand !== EquipmentSlot.HAND) return;
   const item = event.player.inventory.itemInMainHand;
   if (!Blade.check(item)) return;
 
   const clickedBlock = event.clickedBlock;
   const loc = clickedBlock.location.toCenterLocation().add(0, 0.5, 0);
-  const aboveLoc = loc.clone().add(0, 1, 0);
 
-  if (aboveLoc.block.type !== Material.AIR) return; // Prevent placing inside block
-  if (!aboveLoc.getNearbyEntities(1, 1, 1).isEmpty()) return; // Prevent placing inside armor stands etc.
+  // Prevent placing inside block
+  if (clickedBlock.getRelative(0, 1, 0).type !== Material.AIR) return;
+  // Prevent placing inside armor stands.
+  for (const entity of loc.getNearbyEntities(0.5, 0.5, 0.5)) {
+    if (entity.type === EntityType.ARMOR_STAND) return;
+  }
 
   // Set armor stand facing
   switch (event.player.facing) {
