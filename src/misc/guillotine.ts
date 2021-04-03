@@ -1,6 +1,6 @@
 import { ParticleBuilder } from 'com.destroystokyo.paper';
 import { translate } from 'craftjs-plugin/chat';
-import { Location, Material, Particle } from 'org.bukkit';
+import { Location, Material, Particle, Sound, SoundCategory } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
 import {
@@ -18,6 +18,9 @@ import { VkItem } from '../common/items/VkItem';
 const DEADLY_CHOP_VELOCITY = 0.6; // Approx. > 3 block fall kills always.
 const VEL_DAMAGE_MODIFIER = 12; // This is multiplied with y_velocity to get "Non deadly" damage.
 const DRAMATIC_EVENT_DELAY = 10; // ticks (Can be adjusted or removed by preference)
+const PLACEMENT_SOUND = Sound.BLOCK_ANVIL_PLACE;
+const BREAK_SOUND = Sound.BLOCK_ANVIL_BREAK;
+const CHOP_SOUND = Sound.BLOCK_ANVIL_FALL;
 
 const Blade = new CustomItem({
   id: 5,
@@ -62,7 +65,6 @@ async function chopIfHit(location: Location, y_velocity: number) {
       const meta = head.itemMeta as SkullMeta;
       meta.owningPlayer = player;
       head.itemMeta = meta;
-      await wait(DRAMATIC_EVENT_DELAY, 'ticks'); // Delay before dropping head for dramatic effect
       location.world.dropItem(eyeLocation, head);
     }
   }
@@ -74,6 +76,7 @@ async function playChopEffects(location: Location) {
     .data(Material.REDSTONE_BLOCK.createBlockData())
     .count(20)
     .spawn();
+  location.world.playSound(location, CHOP_SOUND, SoundCategory.BLOCKS, 1, 1);
 }
 
 registerEvent(BlockPistonRetractEvent, (event) => {
@@ -106,7 +109,8 @@ registerEvent(PlayerInteractEvent, (event) => {
   const item = event.player.inventory.itemInMainHand;
   if (!Blade.check(item)) return;
 
-  if (event.clickedBlock.type.isInteractable()) return;
+  const player = event.player;
+  if (event.clickedBlock.type.isInteractable() && !player.isSneaking()) return;
   const block = event.clickedBlock.getRelative(event.blockFace);
   if (block.type !== Material.AIR) return;
   const groundBlock = block.getRelative(BlockFace.DOWN);
@@ -117,6 +121,8 @@ registerEvent(PlayerInteractEvent, (event) => {
   for (const entity of loc.getNearbyEntities(0.5, 0.5, 0.5)) {
     if (entity.type === EntityType.ARMOR_STAND) return;
   }
+
+  loc.world.playSound(loc, PLACEMENT_SOUND, SoundCategory.BLOCKS, 1, 1);
 
   // Set armor stand facing
   switch (event.player.facing) {
@@ -157,6 +163,8 @@ registerEvent(EntityDamageEvent, (event) => {
   const armorStand = event.entity as ArmorStand;
   if (!Blade.check(armorStand.getItem(EquipmentSlot.HEAD))) return;
   event.setCancelled(true);
+  const loc = armorStand.location;
+  loc.world.playSound(loc, BREAK_SOUND, SoundCategory.BLOCKS, 1, 1);
   armorStand.world.dropItem(armorStand.location, Blade.create({}, 1));
   armorStand.remove();
 });
