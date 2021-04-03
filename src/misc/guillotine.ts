@@ -17,7 +17,7 @@ import { VkItem } from '../common/items/VkItem';
 
 const DEADLY_CHOP_VELOCITY = 0.6; // Approx. > 3 block fall kills always.
 const VEL_DAMAGE_MODIFIER = 12; // This is multiplied with y_velocity to get "Non deadly" damage.
-const DRAMATIC_EVENT_DELAY = 200; // ms (Can be adjusted or removed by preference)
+const DRAMATIC_EVENT_DELAY = 10; // ticks (Can be adjusted or removed by preference)
 
 const Blade = new CustomItem({
   id: 5,
@@ -33,7 +33,7 @@ async function dropBlade(armorStand: ArmorStand) {
 
   // Blade Falling
   for (let i = 0; i < 200; i++) {
-    await wait(100, 'millis'); // Wait for blade to fall before y-checks.
+    await wait(4, 'ticks'); // Wait for blade to fall before y-checks.
     if (!armorStand.isValid() || armorStand.velocity.y >= previousY) break;
     chopIfHit(armorStand.location, Math.abs(armorStand.velocity.y));
     previousY = armorStand.velocity.y;
@@ -51,7 +51,7 @@ async function chopIfHit(location: Location, y_velocity: number) {
     const eyeLocation = player.eyeLocation;
     playChopEffects(eyeLocation);
 
-    await wait(DRAMATIC_EVENT_DELAY, 'millis'); // Delay before chopping for dramatic effect
+    await wait(DRAMATIC_EVENT_DELAY, 'ticks'); // Delay before chopping for dramatic effect
 
     if (y_velocity >= DEADLY_CHOP_VELOCITY) player.health = 0;
     else player.damage(VEL_DAMAGE_MODIFIER * y_velocity);
@@ -62,7 +62,7 @@ async function chopIfHit(location: Location, y_velocity: number) {
       const meta = head.itemMeta as SkullMeta;
       meta.owningPlayer = player;
       head.itemMeta = meta;
-      await wait(DRAMATIC_EVENT_DELAY, 'millis'); // Delay before dropping head for dramatic effect
+      await wait(DRAMATIC_EVENT_DELAY, 'ticks'); // Delay before dropping head for dramatic effect
       location.world.dropItem(eyeLocation, head);
     }
   }
@@ -102,16 +102,17 @@ registerEvent(BlockBreakEvent, (event) => {
 registerEvent(PlayerInteractEvent, (event) => {
   if (!isRightClick(event.action)) return;
   if (!event.clickedBlock) return;
-  if (!event.player.isSneaking()) return;
   if (event.hand !== EquipmentSlot.HAND) return;
   const item = event.player.inventory.itemInMainHand;
   if (!Blade.check(item)) return;
 
-  const clickedBlock = event.clickedBlock;
-  const loc = clickedBlock.location.toCenterLocation().add(0, 0.5, 0);
+  if (event.clickedBlock.type.isInteractable()) return;
+  const block = event.clickedBlock.getRelative(event.blockFace);
+  if (block.type !== Material.AIR) return;
+  const groundBlock = block.getRelative(BlockFace.DOWN);
+  if (groundBlock.type === Material.AIR) return;
+  const loc = groundBlock.location.toCenterLocation().add(0, 0.5, 0);
 
-  // Prevent placing inside block
-  if (clickedBlock.getRelative(0, 1, 0).type !== Material.AIR) return;
   // Prevent placing inside armor stands.
   for (const entity of loc.getNearbyEntities(0.5, 0.5, 0.5)) {
     if (entity.type === EntityType.ARMOR_STAND) return;
@@ -134,7 +135,7 @@ registerEvent(PlayerInteractEvent, (event) => {
   }
 
   const armorStand = event.player.world.spawnEntity(
-    new Location(clickedBlock.world, 0, -1000, 0),
+    new Location(block.world, 0, -1000, 0),
     EntityType.ARMOR_STAND,
   ) as ArmorStand;
 
