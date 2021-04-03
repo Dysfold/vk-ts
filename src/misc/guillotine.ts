@@ -22,6 +22,8 @@ const PLACEMENT_SOUND = Sound.BLOCK_ANVIL_PLACE;
 const BREAK_SOUND = Sound.BLOCK_ANVIL_BREAK;
 const CHOP_SOUND = Sound.BLOCK_ANVIL_FALL;
 
+const cooldowns = new Set<Player>();
+
 const Blade = new CustomItem({
   id: 5,
   name: translate('vk.golden_horn'),
@@ -51,6 +53,10 @@ async function chopIfHit(location: Location, y_velocity: number) {
   for (const entity of location.getNearbyEntities(1, 1.2, 1)) {
     if (entity.type !== EntityType.PLAYER) return;
     const player = (entity as unknown) as Player;
+
+    if (cooldowns.has(player)) return;
+    cooldowns.add(player);
+
     const eyeLocation = player.eyeLocation;
     playChopEffects(eyeLocation);
 
@@ -67,6 +73,9 @@ async function chopIfHit(location: Location, y_velocity: number) {
       head.itemMeta = meta;
       location.world.dropItem(eyeLocation, head);
     }
+
+    await wait(20, 'ticks');
+    cooldowns.delete(player);
   }
 }
 
@@ -114,7 +123,10 @@ registerEvent(PlayerInteractEvent, (event) => {
   const block = event.clickedBlock.getRelative(event.blockFace);
   if (block.type !== Material.AIR) return;
   const groundBlock = block.getRelative(BlockFace.DOWN);
-  if (groundBlock.type === Material.AIR) return;
+  if (groundBlock.type === Material.AIR) {
+    player.sendActionBar('Et voi asettaa terää ilmaan.');
+    return;
+  }
   const loc = groundBlock.location.toCenterLocation().add(0, 0.5, 0);
 
   // Prevent placing inside armor stands.
