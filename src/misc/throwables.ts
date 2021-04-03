@@ -14,7 +14,7 @@ const THROW_SOUND = Sound.ENTITY_SNOWBALL_THROW;
 const HIT_SOUND = Sound.BLOCK_STONE_HIT;
 const ZERO_VECTOR = new Vector();
 
-const THROW_COOLDOWN = 80; // ms
+const THROW_COOLDOWN = 2; // ticks
 const cooldowns = new Set<Player>();
 
 const NOT_THROWABLE = new Set([
@@ -62,7 +62,7 @@ registerEvent(PlayerDropItemEvent, async (event) => {
     1,
   );
 
-  await wait(THROW_COOLDOWN, 'millis');
+  await wait(THROW_COOLDOWN, 'ticks');
   cooldowns.delete(player);
 });
 
