@@ -10,6 +10,7 @@ import { canBreak } from '../hydration/bottles';
 
 const VELOCITY_MULTIPLIER = 0.8;
 const HIT_DAMAGE = 0.2;
+const MAX_PUSH_VELOCITY = 0.2; // Maximum squared length of entities velocity
 const THROW_SOUND = Sound.ENTITY_SNOWBALL_THROW;
 const HIT_SOUND = Sound.BLOCK_STONE_HIT;
 const ZERO_VECTOR = new Vector();
@@ -47,6 +48,7 @@ registerEvent(PlayerDropItemEvent, (event) => {
   snowball.velocity = player.eyeLocation.direction.multiply(
     VELOCITY_MULTIPLIER,
   );
+
   player.world.playSound(
     player.location,
     THROW_SOUND,
@@ -66,8 +68,10 @@ registerEvent(ProjectileHitEvent, (event) => {
   if (event.hitEntity) {
     const damagee = event.hitEntity as Damageable;
     damagee.damage(HIT_DAMAGE);
-    const pushVel = new Vector(snowball.velocity.x, 0.5, snowball.velocity.z);
-    damagee.velocity = damagee.velocity.add(pushVel.multiply(0.6));
+    if (damagee.velocity.lengthSquared() < MAX_PUSH_VELOCITY) {
+      const pushVel = new Vector(snowball.velocity.x, 0.5, snowball.velocity.z);
+      damagee.velocity = damagee.velocity.add(pushVel.multiply(0.6));
+    }
   }
 
   // Prevent dropping broken bottles -> Breaking handled at breaking-bottles.ts
