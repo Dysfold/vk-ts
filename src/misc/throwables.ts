@@ -1,5 +1,5 @@
 import { Material, Sound, SoundCategory } from 'org.bukkit';
-import { Damageable, EntityType, Snowball } from 'org.bukkit.entity';
+import { Damageable, EntityType, Player, Snowball } from 'org.bukkit.entity';
 import { ProjectileHitEvent } from 'org.bukkit.event.entity';
 import { PlayerDropItemEvent } from 'org.bukkit.event.player';
 import { Vector } from 'org.bukkit.util';
@@ -10,10 +10,12 @@ import { canBreak } from '../hydration/bottles';
 
 const VELOCITY_MULTIPLIER = 0.8;
 const HIT_DAMAGE = 0.2;
-const MAX_PUSH_VELOCITY = 0.2; // Maximum squared length of entities velocity
 const THROW_SOUND = Sound.ENTITY_SNOWBALL_THROW;
 const HIT_SOUND = Sound.BLOCK_STONE_HIT;
 const ZERO_VECTOR = new Vector();
+
+const THROW_COOLDOWN = 80; // ms
+const cooldowns = new Set<Player>();
 
 const NOT_THROWABLE = new Set([
   Material.SNOWBALL,
@@ -24,7 +26,7 @@ const NOT_THROWABLE = new Set([
 
 const NOT_THROWABLE_CUSTOMITEMS = [LockedHandcuffs, Whip];
 
-registerEvent(PlayerDropItemEvent, (event) => {
+registerEvent(PlayerDropItemEvent, async (event) => {
   const player = event.player;
   const item = event.itemDrop.itemStack;
   const itemType = item.type;
@@ -33,6 +35,9 @@ registerEvent(PlayerDropItemEvent, (event) => {
   if (NOT_THROWABLE.has(itemType)) return;
   // Check if item was unthrowable customitem
   if (NOT_THROWABLE_CUSTOMITEMS.some((i) => i.check(item))) return;
+
+  if (cooldowns.has(player)) return; // prevent throwing items while cooldown
+  cooldowns.add(player);
 
   event.setCancelled(true);
 
@@ -56,6 +61,9 @@ registerEvent(PlayerDropItemEvent, (event) => {
     0.5,
     1,
   );
+
+  await wait(THROW_COOLDOWN, 'millis');
+  cooldowns.delete(player);
 });
 
 registerEvent(ProjectileHitEvent, (event) => {
@@ -68,10 +76,8 @@ registerEvent(ProjectileHitEvent, (event) => {
   if (event.hitEntity) {
     const damagee = event.hitEntity as Damageable;
     damagee.damage(HIT_DAMAGE);
-    if (damagee.velocity.lengthSquared() < MAX_PUSH_VELOCITY) {
-      const pushVel = new Vector(snowball.velocity.x, 0.5, snowball.velocity.z);
-      damagee.velocity = damagee.velocity.add(pushVel.multiply(0.6));
-    }
+    const pushVel = new Vector(snowball.velocity.x, 0.5, snowball.velocity.z);
+    damagee.velocity = damagee.velocity.add(pushVel.multiply(0.6));
   }
 
   // Prevent dropping broken bottles -> Breaking handled at breaking-bottles.ts
