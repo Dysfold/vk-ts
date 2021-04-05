@@ -1,19 +1,30 @@
 import { Material, Particle, Sound } from 'org.bukkit';
-import { Block } from 'org.bukkit.block';
-import { Levelled, Waterlogged } from 'org.bukkit.block.data';
+import { Block, BlockFace } from 'org.bukkit.block';
+import { Levelled } from 'org.bukkit.block.data';
 import { Animals, EntityType, LivingEntity, Tameable } from 'org.bukkit.entity';
+import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { EntityBreedEvent } from 'org.bukkit.event.entity';
 import {
   PlayerInteractEntityEvent,
   PlayerInteractEvent,
 } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
+import {
+  getItemFrame,
+  spawnHiddenItemFrame,
+} from '../common/entities/item-frame';
+import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 const BREED_WATER_LEVEL = 1; // Max 3
 const BREED_COMPOST_LEVEL = 4; // Max 8
 const BOWL_SEED_AMOUNT = 4;
-const SEED_BOWL = Material.DEAD_BRAIN_CORAL_FAN;
-const EMPTY_SEED_BOWL = Material.DEAD_TUBE_CORAL_FAN;
+const SEED_BOWL = Material.DEAD_TUBE_CORAL_FAN;
+
+const Seeds = new CustomItem({
+  id: 35,
+  type: VkItem.HIDDEN,
+});
 
 /**
  * Supported food sources
@@ -79,10 +90,14 @@ function consumeFood(entity: LivingEntity): boolean {
   for (const block of blocksNearEntity) {
     if (foodSource === FoodSource.SEED_BOWL) {
       if (block.type === SEED_BOWL) {
-        block.type = EMPTY_SEED_BOWL;
-        const data = block.blockData;
-        if (data instanceof Waterlogged) data.setWaterlogged(false);
-        block.blockData = data;
+        const frame = getItemFrame(
+          block.getRelative(BlockFace.DOWN),
+          BlockFace.UP,
+        );
+        if (!frame) return false;
+        const frameItem = frame.item;
+        if (!Seeds.check(frameItem)) return false;
+        frame.remove();
         playFeedingEffects(block, Material.WHEAT_SEEDS);
         return true;
       }
@@ -220,16 +235,21 @@ registerEvent(PlayerInteractEvent, (event) => {
   if (!event.clickedBlock) return;
   if (!event.item) return;
   if (event.item.type !== Material.WHEAT_SEEDS) return;
-  if (event.clickedBlock.type !== EMPTY_SEED_BOWL) return;
+  if (event.clickedBlock.type !== SEED_BOWL) return;
   if (event.item.amount < BOWL_SEED_AMOUNT) return;
 
   const block = event.clickedBlock;
   const item = event.item;
 
-  block.type = SEED_BOWL;
-  const data = block.blockData;
-  if (data instanceof Waterlogged) data.setWaterlogged(false);
-  block.blockData = data;
+  const frame = getItemFrame(block.getRelative(BlockFace.DOWN), BlockFace.UP);
+  if (frame) return;
+
+  const newFrame = spawnHiddenItemFrame(
+    block.getRelative(BlockFace.DOWN),
+    BlockFace.UP,
+    Seeds.create({}),
+  );
+  if (!newFrame) return;
 
   item.amount -= BOWL_SEED_AMOUNT;
 });
@@ -243,7 +263,13 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
   if (!BREEDABLE_ANIMALS.has(event.rightClicked.type)) return;
 
   const animal = event.rightClicked as Animals;
-  const item = event.player.itemInHand;
+  const item = event.player.inventory.itemInMainHand;
+
+  // Prevent breeding dead animals
+  if (animal.name === 'Dinnerbone') {
+    event.setCancelled(true);
+    return;
+  }
 
   // Prevent breeding untamed animals like horses and mules
   if (animal instanceof Tameable) {
@@ -272,4 +298,18 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
     );
     item.amount--;
   }
+});
+
+registerEvent(BlockBreakEvent, (event) => {
+  const block = event.block;
+  if (block.type !== SEED_BOWL) return;
+  const frame = getItemFrame(block.getRelative(BlockFace.DOWN), BlockFace.UP);
+  if (!frame) return;
+  const frameItem = frame.item;
+  if (!Seeds.check(frameItem)) return;
+  frame.remove();
+  block.world.dropItem(
+    block.location,
+    new ItemStack(Material.WHEAT_SEEDS, BOWL_SEED_AMOUNT),
+  );
 });
