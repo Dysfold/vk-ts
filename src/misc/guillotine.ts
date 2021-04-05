@@ -16,10 +16,10 @@ import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 
 const DEADLY_CHOP_VELOCITY = 0.6; // Approx. > 3 block fall kills always.
-const VEL_DAMAGE_MODIFIER = 12; // This is multiplied with y_velocity to get "Non deadly" damage.
+const VEL_DAMAGE_MODIFIER = 12; // This is multiplied with y_velocity to get smaller drop damage.
 const PLACEMENT_SOUND = Sound.BLOCK_ANVIL_PLACE;
 const BREAK_SOUND = Sound.BLOCK_ANVIL_BREAK;
-const CHOP_SOUND = Sound.BLOCK_ANVIL_FALL;
+const LAND_SOUND = Sound.BLOCK_ANVIL_LAND;
 
 const cooldowns = new Set<Player>();
 
@@ -30,26 +30,35 @@ const Blade = new CustomItem({
 });
 
 async function dropBlade(armorStand: ArmorStand) {
-  if (armorStand.hasGravity()) return; // Has Gravity -> Blade already falling.
+  if (armorStand.hasGravity()) return; // Has gravity -> Blade already falling.
   armorStand.setGravity(true);
   armorStand.setInvulnerable(true);
   let previousY = armorStand.velocity.y;
 
-  // Blade Falling
+  // Blade falling
   for (let i = 0; i < 200; i++) {
-    await wait(2, 'ticks'); // Wait for blade to fall before y-checks.
-    if (!armorStand.isValid() || armorStand.velocity.y >= previousY) break;
-    chopIfHit(armorStand.location, Math.abs(armorStand.velocity.y));
-    previousY = armorStand.velocity.y;
+    await wait(2, 'ticks');
+    const currentY = armorStand.velocity.y;
+    if (!armorStand.isValid() || currentY >= previousY) break;
+    previousY = currentY;
+    chopIfHit(armorStand.location, Math.abs(currentY));
   }
 
   // Blade hit ground
+  armorStand.world.playSound(
+    armorStand.location,
+    LAND_SOUND,
+    SoundCategory.BLOCKS,
+    0.6,
+    0.8,
+  );
   armorStand.setGravity(false);
   armorStand.setInvulnerable(false);
 }
 
 async function chopIfHit(location: Location, y_velocity: number) {
-  for (const entity of location.getNearbyEntities(1, 1.2, 1)) {
+  const entities = location.getNearbyEntities(1, 1.2, 1);
+  for (const entity of entities) {
     if (entity.type !== EntityType.PLAYER) return;
     const player = (entity as unknown) as Player;
 
@@ -59,6 +68,7 @@ async function chopIfHit(location: Location, y_velocity: number) {
     const eyeLocation = player.eyeLocation;
     playChopEffects(eyeLocation);
 
+    // Deal damage
     if (y_velocity >= DEADLY_CHOP_VELOCITY) player.health = 0;
     else player.damage(VEL_DAMAGE_MODIFIER * y_velocity);
 
@@ -82,7 +92,6 @@ async function playChopEffects(location: Location) {
     .data(Material.REDSTONE_BLOCK.createBlockData())
     .count(20)
     .spawn();
-  location.world.playSound(location, CHOP_SOUND, SoundCategory.BLOCKS, 1, 1);
 }
 
 registerEvent(BlockPistonRetractEvent, (event) => {
@@ -112,28 +121,27 @@ registerEvent(PlayerInteractEvent, (event) => {
   if (!isRightClick(event.action)) return;
   if (!event.clickedBlock) return;
   if (event.hand !== EquipmentSlot.HAND) return;
+
   const item = event.player.inventory.itemInMainHand;
   if (!Blade.check(item)) return;
-
   const player = event.player;
-  if (event.clickedBlock.type.isInteractable() && !player.isSneaking()) return;
   const block = event.clickedBlock.getRelative(event.blockFace);
-  if (block.type !== Material.AIR) return;
   const groundBlock = block.getRelative(BlockFace.DOWN);
-  if (groundBlock.type === Material.AIR) {
-    player.sendActionBar('Et voi asettaa terää ilmaan.');
-    return;
-  }
   const loc = groundBlock.location.toCenterLocation().add(0, 0.5, 0);
+
+  if (event.clickedBlock.type.isInteractable() && !player.isSneaking()) return;
+  if (block.type !== Material.AIR) return;
+  if (groundBlock.type === Material.AIR)
+    return player.sendActionBar('Et voi asettaa terää ilmaan.');
 
   // Prevent placing inside armor stands.
   for (const entity of loc.getNearbyEntities(0.5, 0.5, 0.5)) {
     if (entity.type === EntityType.ARMOR_STAND) return;
   }
 
-  loc.world.playSound(loc, PLACEMENT_SOUND, SoundCategory.BLOCKS, 1, 1);
+  loc.world.playSound(loc, PLACEMENT_SOUND, SoundCategory.BLOCKS, 0.6, 0.8);
 
-  // Set armor stand facing
+  // Prepare armor stand facing
   switch (event.player.facing) {
     case BlockFace.SOUTH:
       loc.yaw = 180;
@@ -149,11 +157,13 @@ registerEvent(PlayerInteractEvent, (event) => {
       break;
   }
 
+  // Spawn armor stand out of sight
   const armorStand = event.player.world.spawnEntity(
     new Location(block.world, 0, -1000, 0),
     EntityType.ARMOR_STAND,
   ) as ArmorStand;
 
+  // Set armor stand attributes and teleport to location
   armorStand.setSmall(true);
   armorStand.setInvisible(true);
   armorStand.setGravity(false);
