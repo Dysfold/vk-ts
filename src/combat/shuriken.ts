@@ -8,7 +8,7 @@ import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 
 const HIT_DAMAGE = 5;
-const VEL_MULTIPLIER = 0.4;
+const VEL_MULTIPLIER = 0.8;
 const PICKUP_DELAY = 80; // ticks
 const ZERO_VECTOR = new Vector();
 const HIT_SOUND = Sound.BLOCK_STONE_HIT;
@@ -30,16 +30,19 @@ registerEvent(ProjectileHitEvent, (event) => {
   // Push and damage entity who got hit
   if (event.hitEntity) {
     // Get armor modifier from player
-    if (event.hitEntity.type === EntityType.PLAYER) {
-      const player = (event.hitEntity as unknown) as Player;
+    if (event.hitEntity instanceof Player) {
+      const player = event.hitEntity as Player;
       const armor = player.getAttribute(Attribute.GENERIC_ARMOR)?.value;
       if (armor) armorMultiplier -= armor * 0.04;
     }
     // Damage entity
     const damagee = event.hitEntity as Damageable;
     damagee.damage(HIT_DAMAGE * armorMultiplier);
-    const pushVel = new Vector(snowball.velocity.x, 0.5, snowball.velocity.z);
-    damagee.velocity = damagee.velocity.add(pushVel.multiply(VEL_MULTIPLIER));
+    const pushVel = snowball.velocity
+      .normalize()
+      .add(new Vector(0, 0.5, 0))
+      .multiply(VEL_MULTIPLIER);
+    damagee.velocity = damagee.velocity.add(pushVel);
   }
 
   const drop = event.entity.world.dropItem(
