@@ -2,7 +2,13 @@ import { ParticleBuilder } from 'com.destroystokyo.paper';
 import { translate } from 'craftjs-plugin/chat';
 import { Location, Material, Particle, Sound, SoundCategory } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
-import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
+import {
+  ArmorStand,
+  Entity,
+  EntityType,
+  LivingEntity,
+  Player,
+} from 'org.bukkit.entity';
 import {
   BlockBreakEvent,
   BlockPistonRetractEvent,
@@ -21,7 +27,8 @@ const PLACEMENT_SOUND = Sound.BLOCK_ANVIL_PLACE;
 const BREAK_SOUND = Sound.BLOCK_ANVIL_BREAK;
 const LAND_SOUND = Sound.BLOCK_ANVIL_LAND;
 
-const cooldowns = new Set<Player>();
+const cooldowns = new Set<Entity>();
+const drops = new Map<string, ItemStack>();
 
 const Blade = new CustomItem({
   id: 5,
@@ -29,8 +36,24 @@ const Blade = new CustomItem({
   type: VkItem.UNSTACKABLE,
 });
 
+// DECLARE HEAD DROPS HERE ( for other entities than player)
+addDrop(EntityType.ZOMBIE, new ItemStack(Material.ZOMBIE_HEAD, 1));
+addDrop(EntityType.CREEPER, new ItemStack(Material.CREEPER_HEAD, 1));
+addDrop(EntityType.CREEPER, new ItemStack(Material.CREEPER_HEAD, 1));
+addDrop(EntityType.SKELETON, new ItemStack(Material.SKELETON_SKULL, 1));
+addDrop(
+  EntityType.WITHER_SKELETON,
+  new ItemStack(Material.WITHER_SKELETON_SKULL, 1),
+);
+
+function addDrop(entityType: EntityType, drop: ItemStack) {
+  if (drops.has(entityType.toString())) return;
+  drops.set(entityType.toString(), drop);
+}
+
 async function dropBlade(armorStand: ArmorStand) {
   if (armorStand.hasGravity()) return; // Has gravity -> Blade already falling.
+  // Begin drop
   armorStand.setGravity(true);
   armorStand.setInvulnerable(true);
   let previousY = armorStand.velocity.y;
@@ -59,31 +82,48 @@ async function dropBlade(armorStand: ArmorStand) {
 async function chopIfHit(location: Location, y_velocity: number) {
   const entities = location.getNearbyEntities(1, 1.2, 1);
   for (const entity of entities) {
-    if (entity.type !== EntityType.PLAYER) return;
-    const player = (entity as unknown) as Player;
+    if (!(entity instanceof LivingEntity)) return;
+    if (entity instanceof ArmorStand) return;
+    // Set cooldown
+    if (cooldowns.has(entity)) return;
+    cooldowns.add(entity);
 
-    if (cooldowns.has(player)) return;
-    cooldowns.add(player);
-
-    const eyeLocation = player.eyeLocation;
-    playChopEffects(eyeLocation);
+    // Wait for better timing
+    await wait(4, 'ticks');
 
     // Deal damage
-    if (y_velocity >= DEADLY_CHOP_VELOCITY) player.health = 0;
-    else player.damage(VEL_DAMAGE_MODIFIER * y_velocity);
+    if (y_velocity >= DEADLY_CHOP_VELOCITY) entity.health = 0;
+    else entity.damage(VEL_DAMAGE_MODIFIER * y_velocity);
 
-    // Drop head if player died
-    if (player.isDead()) {
-      const head = new ItemStack(Material.PLAYER_HEAD, 1);
-      const meta = head.itemMeta as SkullMeta;
-      meta.owningPlayer = player;
-      head.itemMeta = meta;
-      location.world.dropItem(eyeLocation, head);
-    }
+    // Play effects
+    const eyeLocation = entity.eyeLocation;
+    playChopEffects(eyeLocation);
 
+    // Drop head
+    if (entity.isDead()) dropHead(entity, eyeLocation);
+
+    // Delete cooldown
     await wait(20, 'ticks');
-    cooldowns.delete(player);
+    cooldowns.delete(entity);
   }
+}
+
+function dropHead(entity: Entity, loc: Location) {
+  let drop: ItemStack | undefined;
+
+  // Get drop from entity
+  const key = entity.type.toString();
+  if (drops.has(key)) drop = drops.get(key);
+
+  // Get player head drop
+  if (entity instanceof Player) {
+    const player = entity as Player;
+    drop = new ItemStack(Material.PLAYER_HEAD, 1);
+    const meta = drop.itemMeta as SkullMeta;
+    meta.owningPlayer = player;
+    drop.itemMeta = meta;
+  }
+  if (drop) loc.world.dropItem(loc, drop);
 }
 
 async function playChopEffects(location: Location) {
@@ -94,6 +134,7 @@ async function playChopEffects(location: Location) {
     .spawn();
 }
 
+// Drop blade on piston retract
 registerEvent(BlockPistonRetractEvent, (event) => {
   const blocks = event.blocks;
   for (const block of blocks) {
@@ -107,6 +148,7 @@ registerEvent(BlockPistonRetractEvent, (event) => {
   }
 });
 
+// Drop blade on block break
 registerEvent(BlockBreakEvent, (event) => {
   const entities = event.block.location.add(0, 1, 0).getNearbyEntities(1, 1, 1);
   for (const entity of entities) {
@@ -117,6 +159,7 @@ registerEvent(BlockBreakEvent, (event) => {
   }
 });
 
+// Place blade on block
 registerEvent(PlayerInteractEvent, (event) => {
   if (!isRightClick(event.action)) return;
   if (!event.clickedBlock) return;
@@ -124,6 +167,7 @@ registerEvent(PlayerInteractEvent, (event) => {
 
   const item = event.player.inventory.itemInMainHand;
   if (!Blade.check(item)) return;
+
   const player = event.player;
   const block = event.clickedBlock.getRelative(event.blockFace);
   const groundBlock = block.getRelative(BlockFace.DOWN);
@@ -134,10 +178,9 @@ registerEvent(PlayerInteractEvent, (event) => {
   if (groundBlock.type === Material.AIR)
     return player.sendActionBar('Et voi asettaa terää ilmaan.');
 
-  // Prevent placing inside armor stands.
-  for (const entity of loc.getNearbyEntities(0.5, 0.5, 0.5)) {
-    if (entity.type === EntityType.ARMOR_STAND) return;
-  }
+  // Prevent placing inside entities
+  const entities = loc.getNearbyEntities(0.5, 0.5, 0.5);
+  if (!entities.isEmpty()) return;
 
   loc.world.playSound(loc, PLACEMENT_SOUND, SoundCategory.BLOCKS, 0.6, 0.8);
 
@@ -175,8 +218,11 @@ registerEvent(PlayerInteractEvent, (event) => {
   armorStand.addDisabledSlots(EquipmentSlot.HAND);
   armorStand.addDisabledSlots(EquipmentSlot.OFF_HAND);
   armorStand.teleport(loc);
+
+  item.amount--;
 });
 
+// Destroy blade
 registerEvent(EntityDamageEvent, (event) => {
   if (event.entityType !== EntityType.ARMOR_STAND) return;
   const armorStand = event.entity as ArmorStand;
