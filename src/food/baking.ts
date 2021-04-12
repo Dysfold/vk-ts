@@ -11,12 +11,13 @@ import {
 import { Vector } from 'org.bukkit.util';
 import {
   getItemFrame,
-  spawnInvisibleItemFrame,
-} from '../common/helpers/itemframes';
+  spawnHiddenItemFrame,
+} from '../common/entities/item-frame';
 import { CustomItem } from '../common/items/CustomItem';
 import { getEmptyBottle } from '../hydration/bottles';
 import { Bowl } from './Bowl';
 import { VkItem } from '../common/items/VkItem';
+import { translate } from 'craftjs-plugin/chat';
 
 const INGREDIENT_PICKUP_DELAY = 5; // Seconds
 
@@ -24,42 +25,35 @@ const INGREDIENT_PICKUP_DELAY = 5; // Seconds
 const DOUGH_BREAD = new CustomItem({
   type: Material.HEART_OF_THE_SEA,
   id: 16,
-  modelId: 16,
 });
 const DOUGH_BREAD_RISEN = new CustomItem({
   type: Material.HEART_OF_THE_SEA,
   id: 17,
-  modelId: 17,
 });
 const DOUGH_PUMPKIN_PIE = new CustomItem({
   type: Material.HEART_OF_THE_SEA,
   id: 19,
-  modelId: 19,
 });
 const DOUGH_COOKIE = new CustomItem({
   type: Material.HEART_OF_THE_SEA,
   id: 18,
-  modelId: 18,
 });
 
 // Dough items for furnace
 const DOUGH_BREAD_ITEM = new CustomItem({
   type: VkItem.MISC,
   id: 6,
-  modelId: 6,
-  name: 'Leipätaikina',
+  name: translate('vk.dough_bread'),
 });
 const DOUGH_COOKIE_ITEM = new CustomItem({
   type: VkItem.MISC,
   id: 7,
-  modelId: 7,
-  name: 'Keksitaikina',
+  name: translate('vk.dough_cookie'),
 });
 const DOUGH_PUMPKIN_PIE_ITEM = new CustomItem({
   type: VkItem.MISC,
   id: 8,
-  modelId: 8,
-  name: 'Kurpitsapiirakkataikina',
+  name: translate('vk.dough_pumpkin_pie'),
 });
 
 const RECIPES = [
@@ -230,7 +224,7 @@ function bake(block: Block) {
         }
         drop.amount--;
       });
-      const frame = spawnInvisibleItemFrame(
+      const frame = spawnHiddenItemFrame(
         block.getRelative(BlockFace.DOWN),
         BlockFace.UP,
         recipe.dough.create({}),

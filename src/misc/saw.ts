@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { Bukkit, Location, Material, Particle } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Gate } from 'org.bukkit.block.data.type';
@@ -20,9 +21,8 @@ export const Saw = new CustomBlock({
 
 export const HandSaw = new CustomItem({
   id: 5,
-  name: 'Käsisaha',
+  name: translate('vk.hand_saw'),
   type: VkItem.TOOL,
-  modelId: 5,
 });
 
 const SAW_COOLDOWN_SECONDS = 1;

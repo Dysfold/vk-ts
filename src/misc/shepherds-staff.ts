@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, PlayerInventory } from 'org.bukkit.inventory';
@@ -11,9 +12,8 @@ const cooldowns = new Set<Player>();
 
 const ShepherdsStaff = new CustomItem({
   id: 4,
-  modelId: 4,
   type: VkItem.TOOL,
-  name: 'Paimensauva',
+  name: translate('vk.shepherd_staff'),
 });
 
 ShepherdsStaff.event(

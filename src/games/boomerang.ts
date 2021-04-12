@@ -1,4 +1,5 @@
 import { ProjectileCollideEvent } from 'com.destroystokyo.paper.event.entity';
+import { translate } from 'craftjs-plugin/chat';
 import { Material, Sound, SoundCategory } from 'org.bukkit';
 import { Player, Snowball } from 'org.bukkit.entity';
 import {
@@ -10,15 +11,13 @@ import { CustomItem } from '../common/items/CustomItem';
 
 const Boomerang = new CustomItem({
   id: 2,
-  modelId: 2,
-  name: 'vk.boomerang',
+  name: translate('vk.boomerang'),
   type: Material.SNOWBALL,
 });
 
 const BoomerangSpin = new CustomItem({
   id: 4,
-  modelId: 4,
-  name: 'vk.boomerang',
+  name: translate('vk.boomerang'),
   type: Material.SNOWBALL,
 });
 

@@ -3,11 +3,13 @@ import { Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
 import * as yup from 'yup';
 import { test } from 'craftjs-plugin';
+import { text } from 'craftjs-plugin/chat';
+import { dataHolder, dataType } from '../datas/holder';
 
 const TestItem = new CustomItem({
   id: 0,
   type: Material.STICK,
-  name: 'Test 1',
+  name: text('Test 1'),
   data: {
     counter: yup.number().default(0),
   },
@@ -32,6 +34,12 @@ const TestItem5 = new CustomItem({
     first: yup.number().default(0).required(),
     second: yup.number().default(0),
   },
+});
+
+const TestItem6 = new CustomItem({
+  id: 6,
+  type: Material.STICK,
+  customModel: false,
 });
 
 test('CustomItems workflow', (t) => {
@@ -113,7 +121,60 @@ test('CustomItem method overriding', (t) => {
     item.amount,
     3,
     'CustomItem.create() overloading changes the output of CustomItem.create()',
+    // and does not unnecessarily mess with amount
   );
 
   t.falsy(TestItem3.check(item), 'CustomItem.check() overloading should work');
+});
+
+test('CustomItem custom amount', (t) => {
+  t.eq(
+    TestItem.create({}, 42).amount,
+    42,
+    'CustomItem.create() properly sets custom amount',
+  );
+  t.eq(
+    TestItem.create({}).amount,
+    1,
+    'CustomItem.create() defaults to stack of 1',
+  );
+});
+
+test('CustomItem model ids', (t) => {
+  t.eq(
+    TestItem.create({}).itemMeta.customModelData,
+    0,
+    'CustomModelData is item id',
+  );
+  t.eq(
+    TestItem6.create({}).itemMeta.customModelData,
+    100006,
+    'CustomModelData is unused when customModel === false',
+  );
+});
+
+test('CustomItem.get() with no data', (t) => {
+  t.eq(
+    TestItem6.get(TestItem6.create({})),
+    {},
+    'custom item without data has {} as data',
+  );
+  t.eq(
+    TestItem6.get(new ItemStack(Material.STICK)),
+    undefined,
+    'non-custom item has undefined data',
+  );
+});
+
+test('CustomItem with extra data', (t) => {
+  const item = TestItem6.create({});
+  const extraType = dataType('cd', {
+    extra: yup.string(),
+  });
+  dataHolder(item).set('cd', extraType, { extra: 'works' });
+  t.eq(
+    TestItem6.get(item),
+    { extra: 'works' },
+    'CustomItem.get() returns data missing from schema',
+  );
 });
