@@ -1,3 +1,4 @@
+import { Location } from 'org.bukkit';
 import { ArmorStand, Player } from 'org.bukkit.entity';
 import { SpeakerStaff } from '../items';
 import { ChatMessage } from '../pipeline';
@@ -81,7 +82,7 @@ export function rangeCheckHandler(
       opts = options.normal;
     }
 
-    const range = receiver.location.distance(msg.sender.location);
+    const range = distanceBetween(receiver.location, sender.location);
     const visible = range <= opts.max;
     if (visible) {
       const result = {
@@ -98,6 +99,13 @@ export function rangeCheckHandler(
       msg.discard = true; // Not visible
     }
   };
+}
+
+function distanceBetween(a: Location, b: Location): number {
+  if (a.world != b.world) {
+    return Number.MAX_VALUE; // Different worlds are very far away, indeed
+  }
+  return a.distance(b); // Calculate distance normally
 }
 
 function computeScramble(opts: Range, range: number) {
