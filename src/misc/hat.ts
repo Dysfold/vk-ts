@@ -1,4 +1,4 @@
-import { GameMode, Material, Sound, SoundCategory, Bukkit } from 'org.bukkit';
+import { GameMode, Material, Sound, SoundCategory } from 'org.bukkit';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
 import { BlockDispenseArmorEvent } from 'org.bukkit.event.block';
 import {
