@@ -1,4 +1,4 @@
-import { DyeColor, Location, Material, SoundCategory } from 'org.bukkit';
+import { Color, DyeColor, Location, Material, SoundCategory } from 'org.bukkit';
 import { Levelled } from 'org.bukkit.block.data';
 import {
   PlayerInteractEntityEvent,
@@ -19,16 +19,18 @@ import { Class } from 'java.lang';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { locationToObj, objToLocation } from '../death/helpers';
-import { SpawnReason } from 'org.bukkit.event.entity.CreatureSpawnEvent';
 import { LeatherArmorMeta } from 'org.bukkit.inventory.meta';
 import { ItemSpawnEvent } from 'org.bukkit.event.entity';
 import { VkItem } from '../common/items/VkItem';
 import { EventPriority } from 'org.bukkit.event';
 import { Campfire } from 'org.bukkit.block.data.type';
 import { BlockDestroyEvent } from 'com.destroystokyo.paper.event.block';
+import { Data } from '../common/datas/yup-utils';
+import { spawnHiddenItemFrame } from '../common/entities/item-frame';
+import { text } from 'craftjs-plugin/chat';
 
 /**
- * Ingredient schema
+ * Ingredient schema definition
  */
 export const IngredientSchema = yup.object({
   /**
@@ -37,110 +39,105 @@ export const IngredientSchema = yup.object({
   name: yup.string().required(),
 
   /**
-   * Material modelId for custom items
+   * Custom item id
    */
   modelId: yup.number().optional(),
 
   /**
-   * Date when the ingredient was added
+   * Date when the ingredient was added to a brew
    */
   date: yup.number().required(),
 
   /**
-   * Temperature when the ingredient was added
+   * Brew temperature when the ingredient was added
    */
   temp: yup.number().required(),
 });
 
 /**
- * Brew in a itemframe
+ * Brew schema definition
+ */
+export const BrewSchema = {
+  /**
+   * Brew ingredients
+   */
+  ingredients: yup.array(IngredientSchema.required()).default([]).required(),
+
+  /**
+   * Creation date
+   */
+  date: yup.number().required(),
+
+  /**
+   * Location of the owning cauldron
+   */
+  cauldron: yup
+    .object({
+      x: yup.number().required(),
+      y: yup.number().required(),
+      z: yup.number().required(),
+      worldId: yup.string().required(),
+    })
+    .required(),
+
+  /**
+   * Current heat source information
+   */
+  heatSource: yup
+    .object({
+      /**
+       * Current state of the heat source
+       */
+      active: yup.boolean().optional(),
+
+      /**
+       * Time since the heat source state had changed
+       */
+      since: yup.number().required(),
+
+      /**
+       * Temperature at the time the heat source state changed
+       */
+      temp: yup.number().required(),
+    })
+    .required(),
+};
+
+/**
+ * The brew on a cauldron
  */
 export const Brew = new CustomItem({
   id: 1000,
   type: VkItem.COLORABLE,
-  modelId: 1000,
   data: {
-    ingredients: yup.array(IngredientSchema.required()).default([]).required(),
-
-    /**
-     * Location of the owning cauldron
-     */
-    cauldron: yup
-      .object({
-        x: yup.number().required(),
-        y: yup.number().required(),
-        z: yup.number().required(),
-        worldId: yup.string().required(),
-      })
-      .required(),
-
-    /**
-     * Date when the brew was created
-     */
-    date: yup.number().required(),
-
-    /**
-     * Current heat source information.
-     * Mainly used only to calculate water temperature
-     */
-    heatSource: yup
-      .object({
-        /**
-         * Current state of the heat source.
-         * Indicates is the brew heating up or cooling down
-         */
-        exists: yup.boolean().optional(),
-
-        /**
-         * Time since the heat source had changed.
-         */
-        since: yup.number().required(),
-
-        /**
-         * Temperature at the time the heat source changed.
-         */
-        temp: yup.number().required(),
-      })
-      .required(),
+    ...BrewSchema,
   },
 });
 
 /**
- * Brew schema for containers.
- * Other features depending on boiling might find this useful
- * @see BrewBucket for example
+ * General purpose brew schema definition for containers
  */
 export const BrewContainerSchema = {
+  /**
+   * Brew ingredients
+   */
   ingredients: yup.array(IngredientSchema.required()).required(),
 
   /**
-   * Date when the brew was put into this container
+   * Date when the brew was put into container
    */
   date: yup.number().required(),
 
   /**
    * Date when the brew was created
    */
-  brewDate: yup.number().required(),
+  brewCreationDate: yup.number().required(),
 
   /**
    * Brew temperature when put into this container
    */
-  temp: yup.number().required(),
+  brewTemp: yup.number().required(),
 };
-
-/**
- * Create BrewContainerSchema from Brew
- * @example BrewBucket.create(createBrewContainer(brew))
- */
-export function createBrewContainer(brew: any) {
-  return {
-    ingredients: brew.ingredients,
-    date: Date.now(),
-    brewDate: brew.date,
-    temp: calculateBrewTemp(brew),
-  };
-}
 
 /**
  * Brew in a bucket
@@ -148,8 +145,7 @@ export function createBrewContainer(brew: any) {
 export const BrewBucket = new CustomItem({
   id: 1,
   type: VkItem.COLORABLE,
-  modelId: 1,
-  name: 'Sotkua', // ? Probably should change this to something else
+  name: text('Seosämpäri'),
   data: {
     ...BrewContainerSchema,
   },
@@ -207,9 +203,8 @@ export const INGREDIENTS: Ingredient = {
   RED_MUSHROOM: { color: DyeColor.BROWN, description: 'myrkkyä' },
   SUGAR_CANE: { color: DyeColor.BROWN, description: 'sokeria' },
   EGG: { description: 'kananmunia' },
-  SUGAR: { color: DyeColor.WHITE, description: 'sokeria' },
+  SUGAR: { description: 'sokeria' },
   NETHER_WART: {
-    color: DyeColor.WHITE,
     description: 'hiivaa',
     tempMax: 50.0,
   },
@@ -238,6 +233,10 @@ export const INGREDIENTS: Ingredient = {
     8: {
       color: DyeColor.BROWN,
       description: 'kaakaota',
+    },
+    9: {
+      color: DyeColor.YELLOW,
+      description: 'inkivääriä',
     },
     19: {
       color: DyeColor.RED,
@@ -269,7 +268,7 @@ export const INGREDIENTS: Ingredient = {
 /**
  * Water temperature stages
  */
- export enum WaterTemp {
+export enum WaterTemp {
   LUKEWARM = 25,
   WARM = 45,
   HOT = 90,
@@ -307,33 +306,17 @@ function getItemFramesAt(location: Location) {
  * Create new brew itemframe at given location
  * @param location must be the location of a cauldron
  */
-function spawnBrewItem(location: Location) {
+function spawnBrewItemFrame(location: Location) {
   // Return if the face is obstructed
   if (!getItemFramesAt(location).isEmpty()) return;
-
-  // Spawn new itemframe
-  const itemFrame = location.world.spawnEntity(
-    location,
-    EntityType.ITEM_FRAME,
-    SpawnReason.CUSTOM,
-    {
-      accept(itemFrame: ItemFrame) {
-        itemFrame.setFacingDirection(BlockFace.UP, true);
-        itemFrame.setVisible(false);
-        itemFrame.setInvulnerable(true);
-        itemFrame.setSilent(true);
-        itemFrame.setFixed(true);
-      },
-    },
-  ) as ItemFrame;
 
   // Create new brew item
   const itemFrameItem = Brew.create({
     ingredients: [],
-    cauldron: locationToObj(location.subtract(0.0, 1.0, 0.0)),
     date: Date.now(),
+    cauldron: locationToObj(location.subtract(0.0, 1.0, 0.0)),
     heatSource: {
-      exists: true,
+      active: true,
       since: Date.now(),
       temp: 20.0, // ? Could biome temperature be used here to get initial ambient temperature?
     },
@@ -344,14 +327,15 @@ function spawnBrewItem(location: Location) {
   meta.color = DyeColor.BLUE.color;
   itemFrameItem.itemMeta = meta;
 
-  itemFrame.setItem(itemFrameItem, false);
+  // Create item frame
+  return spawnHiddenItemFrame(location.block, BlockFace.UP, itemFrameItem);
 }
 
 /**
  * Search and retrieve the first found brew itemframe
  * @param location
  */
-export function getBrewItemFrame(location: Location): ItemFrame | undefined {
+function getBrewItemFrame(location: Location): ItemFrame | undefined {
   for (const itemFrame of getItemFramesAt(location)) {
     if (Brew.check(itemFrame.item)) return itemFrame;
   }
@@ -363,7 +347,7 @@ export function getBrewItemFrame(location: Location): ItemFrame | undefined {
  * Search and destroy itemframes containing a brew item
  * @param location
  */
-function removeBrewItem(location: Location) {
+function removeBrewItemFrame(location: Location) {
   // Check all detected frames
   for (const entity of getItemFramesAt(location)) {
     if (Brew.check((entity as ItemFrame).item)) entity.remove();
@@ -372,12 +356,12 @@ function removeBrewItem(location: Location) {
 
 /**
  * Check if the given block is a valid heat source
- * @param validateData set to false to ignore blockData
+ * @param validate set to false to ignore blockData
  */
-function isValidHeatSource(block: Block, validateData?: boolean): boolean {
+function isValidHeatSource(block: Block, validate?: boolean): boolean {
   return (
     (block.type === Material.CAMPFIRE &&
-      (validateData ?? true ? (block.blockData as Campfire).isLit() : true)) ||
+      (validate ?? true ? (block.blockData as Campfire).isLit() : true)) ||
     (block.type === Material.FIRE &&
       block.getRelative(BlockFace.DOWN).type === Material.NETHERRACK)
   );
@@ -385,7 +369,7 @@ function isValidHeatSource(block: Block, validateData?: boolean): boolean {
 
 /**
  * Get the expected location of a cauldron relative to given block.
- * Returns -1 if block is not used as a part of a heat source
+ * Returns -1 if block is not a part of a heat source
  */
 function getCauldronOffset(block: Block): number {
   switch (block.type) {
@@ -403,17 +387,13 @@ function getCauldronOffset(block: Block): number {
 
 /**
  * Check if the block is a valid brew station
- * @param validateData set to false to ignore blockData
+ * @param validate set to false to ignore blockData
  */
-export function isValidBrewStation(
-  block: Block,
-  validateData?: boolean,
-): boolean {
+function isValidBrewStation(block: Block, validate?: boolean): boolean {
   return (
-    (block.type === Material.CAULDRON && (validateData ?? true)
+    (block.type === Material.CAULDRON && (validate ?? true)
       ? (block.blockData as Levelled).level >= 3
-      : true) &&
-    isValidHeatSource(block.getRelative(BlockFace.DOWN), validateData)
+      : true) && isValidHeatSource(block.getRelative(BlockFace.DOWN), validate)
   );
 }
 
@@ -422,37 +402,24 @@ export function isValidBrewStation(
  * Result is in one decimal precision.
  * @param time in seconds
  */
-export function calculateTemp(
+function calculateNewtonianWaterTemp(
   from: number,
   to: number,
   time: number,
-  constant: number,
 ): number {
   return (
-    Math.round((to + (from - to) * Math.pow(Math.E, constant * time)) * 10.0) /
+    Math.round((to + (from - to) * Math.pow(Math.E, -0.035 * time)) * 10.0) /
     10.0
   );
 }
 
 /**
- * Water temperature as the function of time
- * @param time in seconds
- */
-export function calculateWaterTemp(
-  from: number,
-  to: number,
-  time: number,
-): number {
-  return calculateTemp(from, to, time, -0.035);
-}
-
-/**
  * Calculates the current temperature of a brew
  */
-function calculateBrewTemp(brew: any): number {
-  return calculateWaterTemp(
+function calculateBrewTemp(brew: Data<typeof BrewSchema>): number {
+  return calculateNewtonianWaterTemp(
     brew.heatSource.temp,
-    brew.heatSource.exists ? 100.0 : 20.0,
+    brew.heatSource.active ? 100.0 : 20.0,
     (Date.now() - brew.heatSource.since) / 1000.0,
   );
 }
@@ -460,7 +427,7 @@ function calculateBrewTemp(brew: any): number {
 /**
  * Update brew heat source information
  */
-function setBrewHeatSource(brewItemFrame: ItemFrame, exists: boolean) {
+function setBrewHeatSource(brewItemFrame: ItemFrame, active: boolean) {
   const brewItem = brewItemFrame.item;
 
   const brew = Brew.get(brewItem);
@@ -471,7 +438,7 @@ function setBrewHeatSource(brewItemFrame: ItemFrame, exists: boolean) {
   const temp = calculateBrewTemp(brew);
 
   brew.heatSource = {
-    exists,
+    active,
     since: Date.now(),
     temp,
   };
@@ -480,29 +447,30 @@ function setBrewHeatSource(brewItemFrame: ItemFrame, exists: boolean) {
 }
 
 /**
- * Validates player interaction with itemframe that contains a brew item.
+ * Validate playr interaction with a brew item frame
  */
-registerEvent(
-  PlayerInteractEntityEvent,
-  (event) => {
-    const itemFrame = event.rightClicked as ItemFrame;
+function validatePlayerBrewInteraction(event: PlayerInteractEntityEvent) {
+  if (event.rightClicked.type !== EntityType.ITEM_FRAME) return;
 
-    // Validate entity
-    if (!itemFrame) return;
+  const itemFrame = event.rightClicked as ItemFrame;
 
-    const itemFrameItem = itemFrame.item;
+  if (Brew.check(itemFrame.item))
+    return event.hand === EquipmentSlot.HAND && !itemFrame.isDead();
 
-    // Validate item
-    if (!itemFrameItem) return;
+  return;
+}
 
-    // Validate custom item
-    // Prevents player from interacting with a entity that is marked for removal
-    if (Brew.check(itemFrameItem)) event.setCancelled(itemFrame.isDead());
-  },
-  {
-    priority: EventPriority.LOWEST, // listen in lowest priority so that this event is fired first
-  },
-);
+// function colorDistance(st: Color, nd: Color) {
+//   return Math.sqrt(
+//     (nd.red - st.red) ** 2 +
+//       (nd.green - st.green) ** 2 +
+//       (nd.blue - st.blue) ** 2,
+//   );
+// }
+
+// function colorDistancePercentage(st: Color, nd: Color) {
+//   return colorDistance(st, nd) / Math.sqrt(255 ** 2 + 255 ** 2 + 255 ** 2);
+// }
 
 /**
  * Handle player interaction with a brew
@@ -511,13 +479,11 @@ Brew.event(
   PlayerInteractEntityEvent,
   (event) => (event.rightClicked as ItemFrame).item,
   async (event) => {
-    // Return if cancelled by the validation event
-    if (event.isCancelled()) return;
+    if (!validatePlayerBrewInteraction(event)) return;
 
-    // Check if main hand
-    if (event.hand !== EquipmentSlot.HAND) return;
+    const itemInMainHand = event.player.inventory.itemInMainHand;
 
-    const item = event.player.inventory.itemInMainHand;
+    if (itemInMainHand.type === Material.AIR) return;
 
     const itemFrame = event.rightClicked as ItemFrame;
 
@@ -530,7 +496,7 @@ Brew.event(
     const waterTemp = calculateBrewTemp(brew);
 
     // Describe ingredients if clicked with a empty scoop
-    if (ScoopEmpty.check(item)) {
+    if (ScoopEmpty.check(itemInMainHand)) {
       let description = '';
 
       // Describe water temperature
@@ -579,28 +545,27 @@ Brew.event(
 
     // Retrieve ingredient properties
     const properties = getIngredientProperties(
-      item.type.toString(),
-      item.itemMeta.hasCustomModelData()
-        ? item.itemMeta.customModelData
+      itemInMainHand.type.toString(),
+      itemInMainHand.itemMeta.hasCustomModelData()
+        ? itemInMainHand.itemMeta.customModelData
         : undefined,
     );
 
     // Return if not a valid ingredient
-    // Somehow a custom item with modelId 0 is not undefined even though has no own data. Probably a TS feature because it has nested data.
-    // Prevented by just checking if it has one of the ingredient properties
+    // Also check one of the properties for undefined since a custom item with modelId 0 is not undefined even if it has no own data (probably a TS feature)
     if (!properties || !properties.description) return;
 
     // Limit ingredient amount
-    if (brew.ingredients.length >= 18) {
+    if (brew.ingredients.length >= 24) {
       event.player.sendMessage('Pata on täysi');
       return;
     }
 
     // Add ingredient to brew
     brew.ingredients.push({
-      name: item.type.toString(),
-      modelId: item.itemMeta.hasCustomModelData()
-        ? item.itemMeta.customModelData
+      name: itemInMainHand.type.toString(),
+      modelId: itemInMainHand.itemMeta.hasCustomModelData()
+        ? itemInMainHand.itemMeta.customModelData
         : undefined,
       date: Date.now(),
       temp: waterTemp,
@@ -609,7 +574,27 @@ Brew.event(
     // Update brew color
     if (properties && properties.color) {
       const meta = itemFrameItem.itemMeta as LeatherArmorMeta;
-      meta.color = properties.color.color.mixColors(meta.color);
+
+      // Specify what percentage of the final color should come from the current color
+      const w = 0.75;
+
+      // Blend ingredient color with brew color
+      const blend = Color.fromRGB(
+        (w * meta.color.red + (1 - w) * properties.color.color.red) | 0,
+        (w * meta.color.green + (1 - w) * properties.color.color.green) | 0,
+        (w * meta.color.blue + (1 - w) * properties.color.color.blue) | 0,
+      );
+
+      meta.color = blend;
+
+      // const distance = colorDistancePercentage(meta.color, blend);
+
+      // log.info(distance);
+
+      // if (distance > 0.05) {
+      //   meta.color = blend;
+      // }
+
       itemFrameItem.itemMeta = meta;
     }
 
@@ -617,15 +602,7 @@ Brew.event(
     itemFrame.setItem(itemFrameItem, false);
 
     // Remove item from player
-    item.amount -= 1;
-
-    // Alternative sound effect
-    // event.player.world.playSound(
-    //   itemFrame.location,
-    //   Sound.ENTITY_ITEM_PICKUP,
-    //   0.2,
-    //   Math.random(),
-    // );
+    itemInMainHand.amount -= 1;
 
     // Splash sound effect
     event.player.world.playSound(
@@ -646,26 +623,18 @@ Brew.event(
 registerEvent(
   PlayerInteractEntityEvent,
   (event) => {
-    // Check that the clicked itemframe contains a brew item
-    if (!Brew.check((event.rightClicked as ItemFrame).item)) return;
-
-    // Return if cancelled by the validator or some other feature
-    if (event.isCancelled()) return;
-
-    // Check that player clicked with main hand
-    if (event.hand !== EquipmentSlot.HAND) return;
+    if (event.isCancelled() || !validatePlayerBrewInteraction(event)) return;
 
     const itemInMainHand = event.player.inventory.itemInMainHand;
 
-    // Check that the item in main hand is a empty bucket
     if (itemInMainHand.type !== Material.BUCKET) return;
 
-    // No need to check entity type because it is already handled by the lower priority event
     const itemFrame = event.rightClicked as ItemFrame;
 
-    const brew = Brew.get(itemFrame.item);
+    const itemFrameItem = itemFrame.item;
 
-    // Make type checker happy
+    const brew = Brew.get(itemFrameItem);
+
     if (!brew || !brew.ingredients) return;
 
     let brewBucketItem;
@@ -673,7 +642,12 @@ registerEvent(
     // Create new bucket from brew. If brew has no ingredients, create a water bucket instead
     if (brew.ingredients.length > 0) {
       // Copy ingredients from brew to brew bucket
-      brewBucketItem = BrewBucket.create(createBrewContainer(brew));
+      brewBucketItem = BrewBucket.create({
+        ingredients: brew.ingredients,
+        date: Date.now(),
+        brewCreationDate: brew.date,
+        brewTemp: calculateBrewTemp(brew),
+      });
 
       // Set color
       const meta = brewBucketItem.itemMeta as LeatherArmorMeta;
@@ -707,7 +681,7 @@ registerEvent(
     );
   },
   {
-    priority: EventPriority.HIGH, // listen in high priority so the event is called last
+    priority: EventPriority.HIGH, // event is called last to let either validation cancel it or some other feature override it
   },
 );
 
@@ -733,7 +707,7 @@ registerEvent(BlockPlaceEvent, (event) => {
       setBrewHeatSource(brewItemFrame, true);
     } else {
       // New brew station was created
-      spawnBrewItem(itemFrameLocation);
+      spawnBrewItemFrame(itemFrameLocation);
     }
   } else if (brewItemFrame) {
     // Existing brew station lost heat source
@@ -747,7 +721,7 @@ registerEvent(BlockPlaceEvent, (event) => {
  */
 registerEvent(BlockBreakEvent, (event) => {
   if (event.block.type === Material.CAULDRON) {
-    removeBrewItem(event.block.location.add(0.0, 1.0, 0.0));
+    removeBrewItemFrame(event.block.location.add(0.0, 1.0, 0.0));
     return;
   }
 
@@ -824,7 +798,7 @@ registerEvent(CauldronLevelChangeEvent, (event) => {
     return;
 
   // Spawn new brew
-  spawnBrewItem(event.block.location.add(0.0, 1.0, 0.0));
+  spawnBrewItemFrame(event.block.location.add(0.0, 1.0, 0.0));
 });
 
 /**
@@ -851,7 +825,7 @@ registerEvent(PlayerInteractEvent, (event) => {
 });
 
 /**
- * (Fallback) Prevent brew item from spawning
+ * Fallback to prevent brew item from spawning
  */
 Brew.event(
   ItemSpawnEvent,
@@ -860,47 +834,3 @@ Brew.event(
     event.setCancelled(true);
   },
 );
-
-// /**
-//  * Add dropped items to cauldron
-//  */
-// registerEvent(PlayerDropItemEvent, (event) => {
-//   // Only track items that are listed as ingredients
-//   //if (!INGREDIENTS.has(event.itemDrop)) return;
-
-//   const DELAY = 250;
-
-//   let time = 0;
-
-//   const handle = setInterval(() => {
-//     // Either location.block or getRelative(down)
-//     const block = event.itemDrop.location.block;
-
-//     if (block.type == Material.CAULDRON) {
-//       const data = block.blockData as Levelled;
-
-//       // Cauldron needs to be full
-//       if (data.level == data.maximumLevel) {
-//         event.itemDrop.setCanPlayerPickup(false);
-//         event.itemDrop.setCanMobPickup(false);
-//         event.itemDrop.teleport(block.location);
-
-//         event.player.playSound(
-//           block.location,
-//           Sound.ENTITY_GENERIC_SPLASH,
-//           0.5,
-//           1.0,
-//         );
-//       }
-
-//       clearInterval(handle);
-//     }
-
-//     // Failsafe to stop timer if landing is not detected
-//     if (time > 10) {
-//       clearInterval(handle);
-//     }
-
-//     time += DELAY / 1000;
-//   }, DELAY);
-// });
