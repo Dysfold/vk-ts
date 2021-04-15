@@ -561,15 +561,26 @@ Brew.event(
       return;
     }
 
-    // Add ingredient to brew
-    brew.ingredients.push({
-      name: itemInMainHand.type.toString(),
-      modelId: itemInMainHand.itemMeta.hasCustomModelData()
-        ? itemInMainHand.itemMeta.customModelData
-        : undefined,
-      date: Date.now(),
-      temp: waterTemp,
-    });
+    // Some ingredients might not withstand too high temperatures and are destroyed immediately
+    if (!properties.tempMax || waterTemp < properties.tempMax) {
+      // Add ingredient to brew
+      brew.ingredients.push({
+        name: itemInMainHand.type.toString(),
+        modelId: itemInMainHand.itemMeta.hasCustomModelData()
+          ? itemInMainHand.itemMeta.customModelData
+          : undefined,
+        date: Date.now(),
+        temp: waterTemp,
+      });
+    } else {
+      event.player.world.playSound(
+        itemFrame.location,
+        'block.fire.extinguish',
+        SoundCategory.PLAYERS,
+        0.5,
+        1.0,
+      );
+    }
 
     // Update brew color
     if (properties && properties.color) {
