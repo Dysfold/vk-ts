@@ -1,5 +1,5 @@
 import { Material, Sound, SoundCategory } from 'org.bukkit';
-import { Damageable, EntityType, Snowball } from 'org.bukkit.entity';
+import { Damageable, EntityType, Player, Snowball } from 'org.bukkit.entity';
 import { ProjectileHitEvent } from 'org.bukkit.event.entity';
 import { PlayerDropItemEvent } from 'org.bukkit.event.player';
 import { Vector } from 'org.bukkit.util';
@@ -14,6 +14,9 @@ const THROW_SOUND = Sound.ENTITY_SNOWBALL_THROW;
 const HIT_SOUND = Sound.BLOCK_STONE_HIT;
 const ZERO_VECTOR = new Vector();
 
+const THROW_COOLDOWN = 2; // ticks
+const cooldowns = new Set<Player>();
+
 const NOT_THROWABLE = new Set([
   Material.SNOWBALL,
   Material.EGG,
@@ -23,7 +26,7 @@ const NOT_THROWABLE = new Set([
 
 const NOT_THROWABLE_CUSTOMITEMS = [LockedHandcuffs, Whip];
 
-registerEvent(PlayerDropItemEvent, (event) => {
+registerEvent(PlayerDropItemEvent, async (event) => {
   const player = event.player;
   const item = event.itemDrop.itemStack;
   const itemType = item.type;
@@ -32,6 +35,9 @@ registerEvent(PlayerDropItemEvent, (event) => {
   if (NOT_THROWABLE.has(itemType)) return;
   // Check if item was unthrowable customitem
   if (NOT_THROWABLE_CUSTOMITEMS.some((i) => i.check(item))) return;
+
+  if (cooldowns.has(player)) return; // prevent throwing items while cooldown
+  cooldowns.add(player);
 
   event.setCancelled(true);
 
@@ -47,6 +53,7 @@ registerEvent(PlayerDropItemEvent, (event) => {
   snowball.velocity = player.eyeLocation.direction.multiply(
     VELOCITY_MULTIPLIER,
   );
+
   player.world.playSound(
     player.location,
     THROW_SOUND,
@@ -54,6 +61,9 @@ registerEvent(PlayerDropItemEvent, (event) => {
     0.5,
     1,
   );
+
+  await wait(THROW_COOLDOWN, 'ticks');
+  cooldowns.delete(player);
 });
 
 registerEvent(ProjectileHitEvent, (event) => {
