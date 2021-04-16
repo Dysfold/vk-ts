@@ -10,6 +10,7 @@ import {
 } from 'org.bukkit.event.player';
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { CustomItem } from '../common/items/CustomItem';
+import { translate } from 'craftjs-plugin/chat';
 
 const CHAIR = Material.SOUL_CAMPFIRE;
 const SHOVELS = new Set([
@@ -23,9 +24,8 @@ const SHOVELS = new Set([
 
 const ChairItem = new CustomItem({
   id: 1,
-  modelId: 1,
   type: Material.DARK_OAK_STAIRS,
-  name: 'vk.chair',
+  name: translate('vk.chair'),
 });
 
 const ChairBlock = new CustomBlock({
