@@ -208,10 +208,6 @@ export const INGREDIENTS: Ingredient = {
     description: 'hiivaa',
     tempMax: 50.0,
   },
-  TWISTING_VINES: {
-    color: DyeColor.GREEN,
-    description: 'yrttejä',
-  },
   WHEAT: { color: DyeColor.YELLOW, description: 'viljaa' },
   POISONOUS_POTATO: {
     1: {
@@ -263,6 +259,12 @@ export const INGREDIENTS: Ingredient = {
       description: 'kahvia',
     },
   },
+  PUMPKIN_SEEDS: {
+    4: {
+      color: DyeColor.GREEN,
+      description: 'yrttejä',
+    },
+  },
 };
 
 /**
@@ -284,9 +286,8 @@ export function getIngredientProperties(
   name: string,
   modelId?: number,
 ): IngredientProperties | undefined {
-  if (modelId /* && Object.values(VkItem).includes(Material.valueOf(name)) */) {
+  if (INGREDIENTS[name] && modelId)
     return (INGREDIENTS[name] as Ingredient)[modelId];
-  }
 
   return INGREDIENTS[name];
 }
