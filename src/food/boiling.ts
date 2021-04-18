@@ -32,16 +32,11 @@ import { text } from 'craftjs-plugin/chat';
 /**
  * Ingredient schema definition
  */
-export const IngredientSchema = yup.object({
+export const IngredientSchema = {
   /**
-   * Material name
+   * Material name and or modelId
    */
-  name: yup.string().required(),
-
-  /**
-   * Custom item id
-   */
-  modelId: yup.number().optional(),
+  id: yup.string().required(),
 
   /**
    * Date when the ingredient was added to a brew
@@ -52,7 +47,7 @@ export const IngredientSchema = yup.object({
    * Brew temperature when the ingredient was added
    */
   temp: yup.number().required(),
-});
+};
 
 /**
  * Brew schema definition
@@ -61,7 +56,7 @@ export const BrewSchema = {
   /**
    * Brew ingredients
    */
-  ingredients: yup.array(IngredientSchema.required()).default([]).required(),
+  ingredients: yup.array(yup.object(IngredientSchema).required()).required(),
 
   /**
    * Creation date
@@ -121,7 +116,7 @@ export const BrewContainerSchema = {
   /**
    * Brew ingredients
    */
-  ingredients: yup.array(IngredientSchema.required()).required(),
+  ingredients: yup.array(yup.object(IngredientSchema).required()).required(),
 
   /**
    * Date when the brew was put into container
@@ -151,13 +146,13 @@ export const BrewBucket = new CustomItem({
   },
 });
 
-/**
- * Define ingredient.
- * Each ingredient can have multiple nested ingredients for each modelId
- */
-export type Ingredient = {
-  [x in string | number]: Ingredient | IngredientProperties;
-};
+// /**
+//  * Define ingredient.
+//  * Each ingredient can have multiple nested ingredients for each modelId
+//  */
+// export type Ingredient = {
+//   [x in string | number]: Ingredient | IngredientProperties;
+// };
 
 /**
  * Define properties for ingredient
@@ -182,7 +177,7 @@ export type IngredientProperties = {
 /**
  * Static list of valid ingredients and their properties.
  */
-export const INGREDIENTS: Ingredient = {
+export const INGREDIENTS: { [id: string]: IngredientProperties } = {
   APPLE: { color: DyeColor.RED, description: 'hedelmiä' },
   PORKCHOP: { color: DyeColor.PINK, description: 'lihaa' },
   COD: { color: DyeColor.PINK, description: 'kalaa' },
@@ -209,61 +204,57 @@ export const INGREDIENTS: Ingredient = {
     tempMax: 50.0,
   },
   WHEAT: { color: DyeColor.YELLOW, description: 'viljaa' },
-  POISONOUS_POTATO: {
-    1: {
-      color: DyeColor.YELLOW,
-      description: 'juustoa',
-    },
-    2: {
-      color: DyeColor.BROWN,
-      description: 'lihaa',
-    },
-    5: {
-      color: DyeColor.YELLOW,
-      description: 'sokeria',
-    },
-    6: {
-      color: DyeColor.RED,
-      description: 'lihaa',
-    },
-    8: {
-      color: DyeColor.BROWN,
-      description: 'kaakaota',
-    },
-    9: {
-      color: DyeColor.YELLOW,
-      description: 'inkivääriä',
-    },
-    19: {
-      color: DyeColor.RED,
-      description: 'hedelmiä',
-    },
-    20: {
-      color: DyeColor.RED,
-      description: 'marjoja',
-    },
-    21: {
-      color: DyeColor.LIME,
-      description: 'hedelmiä',
-    },
-    23: {
-      color: DyeColor.PINK,
-      description: 'lihaa',
-    },
-    26: {
-      color: DyeColor.BLUE,
-      description: 'marjoja',
-    },
-    28: {
-      color: DyeColor.BROWN,
-      description: 'kahvia',
-    },
+  'POISONOUS_POTATO:1': {
+    color: DyeColor.YELLOW,
+    description: 'juustoa',
   },
-  PUMPKIN_SEEDS: {
-    4: {
-      color: DyeColor.GREEN,
-      description: 'yrttejä',
-    },
+  'POISONOUS_POTATO:2': {
+    color: DyeColor.BROWN,
+    description: 'lihaa',
+  },
+  'POISONOUS_POTATO:5': {
+    color: DyeColor.YELLOW,
+    description: 'sokeria',
+  },
+  'POISONOUS_POTATO:6': {
+    color: DyeColor.RED,
+    description: 'lihaa',
+  },
+  'POISONOUS_POTATO:8': {
+    color: DyeColor.BROWN,
+    description: 'kaakaota',
+  },
+  'POISONOUS_POTATO:9': {
+    color: DyeColor.YELLOW,
+    description: 'inkivääriä',
+  },
+  'POISONOUS_POTATO:19': {
+    color: DyeColor.RED,
+    description: 'hedelmiä',
+  },
+  'POISONOUS_POTATO:20': {
+    color: DyeColor.RED,
+    description: 'marjoja',
+  },
+  'POISONOUS_POTATO:21': {
+    color: DyeColor.LIME,
+    description: 'hedelmiä',
+  },
+  'POISONOUS_POTATO:23': {
+    color: DyeColor.PINK,
+    description: 'lihaa',
+  },
+  'POISONOUS_POTATO:26': {
+    color: DyeColor.BLUE,
+    description: 'marjoja',
+  },
+  'POISONOUS_POTATO:28': {
+    color: DyeColor.BROWN,
+    description: 'kahvia',
+  },
+  'PUMPKIN_SEEDS:4': {
+    color: DyeColor.GREEN,
+    description: 'yrttejä',
   },
 };
 
@@ -278,18 +269,26 @@ export enum WaterTemp {
 }
 
 /**
- * Retrieve ingredient properties for material
- * @param name material name
- * @param modelId for nested ingredients
+ * Create item identifier from material name and or model id
  */
-export function getIngredientProperties(
-  name: string,
-  modelId?: number,
-): IngredientProperties | undefined {
-  if (INGREDIENTS[name] && modelId)
-    return (INGREDIENTS[name] as Ingredient)[modelId];
+export function createItemId(material: string, modelId?: number): string;
 
-  return INGREDIENTS[name];
+/**
+ * Create item identifier from item stack
+ */
+export function createItemId(itemStack: ItemStack): string;
+
+export function createItemId(a: string | ItemStack, b?: number): string {
+  if (typeof a === 'string') {
+    if (b && b > 0) return a + ':' + b;
+
+    return a;
+  }
+
+  return createItemId(
+    a.type.toString(),
+    a.itemMeta.hasCustomModelData() ? a.itemMeta.customModelData : 0,
+  );
 }
 
 /**
@@ -527,11 +526,7 @@ Brew.event(
 
       // Generate descriptions from the ingredients
       const descriptions = brew.ingredients
-        .map(
-          (ingredient) =>
-            getIngredientProperties(ingredient.name, ingredient.modelId)
-              ?.description,
-        )
+        .map((ingredient) => INGREDIENTS[ingredient.id].description)
         .filter((ingredient, index, self) => self.indexOf(ingredient) == index);
 
       // Join descriptions into one string and replace the last delimiter with 'ja'
@@ -544,17 +539,12 @@ Brew.event(
       return;
     }
 
-    // Retrieve ingredient properties
-    const properties = getIngredientProperties(
-      itemInMainHand.type.toString(),
-      itemInMainHand.itemMeta.hasCustomModelData()
-        ? itemInMainHand.itemMeta.customModelData
-        : undefined,
-    );
+    const itemId = createItemId(itemInMainHand);
+
+    const properties = INGREDIENTS[itemId];
 
     // Return if not a valid ingredient
-    // Also check one of the properties for undefined since a custom item with modelId 0 is not undefined even if it has no own data (probably a TS feature)
-    if (!properties || !properties.description) return;
+    if (!properties) return;
 
     // Limit ingredient amount
     if (brew.ingredients.length >= 24) {
@@ -566,10 +556,7 @@ Brew.event(
     if (!properties.tempMax || waterTemp < properties.tempMax) {
       // Add ingredient to brew
       brew.ingredients.push({
-        name: itemInMainHand.type.toString(),
-        modelId: itemInMainHand.itemMeta.hasCustomModelData()
-          ? itemInMainHand.itemMeta.customModelData
-          : undefined,
+        id: itemId,
         date: Date.now(),
         temp: waterTemp,
       });
@@ -587,8 +574,8 @@ Brew.event(
     if (properties && properties.color) {
       const meta = itemFrameItem.itemMeta as LeatherArmorMeta;
 
-      // Specify what percentage of the final color should come from the current color
-      const w = 0.75;
+      // Specify what percentage of the final color should come from the current brew color
+      const w = 0.7;
 
       // Blend ingredient color with brew color
       const blend = Color.fromRGB(
