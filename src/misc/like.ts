@@ -114,16 +114,18 @@ function addLike(sender: CommandSender, uuid: string) {
 /*
  * Remove like from player
  */
-function removeLike(uuid: string) {
+function removeLike(uuid: string, amount: number) {
+  if (amount < 0) return;
   if (!topPlayers.playerUuidList) topPlayers.playerUuidList = [];
   const player = uuidToOfflinePlayer(uuid);
   const playerView = dataView(PlayerLikes, player);
   if (!playerView.count) playerView.count = 0;
   if (playerView.count != 0) {
-    playerView.count--;
+    playerView.count -= amount;
   }
-  if (playerView.count == 0) {
+  if (playerView.count <= 0) {
     topPlayers.playerUuidList.removeValue(uuid);
+    setLikeRemovalTimestamp(player);
   }
   topPlayers.playerUuidList = sortLikeList(topPlayers.playerUuidList);
 }
@@ -134,7 +136,18 @@ function removeLike(uuid: string) {
  */
 const TIME_TO_DECREASE = 24 * 60 * 60 * 1000;
 function hasTimePassedToDecrease(timestamp: number): boolean {
+  console.log(`timestamamaspp ${timestamp}`);
   return timestamp - (Date.now() - TIME_TO_DECREASE) <= 0;
+}
+
+/**
+ * Has it been enough time to decrease likes
+ * @param timestamp The timestamp, if its 24h ago or more return true
+ */
+function likeDecreaseAmount(timestamp: number): number {
+  return Math.floor(
+    (Date.now() - TIME_TO_DECREASE - timestamp) / TIME_TO_DECREASE + 1,
+  );
 }
 
 /**
@@ -159,11 +172,10 @@ function uuidToOfflinePlayer(uuid: string): OfflinePlayer {
  * @param user String UUID of the liked player
  */
 function refreshLikesOf(user: string): void {
-  if (
-    hasTimePassedToDecrease(getLikeRemovalTimestamp(uuidToOfflinePlayer(user)))
-  ) {
-    removeLike(user);
-    setLikeRemovalTimestamp(uuidToOfflinePlayer(user));
+  const removalTimeStamp = getLikeRemovalTimestamp(uuidToOfflinePlayer(user));
+  if (removalTimeStamp == -1) return;
+  if (hasTimePassedToDecrease(removalTimeStamp)) {
+    removeLike(user, likeDecreaseAmount(removalTimeStamp));
   }
 }
 /**
@@ -231,6 +243,16 @@ registerCommand(
     }
   },
   {
+    completer: (_sender, _alias, args) => {
+      switch (args.length) {
+        case 1:
+          return Bukkit.server.onlinePlayers
+            .toArray()
+            .map((player) => player.name);
+        default:
+          return [];
+      }
+    },
     permission: 'vk.like',
     description: 'Tykkää pelaajasta',
     executableBy: 'players',
