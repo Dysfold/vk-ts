@@ -87,17 +87,17 @@ export const HotIronStick = new CustomItem({
 export const HotIronPlate = new CustomItem({
   id: 4,
   type: VkItem.MOLTEN,
-  name: translate('vk.hot_iron_ingot'),
+  name: translate('vk.hot_iron_plate'),
 });
 export const HotIronBar = new CustomItem({
   id: 5,
   type: VkItem.MOLTEN,
-  name: translate('vk.hot_iron_ingot'),
+  name: translate('vk.hot_iron_bar'),
 });
 export const HotIronNugget = new CustomItem({
   id: 6,
   type: VkItem.MOLTEN,
-  name: translate('vk.hot_iron_ingot'),
+  name: translate('vk.hot_iron_nugget'),
 });
 
 // Pair pliers with corresponding molten items

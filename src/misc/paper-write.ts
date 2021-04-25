@@ -6,7 +6,7 @@ import {
 } from 'org.bukkit.inventory';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { Player } from 'org.bukkit.entity';
-import { color, text } from 'craftjs-plugin/chat';
+import { color, text, translate } from 'craftjs-plugin/chat';
 import { ChatColor } from 'net.md_5.bungee.api';
 import { isRightClick } from '../common/helpers/click';
 import { ChatMessage, GLOBAL_PIPELINE } from '../chat/pipeline';
@@ -23,36 +23,35 @@ const playersWriting: Set<Player> = new Set<Player>();
 
 /**
  * CustomModelData table of Paper
- * id 0: Normal paper
- * 1: Written paper
- * 2: Sealed paper
- * 3: Empty envelope
- * 4: Envelope with letter
- * 5: Closed/sealed envelope
+ * 7: Written paper
+ * 7: Sealed paper
+ * 8: Empty envelope
+ * 9: Envelope with letter
+ * 10: Closed/sealed envelope
  */
 
 export const PaperWritten = new CustomItem({
-  id: 1,
-  name: text('Paperi'),
-  type: VkItem.PAPER,
+  id: 6,
+  name: translate('vk.written_paper'),
+  type: VkItem.UNSTACKABLE,
 });
 
 export const PaperSealed = new CustomItem({
-  id: 2,
-  name: text('Paperi'),
-  type: VkItem.PAPER,
+  id: 7,
+  name: translate('vk.sealed_paper'),
+  type: VkItem.UNSTACKABLE,
 });
 
 export const Envelope = new CustomItem({
-  id: 3,
-  name: text('Kirjekuori'),
-  type: VkItem.PAPER,
+  id: 8,
+  name: translate('vk.empty_envelope'),
+  type: VkItem.UNSTACKABLE,
 });
 
 export const EnvelopeWithLetter = new CustomItem({
-  id: 4,
-  name: text('Kirjekuori'),
-  type: VkItem.PAPER,
+  id: 9,
+  name: translate('vk.letter'),
+  type: VkItem.UNSTACKABLE,
   data: {
     letter: yup.string().required(),
     wax: yup.array().of(yup.string().required()).required(),
@@ -60,9 +59,9 @@ export const EnvelopeWithLetter = new CustomItem({
 });
 
 export const EnvelopeSealed = new CustomItem({
-  id: 5,
-  name: text('Kirjekuori'),
-  type: VkItem.PAPER,
+  id: 10,
+  name: translate('vk.sealed_envelope'),
+  type: VkItem.UNSTACKABLE,
   data: {
     letter: yup.string().required(),
     wax: yup.array().of(yup.string().required()).required(),
