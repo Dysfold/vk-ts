@@ -41,15 +41,19 @@ function getOverlappingFace(player: Player) {
 
   switch (facing) {
     case BlockFace.SOUTH:
-    case BlockFace.NORTH:
+    case BlockFace.NORTH: {
       const x = Math.abs(loc.x % 1);
       if (x > 0.7) return BlockFace.EAST;
       if (x < 0.3) return BlockFace.WEST;
+      break;
+    }
     case BlockFace.WEST:
-    case BlockFace.EAST:
+    case BlockFace.EAST: {
       const z = Math.abs(loc.z % 1);
       if (z > 0.7) return BlockFace.NORTH;
       if (z < 0.3) return BlockFace.SOUTH;
+      break;
+    }
   }
   return undefined;
 }
