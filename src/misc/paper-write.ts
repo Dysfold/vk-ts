@@ -21,15 +21,6 @@ const MAX_LENGTH = 128;
 
 const playersWriting: Set<Player> = new Set<Player>();
 
-/**
- * CustomModelData table of Paper
- * 7: Written paper
- * 7: Sealed paper
- * 8: Empty envelope
- * 9: Envelope with letter
- * 10: Closed/sealed envelope
- */
-
 export const PaperWritten = new CustomItem({
   id: 6,
   name: translate('vk.written_paper'),
