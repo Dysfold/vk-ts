@@ -54,7 +54,7 @@ async function hug(from: Player, to: Player) {
 
 function canHug(player: Player) {
   if (hugCooldowns.has(player)) return false;
-  // if (!player.isSneaking()) return false;
+  if (!player.isSneaking()) return false;
   if (!player.isOnGround()) return false;
   if (player.gameMode === GameMode.SPECTATOR) return false;
   return true;
