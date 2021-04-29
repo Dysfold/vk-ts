@@ -1,42 +1,52 @@
-import { PlayerToggleSneakEvent } from 'org.bukkit.event.player';
-import { Particle } from 'org.bukkit';
+import { GameMode, Particle } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
+import { PlayerToggleSneakEvent } from 'org.bukkit.event.player';
 
 const MESSAGE_RADIUS = 10;
-const HUG_COOLDOWN = 1250; // milliseconds
+const HUG_COOLDOWN = 1.25; // seconds
 const hugCooldowns = new Set<Player>();
 
 registerEvent(PlayerToggleSneakEvent, async (event) => {
+  if (!canHug(event.player)) return;
   if (!event.isSneaking()) return;
-  if (hugCooldowns.has(event.player)) return;
-  const location = event.player.location.add(
-    event.player.location.direction.multiply(0.7),
-  );
-  for (const player of location.getNearbyPlayers(0.5)) {
-    if (player == event.player) continue;
-    if (!player.isSneaking()) continue;
-    hugCooldowns.add(player);
-    event.player.sendMessage(`§fHalaat pelaajaa §7${player.name} §4❤`);
-    player.sendMessage(`§fPelaaja §7${event.player.name} §fhalaa sinua §4❤`);
-    event.player.world.spawnParticle(
-      Particle.HEART,
-      event.player.eyeLocation.add(0, 0.5, 0),
-      1,
-    );
-    player.world.spawnParticle(
-      Particle.HEART,
-      player.eyeLocation.add(0, 0.5, 0),
-      1,
-    );
-    // prettier-ignore
-    for (const nearbyPlayer of event.player.location.getNearbyPlayers(MESSAGE_RADIUS)) {
-      if (nearbyPlayer == event.player || nearbyPlayer == player) continue;
-      nearbyPlayer.sendMessage(
-        `§7${event.player.name} §fhalaa pelaajaa §7${player.name} §4❤`,
-      );
-    }
-    await wait(HUG_COOLDOWN, 'millis');
-    hugCooldowns.delete(player);
-    break;
-  }
+
+  const target = event.player.getTargetEntity(2);
+  if (!(target instanceof Player)) return;
+  if (!canHug(target)) return;
+
+  // Check if other player is looking at the hugger
+  const otherTarget = target.getTargetEntity(3);
+  if (!(otherTarget instanceof Player)) return;
+  if (otherTarget !== event.player) return;
+
+  hug(event.player, target);
 });
+
+async function hug(from: Player, to: Player) {
+  hugCooldowns.add(to);
+
+  // Particles
+  from.world.spawnParticle(Particle.HEART, from.eyeLocation.add(0, 0.5, 0), 1);
+  to.world.spawnParticle(Particle.HEART, to.eyeLocation.add(0, 0.5, 0), 1);
+
+  // Messages
+  from.sendMessage(`§fHalaat pelaajaa §7${to.name} §4❤`);
+  to.sendMessage(`§fPelaaja §7${from.name} §fhalaa sinua §4❤`);
+  for (const nearbyPlayer of from.location.getNearbyPlayers(MESSAGE_RADIUS)) {
+    if (nearbyPlayer == from || nearbyPlayer == to) continue;
+    nearbyPlayer.sendMessage(
+      `§7${from.name} §fhalaa pelaajaa §7${to.name} §4❤`,
+    );
+  }
+
+  await wait(HUG_COOLDOWN, 'seconds');
+  hugCooldowns.delete(to);
+}
+
+function canHug(player: Player) {
+  if (hugCooldowns.has(player)) return false;
+  if (!player.isSneaking()) return false;
+  if (!player.isOnGround()) return false;
+  if (player.gameMode === GameMode.SPECTATOR) return false;
+  return true;
+}
