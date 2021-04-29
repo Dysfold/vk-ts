@@ -13,6 +13,7 @@ registerEvent(PlayerToggleSneakEvent, async (event) => {
 
   const target = event.player.getTargetEntity(2);
   if (!(target instanceof Player)) return;
+  Bukkit.broadcastMessage('0.5');
   if (!canHug(target)) return;
   Bukkit.broadcastMessage('1');
 
