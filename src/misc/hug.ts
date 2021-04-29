@@ -1,4 +1,4 @@
-import { GameMode, Particle, Bukkit } from 'org.bukkit';
+import { GameMode, Particle } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { PlayerToggleSneakEvent } from 'org.bukkit.event.player';
 
@@ -9,24 +9,16 @@ const hugCooldowns = new Set<Player>();
 registerEvent(PlayerToggleSneakEvent, async (event) => {
   if (!canHug(event.player)) return;
   if (!event.isSneaking()) return;
-  Bukkit.broadcastMessage('0');
 
   const target = event.player.getTargetEntity(2);
   if (!(target instanceof Player)) return;
-  Bukkit.broadcastMessage('0.5');
   if (!canHug(target)) return;
-  Bukkit.broadcastMessage('1');
 
   // Check if other player is looking at the hugger
-  Bukkit.broadcastMessage('2');
   const otherTarget = target.getTargetEntity(3);
-  Bukkit.broadcastMessage('3');
-  Bukkit.broadcastMessage('...' + otherTarget);
 
   if (!(otherTarget instanceof Player)) return;
-  Bukkit.broadcastMessage('4');
   if (otherTarget !== event.player) return;
-  Bukkit.broadcastMessage('5');
 
   hug(event.player, target);
 });
@@ -54,7 +46,6 @@ async function hug(from: Player, to: Player) {
 
 function canHug(player: Player) {
   if (hugCooldowns.has(player)) return false;
-  if (!player.isSneaking()) return false;
   if (!player.isOnGround()) return false;
   if (player.gameMode === GameMode.SPECTATOR) return false;
   return true;
