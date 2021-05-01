@@ -1,4 +1,4 @@
-import { GameMode, Location, Material, SoundCategory } from 'org.bukkit';
+import { GameMode, Location, Material } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
@@ -7,7 +7,7 @@ import {
   PlayerInteractEvent,
 } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
-import { EulerAngle } from 'org.bukkit.util';
+import { spawnHolderArmorStand } from '../common/entities/armor-stand';
 import { giveItem } from '../common/helpers/inventory';
 
 /**
@@ -133,55 +133,6 @@ function containsTooManyItems(location: Location) {
 
 function warnTooManyItems(player: Player) {
   player.sendActionBar('§cTähän ei mahdu uutta esinettä');
-}
-
-/**
- * Spawns item on the ground with armor stand
- * @param loc Clicked location
- * @param item Item to be placed
- */
-function spawnHolderArmorStand(loc: Location, item: ItemStack) {
-  const tempLoc = loc.clone();
-  tempLoc.y = 1000;
-  // Clever hack to make the teleport instant ":)"
-  // If the armorstand is ~75 blocks away,
-  // the teleportation will not have an animation
-  tempLoc.x += 75;
-  const armorStand = loc.world.spawnEntity(
-    tempLoc,
-    EntityType.ARMOR_STAND,
-  ) as ArmorStand;
-
-  const clone = item.clone();
-  clone.amount = 1;
-  armorStand.setSilent(true);
-  armorStand.setVisible(false);
-  armorStand.teleport(loc);
-  armorStand.setItem(EquipmentSlot.HEAD, clone);
-  armorStand.setCanPickupItems(false);
-  armorStand.setCollidable(false);
-  armorStand.setSilent(true);
-  armorStand.setSmall(true);
-  armorStand.setArms(false);
-  armorStand.addDisabledSlots(
-    EquipmentSlot.HEAD,
-    EquipmentSlot.CHEST,
-    EquipmentSlot.LEGS,
-    EquipmentSlot.FEET,
-    EquipmentSlot.HAND,
-    EquipmentSlot.OFF_HAND,
-  );
-
-  // Prevent texture overlapping
-  armorStand.headPose = new EulerAngle(0.005, 0.005, 0.005);
-
-  loc.world.playSound(
-    loc,
-    'minecraft:block.wood.break',
-    SoundCategory.BLOCKS,
-    0.5,
-    1.3,
-  );
 }
 
 /**

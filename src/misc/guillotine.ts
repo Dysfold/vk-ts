@@ -1,6 +1,6 @@
 import { ParticleBuilder } from 'com.destroystokyo.paper';
 import { translate } from 'craftjs-plugin/chat';
-import { Location, Material, Particle, Sound, SoundCategory } from 'org.bukkit';
+import { Location, Material, Particle, SoundCategory } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import {
   ArmorStand,
@@ -13,43 +13,36 @@ import {
   BlockBreakEvent,
   BlockPistonRetractEvent,
 } from 'org.bukkit.event.block';
-import { EntityDamageEvent } from 'org.bukkit.event.entity';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { SkullMeta } from 'org.bukkit.inventory.meta';
+import { spawnHolderArmorStand } from '../common/entities/armor-stand';
 import { isRightClick } from '../common/helpers/click';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 
 const DEADLY_CHOP_VELOCITY = 0.6; // Approx. > 3 block fall kills always.
 const VEL_DAMAGE_MODIFIER = 12; // This is multiplied with y_velocity to get smaller drop damage.
-const PLACEMENT_SOUND = Sound.BLOCK_ANVIL_PLACE;
-const BREAK_SOUND = Sound.BLOCK_ANVIL_BREAK;
-const LAND_SOUND = Sound.BLOCK_ANVIL_LAND;
+
+const PLACEMENT_SOUND = 'minecraft:block.anvil.place';
+const LAND_SOUND = 'minecraft:block.anvil.land';
 
 const cooldowns = new Set<Entity>();
-const drops = new Map<string, ItemStack>();
 
 const Blade = new CustomItem({
   id: 5,
-  name: translate('vk.golden_horn'),
+  name: translate('vk.guillotine_blade'),
   type: VkItem.UNSTACKABLE,
 });
 
-// DECLARE HEAD DROPS HERE ( for other entities than player)
-addDrop(EntityType.ZOMBIE, new ItemStack(Material.ZOMBIE_HEAD, 1));
-addDrop(EntityType.CREEPER, new ItemStack(Material.CREEPER_HEAD, 1));
-addDrop(EntityType.CREEPER, new ItemStack(Material.CREEPER_HEAD, 1));
-addDrop(EntityType.SKELETON, new ItemStack(Material.SKELETON_SKULL, 1));
-addDrop(
-  EntityType.WITHER_SKELETON,
-  new ItemStack(Material.WITHER_SKELETON_SKULL, 1),
-);
-
-function addDrop(entityType: EntityType, drop: ItemStack) {
-  if (drops.has(entityType.toString())) return;
-  drops.set(entityType.toString(), drop);
-}
+// prettier-ignore
+const HEADS = new Map<EntityType, ItemStack>([
+  [EntityType.ZOMBIE,           new ItemStack(Material.ZOMBIE_HEAD, 1)],
+  [EntityType.CREEPER,          new ItemStack(Material.CREEPER_HEAD, 1)],
+  [EntityType.CREEPER,          new ItemStack(Material.CREEPER_HEAD, 1)],
+  [EntityType.SKELETON,         new ItemStack(Material.SKELETON_SKULL, 1)],
+  [EntityType.WITHER_SKELETON,  new ItemStack(Material.WITHER_SKELETON_SKULL, 1)],
+]);
 
 async function dropBlade(armorStand: ArmorStand) {
   if (armorStand.hasGravity()) return; // Has gravity -> Blade already falling.
@@ -75,6 +68,7 @@ async function dropBlade(armorStand: ArmorStand) {
     0.6,
     0.8,
   );
+
   armorStand.setGravity(false);
   armorStand.setInvulnerable(false);
 }
@@ -112,8 +106,7 @@ function dropHead(entity: Entity, loc: Location) {
   let drop: ItemStack | undefined;
 
   // Get drop from entity
-  const key = entity.type.toString();
-  if (drops.has(key)) drop = drops.get(key);
+  if (HEADS.has(entity.type)) drop = HEADS.get(entity.type);
 
   // Get player head drop
   if (entity instanceof Player) {
@@ -138,24 +131,22 @@ async function playChopEffects(location: Location) {
 registerEvent(BlockPistonRetractEvent, (event) => {
   const blocks = event.blocks;
   for (const block of blocks) {
-    const entities = block.location.add(0, 1, 0).getNearbyEntities(1, 1, 1);
+    const entities = block.location
+      .add(0.5, 1, 0.5)
+      .getNearbyEntities(0.5, 1, 0.5);
     for (const entity of entities) {
-      if (entity.type === EntityType.ARMOR_STAND) {
-        const armorStand = entity as ArmorStand;
-        dropBlade(armorStand);
-      }
+      if (entity instanceof ArmorStand) dropBlade(entity);
     }
   }
 });
 
 // Drop blade on block break
 registerEvent(BlockBreakEvent, (event) => {
-  const entities = event.block.location.add(0, 1, 0).getNearbyEntities(1, 1, 1);
+  const entities = event.block.location
+    .add(0.5, 1, 0.5)
+    .getNearbyEntities(0.5, 1, 0.5);
   for (const entity of entities) {
-    if (entity.type === EntityType.ARMOR_STAND) {
-      const armorStand = entity as ArmorStand;
-      dropBlade(armorStand);
-    }
+    if (entity instanceof ArmorStand) dropBlade(entity);
   }
 });
 
@@ -200,36 +191,7 @@ registerEvent(PlayerInteractEvent, (event) => {
       break;
   }
 
-  // Spawn armor stand out of sight
-  const armorStand = event.player.world.spawnEntity(
-    new Location(block.world, 0, -1000, 0),
-    EntityType.ARMOR_STAND,
-  ) as ArmorStand;
-
-  // Set armor stand attributes and teleport to location
-  armorStand.setSmall(true);
-  armorStand.setInvisible(true);
-  armorStand.setGravity(false);
-  armorStand.setItem(EquipmentSlot.HEAD, item);
-  armorStand.addDisabledSlots(EquipmentSlot.HEAD);
-  armorStand.addDisabledSlots(EquipmentSlot.CHEST);
-  armorStand.addDisabledSlots(EquipmentSlot.LEGS);
-  armorStand.addDisabledSlots(EquipmentSlot.FEET);
-  armorStand.addDisabledSlots(EquipmentSlot.HAND);
-  armorStand.addDisabledSlots(EquipmentSlot.OFF_HAND);
-  armorStand.teleport(loc);
-
+  const stand = spawnHolderArmorStand(loc, item);
+  stand.setGravity(false);
   item.amount--;
-});
-
-// Destroy blade
-registerEvent(EntityDamageEvent, (event) => {
-  if (event.entityType !== EntityType.ARMOR_STAND) return;
-  const armorStand = event.entity as ArmorStand;
-  if (!Blade.check(armorStand.getItem(EquipmentSlot.HEAD))) return;
-  event.setCancelled(true);
-  const loc = armorStand.location;
-  loc.world.playSound(loc, BREAK_SOUND, SoundCategory.BLOCKS, 1, 1);
-  armorStand.world.dropItem(armorStand.location, Blade.create({}, 1));
-  armorStand.remove();
 });
