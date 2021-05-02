@@ -1,6 +1,7 @@
 import { Container } from 'org.bukkit.block';
 import { ItemStack } from 'org.bukkit.inventory';
-import { Material } from 'org.bukkit';
+import { Material, Bukkit } from 'org.bukkit';
+import { translate } from 'craftjs-plugin/chat';
 
 /**
  * Tries to find similar itemstack from the container
@@ -34,12 +35,18 @@ export function findItemFromContainer(
  * @param modelId Custom model data of the item
  * @param name Display name of the item
  */
-export function getShopItem(type: string, modelId?: number, name?: string) {
+export function getShopItem(
+  type: string,
+  modelId?: number,
+  name?: string,
+  translationKey?: string,
+) {
   const material = Material.valueOf(type);
   const item = new ItemStack(material);
   const meta = item.itemMeta;
   if (modelId) meta.customModelData = modelId;
   if (name) meta.displayName = name;
+  if (translationKey) meta.displayNameComponent = [translate(translationKey)];
   item.itemMeta = meta;
   return item;
 }

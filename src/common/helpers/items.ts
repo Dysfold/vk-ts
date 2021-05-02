@@ -32,9 +32,8 @@ export function useFlintAndSteel(player: Player, item: ItemStack) {
  * Tries to get translated name of the item or the display name
  */
 export function getItemName(item: ItemStack) {
-  if (!item.itemMeta.hasDisplayName()) {
+  if (!item?.itemMeta?.hasDisplayName()) {
     const key = item.type.translationKey;
-
     // For some reason
     // spigot gives "item.minecraft..." instead of "block.minecraft..."
     if (item.type.isBlock()) {
@@ -51,4 +50,18 @@ export function getItemName(item: ItemStack) {
     }
   }
   return text(item.itemMeta.displayName);
+}
+
+/**
+ * Tries to custom (vk.) translation from the item
+ */
+export function getCustomTranslation(item: ItemStack) {
+  const components = item.itemMeta.displayNameComponent;
+  for (const component of components) {
+    // Check if the name is the original name
+    if (component instanceof TranslatableComponent) {
+      return component;
+    }
+  }
+  return undefined;
 }

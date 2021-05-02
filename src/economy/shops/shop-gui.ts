@@ -8,6 +8,7 @@ import {
   InventoryCloseEvent,
 } from 'org.bukkit.event.inventory';
 import { PlayerSwapHandItemsEvent } from 'org.bukkit.event.player';
+import { getBlockBehind } from './make-shop';
 
 const GUI_ICON = '\uE009';
 
@@ -23,16 +24,21 @@ const openGUIs = new Set<Player>();
  * @param chest Container behind the clicked sign (shop container)
  * @param sign The shop sign, where the data was stored
  */
-export function openShopGUI(player: Player, chest: Container, sign: Block) {
+export function openShopGUI(player: Player, sign: Block) {
+  const chest = getBlockBehind(sign);
+  if (!chest) return;
+  if (!(chest.state instanceof Container)) return;
   const shop = getShop(sign);
   if (!shop) return undefined;
+  if (!shop.item) return undefined;
   const item = getShopItem(
     shop.item.material,
     shop.item.modelId,
     shop.item.name,
+    shop.item.translationKey,
   );
-  let itemPreview = findItemFromContainer(chest, item);
-  if (shop.type === 'BUYING') itemPreview = item;
+  let itemPreview = findItemFromContainer(chest.state, item);
+  if (!itemPreview && shop.type === 'BUYING') itemPreview = item;
   if (!itemPreview) return;
   const inv = createShopGuiInventory(sign);
   if (!inv) return;
@@ -89,3 +95,24 @@ registerEvent(PlayerSwapHandItemsEvent, (event) => {
     event.player.updateInventory();
   }
 });
+
+// Remove comments if chat clickEvent is needed
+// registerCommand('openshopgui', (sender, _alias, args) => {
+//   if (!(sender instanceof Player)) return;
+//   const x = Number.parseInt(args[0]);
+//   const y = Number.parseInt(args[1]);
+//   const z = Number.parseInt(args[2]);
+//   if (isNaN(x) || isNaN(y) || isNaN(z)) return;
+//   const shopSign = sender.world.getBlockAt(x, y, z);
+//   if (!shopSign) return;
+//   if (shopSign.location.distance(sender.location) > 10) {
+//     sender.sendMessage('Olet liian kaukana kaupasta');
+//     return;
+//   }
+
+//   const chest = getBlockBehind(shopSign);
+//   if (!chest) return;
+//   if (!(chest.state instanceof Container)) return;
+
+//   openShopGUI(sender as Player, chest.state, shopSign);
+// });

@@ -9,7 +9,7 @@ export const ShopData = dataType('shop-data', {
     material: yup.string().required(),
     modelId: yup.number().notRequired(),
     name: yup.string().notRequired(),
-    displayNameComponent: yup.string().notRequired(),
+    translationKey: yup.string().notRequired(),
   }),
   price: yup.number().required(),
   currency: yup.object({

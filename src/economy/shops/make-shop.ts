@@ -9,7 +9,7 @@ import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
 import { dataView } from '../../common/datas/view';
-import { getItemName } from '../../common/helpers/items';
+import { getItemName, getCustomTranslation } from '../../common/helpers/items';
 import { coinModelIdToCurrencyId, Currency, getCoinData } from '../money-mold';
 import { ShopData } from './ShopData';
 export type ShopType = 'SELLING' | 'BUYING';
@@ -137,17 +137,18 @@ function saveShop(player: Player) {
   const shop = session.shopInfo;
   if (!isShopInfoValid(shop)) return;
   const view = dataView(ShopData, signDataHolder);
+  const name = shop.item.itemMeta.displayName;
   const modelId = shop.item.itemMeta.hasCustomModelData()
     ? shop.item.itemMeta.customModelData
     : undefined;
 
+  Bukkit.broadcastMessage('- ' + shop.item.toString());
   view.type = shop.type;
-  // view.item.material = shop.item.type.toString();
-  // view.item.modelId = modelId;
-  // view.item.name = shop.item.itemMeta.displayName;
-  // view.item.material = shop.item.type.toString();
-  view.item = shop.item.toString();
-  // view.item.displayNameComponent = shop.item.toString()
+  view.item.material = shop.item.type.toString();
+  view.item.modelId = modelId;
+  view.item.name = name.startsWith('vk.') ? undefined : name;
+  view.item.material = shop.item.type.toString();
+  view.item.translationKey = getCustomTranslation(shop.item)?.translate;
   view.price = shop.price;
   view.currency.model = shop.currency.model;
   view.currency.unitPlural = shop.currency.unitPlural;

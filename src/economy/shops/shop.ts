@@ -1,48 +1,78 @@
-import { Container, Block } from 'org.bukkit.block';
-import { Action } from 'org.bukkit.event.block';
+import { color, text, translate } from 'craftjs-plugin/chat';
+import { TranslatableComponent } from 'net.md_5.bungee.api.chat';
+import { ChatColor, Bukkit } from 'org.bukkit';
+import { Block } from 'org.bukkit.block';
+import { Player } from 'org.bukkit.entity';
+import { Action as BlockAction } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot } from 'org.bukkit.inventory';
-import { getBlockBehind } from './make-shop';
-import { openShopGUI } from './shop-gui';
-import { getShop } from './ShopData';
-import { Player } from 'org.bukkit.entity';
-import { color, text, tooltip } from 'craftjs-plugin/chat';
 import { getItemName } from '../../common/helpers/items';
 import { getShopItem } from './helpers';
+import { openShopGUI } from './shop-gui';
+import { getShop } from './ShopData';
+import { UUID } from 'java.util';
 
 const line = text('------------------------------------------');
 
 registerEvent(PlayerInteractEvent, (event) => {
-  if (event.action !== Action.RIGHT_CLICK_BLOCK) return;
+  if (event.action !== BlockAction.RIGHT_CLICK_BLOCK) return;
   if (event.hand !== EquipmentSlot.HAND) return;
   if (!event.clickedBlock) return;
   const sign = event.clickedBlock;
   const view = getShop(sign);
+
   if (!view) return;
+  if (!view.type) return;
 
-  const chest = getBlockBehind(sign);
-  if (!chest) return;
-  if (!(chest.state instanceof Container)) return;
-
-  openShopGUI(event.player, chest.state, sign);
+  if (event.player.isSneaking()) {
+    openShopGUI(event.player, sign);
+  }
+  displayShopInfo(event.player, sign);
+  // openShopGUI(event.player, chest.state, sign);
 });
 
-function displayShopInfo(player: Player, sign: Block) {
+function displayShopInfo(p: Player, sign: Block) {
   const view = getShop(sign);
   if (!view) return;
   const item = getShopItem(
     view.item.material,
     view.item.modelId,
     view.item.name,
+    view.item.translationKey,
   );
-  const itemName = getItemName();
-  player.sendMessage(color('#FFAA00', line));
-  player.sendMessage(
+  const unit =
+    view.price === 1
+      ? view.currency.unitPlural.slice(0, -1)
+      : view.currency.unitPlural;
+  const itemName = getItemName(item);
+  const taxCollector = view.taxCollector
+    ? Bukkit.server.getOfflinePlayer(UUID.fromString(view.taxCollector))
+    : undefined;
+
+  p.sendMessage(color('#FFAA00', text('----------Kauppa-arkku----------')));
+
+  p.sendMessage(
     color(
-      '#FFFF55',
-      text('Tämä kauppa myy tuotetta '),
-      tooltip('Klikkaa nähdäksesi'),
+      '#FFFF99',
+      translate(view.type === 'SELLING' ? 'vk.selling' : 'vk.buying'),
     ),
   );
-  player.sendMessage(color('#FFAA00', line));
+
+  if (itemName instanceof TranslatableComponent) {
+    p.sendMessage(color('#FFD700', itemName));
+  } else {
+    p.sendMessage(
+      color('#FFD700', text(ChatColor.ITALIC + '"' + itemName.text + '"')),
+    );
+  }
+  p.sendMessage(color('#FFFF99', text(`Hinta: ${view.price} ${unit} / kpl`)));
+  if (view.tax)
+    p.sendMessage(
+      color(
+        '#FFFF99',
+        text(`Vero: ${view.tax}% (${taxCollector?.name || 'Tuntematon'})`),
+      ),
+    );
+
+  p.sendMessage(color('#FFAA00', text('--------------------------------')));
 }
