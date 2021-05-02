@@ -1,7 +1,7 @@
+import { translate } from 'craftjs-plugin/chat';
+import { Material } from 'org.bukkit';
 import { Container } from 'org.bukkit.block';
 import { ItemStack } from 'org.bukkit.inventory';
-import { Material, Bukkit } from 'org.bukkit';
-import { translate } from 'craftjs-plugin/chat';
 
 /**
  * Tries to find similar itemstack from the container

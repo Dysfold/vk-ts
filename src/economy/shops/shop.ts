@@ -1,4 +1,4 @@
-import { color, text, translate } from 'craftjs-plugin/chat';
+import { color, text, translate, tooltip } from 'craftjs-plugin/chat';
 import { TranslatableComponent } from 'net.md_5.bungee.api.chat';
 import { ChatColor, Bukkit } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
@@ -11,8 +11,6 @@ import { getShopItem } from './helpers';
 import { openShopGUI } from './shop-gui';
 import { getShop } from './ShopData';
 import { UUID } from 'java.util';
-
-const line = text('------------------------------------------');
 
 registerEvent(PlayerInteractEvent, (event) => {
   if (event.action !== BlockAction.RIGHT_CLICK_BLOCK) return;
@@ -49,6 +47,7 @@ function displayShopInfo(p: Player, sign: Block) {
     ? Bukkit.server.getOfflinePlayer(UUID.fromString(view.taxCollector))
     : undefined;
 
+  p.sendMessage(text('\n\n\n'));
   p.sendMessage(color('#FFAA00', text('----------Kauppa-arkku----------')));
 
   p.sendMessage(
@@ -70,9 +69,17 @@ function displayShopInfo(p: Player, sign: Block) {
     p.sendMessage(
       color(
         '#FFFF99',
-        text(`Vero: ${view.tax}% (${taxCollector?.name || 'Tuntematon'})`),
+        tooltip(
+          text(`Verottaja: ${taxCollector?.name || 'Tuntematon'}`),
+          text(`Vero: `),
+          color('#FFD700', text(`[${view.tax}%]`)),
+        ),
       ),
     );
 
   p.sendMessage(color('#FFAA00', text('--------------------------------')));
+  const action = view.type == 'SELLING' ? 'ostaa' : 'myydä';
+  p.sendMessage(
+    color('#FFFF99', text('Montako tuotetta haluat ' + action + '?')),
+  );
 }

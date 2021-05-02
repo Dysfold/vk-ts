@@ -1,9 +1,9 @@
-import { Sound, SoundCategory, Bukkit } from 'org.bukkit';
+import { text, translate } from 'craftjs-plugin/chat';
+import { TranslatableComponent } from 'net.md_5.bungee.api.chat';
+import { Sound, SoundCategory } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { ItemStack } from 'org.bukkit.inventory';
 import { Damageable, ItemMeta } from 'org.bukkit.inventory.meta';
-import { TranslatableComponent } from 'net.md_5.bungee.api.chat';
-import { translate, text } from 'craftjs-plugin/chat';
 
 /**
  * Damages flint and steel, breaks item if max damage is reached.
