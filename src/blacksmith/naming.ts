@@ -4,6 +4,7 @@ import { PrepareAnvilEvent } from 'org.bukkit.event.inventory';
 import { ItemStack } from 'org.bukkit.inventory';
 import { Handcuffs } from '../combat/handcuffs';
 import { Key } from '../locks/key';
+import { VkItem } from '../common/items/VkItem';
 
 // TODO: Allow renaming of locks
 function isAllowedItem(item: ItemStack) {
@@ -12,8 +13,13 @@ function isAllowedItem(item: ItemStack) {
   return false;
 }
 
+function isBlackListed(item: ItemStack) {
+  return item.type === VkItem.MONEY;
+}
+
 function canBeRenamed(item: ItemStack) {
   if (isAllowedItem(item)) return true;
+  if (isBlackListed(item)) return false;
   if (!item.itemMeta.hasDisplayName()) return true;
 
   const components = item.itemMeta.displayNameComponent;

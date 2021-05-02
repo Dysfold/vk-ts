@@ -13,6 +13,7 @@ import { getBlockBehind } from './make-shop';
 import { openShopGUI } from './shop-gui';
 import { getShop } from './ShopData';
 import { GLOBAL_PIPELINE, ChatMessage } from '../../chat/pipeline';
+import { getInventoryBalance, takeMoneyFrom } from '../money';
 
 registerEvent(PlayerInteractEvent, (event) => {
   if (event.action !== BlockAction.RIGHT_CLICK_BLOCK) return;
@@ -176,7 +177,26 @@ function handleMessage(msg: ChatMessage) {
   if (amount > maxAmount) {
     p.sendMessage(ChatColor.RED + 'Liian suuri kappalemäärä');
   }
-  return;
+
+  buy(p, amount, shopSign);
+}
+
+function buy(player: Player, amount: number, shopSign: Block) {
+  const chest = getBlockBehind(shopSign);
+  if (!chest) return false;
+  if (!(chest.state instanceof Container)) return false;
+  const view = getShop(shopSign);
+  if (!view) return;
+
+  const unit = view.currency.unitPlural.slice(0, -1);
+  const price = amount * view.price;
+  const balance = getInventoryBalance(player.inventory, unit);
+  if (price > balance) {
+    player.sendMessage(ChatColor.RED + 'Sinulla ei ole tarpeeksi rahaa!');
+    return false;
+  }
+  player.sendMessage('Sinulla on rahaa: ' + balance + ' / ' + price);
+  takeMoneyFrom(player, price, unit);
 }
 
 function detectShopTransaction(msg: ChatMessage) {
