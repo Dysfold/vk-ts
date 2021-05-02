@@ -1,3 +1,4 @@
+require('./ice-breaking');
 require('./barrel');
 require('./knock');
 require('./falling');
