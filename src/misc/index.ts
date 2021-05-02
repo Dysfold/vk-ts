@@ -1,4 +1,3 @@
-require('./ice-breaking');
 require('./barrel');
 require('./knock');
 require('./falling');
@@ -54,3 +53,4 @@ require('./placable-items');
 require('./rope');
 require('./like');
 require('./paper-write');
+require('./ice-breaking');

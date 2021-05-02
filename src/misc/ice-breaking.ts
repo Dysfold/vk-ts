@@ -10,8 +10,8 @@ import { DamageCause } from 'org.bukkit.event.entity.EntityDamageEvent';
 const materials = [
   Material.ICE,
   Material.WATER,
-  Material.FROSTED_ICE,
   Material.WATER,
+  Material.FROSTED_ICE,
 ];
 
 registerEvent(PlayerJumpEvent, async (event) => {
