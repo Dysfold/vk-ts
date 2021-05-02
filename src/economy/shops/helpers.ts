@@ -4,15 +4,15 @@ import { Container } from 'org.bukkit.block';
 import { ItemStack } from 'org.bukkit.inventory';
 
 /**
- * Tries to find similar itemstack from the container
+ * Tries to find similar itemstacks from the container
  * @param container Container used in the shop
  * @param lookfor ItemStack to be looked for from the container
  */
-export function findItemFromContainer(
+export function findItemsFromContainer(
   container: Container,
   lookfor: ItemStack,
 ) {
-  return container.inventory.contents.find((i) => {
+  return container.inventory.contents.filter((i) => {
     if (!i) return false;
     if (i.type != lookfor.type) return false;
     const metaA = i.itemMeta;

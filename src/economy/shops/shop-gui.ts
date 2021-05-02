@@ -1,7 +1,7 @@
 import { Bukkit, ChatColor } from 'org.bukkit';
 import { Block, Container } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
-import { findItemFromContainer, getShopItem } from './helpers';
+import { getShopItem, findItemsFromContainer } from './helpers';
 import { getShop } from './ShopData';
 import {
   InventoryClickEvent,
@@ -37,12 +37,12 @@ export function openShopGUI(player: Player, sign: Block) {
     shop.item.name,
     shop.item.translationKey,
   );
-  let itemPreview = findItemFromContainer(chest.state, item);
+  let itemPreview = findItemsFromContainer(chest.state, item)?.[0];
   if (!itemPreview && shop.type === 'BUYING') itemPreview = item;
   if (!itemPreview) return;
   const inv = createShopGuiInventory(sign);
   if (!inv) return;
-  inv.setItem(13, itemPreview);
+  inv.setItem(13, itemPreview.asQuantity(1));
 
   openGUIs.add(player);
   player.openInventory(inv);
