@@ -1,5 +1,7 @@
 import * as yup from 'yup';
 import { dataType } from '../../common/datas/holder';
+import { Block, Sign } from 'org.bukkit.block';
+import { dataView } from '../../common/datas/view';
 
 export const ShopData = dataType('shop-data', {
   type: yup.string().required(),
@@ -7,6 +9,7 @@ export const ShopData = dataType('shop-data', {
     material: yup.string().required(),
     modelId: yup.number().notRequired(),
     name: yup.string().notRequired(),
+    displayNameComponent: yup.string().notRequired(),
   }),
   price: yup.number().required(),
   currency: yup.object({
@@ -17,3 +20,13 @@ export const ShopData = dataType('shop-data', {
   tax: yup.number().required(),
   taxCollector: yup.string().notRequired(),
 });
+
+/**
+ * Get a database view of the shop
+ * @param block The sign in fron of the (chest)shop
+ */
+export function getShop(block: Block) {
+  if (!(block.state instanceof Sign)) return undefined;
+  const view = dataView(ShopData, block.state);
+  return view;
+}

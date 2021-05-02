@@ -1,19 +1,18 @@
+import { color, text } from 'craftjs-plugin/chat';
+import { TextComponent, TranslatableComponent } from 'net.md_5.bungee.api.chat';
+import { Bukkit, ChatColor, OfflinePlayer } from 'org.bukkit';
 import { Block, Sign } from 'org.bukkit.block';
 import { Chest, WallSign } from 'org.bukkit.block.data.type';
-import { Player, Minecart } from 'org.bukkit.entity';
+import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
-import { coinModelIdToCurrencyId, Currency, getCoinData } from '../money-mold';
-import { OfflinePlayer, Bukkit, ChatColor, Material } from 'org.bukkit';
-import { color, text } from 'craftjs-plugin/chat';
 import { dataView } from '../../common/datas/view';
-import { ShopData } from './ShopData';
 import { getItemName } from '../../common/helpers/items';
-import { TextComponent, TranslatableComponent } from 'net.md_5.bungee.api.chat';
-import { SuppressWarnings } from 'java.lang';
-type ShopType = 'SELLING' | 'BUYING';
+import { coinModelIdToCurrencyId, Currency, getCoinData } from '../money-mold';
+import { ShopData } from './ShopData';
+export type ShopType = 'SELLING' | 'BUYING';
 
 interface ShopInfo {
   type?: ShopType;
@@ -24,7 +23,7 @@ interface ShopInfo {
   taxCollector?: OfflinePlayer;
 }
 
-interface ValidShopInfo {
+export interface ValidShopInfo {
   type: ShopType;
   item: ItemStack;
   price: number;
@@ -90,9 +89,13 @@ function startNextTask(player: Player) {
     }
   }
 
-  player.sendMessage(color('#FFAA00', text('------------------------------')));
+  player.sendMessage(
+    color('#FFAA00', text('------------------------------------------')),
+  );
   player.sendMessage(color('#FFFF55', text(nextTask.prompt)));
-  player.sendMessage(color('#FFAA00', text('------------------------------')));
+  player.sendMessage(
+    color('#FFAA00', text('------------------------------------------')),
+  );
   return true;
 }
 
@@ -139,16 +142,19 @@ function saveShop(player: Player) {
     : undefined;
 
   view.type = shop.type;
-  view.item.material = shop.item.type.toString();
-  view.item.modelId = modelId;
-  view.item.name = shop.item.itemMeta.displayName;
-  view.item.material = shop.item.type.toString();
+  // view.item.material = shop.item.type.toString();
+  // view.item.modelId = modelId;
+  // view.item.name = shop.item.itemMeta.displayName;
+  // view.item.material = shop.item.type.toString();
+  view.item = shop.item.toString();
+  // view.item.displayNameComponent = shop.item.toString()
   view.price = shop.price;
   view.currency.model = shop.currency.model;
   view.currency.unitPlural = shop.currency.unitPlural;
   view.currency.subunitPlural = shop.currency.subunitPlural;
   view.tax = shop.tax;
   view.taxCollector = shop.taxCollector?.uniqueId.toString();
+  signDataHolder.update();
 
   updateShopSign(session);
   player.sendMessage('Kauppa luotu!!');
@@ -171,16 +177,22 @@ function getShopItemName(item: ItemStack) {
   if (component instanceof TextComponent) {
     return ChatColor.ITALIC + '"' + component.toPlainText() + '"';
   }
-  return component.translate;
+  return component;
 }
 
 // THIS IS HACK
-function updateSignTextTranslation(text: TranslatableComponent, sign: Block) {
+function updateSignTextTranslation(
+  text: TranslatableComponent,
+  sign: Block,
+  type: ShopType,
+) {
+  const shopTypeTranslation = type === 'SELLING' ? 'vk.selling' : 'vk.buying';
+  const shopTypeColor = type === 'SELLING' ? 'green' : 'blue';
   const world =
-    Bukkit.server.worlds.length > 3
-      ? 'minecraft:' + sign.world.name
-      : 'minecraft:overworld';
-  const cmd = `execute in ${world} run data merge block ${sign.x} ${sign.y} ${sign.z} {Text2:'{"translate":"${text.translate}"}'}`;
+    sign.world.name === 'world'
+      ? 'minecraft:overworld'
+      : 'minecraft:' + sign.world.name;
+  const cmd = `execute in ${world} run data merge block ${sign.x} ${sign.y} ${sign.z} {Text1:'{"translate":"${shopTypeTranslation}","color":"${shopTypeColor}"}',Text2:'{"translate":"${text.translate}"}'}`;
   const console = Bukkit.server.consoleSender;
   Bukkit.dispatchCommand(console, cmd);
 }
@@ -191,16 +203,17 @@ function updateShopSign(session: ShopMakingSession) {
   const sign = signBlock.state as Sign;
 
   const name = getItemName(shop.item);
+  const unit = shop.price === 1 ? shop.currency.unit : shop.currency.unitPlural;
 
   sign.setLine(0, shopTypeToString(shop.type));
   // TODO: remove .toPlainText() when chat components are accepted
-  sign.setLine(1, getShopItemName(shop.item));
-  sign.setLine(2, shop.price + ' ' + shop.currency.unitPlural);
+  sign.setLine(1, getShopItemName(shop.item).toString());
+  sign.setLine(2, shop.price + ' ' + unit);
   sign.update();
 
-  // HACK
+  // HACK. Remove this later
   if (name instanceof TranslatableComponent) {
-    updateSignTextTranslation(name, signBlock);
+    updateSignTextTranslation(name, signBlock, shop.type as ShopType);
   }
 }
 
@@ -277,9 +290,15 @@ function canBecomeShop(block: Block): block is Block {
   }
 
   if (!(sign.blockData instanceof WallSign)) return false;
-  const attachedTo = block.getRelative(sign.blockData.facing.oppositeFace);
+  const attachedTo = getBlockBehind(block);
+  if (!attachedTo) return false;
   if (!isValidChest(attachedTo)) return false;
   return true;
+}
+
+export function getBlockBehind(sign: Block) {
+  if (!(sign.blockData instanceof WallSign)) return undefined;
+  return sign.getRelative(sign.blockData.facing.oppositeFace);
 }
 
 const SHOP_TYPES = new Map<string, ShopType>([
