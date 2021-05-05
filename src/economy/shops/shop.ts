@@ -31,7 +31,6 @@ registerEvent(PlayerInteractEvent, (event) => {
     openShopGUI(event.player, sign);
   }
   displayShopInfo(event.player, sign);
-  // openShopGUI(event.player, chest.state, sign);
 });
 
 function displayShopInfo(p: Player, sign: Block) {
@@ -222,9 +221,9 @@ function buy(player: Player, amount: number, shopSign: Block) {
 
   let a = amount;
   for (const product of allProducts) {
-    if (a <= 0) return;
+    if (a <= 0) break;
     const amountToRemove = Math.min(product.amount, a);
-    a = amountToRemove;
+    a -= amountToRemove;
     items.push(product.clone().asQuantity(amountToRemove));
     product.amount -= amountToRemove;
   }
