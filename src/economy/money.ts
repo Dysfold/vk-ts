@@ -1,15 +1,9 @@
-import { Inventory, ItemStack } from 'org.bukkit.inventory';
-import {
-  getCoinData,
-  makeCoinItem,
-  CURRENCY_ITEMS,
-  getCoinDisplayName,
-} from './money-mold';
-import { Player } from 'org.bukkit.entity';
-import { invert, toLength } from 'lodash';
 import { Bukkit } from 'org.bukkit';
-import { Currency, getCurrency } from './currency';
+import { Player } from 'org.bukkit.entity';
+import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import { giveItem } from '../common/helpers/inventory';
+import { Currency } from './currency';
+import { CURRENCY_ITEMS, getCoinData, getCoinDisplayName } from './money-mold';
 
 /**
  * Calculate total value of given currency in an inventory
