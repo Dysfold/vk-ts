@@ -28,8 +28,8 @@ export function giveItem(
       return;
     }
   }
-  // MainHand (default)
-  else {
+  // MainHand
+  if (hand === EquipmentSlot.OFF_HAND) {
     if (inventory.itemInMainHand.type.isEmpty()) {
       inventory.itemInMainHand = item;
       return;

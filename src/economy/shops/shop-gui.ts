@@ -31,14 +31,10 @@ export function openShopGUI(player: Player, sign: Block) {
   const shop = getShop(sign);
   if (!shop) return undefined;
   if (!shop.item) return undefined;
-  const item = getShopItem(
-    shop.item.material,
-    shop.item.modelId,
-    shop.item.name,
-    shop.item.translationKey,
-  );
+  const item = getShopItem(shop.item);
+  if (!item) return;
   let itemPreview = findItemsFromContainer(chest.state, item)?.[0];
-  if (!itemPreview && shop.type === 'BUYING') itemPreview = item;
+  if (!itemPreview) itemPreview = item;
   if (!itemPreview) return;
   const inv = createShopGuiInventory(sign);
   if (!inv) return;

@@ -1,15 +1,17 @@
-import { translate, text } from 'craftjs-plugin/chat';
+import { text, translate } from 'craftjs-plugin/chat';
 import { Location, Material } from 'org.bukkit';
 import { BlockFace, Dispenser } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
 import { Action, BlockPistonRetractEvent } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
-import { CustomItem, CUSTOM_DATA_KEY } from '../common/items/CustomItem';
-import { VkItem } from '../common/items/VkItem';
 import * as yup from 'yup';
 import { dataType } from '../common/datas/holder';
 import { dataView } from '../common/datas/view';
+import { CustomItem, CUSTOM_DATA_KEY } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
+import { Currency, CurrencyModel, isCurrencyModel } from './currency';
+
 const MoneyMold = new CustomItem({
   name: translate('vk.money_mold'),
   id: 10,
@@ -21,134 +23,45 @@ const PRESS_BLOCK = Material.IRON_BLOCK;
 const MATERIAL_CONTAINER = Material.DROPPER;
 
 // Placeholder for copper material (1.17)
-const COPPER_MATERIAL = Material.BRICK;
+const COPPER_MATERIAL = Material.BRICK; //Material.COPPER_INGOT
 
 // Config for coins materials. Number is the id of the currency
-const RAW_MATERIALS: { [id: string]: ItemStack[] } = {
-  1: [
-    new ItemStack(Material.GOLD_INGOT, 10),
-    new ItemStack(COPPER_MATERIAL, 10),
+const RAW_MATERIALS = new Map<CurrencyModel, ItemStack[]>([
+  [
+    CurrencyModel.GOLDEN,
+    [
+      new ItemStack(Material.GOLD_INGOT, 10),
+      new ItemStack(COPPER_MATERIAL, 10),
+    ],
   ],
-  2: [
-    new ItemStack(Material.IRON_INGOT, 10),
-    new ItemStack(COPPER_MATERIAL, 10),
+  [
+    CurrencyModel.SILVER,
+    [
+      new ItemStack(Material.IRON_INGOT, 10),
+      new ItemStack(COPPER_MATERIAL, 10),
+    ],
   ],
-  3: [
-    new ItemStack(Material.PAPER, 10),
-    new ItemStack(Material.INK_SAC, 10),
-    new ItemStack(COPPER_MATERIAL, 10),
+  [
+    CurrencyModel.PAPER,
+    [
+      new ItemStack(Material.PAPER, 10),
+      new ItemStack(Material.INK_SAC, 10),
+      new ItemStack(COPPER_MATERIAL, 10),
+    ],
   ],
-};
+]);
+const CURRENCY_MODELS = Array.from(RAW_MATERIALS.keys());
 
+/**
+ * Data for coin custom item
+ */
 const COIN_DATA = {
-  unit: yup.string().required(),
-  subUnit: yup.string().required(),
+  unit: yup.string().notRequired(),
+  subUnit: yup.string().notRequired(),
 };
-
-const COIN_A_0_01 = new CustomItem({
-  id: 1,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_A_0_1 = new CustomItem({
-  id: 2,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_A_1 = new CustomItem({
-  id: 3,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_A_10 = new CustomItem({
-  id: 4,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_A_100 = new CustomItem({
-  id: 5,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_A_1000 = new CustomItem({
-  id: 6,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-
-const COIN_B_0_01 = new CustomItem({
-  id: 7,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_B_0_1 = new CustomItem({
-  id: 8,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_B_1 = new CustomItem({
-  id: 9,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_B_10 = new CustomItem({
-  id: 10,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_B_100 = new CustomItem({
-  id: 11,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_B_1000 = new CustomItem({
-  id: 12,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-
-const COIN_C_0_01 = new CustomItem({
-  id: 13,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_C_0_1 = new CustomItem({
-  id: 14,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_C_1 = new CustomItem({
-  id: 15,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_C_10 = new CustomItem({
-  id: 16,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_C_100 = new CustomItem({
-  id: 17,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-const COIN_C_1000 = new CustomItem({
-  id: 18,
-  type: VkItem.MONEY,
-  data: COIN_DATA,
-});
-
-// Infromation about the name of the currency
-export interface Currency {
-  model: number;
-  unit: string;
-  unitPlural: string;
-  subunit: string;
-  subunitPlural: string;
-}
 
 interface Coin {
-  item: CustomItem<any>;
+  item: CustomItem<typeof COIN_DATA>;
   amount: number;
   value: number;
 }
@@ -156,61 +69,85 @@ interface Coin {
 export function getCoinData(item: ItemStack) {
   if (!isMoney(item)) return undefined;
   const DATA_TYPE = dataType(CUSTOM_DATA_KEY, COIN_DATA);
-  return dataView(DATA_TYPE, item);
+  const view = dataView(DATA_TYPE, item);
+  if (!view.subUnit || !view.unit) return undefined;
+  return view;
 }
 
 function isMoney(item: ItemStack) {
   if (item.type !== VkItem.MONEY) return false;
-  return item.itemMeta.hasCustomModelData();
+  if (!item.itemMeta.hasCustomModelData()) return false;
+  const DATA_TYPE = dataType(CUSTOM_DATA_KEY, COIN_DATA);
+  const view = dataView(DATA_TYPE, item);
+  if (!view.unit || !view.subUnit) return false;
+  return true;
 }
 
-const CURRENCY_ITEMS = new Map<number, Coin[]>([
-  [
-    1,
-    [
-      { item: COIN_A_0_01, amount: 10, value: 0.01 },
-      { item: COIN_A_0_1, amount: 10, value: 0.1 },
-      { item: COIN_A_1, amount: 10, value: 1 },
-      { item: COIN_A_10, amount: 10, value: 10 },
-      { item: COIN_A_100, amount: 10, value: 100 },
-      { item: COIN_A_1000, amount: 10, value: 1000 },
-    ],
-  ],
-  [
-    2,
-    [
-      { item: COIN_B_0_01, amount: 10, value: 0.01 },
-      { item: COIN_B_0_1, amount: 10, value: 0.1 },
-      { item: COIN_B_1, amount: 10, value: 1 },
-      { item: COIN_B_10, amount: 10, value: 10 },
-      { item: COIN_B_100, amount: 10, value: 100 },
-      { item: COIN_B_1000, amount: 10, value: 1000 },
-    ],
-  ],
-  [
-    3,
-    [
-      { item: COIN_C_0_01, amount: 10, value: 0.01 },
-      { item: COIN_C_0_1, amount: 10, value: 0.1 },
-      { item: COIN_C_1, amount: 10, value: 1 },
-      { item: COIN_C_10, amount: 10, value: 10 },
-      { item: COIN_C_100, amount: 10, value: 100 },
-      { item: COIN_C_1000, amount: 10, value: 1000 },
-    ],
-  ],
-]);
+const VALUES_IN_CURRENCY = [0.01, 0.1, 1, 10, 100, 1000];
+export const CURRENCY_ITEMS = new Map<CurrencyModel, Coin[]>();
 
-const MODEL_ID_TO_CURRENCY_ID = new Map<number, number>();
+/**
+ * Generate custom model data (or model id) for the custom item
+ * @param currencyModel Model of the currency (from 1 to 3(?))
+ * @param value Value of the coin. From 0.01 to 1000
+ */
+function getCoinModelId(currencyModel: number, value: number) {
+  const index = VALUES_IN_CURRENCY.indexOf(value);
+  if (index == -1) return undefined;
+  return currencyModel * 10 + index;
+}
+
+/**
+ * Create new custom item for the coin
+ * @param currencyModel Model of the currency (from 1 to 3(?))
+ * @param value Value of the coin. From 0.01 to 1000
+ */
+export function makeCoinItem(currencyModel: number, value: number) {
+  const modelId = getCoinModelId(currencyModel, value);
+  if (modelId === undefined) return undefined;
+  const customItem = new CustomItem({
+    id: modelId,
+    type: VkItem.MONEY,
+    data: COIN_DATA,
+  });
+  return customItem;
+}
+
+/**
+ * Generate list of Coin items that belong to same texture group
+ * @param currencyModel Model of the currency (from 1 to 3(?))
+ */
+function generateCoins(currencyModel: number) {
+  const coins: Coin[] = [];
+  for (const value of VALUES_IN_CURRENCY) {
+    const customItem = makeCoinItem(currencyModel, value);
+    if (!customItem) break;
+    const coin: Coin = {
+      item: customItem,
+      amount: 10,
+      value: value,
+    };
+    coins.push(coin);
+  }
+  return coins;
+}
+
+CURRENCY_MODELS.forEach((currencyModel) => {
+  const coins = generateCoins(currencyModel);
+  CURRENCY_ITEMS.set(currencyModel, coins);
+});
+
+const MODEL_ID_TO_CURRENCY_MODEL = new Map<number, CurrencyModel>();
 CURRENCY_ITEMS.forEach((items, id) =>
   items.forEach((coin) =>
-    MODEL_ID_TO_CURRENCY_ID.set(
+    MODEL_ID_TO_CURRENCY_MODEL.set(
       coin.item.create({}).itemMeta.customModelData,
       id,
     ),
   ),
 );
 export function coinModelIdToCurrencyId(modelId: number) {
-  return MODEL_ID_TO_CURRENCY_ID.get(modelId);
+  return MODEL_ID_TO_CURRENCY_MODEL.get(modelId);
 }
 
 registerEvent(BlockPistonRetractEvent, (event) => {
@@ -235,8 +172,9 @@ registerEvent(BlockPistonRetractEvent, (event) => {
   const subunitPlural = lore[3];
   const model = Number(lore[4]);
   if (!unit || !subunit || !model) return;
+  if (!isCurrencyModel(model)) return;
 
-  const materials = RAW_MATERIALS[model];
+  const materials = RAW_MATERIALS.get(model);
   if (!materials) return;
   if (!removeMaterials(inventory, materials)) return;
 
@@ -281,13 +219,7 @@ async function createMoney(location: Location, currency: Currency) {
       coin.amount,
     );
     const meta = item.itemMeta;
-
     meta.displayName = getCoinDisplayName(coin, currency);
-
-    // prettier-ignore
-    // const lore = [`§r§6[${currency.unitPlural}, ${currency.subunitPlural}]`];
-    // meta.lore = lore;
-
     item.itemMeta = meta;
 
     // Drop the item without velocity.
@@ -297,7 +229,7 @@ async function createMoney(location: Location, currency: Currency) {
   }
 }
 
-function getCoinDisplayName(coin: Coin, currency: Currency) {
+export function getCoinDisplayName(coin: Coin, currency: Currency) {
   const isSubunit = coin.value < 1;
 
   // Subunits are transformed to integers: 0.1 -> 10
@@ -364,7 +296,9 @@ MoneyMold.event(
     const line = lore[4];
     console.log(line);
     const model = Number(line);
-    const items = RAW_MATERIALS[model];
+    if (!isCurrencyModel(model)) return;
+    const items = RAW_MATERIALS.get(model);
+    if (!items) return;
 
     event.player.sendMessage('Tarvitset tätä valuuttaa varten: ');
     for (const item of items) {

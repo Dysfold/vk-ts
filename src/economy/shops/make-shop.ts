@@ -10,8 +10,9 @@ import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
 import { dataView } from '../../common/datas/view';
 import { getItemName, getCustomTranslation } from '../../common/helpers/items';
-import { coinModelIdToCurrencyId, Currency, getCoinData } from '../money-mold';
+import { coinModelIdToCurrencyId, getCoinData } from '../money-mold';
 import { ShopData } from './ShopData';
+import { Currency } from '../currency';
 export type ShopType = 'SELLING' | 'BUYING';
 
 interface ShopInfo {
@@ -250,14 +251,14 @@ registerEvent(PlayerInteractEvent, async (event) => {
     const item = player.inventory.itemInMainHand;
     const data = getCoinData(item);
 
-    if (!data) {
-      player.sendMessage('Viallinen valuutta');
+    if (!data?.unit || !data.subUnit) {
+      player.sendMessage('Viallinen valuutta!');
       return;
     }
     const currencyModel = coinModelIdToCurrencyId(
       item.itemMeta.customModelData,
     );
-    if (!currencyModel) {
+    if (currencyModel === undefined) {
       player.sendMessage('Viallinen valuutta');
       log.error('Viallinen valuutta');
       return;

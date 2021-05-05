@@ -1,20 +1,27 @@
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
-import { getCoinData } from './money-mold';
+import {
+  getCoinData,
+  makeCoinItem,
+  CURRENCY_ITEMS,
+  getCoinDisplayName,
+} from './money-mold';
 import { Player } from 'org.bukkit.entity';
-import { invert } from 'lodash';
+import { invert, toLength } from 'lodash';
 import { Bukkit } from 'org.bukkit';
+import { Currency, getCurrency } from './currency';
+import { giveItem } from '../common/helpers/inventory';
 
 /**
  * Calculate total value of given currency in an inventory
  * @param inv Inventory were the balace is calculated
- * @param targetUnit Currency unit as string "Euro", "Punta" etc
+ * @param currency Currency unit
  */
-export function getInventoryBalance(inv: Inventory, targetUnit: string) {
-  const unit = targetUnit.toLowerCase();
+export function getInventoryBalance(inv: Inventory, currency: Currency) {
+  const unit = currency.unit.toLowerCase();
   const sum = inv.contents.reduce((total, item) => {
     if (!item) return total;
     const data = getCoinData(item);
-    if (!data) return total;
+    if (!data?.unit) return total;
 
     if (!isSameCurrency(data.unit, unit)) return total;
 
@@ -44,7 +51,11 @@ export function getInventoryBalance(inv: Inventory, targetUnit: string) {
  * @param amount Amount of money to be removed
  * @param unit Currency as string
  */
-export function takeMoneyFrom(player: Player, amount: number, unit: string) {
+export function takeMoneyFrom(
+  player: Player,
+  amount: number,
+  currency: Currency,
+) {
   /**
    * Map containing all coins in the players inventory.
    * Value of the coin is used as key (0.01, 0.1, 1, 10 etc)
@@ -62,14 +73,13 @@ export function takeMoneyFrom(player: Player, amount: number, unit: string) {
     if (isNaN(amount)) return;
 
     const data = getCoinData(item);
-    if (!data) return;
+    if (!data?.unit) return;
 
-    if (!isSameCurrency(data.unit, unit)) return;
+    if (!isSameCurrency(data.unit, currency.unit)) return;
 
-    if (isSameCurrency(displayUnit, unit)) {
+    if (isSameCurrency(displayUnit, currency.unit)) {
       // Units
       const itemStacks = invCoins.get(amount);
-      Bukkit.broadcastMessage('MA ' + amount);
       if (!itemStacks) invCoins.set(amount, [item]);
       else itemStacks.push(item);
       return;
@@ -77,7 +87,6 @@ export function takeMoneyFrom(player: Player, amount: number, unit: string) {
     // Sub units
     const subAmount = amount / 100;
     const itemStacks = invCoins.get(subAmount);
-    Bukkit.broadcastMessage('sub ' + subAmount);
     if (!itemStacks) invCoins.set(subAmount, [item]);
     else itemStacks.push(item);
     return;
@@ -93,9 +102,6 @@ export function takeMoneyFrom(player: Player, amount: number, unit: string) {
     for (const itemStack of itemList) {
       const howMany = Math.ceil(price / AMOUNT);
 
-      Bukkit.broadcastMessage(
-        'How many [' + itemStack.itemMeta.displayName + '] ' + howMany,
-      );
       const removeHowMany = Math.min(howMany, itemStack.amount);
       itemStack.amount -= removeHowMany;
       price -= removeHowMany * AMOUNT;
@@ -104,9 +110,45 @@ export function takeMoneyFrom(player: Player, amount: number, unit: string) {
   }
 
   Bukkit.broadcastMessage('Hintaa jäljellä ' + price);
+  // If the price goes negative, player has payed too much -> return change coins
+  if (price < 0) {
+    giveMoney(player, -price, currency);
+  }
 }
 
-export function giveMoney(player: Player, amount: number, unit: string) {}
+export function giveMoney(
+  player: Player,
+  totalAmount: number,
+  currency: Currency,
+) {
+  const coins = CURRENCY_ITEMS.get(currency.model);
+  if (!coins) return;
+
+  let amount = totalAmount;
+  const VALUES = [1000, 100, 10, 1, 0.1, 0.01];
+  for (const VALUE of VALUES) {
+    if (VALUE > amount) continue;
+    const howMany = Math.floor(amount / VALUE);
+    amount -= howMany * VALUE;
+    Bukkit.broadcastMessage('Palautetaan ' + howMany + ' ' + VALUE);
+    const coin = coins.find((c) => c.value == VALUE);
+    if (!coin) return;
+    const customItem = coin.item;
+    if (!customItem) return;
+    const item = customItem.create(
+      {
+        unit: currency.unitPlural,
+        subUnit: currency.subunitPlural,
+      },
+      howMany,
+    );
+    const meta = item.itemMeta;
+    meta.displayName = getCoinDisplayName(coin, currency);
+    item.itemMeta = meta;
+
+    giveItem(player, item);
+  }
+}
 
 /**
  * Compares 2 strings if they are the same unit:  "Euroa" == "euro" -> true

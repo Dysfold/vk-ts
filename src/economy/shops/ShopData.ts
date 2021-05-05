@@ -3,7 +3,7 @@ import { dataType } from '../../common/datas/holder';
 import { Block, Sign } from 'org.bukkit.block';
 import { dataView } from '../../common/datas/view';
 
-export const ShopData = dataType('shop-data', {
+export const SHOP_DATA = {
   type: yup.string().required(),
   item: yup.object({
     material: yup.string().required(),
@@ -19,7 +19,9 @@ export const ShopData = dataType('shop-data', {
   }),
   tax: yup.number().required(),
   taxCollector: yup.string().notRequired(),
-});
+};
+
+export const ShopData = dataType('shop-data', SHOP_DATA);
 
 /**
  * Get a database view of the shop

@@ -23,7 +23,8 @@ registerEvent(PlayerItemConsumeEvent, (event) => {
   const inv = event.player.inventory;
   if (inv.itemInMainHand.isSimilar(food)) {
     inv.itemInMainHand.amount--;
-    if (foodInfo.result) giveItem(event.player, foodInfo.result);
+    if (foodInfo.result)
+      giveItem(event.player, foodInfo.result, EquipmentSlot.HAND);
   } else if (inv.itemInOffHand.isSimilar(food)) {
     inv.itemInOffHand.amount--;
     if (foodInfo.result)

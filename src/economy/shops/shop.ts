@@ -1,12 +1,12 @@
 import { color, text, tooltip, translate } from 'craftjs-plugin/chat';
 import { UUID } from 'java.util';
 import { TranslatableComponent } from 'net.md_5.bungee.api.chat';
-import { Bukkit, ChatColor } from 'org.bukkit';
+import { Bukkit, ChatColor, Material } from 'org.bukkit';
 import { Block, Container } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
 import { Action as BlockAction } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
-import { EquipmentSlot } from 'org.bukkit.inventory';
+import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { getItemName } from '../../common/helpers/items';
 import { getShopItem, findItemsFromContainer } from './helpers';
 import { getBlockBehind } from './make-shop';
@@ -14,6 +14,8 @@ import { openShopGUI } from './shop-gui';
 import { getShop } from './ShopData';
 import { GLOBAL_PIPELINE, ChatMessage } from '../../chat/pipeline';
 import { getInventoryBalance, takeMoneyFrom } from '../money';
+import { getCurrency } from '../currency';
+import { giveItem } from '../../common/helpers/inventory';
 
 registerEvent(PlayerInteractEvent, (event) => {
   if (event.action !== BlockAction.RIGHT_CLICK_BLOCK) return;
@@ -35,12 +37,8 @@ registerEvent(PlayerInteractEvent, (event) => {
 function displayShopInfo(p: Player, sign: Block) {
   const view = getShop(sign);
   if (!view) return;
-  const item = getShopItem(
-    view.item.material,
-    view.item.modelId,
-    view.item.name,
-    view.item.translationKey,
-  );
+  const item = getShopItem(view.item);
+  if (!item) return;
   const unit =
     view.price === 1
       ? view.currency.unitPlural.slice(0, -1)
@@ -138,12 +136,8 @@ function countItemsInShop(shopSign: Block) {
   if (!(chest.state instanceof Container)) return;
   const view = getShop(shopSign);
   if (!view) return;
-  const item = getShopItem(
-    view.item.material,
-    view.item.modelId,
-    view.item.name,
-    view.item.translationKey,
-  );
+  const item = getShopItem(view.item);
+  if (!item) return;
   const items = findItemsFromContainer(chest.state, item);
   return items.reduce((total, i) => total + i.amount, 0);
 }
@@ -167,15 +161,27 @@ function handleMessage(msg: ChatMessage) {
     p.sendMessage(ChatColor.RED + 'Viallinen kappalemäärä');
     return;
   }
-  let maxAmount = 0;
+
+  // Check if player can sell items to the "BUYING" chest
   if (view.type === 'BUYING') {
-    maxAmount = countEmptyStacks(shopSign) ?? 0;
+    const emptyStacks = countEmptyStacks(shopSign) ?? 0;
+    const material = Material.getMaterial(view.item.material);
+    if (!material) return;
+    const stackSize = material?.maxStackSize;
+    const maxAmount = stackSize * emptyStacks;
+    if (amount > maxAmount) {
+      p.sendMessage(ChatColor.RED + 'Kaupassa ei tarpeeksi tilaa');
+      return;
+    }
   }
+
+  // Check if player can buy items from "SELLING" chest
   if (view.type === 'SELLING') {
-    maxAmount = countItemsInShop(shopSign) ?? 0;
-  }
-  if (amount > maxAmount) {
-    p.sendMessage(ChatColor.RED + 'Liian suuri kappalemäärä');
+    const itemsInShop = countItemsInShop(shopSign) ?? 0;
+    if (itemsInShop < amount) {
+      p.sendMessage(ChatColor.RED + 'Kaupassa ei tarpeeksi tuotetta');
+      return;
+    }
   }
 
   buy(p, amount, shopSign);
@@ -188,15 +194,43 @@ function buy(player: Player, amount: number, shopSign: Block) {
   const view = getShop(shopSign);
   if (!view) return;
 
-  const unit = view.currency.unitPlural.slice(0, -1);
+  const currency = getCurrency(
+    view.currency.model,
+    view.currency.unitPlural,
+    view.currency.subunitPlural,
+  );
+  if (!currency) return;
+
   const price = amount * view.price;
-  const balance = getInventoryBalance(player.inventory, unit);
+  const balance = getInventoryBalance(player.inventory, currency);
   if (price > balance) {
     player.sendMessage(ChatColor.RED + 'Sinulla ei ole tarpeeksi rahaa!');
     return false;
   }
   player.sendMessage('Sinulla on rahaa: ' + balance + ' / ' + price);
-  takeMoneyFrom(player, price, unit);
+
+  const shopItem = getShopItem(view.item);
+  if (!shopItem) {
+    log.error('ShopItem parsing failed: ', view);
+    return false;
+  }
+
+  takeMoneyFrom(player, price, currency);
+  const allProducts = findItemsFromContainer(chest.state, shopItem);
+
+  const items: ItemStack[] = [];
+
+  let a = amount;
+  for (const product of allProducts) {
+    if (a <= 0) return;
+    const amountToRemove = Math.min(product.amount, a);
+    a = amountToRemove;
+    items.push(product.clone().asQuantity(amountToRemove));
+    product.amount -= amountToRemove;
+  }
+  items.forEach((item) => {
+    giveItem(player, item, player.mainHand);
+  });
 }
 
 function detectShopTransaction(msg: ChatMessage) {
