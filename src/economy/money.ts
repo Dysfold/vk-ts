@@ -1,7 +1,5 @@
-import { Bukkit } from 'org.bukkit';
-import { Player } from 'org.bukkit.entity';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
-import { giveItem, addItemTo } from '../common/helpers/inventory';
+import { addItemTo } from '../common/helpers/inventory';
 import { Currency } from './currency';
 import { CURRENCY_ITEMS, getCoinData, getCoinDisplayName } from './money-mold';
 
