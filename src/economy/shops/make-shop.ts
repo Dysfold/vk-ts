@@ -4,7 +4,7 @@ import { Bukkit, ChatColor, OfflinePlayer } from 'org.bukkit';
 import { Block, Sign } from 'org.bukkit.block';
 import { Chest, WallSign } from 'org.bukkit.block.data.type';
 import { Player } from 'org.bukkit.entity';
-import { Action } from 'org.bukkit.event.block';
+import { Action, SignChangeEvent } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
@@ -51,7 +51,10 @@ const sessions = new Map<Player, ShopMakingSession>();
 
 const TASK_ORDER: { step: Step; prompt: string }[] = [
   { step: 'START', prompt: '' },
-  { step: 'SET_ITEM', prompt: 'Klikkaa kylttiä myytävällä esineellä.' },
+  {
+    step: 'SET_ITEM',
+    prompt: 'Klikkaa kylttiä haluamallasi tuotteella.',
+  },
   { step: 'SET_CURRENCY', prompt: 'Klikkaa kylttiä haluamallasi valuutalla.' },
   {
     step: 'SET_PRICE',
@@ -102,11 +105,8 @@ function startNextTask(player: Player) {
 /**
  * Start making a new shop
  */
-registerEvent(PlayerInteractEvent, async (event) => {
-  if (event.action !== Action.RIGHT_CLICK_BLOCK) return;
-  if (event.hand !== EquipmentSlot.HAND) return;
-  const sign = event.clickedBlock;
-  if (!sign) return;
+registerEvent(SignChangeEvent, async (event) => {
+  const sign = event.block;
   if (!canBecomeShop(sign)) return;
   const player = event.player;
   if (sessions.has(player)) return;
@@ -370,7 +370,7 @@ function detectShopSetup(msg: ChatMessage) {
         if (!taxCollector) {
           msg.sender.sendMessage('Pelaajaa ei löydy');
         }
-        msg.sender.sendMessage('Asetit veronkerääjäksi ' + taxCollector);
+        msg.sender.sendMessage('Asetit veronkerääjäksi ' + taxCollector.name);
         session.shopInfo.taxCollector = taxCollector;
         startNextTask(msg.sender);
         return;

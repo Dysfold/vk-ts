@@ -1,5 +1,5 @@
 import { text, translate } from 'craftjs-plugin/chat';
-import { Location, Material } from 'org.bukkit';
+import { Location, Material, Bukkit } from 'org.bukkit';
 import { BlockFace, Dispenser } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
 import { Action, BlockPistonRetractEvent } from 'org.bukkit.event.block';
@@ -94,7 +94,7 @@ export const CURRENCY_ITEMS = new Map<CurrencyModel, Coin[]>();
 function getCoinModelId(currencyModel: number, value: number) {
   const index = VALUES_IN_CURRENCY.indexOf(value);
   if (index == -1) return undefined;
-  return currencyModel * 10 + index;
+  return currencyModel * 10 + 1 + index;
 }
 
 /**

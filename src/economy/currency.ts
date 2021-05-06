@@ -32,7 +32,7 @@ export function getCurrency(
     model,
     unit: unitPlural.slice(0, -1),
     unitPlural,
-    subunit: unitPlural.slice(0, -1),
+    subunit: subunitPlural.slice(0, -1),
     subunitPlural,
   } as Currency;
 }
