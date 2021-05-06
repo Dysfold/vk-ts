@@ -3,6 +3,7 @@ import {
   ItemStack,
   EquipmentSlot,
   PlayerInventory,
+  Inventory,
 } from 'org.bukkit.inventory';
 import { Material } from 'org.bukkit';
 
@@ -42,6 +43,23 @@ export function giveItem(
   // Drop leftover on the ground
   if (leftOver.size()) {
     player.world.dropItem(player.location, leftOver.get(0));
+  }
+}
+
+/**
+ * Adds an item to inventory or drops it on the ground, if the inventory is full.
+ * @param inventory The inventory where the item is placed
+ * @param item ItemStack to be given
+ */
+export function addItemTo(inventory: Inventory, item: ItemStack) {
+  if (item.type === Material.AIR) return;
+
+  // We can't place the item on the hand. Try to add the item to inventory
+  const leftOver = inventory.addItem(item);
+
+  // Drop leftover on the ground
+  if (leftOver.size()) {
+    inventory.location?.world.dropItem(inventory.location, leftOver.get(0));
   }
 }
 

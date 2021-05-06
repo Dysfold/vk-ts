@@ -1,7 +1,7 @@
 import { Bukkit } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
-import { giveItem } from '../common/helpers/inventory';
+import { giveItem, addItemTo } from '../common/helpers/inventory';
 import { Currency } from './currency';
 import { CURRENCY_ITEMS, getCoinData, getCoinDisplayName } from './money-mold';
 
@@ -41,12 +41,12 @@ export function getInventoryBalance(inv: Inventory, currency: Currency) {
 
 /**
  * Take money from player
- * @param player Player whom money is going to be removed
+ * @param inventory Inventory where money is going to be removed
  * @param amount Amount of money to be removed
  * @param unit Currency as string
  */
 export function takeMoneyFrom(
-  player: Player,
+  inventory: Inventory,
   amount: number,
   currency: Currency,
 ) {
@@ -57,7 +57,7 @@ export function takeMoneyFrom(
   const invCoins = new Map<number, ItemStack[]>();
 
   // Collect the itemstacks to the map above
-  player.inventory.contents.forEach((item) => {
+  inventory.contents.forEach((item) => {
     if (!item?.itemMeta?.hasDisplayName()) return;
     const display = item.itemMeta.displayName;
     const names = display.split(' ');
@@ -103,15 +103,14 @@ export function takeMoneyFrom(
     }
   }
 
-  Bukkit.broadcastMessage('Hintaa jäljellä ' + price);
   // If the price goes negative, player has payed too much -> return change coins
   if (price < 0) {
-    giveMoney(player, -price, currency);
+    giveMoney(inventory, -price, currency);
   }
 }
 
 export function giveMoney(
-  player: Player,
+  inventory: Inventory,
   totalAmount: number,
   currency: Currency,
 ) {
@@ -124,7 +123,6 @@ export function giveMoney(
     if (VALUE > amount) continue;
     const howMany = Math.floor(amount / VALUE);
     amount -= howMany * VALUE;
-    Bukkit.broadcastMessage('Palautetaan ' + howMany + ' ' + VALUE);
     const coin = coins.find((c) => c.value == VALUE);
     if (!coin) return;
     const customItem = coin.item;
@@ -140,7 +138,7 @@ export function giveMoney(
     meta.displayName = getCoinDisplayName(coin, currency);
     item.itemMeta = meta;
 
-    giveItem(player, item);
+    addItemTo(inventory, item);
   }
 }
 

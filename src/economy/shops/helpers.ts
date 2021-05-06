@@ -1,20 +1,19 @@
 import { translate } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
-import { Container } from 'org.bukkit.block';
-import { ItemStack } from 'org.bukkit.inventory';
+import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import * as yup from 'yup';
 import { SHOP_DATA } from './ShopData';
 
 /**
  * Tries to find similar itemstacks from the container
- * @param container Container used in the shop
+ * @param inventory Inventory used in the shop
  * @param lookfor ItemStack to be looked for from the container
  */
-export function findItemsFromContainer(
-  container: Container,
+export function findItemsFromInventory(
+  inventory: Inventory,
   lookfor: ItemStack,
 ) {
-  return container.inventory.contents.filter((i) => {
+  return inventory.contents.filter((i) => {
     if (!i) return false;
     if (i.type != lookfor.type) return false;
     const metaA = i.itemMeta;
@@ -32,10 +31,7 @@ export function findItemsFromContainer(
 
 /**
  * Creates new item stack with given information.
- * This is an estimation of the item in the shop
- * @param type Material of the item
- * @param modelId Custom model data of the item
- * @param name Display name of the item
+ * This is an estimation of the item in the shop.
  */
 export function getShopItem(itemData: yup.TypeOf<typeof SHOP_DATA.item>) {
   if (!itemData.material) return;

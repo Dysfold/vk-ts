@@ -5,21 +5,29 @@ import { dataView } from '../../common/datas/view';
 
 export const SHOP_DATA = {
   type: yup.string().required(),
-  item: yup.object({
-    material: yup.string().required(),
-    modelId: yup.number().notRequired(),
-    name: yup.string().notRequired(),
-    translationKey: yup.string().notRequired(),
-  }),
+  item: yup
+    .object({
+      material: yup.string().required(),
+      modelId: yup.number().notRequired(),
+      name: yup.string().notRequired(),
+      translationKey: yup.string().notRequired(),
+    })
+    .required(),
   price: yup.number().required(),
-  currency: yup.object({
-    model: yup.number().required(),
-    unitPlural: yup.string().required(),
-    subunitPlural: yup.string().required(),
-  }),
+  currency: yup
+    .object({
+      model: yup.number().required(),
+      unitPlural: yup.string().required(),
+      subunitPlural: yup.string().required(),
+    })
+    .required(),
   tax: yup.number().required(),
   taxCollector: yup.string().notRequired(),
 };
+
+export type ShopDataType = typeof SHOP_DATA;
+export type ShopItemDataType = yup.TypeOf<typeof SHOP_DATA.item>;
+export type ShopCurrencyType = yup.TypeOf<typeof SHOP_DATA.currency>;
 
 export const ShopData = dataType('shop-data', SHOP_DATA);
 

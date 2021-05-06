@@ -73,7 +73,6 @@ function startNextTask(player: Player) {
   if (taskIndex == -1) return false;
 
   if (taskIndex == TASK_ORDER.length - 1) {
-    player.sendMessage('Kauppa luotu');
     saveShop(player);
     sessions.delete(player);
     return true;
@@ -143,7 +142,6 @@ function saveShop(player: Player) {
     ? shop.item.itemMeta.customModelData
     : undefined;
 
-  Bukkit.broadcastMessage('- ' + shop.item.toString());
   view.type = shop.type;
   view.item.material = shop.item.type.toString();
   view.item.modelId = modelId;
@@ -159,7 +157,7 @@ function saveShop(player: Player) {
   signDataHolder.update();
 
   updateShopSign(session);
-  player.sendMessage('Kauppa luotu!!');
+  player.sendMessage(ChatColor.GREEN + 'Kauppa luotu!');
 }
 
 /**
@@ -264,8 +262,6 @@ registerEvent(PlayerInteractEvent, async (event) => {
       return;
     }
 
-    // player.sendMessage('Syötä chattiin esineen hinta');
-    // session.step = 'SET_PRICE';
     const currency: Currency = {
       model: currencyModel,
       unit: data.unit.slice(0, -1),

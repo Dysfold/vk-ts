@@ -1,3 +1,6 @@
+import * as yup from 'yup';
+import { SHOP_DATA } from './shops/ShopData';
+
 export const CurrencyModel = {
   GOLDEN: 0,
   SILVER: 1,
@@ -23,7 +26,7 @@ export function getCurrency(
   unitPlural: string,
   subunitPlural: string,
 ) {
-  if (!isCurrencyModel(model)) return;
+  if (!isCurrencyModel(model)) return undefined;
 
   return {
     model,
@@ -32,4 +35,17 @@ export function getCurrency(
     subunit: unitPlural.slice(0, -1),
     subunitPlural,
   } as Currency;
+}
+
+export function getShopCurrency(
+  currencyData: yup.TypeOf<typeof SHOP_DATA.currency>,
+) {
+  if (!currencyData.model) return undefined;
+  if (!currencyData.unitPlural) return undefined;
+  if (!currencyData.subunitPlural) return undefined;
+  return getCurrency(
+    currencyData.model,
+    currencyData.unitPlural,
+    currencyData.subunitPlural,
+  );
 }

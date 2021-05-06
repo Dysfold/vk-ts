@@ -1,21 +1,27 @@
 import { color, text, tooltip, translate } from 'craftjs-plugin/chat';
 import { UUID } from 'java.util';
 import { TranslatableComponent } from 'net.md_5.bungee.api.chat';
-import { Bukkit, ChatColor, Material } from 'org.bukkit';
-import { Block, Container } from 'org.bukkit.block';
+import {
+  Bukkit,
+  ChatColor,
+  Location,
+  Material,
+  SoundCategory,
+} from 'org.bukkit';
+import { Block, Chest, Container } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
 import { Action as BlockAction } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
+import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
+import { addItemTo, giveItem } from '../../common/helpers/inventory';
 import { getItemName } from '../../common/helpers/items';
-import { getShopItem, findItemsFromContainer } from './helpers';
+import { Currency, getShopCurrency } from '../currency';
+import { getInventoryBalance, giveMoney, takeMoneyFrom } from '../money';
+import { findItemsFromInventory, getShopItem } from './helpers';
 import { getBlockBehind } from './make-shop';
 import { openShopGUI } from './shop-gui';
 import { getShop } from './ShopData';
-import { GLOBAL_PIPELINE, ChatMessage } from '../../chat/pipeline';
-import { getInventoryBalance, takeMoneyFrom } from '../money';
-import { getCurrency } from '../currency';
-import { giveItem } from '../../common/helpers/inventory';
 
 registerEvent(PlayerInteractEvent, (event) => {
   if (event.action !== BlockAction.RIGHT_CLICK_BLOCK) return;
@@ -37,6 +43,9 @@ function displayShopInfo(p: Player, sign: Block) {
   const view = getShop(sign);
   if (!view) return;
   const item = getShopItem(view.item);
+  const chestBlock = getBlockBehind(sign);
+  if (!(chestBlock?.state instanceof Chest)) return;
+  const chest = chestBlock.state;
   if (!item) return;
   const unit =
     view.price === 1
@@ -84,7 +93,7 @@ function displayShopInfo(p: Player, sign: Block) {
     );
   }
   if (view.type === 'SELLING') {
-    const amount = countItemsInShop(sign) ?? 0;
+    const amount = countItemsInShop(chest, item);
     p.sendMessage(
       color(
         '#FFFF99',
@@ -95,7 +104,7 @@ function displayShopInfo(p: Player, sign: Block) {
     );
   }
   if (view.type === 'BUYING') {
-    const amount = countEmptyStacks(sign) ?? 0;
+    const amount = countEmptyStacks(chest);
     if (amount) {
       p.sendMessage(
         color(
@@ -117,27 +126,15 @@ function displayShopInfo(p: Player, sign: Block) {
   activeCustomers.set(p, sign);
 }
 
-function countEmptyStacks(shopSign: Block) {
-  const chest = getBlockBehind(shopSign);
-  if (!chest) return;
-  if (!(chest.state instanceof Container)) return;
-  const view = getShop(shopSign);
-  if (!view) return;
-  return chest.state.inventory.contents.reduce(
+function countEmptyStacks(chest: Container) {
+  return chest.inventory.contents.reduce(
     (total, i) => total + (i === null ? 1 : 0),
     0,
   );
 }
 
-function countItemsInShop(shopSign: Block) {
-  const chest = getBlockBehind(shopSign);
-  if (!chest) return;
-  if (!(chest.state instanceof Container)) return;
-  const view = getShop(shopSign);
-  if (!view) return;
-  const item = getShopItem(view.item);
-  if (!item) return;
-  const items = findItemsFromContainer(chest.state, item);
+function countItemsInShop(chest: Container, item: ItemStack) {
+  const items = findItemsFromInventory(chest.inventory, item);
   return items.reduce((total, i) => total + i.amount, 0);
 }
 
@@ -154,6 +151,9 @@ function handleMessage(msg: ChatMessage) {
   if (!(chest.state instanceof Container)) return;
   const view = getShop(shopSign);
   if (!view) return;
+  const shopItem = getShopItem(view.item);
+  const currency = getShopCurrency(view.currency);
+  if (!shopItem || !currency) return;
 
   const amount = Number.parseInt(msg.content);
   if (isNaN(amount) || amount <= 0) {
@@ -163,7 +163,7 @@ function handleMessage(msg: ChatMessage) {
 
   // Check if player can sell items to the "BUYING" chest
   if (view.type === 'BUYING') {
-    const emptyStacks = countEmptyStacks(shopSign) ?? 0;
+    const emptyStacks = countEmptyStacks(chest.state);
     const material = Material.getMaterial(view.item.material);
     if (!material) return;
     const stackSize = material?.maxStackSize;
@@ -172,64 +172,98 @@ function handleMessage(msg: ChatMessage) {
       p.sendMessage(ChatColor.RED + 'Kaupassa ei tarpeeksi tilaa');
       return;
     }
+    const success = sell(
+      p,
+      shopItem,
+      amount,
+      view.price,
+      currency,
+      chest.state,
+    );
+    if (!success) return;
   }
 
   // Check if player can buy items from "SELLING" chest
   if (view.type === 'SELLING') {
-    const itemsInShop = countItemsInShop(shopSign) ?? 0;
+    const itemsInShop = countItemsInShop(chest.state, shopItem);
     if (itemsInShop < amount) {
       p.sendMessage(ChatColor.RED + 'Kaupassa ei tarpeeksi tuotetta');
       return;
     }
+    const success = buy(p, shopItem, amount, view.price, currency, chest.state);
+    if (!success) return;
   }
-
-  buy(p, amount, shopSign);
+  playShopSound(chest.location.add(0.5, 1, 0.5));
 }
 
-function buy(player: Player, amount: number, shopSign: Block) {
-  const chest = getBlockBehind(shopSign);
-  if (!chest) return false;
-  if (!(chest.state instanceof Container)) return false;
-  const view = getShop(shopSign);
-  if (!view) return;
+function sell(
+  player: Player,
+  shopItem: ItemStack,
+  amount: number,
+  productPrice: number,
+  currency: Currency,
+  chest: Container,
+) {
+  const moneyInShop = getInventoryBalance(chest.inventory, currency);
+  const price = productPrice * amount;
+  if (moneyInShop < price) {
+    player.sendMessage(ChatColor.RED + 'Kaupassa ei ole tarpeeksi rahaa!');
+    return false;
+  }
 
-  const currency = getCurrency(
-    view.currency.model,
-    view.currency.unitPlural,
-    view.currency.subunitPlural,
-  );
-  if (!currency) return;
+  takeMoneyFrom(chest.inventory, price, currency);
+  giveMoney(player.inventory, price, currency);
 
-  const price = amount * view.price;
+  const allProducts = findItemsFromInventory(player.inventory, shopItem);
+  const items: ItemStack[] = [];
+
+  for (const product of allProducts) {
+    if (amount <= 0) break;
+    const amountToRemove = Math.min(product.amount, amount);
+    amount -= amountToRemove;
+    items.push(product.clone().asQuantity(amountToRemove));
+    product.amount -= amountToRemove;
+  }
+
+  items.forEach((item) => {
+    addItemTo(chest.inventory, item);
+  });
+  return true;
+}
+
+function buy(
+  player: Player,
+  shopItem: ItemStack,
+  amount: number,
+  productPrice: number,
+  currency: Currency,
+  chest: Container,
+) {
+  const price = amount * productPrice;
   const balance = getInventoryBalance(player.inventory, currency);
   if (price > balance) {
     player.sendMessage(ChatColor.RED + 'Sinulla ei ole tarpeeksi rahaa!');
     return false;
   }
-  player.sendMessage('Sinulla on rahaa: ' + balance + ' / ' + price);
 
-  const shopItem = getShopItem(view.item);
-  if (!shopItem) {
-    log.error('ShopItem parsing failed: ', view);
-    return false;
-  }
+  takeMoneyFrom(player.inventory, price, currency);
+  giveMoney(chest.inventory, price, currency);
 
-  takeMoneyFrom(player, price, currency);
-  const allProducts = findItemsFromContainer(chest.state, shopItem);
+  const allProducts = findItemsFromInventory(chest.inventory, shopItem);
 
   const items: ItemStack[] = [];
 
-  let a = amount;
   for (const product of allProducts) {
-    if (a <= 0) break;
-    const amountToRemove = Math.min(product.amount, a);
-    a -= amountToRemove;
+    if (amount <= 0) break;
+    const amountToRemove = Math.min(product.amount, amount);
+    amount -= amountToRemove;
     items.push(product.clone().asQuantity(amountToRemove));
     product.amount -= amountToRemove;
   }
   items.forEach((item) => {
     giveItem(player, item, player.mainHand);
   });
+  return true;
 }
 
 function detectShopTransaction(msg: ChatMessage) {
@@ -237,6 +271,16 @@ function detectShopTransaction(msg: ChatMessage) {
   msg.discard = true;
   handleMessage(msg);
   activeCustomers.delete(msg.sender);
+}
+
+function playShopSound(location: Location) {
+  location.world.playSound(
+    location,
+    'minecraft:custom.cashregister',
+    SoundCategory.BLOCKS,
+    0.8,
+    0.9,
+  );
 }
 
 GLOBAL_PIPELINE.addHandler('detectShopTransaction', -1, detectShopTransaction);
