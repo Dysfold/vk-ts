@@ -1,8 +1,9 @@
 import { color, component, text } from 'craftjs-plugin/chat';
 import { Audience } from 'net.kyori.adventure.audience';
 import { Component } from 'net.kyori.adventure.text';
+import { CommandSender } from 'org.bukkit.command';
 import { Player } from 'org.bukkit.entity';
-import { getChatTheme } from './style/theme';
+import { defaultChatTheme, getChatTheme } from './style/theme';
 
 export function sendMessages(
   target: Audience,
@@ -17,16 +18,26 @@ export function sendMessages(
   );
 }
 
-export function statusMessage(player: Player, msg: string) {
+export function statusMessage(receiver: Player, msg: string) {
   if (msg != '') {
-    const theme = getChatTheme(player);
-    player.sendMessage(color(theme.system.status, text(msg)));
+    const theme =
+      receiver instanceof Player ? getChatTheme(receiver) : defaultChatTheme();
+    receiver.sendMessage(color(theme.system.status, text(msg)));
   }
 }
 
-export function errorMessage(player: Player, msg: string) {
+export function errorMessage(receiver: CommandSender | Player, msg: string) {
   if (msg != '') {
-    const theme = getChatTheme(player);
-    player.sendMessage(color(theme.system.error, text(msg)));
+    const theme =
+      receiver instanceof Player ? getChatTheme(receiver) : defaultChatTheme();
+    receiver.sendMessage(color(theme.system.error, text(msg)));
+  }
+}
+
+export function successMessage(receiver: CommandSender | Player, msg: string) {
+  if (msg != '') {
+    const theme =
+      receiver instanceof Player ? getChatTheme(receiver) : defaultChatTheme();
+    receiver.sendMessage(color(theme.system.success, text(msg)));
   }
 }
