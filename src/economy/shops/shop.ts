@@ -22,6 +22,8 @@ import { findItemsFromInventory, getShopItem } from './helpers';
 import { getBlockBehind } from './make-shop';
 import { openShopGUI } from './shop-gui';
 import { getShop } from './ShopData';
+import { distanceBetween } from '../../common/helpers/locations';
+import { errorMessage } from '../../chat/system';
 
 registerEvent(PlayerInteractEvent, (event) => {
   if (event.action !== BlockAction.RIGHT_CLICK_BLOCK) return;
@@ -124,7 +126,7 @@ function displayShopInfo(p: Player, sign: Block) {
   p.sendMessage(
     color('#FFFF99', text('Montako tuotetta haluat ' + action + '?')),
   );
-  activeCustomers.set(p, sign);
+  activeCustomers.set(p, { sign: sign, startTime: new Date() });
 }
 
 function countEmptyStacks(chest: Container) {
@@ -139,10 +141,39 @@ function countItemsInShop(chest: Container, item: ItemStack) {
   return items.reduce((total, i) => total + i.amount, 0);
 }
 
-const activeCustomers = new Map<Player, Block>();
+const activeCustomers = new Map<Player, { sign: Block; startTime: Date }>();
+
+/**
+ * Stop shop transaction if player has moved far away or is idle
+ */
+const TIMEOUT_MS = 1000 * 8;
+const MAX_DISTANCE = 5;
+setInterval(() => {
+  activeCustomers.forEach((data, player) => {
+    const t0 = data.startTime.getTime();
+    const t1 = new Date().getTime();
+    if (t1 - t0 > TIMEOUT_MS) {
+      stopTransaction(player);
+      return;
+    }
+    const locA = player.location;
+    const locB = data.sign.location;
+    if (distanceBetween(locA, locB) > MAX_DISTANCE) {
+      stopTransaction(player);
+      return;
+    }
+  });
+}, 2000);
+
+function stopTransaction(player: Player) {
+  if (activeCustomers.has(player)) {
+    errorMessage(player, 'Kaupankäynti keskeytetty.');
+  }
+  activeCustomers.delete(player);
+}
 
 function handleMessage(msg: ChatMessage) {
-  const shopSign = activeCustomers.get(msg.sender);
+  const shopSign = activeCustomers.get(msg.sender)?.sign;
   if (!shopSign) return;
 
   const p = msg.sender;

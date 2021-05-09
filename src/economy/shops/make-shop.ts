@@ -13,6 +13,8 @@ import { getItemName, getCustomTranslation } from '../../common/helpers/items';
 import { coinModelIdToCurrencyId, getCoinData } from '../money-mold';
 import { ShopData } from './ShopData';
 import { Currency } from '../currency';
+import { distanceBetween } from '../../common/helpers/locations';
+import { errorMessage } from '../../chat/system';
 export type ShopType = 'SELLING' | 'BUYING';
 
 interface ShopInfo {
@@ -45,9 +47,32 @@ interface ShopMakingSession {
   sign: Block;
   step: Step;
   shopInfo: ShopInfo;
+  updated: Date;
 }
 
 const sessions = new Map<Player, ShopMakingSession>();
+
+/**
+ * Stop shop making sessions if the player has been idle or moved far away from the shop
+ */
+const SHOP_MAKING_TIMEOUT_MS = 1000 * 8;
+const MAX_DISTANCE = 5;
+setInterval(() => {
+  sessions.forEach((session, player) => {
+    const t0 = session.updated.getTime();
+    const t1 = new Date().getTime();
+    if (t1 - t0 > SHOP_MAKING_TIMEOUT_MS) {
+      stopMakingShop(player);
+      return;
+    }
+    const locA = player.location;
+    const locB = session.sign.location;
+    if (distanceBetween(locA, locB) > MAX_DISTANCE) {
+      stopMakingShop(player);
+      return;
+    }
+  });
+}, 2000);
 
 const TASK_ORDER: { step: Step; prompt: string }[] = [
   { step: 'START', prompt: '' },
@@ -87,6 +112,7 @@ function startNextTask(player: Player) {
   // Special check if the tax is 0 -> no need to select tax collector
   if (nextTask.step == 'SET_TAX_COLLECTOR') {
     if (session.shopInfo.tax == 0) {
+      session.updated = new Date();
       startNextTask(player);
       return true;
     }
@@ -100,6 +126,13 @@ function startNextTask(player: Player) {
     color('#FFAA00', text('------------------------------------------')),
   );
   return true;
+}
+
+function stopMakingShop(player: Player) {
+  if (sessions.has(player)) {
+    errorMessage(player, 'Kaupan perustaminen peruutettu.');
+  }
+  sessions.delete(player);
 }
 
 /**
@@ -121,6 +154,7 @@ registerEvent(SignChangeEvent, async (event) => {
     sign: sign,
     step: 'START',
     shopInfo: { type: shopType },
+    updated: new Date(),
   });
   startNextTask(player);
 });
