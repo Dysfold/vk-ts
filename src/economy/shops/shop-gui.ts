@@ -1,14 +1,14 @@
 import { Bukkit, ChatColor } from 'org.bukkit';
 import { Block, Container } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
-import { getShopItem, findItemsFromInventory } from './helpers';
-import { getShop } from './ShopData';
 import {
   InventoryClickEvent,
   InventoryCloseEvent,
 } from 'org.bukkit.event.inventory';
 import { PlayerSwapHandItemsEvent } from 'org.bukkit.event.player';
+import { findItemsFromInventory, getShopItem } from './helpers';
 import { getBlockBehind } from './make-shop';
+import { getShop } from './ShopData';
 
 const GUI_ICON = '\uE009';
 
@@ -38,9 +38,10 @@ export function openShopGUI(player: Player, sign: Block) {
 
   const inv = createShopGuiInventory(sign);
   if (!inv) return;
+  openGUIs.add(player);
+
   inv.setItem(13, itemPreview.asQuantity(1));
 
-  openGUIs.add(player);
   player.openInventory(inv);
 }
 
@@ -73,7 +74,9 @@ function createShopGuiInventory(sign: Block) {
 }
 
 registerEvent(InventoryCloseEvent, (event) => {
-  if (event.player instanceof Player) openGUIs.delete(event.player);
+  if (event.player instanceof Player) {
+    openGUIs.delete(event.player);
+  }
 });
 
 /**

@@ -34,6 +34,7 @@ registerEvent(PlayerInteractEvent, (event) => {
   if (!view.type) return;
 
   if (event.player.isSneaking()) {
+    if (event.isBlockInHand()) return;
     openShopGUI(event.player, sign);
   }
   displayShopInfo(event.player, sign);
