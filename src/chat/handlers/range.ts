@@ -1,9 +1,8 @@
-import { Location } from 'org.bukkit';
 import { ArmorStand, Player } from 'org.bukkit.entity';
+import { distanceBetween } from '../../common/helpers/locations';
 import { SpeakerStaff } from '../items';
 import { ChatMessage } from '../pipeline';
 import { IsMention } from './mention';
-import { distanceBetween } from '../../common/helpers/locations';
 
 interface Range {
   /**
