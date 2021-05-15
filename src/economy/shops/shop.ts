@@ -24,6 +24,7 @@ import { openShopGUI } from './shop-gui';
 import { getShop } from './ShopData';
 import { distanceBetween } from '../../common/helpers/locations';
 import { errorMessage } from '../../chat/system';
+import { getTaxes, sendTaxes } from './taxes';
 
 registerEvent(PlayerInteractEvent, (event) => {
   if (event.action !== BlockAction.RIGHT_CLICK_BLOCK) return;
@@ -90,7 +91,7 @@ function displayShopInfo(p: Player, sign: Block) {
         '#FFFF99',
         tooltip(
           text(`Verottaja: ${taxCollector?.name || 'Tuntematon'}`),
-          text(`Vero: ${ChatColor.GOLD}${view.tax}%`),
+          text(`Arvonlisävero: ${ChatColor.GOLD}${view.tax}%`),
         ),
       ),
     );
@@ -172,6 +173,10 @@ function stopTransaction(player: Player) {
   activeCustomers.delete(player);
 }
 
+interface TransactionResult {
+  taxAmount: number;
+}
+
 function handleMessage(msg: ChatMessage) {
   const shopSign = activeCustomers.get(msg.sender)?.sign;
   if (!shopSign) return;
@@ -193,6 +198,8 @@ function handleMessage(msg: ChatMessage) {
     return;
   }
 
+  let result: TransactionResult | undefined;
+
   // Check if player can sell items to the "BUYING" chest
   if (view.type === 'BUYING') {
     const emptyStacks = countEmptyStacks(chest.state);
@@ -204,15 +211,15 @@ function handleMessage(msg: ChatMessage) {
       p.sendMessage(ChatColor.RED + 'Kaupassa ei tarpeeksi tilaa');
       return;
     }
-    const success = sell(
+    result = sell(
       p,
       shopItem,
       amount,
       view.price,
       currency,
       chest.state,
+      view.tax,
     );
-    if (!success) return;
   }
 
   // Check if player can buy items from "SELLING" chest
@@ -222,10 +229,28 @@ function handleMessage(msg: ChatMessage) {
       p.sendMessage(ChatColor.RED + 'Kaupassa ei tarpeeksi tuotetta');
       return;
     }
-    const success = buy(p, shopItem, amount, view.price, currency, chest.state);
-    if (!success) return;
+    result = buy(
+      p,
+      shopItem,
+      amount,
+      view.price,
+      currency,
+      chest.state,
+      view.tax,
+    );
   }
+
+  if (!result) return;
+
   playShopSound(chest.location.add(0.5, 1, 0.5));
+
+  // Handle taxes
+  if (view.taxCollector) {
+    const collector = Bukkit.getOfflinePlayer(
+      UUID.fromString(view.taxCollector),
+    );
+    sendTaxes(collector, result.taxAmount, currency);
+  }
 }
 
 function sell(
@@ -235,16 +260,18 @@ function sell(
   productPrice: number,
   currency: Currency,
   chest: Container,
-) {
+  taxRate: number,
+): TransactionResult | undefined {
   const moneyInShop = getInventoryBalance(chest.inventory, currency);
   const price = productPrice * amount;
   if (moneyInShop < price) {
     player.sendMessage(ChatColor.RED + 'Kaupassa ei ole tarpeeksi rahaa!');
-    return false;
+    return undefined;
   }
 
+  const tax = getTaxes(taxRate, price);
   takeMoneyFrom(chest.inventory, price, currency);
-  giveMoney(player.inventory, price, currency);
+  giveMoney(player.inventory, price - tax, currency);
 
   const allProducts = findItemsFromInventory(player.inventory, shopItem);
   const items: ItemStack[] = [];
@@ -260,7 +287,7 @@ function sell(
   items.forEach((item) => {
     addItemTo(chest.inventory, item);
   });
-  return true;
+  return { taxAmount: tax };
 }
 
 function buy(
@@ -270,16 +297,21 @@ function buy(
   productPrice: number,
   currency: Currency,
   chest: Container,
-) {
+  taxRate: number,
+): TransactionResult | undefined {
   const price = amount * productPrice;
   const balance = getInventoryBalance(player.inventory, currency);
   if (price > balance) {
     player.sendMessage(ChatColor.RED + 'Sinulla ei ole tarpeeksi rahaa!');
-    return false;
+    return undefined;
   }
 
+  const tax = getTaxes(taxRate, price);
   takeMoneyFrom(player.inventory, price, currency);
-  giveMoney(chest.inventory, price, currency);
+  giveMoney(chest.inventory, price - tax, currency);
+  player.sendMessage('Hinta: ' + price);
+  player.sendMessage('Veroton: ' + (price - tax));
+  player.sendMessage('Vero: ' + tax);
 
   const allProducts = findItemsFromInventory(chest.inventory, shopItem);
 
@@ -295,7 +327,7 @@ function buy(
   items.forEach((item) => {
     giveItem(player, item, player.mainHand);
   });
-  return true;
+  return { taxAmount: tax };
 }
 
 function detectShopTransaction(msg: ChatMessage) {

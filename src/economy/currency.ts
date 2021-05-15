@@ -17,6 +17,12 @@ export interface Currency {
   subunitPlural: string;
 }
 
+export const YUP_CURRENCY = yup.object({
+  model: yup.number().required(),
+  unitPlural: yup.string().required(),
+  subunitPlural: yup.string().required(),
+});
+
 export function isCurrencyModel(model: number): model is CurrencyModel {
   return Object.values(CurrencyModel).includes(model as CurrencyModel);
 }

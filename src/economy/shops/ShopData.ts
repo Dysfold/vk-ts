@@ -2,6 +2,7 @@ import * as yup from 'yup';
 import { dataType } from '../../common/datas/holder';
 import { Block, Sign } from 'org.bukkit.block';
 import { dataView } from '../../common/datas/view';
+import { YUP_CURRENCY } from '../currency';
 
 export const SHOP_DATA = {
   type: yup.string().required(),
@@ -14,13 +15,7 @@ export const SHOP_DATA = {
     })
     .required(),
   price: yup.number().required(),
-  currency: yup
-    .object({
-      model: yup.number().required(),
-      unitPlural: yup.string().required(),
-      subunitPlural: yup.string().required(),
-    })
-    .required(),
+  currency: YUP_CURRENCY.required(),
   tax: yup.number().required(),
   taxCollector: yup.string().notRequired(),
 };

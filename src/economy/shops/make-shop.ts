@@ -108,11 +108,12 @@ function startNextTask(player: Player) {
 
   const nextTask = TASK_ORDER[taskIndex + 1];
   session.step = nextTask.step;
+  // Update the time, so player doesn't timeout from the shop making session
+  session.updated = new Date();
 
   // Special check if the tax is 0 -> no need to select tax collector
   if (nextTask.step == 'SET_TAX_COLLECTOR') {
     if (session.shopInfo.tax == 0) {
-      session.updated = new Date();
       startNextTask(player);
       return true;
     }
