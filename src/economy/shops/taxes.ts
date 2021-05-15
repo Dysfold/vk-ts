@@ -2,7 +2,6 @@ import { UUID } from 'java.util';
 import { Bukkit, OfflinePlayer } from 'org.bukkit';
 import { Block, Chest, Sign } from 'org.bukkit.block';
 import { WallSign } from 'org.bukkit.block.data.type';
-import { Player } from 'org.bukkit.entity';
 import { Action, SignChangeEvent } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import * as yup from 'yup';
