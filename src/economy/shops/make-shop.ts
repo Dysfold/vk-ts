@@ -239,7 +239,7 @@ function updateShopSign(session: ShopMakingSession) {
   const shop = session.shopInfo as ValidShopInfo;
   const sign = signBlock.state as Sign;
   const taxes = getTaxes(shop.tax, shop.price);
-  const price = shop.type == 'BUYING' ? shop.price - taxes : taxes;
+  const price = shop.type == 'BUYING' ? shop.price - taxes : shop.price;
 
   const name = getItemName(shop.item);
   const unit = shop.price === 1 ? shop.currency.unit : shop.currency.unitPlural;
