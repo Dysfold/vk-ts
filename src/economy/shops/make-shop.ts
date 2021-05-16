@@ -15,6 +15,8 @@ import { ShopData } from './ShopData';
 import { Currency } from '../currency';
 import { distanceBetween } from '../../common/helpers/locations';
 import { errorMessage } from '../../chat/system';
+import { getTaxCollector, getTaxes } from './taxes';
+import { getBlockBehind } from './helpers';
 export type ShopType = 'SELLING' | 'BUYING';
 
 interface ShopInfo {
@@ -236,14 +238,16 @@ function updateShopSign(session: ShopMakingSession) {
   const signBlock = session.sign;
   const shop = session.shopInfo as ValidShopInfo;
   const sign = signBlock.state as Sign;
+  const taxes = getTaxes(shop.tax, shop.price);
+  const price = shop.type == 'BUYING' ? shop.price - taxes : taxes;
 
   const name = getItemName(shop.item);
   const unit = shop.price === 1 ? shop.currency.unit : shop.currency.unitPlural;
 
   sign.setLine(0, shopTypeToString(shop.type));
-  // TODO: remove .toPlainText() when chat components are accepted
+  // TODO: remove .toString() (and the hack) when chat components are accepted
   sign.setLine(1, getShopItemName(shop.item).toString());
-  sign.setLine(2, shop.price + ' ' + unit);
+  sign.setLine(2, price + ' ' + unit);
   sign.update();
 
   // HACK. Remove this later
@@ -265,8 +269,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
   await wait(1, 'ticks');
 
   if (!isSameShop(event.clickedBlock, session.sign)) {
-    event.player.sendMessage('Kaupan luominen peruttiin');
-    sessions.delete(player);
+    stopMakingShop(player);
     return;
   }
   const step = session.step;
@@ -285,14 +288,16 @@ registerEvent(PlayerInteractEvent, async (event) => {
     const data = getCoinData(item);
 
     if (!data?.unit || !data.subUnit) {
-      player.sendMessage('Viallinen valuutta!');
+      errorMessage(player, 'Viallinen valuutta!');
+      stopMakingShop(player);
       return;
     }
     const currencyModel = coinModelIdToCurrencyId(
       item.itemMeta.customModelData,
     );
     if (currencyModel === undefined) {
-      player.sendMessage('Viallinen valuutta');
+      errorMessage(player, 'Viallinen valuutta');
+      stopMakingShop(player);
       log.error('Viallinen valuutta');
       return;
     }
@@ -327,11 +332,6 @@ function canBecomeShop(block: Block): block is Block {
   if (!attachedTo) return false;
   if (!isValidChest(attachedTo)) return false;
   return true;
-}
-
-export function getBlockBehind(sign: Block) {
-  if (!(sign.blockData instanceof WallSign)) return undefined;
-  return sign.getRelative(sign.blockData.facing.oppositeFace);
 }
 
 const SHOP_TYPES = new Map<string, ShopType>([
@@ -381,8 +381,10 @@ function detectShopSetup(msg: ChatMessage) {
     switch (step) {
       case 'SET_PRICE': {
         const price = Number.parseFloat(msg.content);
-        if (!price) {
-          msg.sender.sendMessage('Virheellinen hinta');
+        if (!price || price < 0) {
+          errorMessage(msg.sender, 'Virheellinen hinta');
+          stopMakingShop(msg.sender);
+          return;
         }
         msg.sender.sendMessage('Asetit hinnanksi ' + price);
         session.shopInfo.price = price;
@@ -392,8 +394,10 @@ function detectShopSetup(msg: ChatMessage) {
       }
       case 'SET_TAXES': {
         const tax = Number.parseFloat(msg.content);
-        if (isNaN(tax)) {
-          msg.sender.sendMessage('Virheellinen veroprosentti');
+        if (isNaN(tax) || tax < 0) {
+          errorMessage(msg.sender, 'Virheellinen veroprosentti');
+          stopMakingShop(msg.sender);
+          return;
         }
         msg.sender.sendMessage('Asetit veroprosentiksi ' + tax);
         session.shopInfo.tax = tax;
@@ -401,9 +405,11 @@ function detectShopSetup(msg: ChatMessage) {
         return;
       }
       case 'SET_TAX_COLLECTOR': {
-        const taxCollector = Bukkit.server.getOfflinePlayer(msg.content);
+        const taxCollector = getTaxCollector(msg.content);
         if (!taxCollector) {
-          msg.sender.sendMessage('Pelaajaa ei löydy');
+          errorMessage(msg.sender, 'Tämä henkilö ei ole veronkerääjä');
+          stopMakingShop(msg.sender);
+          return;
         }
         msg.sender.sendMessage('Asetit veronkerääjäksi ' + taxCollector.name);
         session.shopInfo.taxCollector = taxCollector;

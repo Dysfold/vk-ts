@@ -49,5 +49,5 @@ export function yupLocToLoc(yupLoc: YupLocation) {
   if (y === undefined) return undefined;
   if (z === undefined) return undefined;
 
-  return new Location(world, z, y, z);
+  return new Location(world, x, y, z);
 }

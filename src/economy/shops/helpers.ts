@@ -1,5 +1,7 @@
 import { translate } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
+import { Block } from 'org.bukkit.block';
+import { WallSign } from 'org.bukkit.block.data.type';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import * as yup from 'yup';
 import { SHOP_DATA } from './ShopData';
@@ -44,4 +46,9 @@ export function getShopItem(itemData: yup.TypeOf<typeof SHOP_DATA.item>) {
     meta.displayNameComponent = [translate(itemData.translationKey)];
   item.itemMeta = meta;
   return item;
+}
+
+export function getBlockBehind(sign: Block) {
+  if (!(sign.blockData instanceof WallSign)) return undefined;
+  return sign.getRelative(sign.blockData.facing.oppositeFace);
 }

@@ -18,8 +18,7 @@ import { addItemTo, giveItem } from '../../common/helpers/inventory';
 import { getItemName } from '../../common/helpers/items';
 import { Currency, getShopCurrency } from '../currency';
 import { getInventoryBalance, giveMoney, takeMoneyFrom } from '../money';
-import { findItemsFromInventory, getShopItem } from './helpers';
-import { getBlockBehind } from './make-shop';
+import { findItemsFromInventory, getBlockBehind, getShopItem } from './helpers';
 import { openShopGUI } from './shop-gui';
 import { getShop } from './ShopData';
 import { distanceBetween } from '../../common/helpers/locations';
@@ -85,13 +84,28 @@ function displayShopInfo(p: Player, sign: Block) {
       ),
     ),
   );
+
   if (view.tax) {
     p.sendMessage(
       color(
         '#FFFF99',
         tooltip(
-          text(`Verottaja: ${taxCollector?.name || 'Tuntematon'}`),
+          text(
+            `Verottaja: ${
+              taxCollector?.name || 'Tuntematon'
+            } \nVeroton hinta: ${view.price - getTaxes(view.tax, view.price)}`,
+          ),
           text(`Arvonlisävero: ${ChatColor.GOLD}${view.tax}%`),
+        ),
+      ),
+    );
+    p.sendMessage(
+      color(
+        '#FFFF99',
+        text(
+          `Veroton hinta: ${ChatColor.GOLD}${
+            view.price - getTaxes(view.tax, view.price)
+          }${ChatColor.RESET} ${unit} / kpl`,
         ),
       ),
     );
@@ -147,7 +161,7 @@ const activeCustomers = new Map<Player, { sign: Block; startTime: Date }>();
 /**
  * Stop shop transaction if player has moved far away or is idle
  */
-const TIMEOUT_MS = 1000 * 8;
+const TIMEOUT_MS = 1000 * 10;
 const MAX_DISTANCE = 5;
 setInterval(() => {
   activeCustomers.forEach((data, player) => {
@@ -309,9 +323,6 @@ function buy(
   const tax = getTaxes(taxRate, price);
   takeMoneyFrom(player.inventory, price, currency);
   giveMoney(chest.inventory, price - tax, currency);
-  player.sendMessage('Hinta: ' + price);
-  player.sendMessage('Veroton: ' + (price - tax));
-  player.sendMessage('Vero: ' + tax);
 
   const allProducts = findItemsFromInventory(chest.inventory, shopItem);
 

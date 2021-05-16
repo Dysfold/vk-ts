@@ -1,19 +1,34 @@
+import { color, text } from 'craftjs-plugin/chat';
 import { UUID } from 'java.util';
+import { round } from 'lodash';
+import { ChatColor } from 'net.md_5.bungee.api';
 import { Bukkit, OfflinePlayer } from 'org.bukkit';
 import { Block, Chest, Sign } from 'org.bukkit.block';
 import { WallSign } from 'org.bukkit.block.data.type';
 import { Action, SignChangeEvent } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import * as yup from 'yup';
+import { errorMessage } from '../../chat/system';
 import { dataType } from '../../common/datas/holder';
 import { dataView } from '../../common/datas/view';
-import { YUP_LOCATION } from '../../common/helpers/locations';
+import {
+  distanceBetween,
+  yupLocToLoc,
+  YUP_LOCATION,
+} from '../../common/helpers/locations';
 import { Currency, getShopCurrency, YUP_CURRENCY } from '../currency';
 import { giveMoney } from '../money';
-import { getBlockBehind } from './make-shop';
+import { getBlockBehind } from './helpers';
 
+/**
+ * Calculate the amount of the tax and round it to 2 decimals points.
+ * @param taxRate Tax rate as a percentage from 0 to 100
+ * @param price Price including tax
+ * @returns Amount of the tax
+ */
 export function getTaxes(taxRate: number, price: number) {
-  return (taxRate / (100 + taxRate)) * price;
+  const taxes = (taxRate / (100 + taxRate)) * price;
+  return round(taxes, 2);
 }
 
 const TAX_CHEST_DATA = {
@@ -97,9 +112,7 @@ registerEvent(SignChangeEvent, async (event) => {
   playerDataView.chestLocation.y = chest.location.y;
   playerDataView.chestLocation.z = chest.location.z;
 
-  event.player.sendMessage(
-    'Veroarkku luotu! ' + playerDataView.chestLocation.x,
-  );
+  event.player.sendMessage('Veroarkku luotu!');
 });
 
 /**
@@ -149,23 +162,69 @@ registerEvent(PlayerInteractEvent, (event) => {
   const chest = event.clickedBlock.state;
   const taxChestView = dataView(TaxChestData, chest);
   if (!taxChestView.taxCollector) return;
+  const player = event.player;
 
   const collector = Bukkit.getOfflinePlayer(
     UUID.fromString(taxChestView.taxCollector),
   );
   const collectorView = dataView(TaxCollectorData, collector);
 
-  if (collectorView.untransferred) {
+  const yupLoc = collectorView.chestLocation;
+  const location = yupLocToLoc(yupLoc);
+  if (!location) return;
+
+  if (distanceBetween(location, chest.location)) {
+    errorMessage(player, 'Tämä veroarkku ei ole enää käytössä!');
+    return;
+  }
+
+  player.sendMessage(
+    color('#FFAA00', text('-----------------Veroarkku-----------------')),
+  );
+  player.sendMessage(
+    color('#FFFF99', text('Veronkerääjä: ' + ChatColor.GOLD + collector.name)),
+  );
+
+  if (collectorView.untransferred.length) {
+    player.sendMessage(color('#FFFF99', text('Uusia veroja:')));
     for (const tax of collectorView.untransferred) {
       const currency = getShopCurrency(tax.currency);
       if (!currency) return;
       giveMoney(chest.inventory, tax.amount, currency);
-      event.player.sendMessage(
-        'Uusia veroja: ' + tax.amount + ' ' + currency.unitPlural,
+      player.sendMessage(
+        color(
+          '#FFFF99',
+          text(
+            '+ ' +
+              ChatColor.GOLD +
+              tax.amount +
+              ' ' +
+              ChatColor.RESET +
+              currency.unitPlural,
+          ),
+        ),
       );
     }
 
     collectorView.untransferred = [];
   }
-  event.player.sendMessage('Kerääjä: ' + collector.name);
+
+  player.sendMessage(
+    color('#FFAA00', text('-------------------------------------------')),
+  );
 });
+
+/**
+ * Check if the player is a tax collector or not
+ * @param player Player to be checked
+ * @returns The tax collector as OfflinePlayer or undefined
+ */
+export function getTaxCollector(player: string | OfflinePlayer) {
+  const offlinePlayer =
+    player instanceof OfflinePlayer ? player : Bukkit.getOfflinePlayer(player);
+  const view = dataView(TaxCollectorData, offlinePlayer);
+  if (view.chestLocation?.worldId) {
+    return offlinePlayer;
+  }
+  return undefined;
+}

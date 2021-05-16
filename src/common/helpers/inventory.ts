@@ -4,8 +4,10 @@ import {
   EquipmentSlot,
   PlayerInventory,
   Inventory,
+  BlockInventoryHolder,
 } from 'org.bukkit.inventory';
-import { Material } from 'org.bukkit';
+import { Material, SoundCategory } from 'org.bukkit';
+import { Vector } from 'org.bukkit.util';
 
 /**
  * Gives item to the player or drops it on the ground, if the inventory is full.
@@ -59,7 +61,32 @@ export function addItemTo(inventory: Inventory, item: ItemStack) {
 
   // Drop leftover on the ground
   if (leftOver.size()) {
-    inventory.location?.world.dropItem(inventory.location, leftOver.get(0));
+    const isBlock = inventory.holder instanceof BlockInventoryHolder;
+    const location = isBlock
+      ? inventory.location?.add(0.5, 1.2, 0.5)
+      : inventory.location;
+
+    // The location should always exist unless we are adding items to some kind of virtual inventory
+    // In that case more checks will be needed or we need to get the location with some other way (maybe additional argument)
+    if (!location) {
+      log.error('Inventorya ei ole olemassa!');
+      return;
+    }
+
+    const drop = location.world.dropItem(location, leftOver.get(0));
+
+    // If the inventory holder is a block, drop the item with very little velocity -> more cleaner drop
+    if (isBlock) {
+      drop.velocity = new Vector(0, 0.2, 0);
+    }
+
+    location.world.playSound(
+      location,
+      'minecraft:entity.chicken.egg',
+      SoundCategory.NEUTRAL,
+      1,
+      0.9,
+    );
   }
 }
 

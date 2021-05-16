@@ -6,9 +6,9 @@ import {
   InventoryCloseEvent,
 } from 'org.bukkit.event.inventory';
 import { PlayerSwapHandItemsEvent } from 'org.bukkit.event.player';
-import { findItemsFromInventory, getShopItem } from './helpers';
-import { getBlockBehind } from './make-shop';
+import { findItemsFromInventory, getBlockBehind, getShopItem } from './helpers';
 import { getShop } from './ShopData';
+import { getTaxes } from './taxes';
 
 const GUI_ICON = '\uE009';
 
@@ -53,8 +53,13 @@ function createShopGuiInventory(sign: Block) {
   const shop = getShop(sign);
   if (!shop) return undefined;
 
+  const price =
+    shop.type === 'BUYING'
+      ? shop.price - getTaxes(shop.tax, shop.price)
+      : shop.price;
+
   const unit =
-    shop.price === 1
+    price === 1
       ? shop.currency.unitPlural.slice(0, -1)
       : shop.currency.unitPlural;
 
@@ -66,7 +71,7 @@ function createShopGuiInventory(sign: Block) {
       '\uF808' +
       GUI_ICON +
       '\uF80C' +
-      shop.price +
+      price +
       ' ' +
       unit +
       '/kpl',
