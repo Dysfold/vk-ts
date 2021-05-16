@@ -50,10 +50,17 @@ function displayShopInfo(p: Player, sign: Block) {
   if (!(chestBlock?.state instanceof Chest)) return;
   const chest = chestBlock.state;
   if (!item) return;
+  const taxes = getTaxes(view.tax, view.price);
+  const taxFreePrice = view.price - taxes;
   const unit =
     view.price === 1
       ? view.currency.unitPlural.slice(0, -1)
       : view.currency.unitPlural;
+  const taxFreeUnit =
+    taxFreePrice === 1
+      ? view.currency.unitPlural.slice(0, -1)
+      : view.currency.unitPlural;
+
   const itemName = getItemName(item);
   const taxCollector = view.taxCollector
     ? Bukkit.server.getOfflinePlayer(UUID.fromString(view.taxCollector))
@@ -93,7 +100,7 @@ function displayShopInfo(p: Player, sign: Block) {
           text(
             `Verottaja: ${
               taxCollector?.name || 'Tuntematon'
-            } \nVeroton hinta: ${view.price - getTaxes(view.tax, view.price)}`,
+            } \nVeroton arvo: ${taxes}`,
           ),
           text(`Arvonlisävero: ${ChatColor.GOLD}${view.tax}%`),
         ),
@@ -103,9 +110,7 @@ function displayShopInfo(p: Player, sign: Block) {
       color(
         '#FFFF99',
         text(
-          `Veroton hinta: ${ChatColor.GOLD}${
-            view.price - getTaxes(view.tax, view.price)
-          }${ChatColor.RESET} ${unit} / kpl`,
+          `Veroton hinta: ${ChatColor.GOLD}${taxFreePrice}${ChatColor.RESET} ${taxFreeUnit} / kpl`,
         ),
       ),
     );
@@ -270,14 +275,14 @@ function handleMessage(msg: ChatMessage) {
 function sell(
   player: Player,
   shopItem: ItemStack,
-  amount: number,
+  howMany: number,
   productPrice: number,
   currency: Currency,
   chest: Container,
   taxRate: number,
 ): TransactionResult | undefined {
   const moneyInShop = getInventoryBalance(chest.inventory, currency);
-  const price = productPrice * amount;
+  const price = productPrice * howMany;
   if (moneyInShop < price) {
     player.sendMessage(ChatColor.RED + 'Kaupassa ei ole tarpeeksi rahaa!');
     return undefined;
@@ -290,6 +295,7 @@ function sell(
   const allProducts = findItemsFromInventory(player.inventory, shopItem);
   const items: ItemStack[] = [];
 
+  let amount = howMany;
   for (const product of allProducts) {
     if (amount <= 0) break;
     const amountToRemove = Math.min(product.amount, amount);
@@ -301,19 +307,27 @@ function sell(
   items.forEach((item) => {
     addItemTo(chest.inventory, item);
   });
+
+  const unit = price - tax == 1 ? currency.unit : currency.unitPlural;
+  player.sendMessage(
+    color(
+      '#55FF55',
+      text(`Myit ${howMany} kpl hintaan ${price - tax} ${unit}`),
+    ),
+  );
   return { taxAmount: tax };
 }
 
 function buy(
   player: Player,
   shopItem: ItemStack,
-  amount: number,
+  howMany: number,
   productPrice: number,
   currency: Currency,
   chest: Container,
   taxRate: number,
 ): TransactionResult | undefined {
-  const price = amount * productPrice;
+  const price = howMany * productPrice;
   const balance = getInventoryBalance(player.inventory, currency);
   if (price > balance) {
     player.sendMessage(ChatColor.RED + 'Sinulla ei ole tarpeeksi rahaa!');
@@ -328,6 +342,7 @@ function buy(
 
   const items: ItemStack[] = [];
 
+  let amount = howMany;
   for (const product of allProducts) {
     if (amount <= 0) break;
     const amountToRemove = Math.min(product.amount, amount);
@@ -338,6 +353,11 @@ function buy(
   items.forEach((item) => {
     giveItem(player, item, player.mainHand);
   });
+
+  const unit = price == 1 ? currency.unit : currency.unitPlural;
+  player.sendMessage(
+    color('#55FF55', text(`Ostit ${howMany} kpl hintaan ${price} ${unit}`)),
+  );
   return { taxAmount: tax };
 }
 

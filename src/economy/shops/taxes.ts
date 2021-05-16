@@ -138,13 +138,10 @@ function canBecomeTaxChest(sign: Block, lines: string[]) {
   if (!sign) return false;
   if (!(sign.state instanceof Sign)) return false;
 
-  // Check if every line is empty, exept the first (0th) line
-  for (let i = 1; i <= 3; i++) {
-    if (lines[i]) return false;
+  // Check if lines are either "tax", "veroarkku", "tax chest" etc or empty
+  for (const line of lines) {
+    if (line && !taxWords.has(line.toLowerCase())) return false;
   }
-
-  // Check if the first line is "tax", "veroarkku", "tax chest" etc
-  if (!taxWords.has(lines[0].toLowerCase())) return false;
 
   if (!(sign.blockData instanceof WallSign)) return false;
   const attachedTo = getBlockBehind(sign);

@@ -139,15 +139,32 @@ function stopMakingShop(player: Player) {
 }
 
 /**
- * Start making a new shop
+ * Start making a new shop by writing a sign
  */
 registerEvent(SignChangeEvent, async (event) => {
-  const sign = event.block;
-  if (!canBecomeShop(sign)) return;
-  const player = event.player;
-  if (sessions.has(player)) return;
-  await wait(1, 'ticks');
+  if (!canBecomeShop(event.block)) return;
+  await wait(1, 'ticks'); // Wait to sign actually update
+  if (canStartMakingShop(event.player)) {
+    startMakingShop(event.player, event.block);
+  }
+});
 
+/**
+ * Start making a new shop by clicking a sign
+ */
+registerEvent(PlayerInteractEvent, async (event) => {
+  if (!canBecomeShop(event.clickedBlock)) return;
+  if (canStartMakingShop(event.player)) {
+    await wait(1, 'ticks');
+    startMakingShop(event.player, event.clickedBlock);
+  }
+});
+
+function canStartMakingShop(player: Player) {
+  return !sessions.has(player);
+}
+
+function startMakingShop(player: Player, sign: Block) {
   // Get the shop type from the sign
   const shopType = getShopType(sign);
   if (!shopType) return;
@@ -160,7 +177,7 @@ registerEvent(SignChangeEvent, async (event) => {
     updated: new Date(),
   });
   startNextTask(player);
-});
+}
 
 function saveShop(player: Player) {
   const session = sessions.get(player);
@@ -242,7 +259,7 @@ function updateShopSign(session: ShopMakingSession) {
   const price = shop.type == 'BUYING' ? shop.price - taxes : shop.price;
 
   const name = getItemName(shop.item);
-  const unit = shop.price === 1 ? shop.currency.unit : shop.currency.unitPlural;
+  const unit = price === 1 ? shop.currency.unit : shop.currency.unitPlural;
 
   sign.setLine(0, shopTypeToString(shop.type));
   // TODO: remove .toString() (and the hack) when chat components are accepted
@@ -317,7 +334,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
   }
 });
 
-function canBecomeShop(block: Block): block is Block {
+function canBecomeShop(block: Block | null): block is Block {
   if (!block) return false;
   if (!(block.state instanceof Sign)) return false;
   const sign = block.state as Sign;
@@ -356,7 +373,8 @@ function getShopType(block: Block) {
 
 function isValidChest(block: Block) {
   if (!(block.blockData instanceof Chest)) return false;
-  // TODO: Check lock
+  // TODO: Check if the chest is locked. Lock must be open when making a shop
+  // if (isLocked(...)) return false;
   return true;
 }
 
