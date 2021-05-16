@@ -142,6 +142,7 @@ function canBecomeTaxChest(sign: Block, lines: string[]) {
   for (const line of lines) {
     if (line && !taxWords.has(line.toLowerCase())) return false;
   }
+  if (lines.every((line) => !line)) return false;
 
   if (!(sign.blockData instanceof WallSign)) return false;
   const attachedTo = getBlockBehind(sign);
@@ -194,7 +195,7 @@ registerEvent(PlayerInteractEvent, (event) => {
           text(
             '+ ' +
               ChatColor.GOLD +
-              tax.amount +
+              round(tax.amount, 2) +
               ' ' +
               ChatColor.RESET +
               currency.unitPlural,

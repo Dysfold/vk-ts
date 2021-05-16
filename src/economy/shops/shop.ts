@@ -24,6 +24,7 @@ import { getShop } from './ShopData';
 import { distanceBetween } from '../../common/helpers/locations';
 import { errorMessage } from '../../chat/system';
 import { getTaxes, sendTaxes } from './taxes';
+import { round } from '../../common/helpers/math';
 
 registerEvent(PlayerInteractEvent, (event) => {
   if (event.action !== BlockAction.RIGHT_CLICK_BLOCK) return;
@@ -50,7 +51,7 @@ function displayShopInfo(p: Player, sign: Block) {
   if (!(chestBlock?.state instanceof Chest)) return;
   const chest = chestBlock.state;
   if (!item) return;
-  const taxes = getTaxes(view.tax, view.price);
+  const taxes = getTaxes(view.taxRate, view.price);
   const taxFreePrice = view.price - taxes;
   const unit =
     view.price === 1
@@ -92,7 +93,7 @@ function displayShopInfo(p: Player, sign: Block) {
     ),
   );
 
-  if (view.tax) {
+  if (view.taxRate) {
     p.sendMessage(
       color(
         '#FFFF99',
@@ -102,7 +103,7 @@ function displayShopInfo(p: Player, sign: Block) {
               taxCollector?.name || 'Tuntematon'
             } \nVeroton arvo: ${taxes}`,
           ),
-          text(`Arvonlisävero: ${ChatColor.GOLD}${view.tax}%`),
+          text(`Arvonlisävero: ${ChatColor.GOLD}${view.taxRate}%`),
         ),
       ),
     );
@@ -237,7 +238,7 @@ function handleMessage(msg: ChatMessage) {
       view.price,
       currency,
       chest.state,
-      view.tax,
+      view.taxRate,
     );
   }
 
@@ -255,7 +256,7 @@ function handleMessage(msg: ChatMessage) {
       view.price,
       currency,
       chest.state,
-      view.tax,
+      view.taxRate,
     );
   }
 
@@ -312,7 +313,7 @@ function sell(
   player.sendMessage(
     color(
       '#55FF55',
-      text(`Myit ${howMany} kpl hintaan ${price - tax} ${unit}`),
+      text(`Myit ${howMany} kpl hintaan ${round(price - tax, 2)} ${unit}`),
     ),
   );
   return { taxAmount: tax };
@@ -356,7 +357,10 @@ function buy(
 
   const unit = price == 1 ? currency.unit : currency.unitPlural;
   player.sendMessage(
-    color('#55FF55', text(`Ostit ${howMany} kpl hintaan ${price} ${unit}`)),
+    color(
+      '#55FF55',
+      text(`Ostit ${howMany} kpl hintaan ${round(price, 2)} ${unit}`),
+    ),
   );
   return { taxAmount: tax };
 }

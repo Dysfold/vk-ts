@@ -24,7 +24,7 @@ interface ShopInfo {
   item?: ItemStack;
   price?: number;
   currency?: Currency;
-  tax?: number;
+  taxRate?: number;
   taxCollector?: OfflinePlayer;
 }
 
@@ -33,10 +33,13 @@ export interface ValidShopInfo {
   item: ItemStack;
   price: number;
   currency: Currency;
-  tax: number;
+  taxRate: number;
   taxCollector?: OfflinePlayer;
 }
 
+/**
+ * Steps during the shop making session
+ */
 type Step =
   | 'START'
   | 'SET_ITEM'
@@ -52,21 +55,27 @@ interface ShopMakingSession {
   updated: Date;
 }
 
+/**
+ * A Map containing players who are making a shop currently, and information about the session
+ */
 const sessions = new Map<Player, ShopMakingSession>();
 
 /**
  * Stop shop making sessions if the player has been idle or moved far away from the shop
  */
-const SHOP_MAKING_TIMEOUT_MS = 1000 * 8;
+const SHOP_MAKING_TIMEOUT_MS = 1000 * 10;
 const MAX_DISTANCE = 5;
 setInterval(() => {
   sessions.forEach((session, player) => {
+    // Check the time
     const t0 = session.updated.getTime();
     const t1 = new Date().getTime();
     if (t1 - t0 > SHOP_MAKING_TIMEOUT_MS) {
       stopMakingShop(player);
       return;
     }
+
+    // Check the distance
     const locA = player.location;
     const locB = session.sign.location;
     if (distanceBetween(locA, locB) > MAX_DISTANCE) {
@@ -76,22 +85,17 @@ setInterval(() => {
   });
 }, 2000);
 
+/**
+ * Order of shop making tasks and prompts
+ */
+// prettier-ignore
 const TASK_ORDER: { step: Step; prompt: string }[] = [
   { step: 'START', prompt: '' },
-  {
-    step: 'SET_ITEM',
-    prompt: 'Klikkaa kylttiä haluamallasi tuotteella.',
-  },
+  { step: 'SET_ITEM', prompt: 'Klikkaa kylttiä haluamallasi tuotteella.' },
   { step: 'SET_CURRENCY', prompt: 'Klikkaa kylttiä haluamallasi valuutalla.' },
-  {
-    step: 'SET_PRICE',
-    prompt: 'Kirjoita chattiin tuotteen hinta. Esim: "4.5"',
-  },
+  { step: 'SET_PRICE', prompt: 'Kirjoita chattiin tuotteen hinta. Esim: "4.5"' },
   { step: 'SET_TAXES', prompt: 'Kirjoita chattiin veroprosentti. Esim: "10"' },
-  {
-    step: 'SET_TAX_COLLECTOR',
-    prompt: 'Kirjoita chattiin veronkerääjän nimi. Esim: "Steve"',
-  },
+  { step: 'SET_TAX_COLLECTOR', prompt: 'Kirjoita chattiin veronkerääjän nimi. Esim: "Steve"' },
 ];
 
 function startNextTask(player: Player) {
@@ -103,9 +107,7 @@ function startNextTask(player: Player) {
   if (taskIndex == -1) return false;
 
   if (taskIndex == TASK_ORDER.length - 1) {
-    saveShop(player);
-    sessions.delete(player);
-    return true;
+    return endLastTask(player);
   }
 
   const nextTask = TASK_ORDER[taskIndex + 1];
@@ -115,7 +117,7 @@ function startNextTask(player: Player) {
 
   // Special check if the tax is 0 -> no need to select tax collector
   if (nextTask.step == 'SET_TAX_COLLECTOR') {
-    if (session.shopInfo.tax == 0) {
+    if (session.shopInfo.taxRate == 0) {
       startNextTask(player);
       return true;
     }
@@ -128,6 +130,12 @@ function startNextTask(player: Player) {
   player.sendMessage(
     color('#FFAA00', text('------------------------------------------')),
   );
+  return true;
+}
+
+function endLastTask(player: Player) {
+  saveShop(player);
+  sessions.delete(player);
   return true;
 }
 
@@ -182,10 +190,13 @@ function startMakingShop(player: Player, sign: Block) {
 function saveShop(player: Player) {
   const session = sessions.get(player);
   if (!session) return;
+  player.sendMessage('0');
 
   // Use the sign as dataholder. Check if it still exists
   const signDataHolder = session.sign.state;
   if (!(signDataHolder instanceof Sign)) return;
+
+  player.sendMessage('1');
 
   // Store the session shopInfo data
   const shop = session.shopInfo;
@@ -195,6 +206,7 @@ function saveShop(player: Player) {
   const modelId = shop.item.itemMeta.hasCustomModelData()
     ? shop.item.itemMeta.customModelData
     : undefined;
+  player.sendMessage('2');
 
   view.type = shop.type;
   view.item.material = shop.item.type.toString();
@@ -206,7 +218,7 @@ function saveShop(player: Player) {
   view.currency.model = shop.currency.model;
   view.currency.unitPlural = shop.currency.unitPlural;
   view.currency.subunitPlural = shop.currency.subunitPlural;
-  view.tax = shop.tax;
+  view.taxRate = shop.taxRate;
   view.taxCollector = shop.taxCollector?.uniqueId.toString();
   signDataHolder.update();
 
@@ -222,7 +234,7 @@ function isShopInfoValid(shopInfo: ShopInfo): shopInfo is ValidShopInfo {
   if (!('item' in shopInfo)) return false;
   if (!('price' in shopInfo)) return false;
   if (!('currency' in shopInfo)) return false;
-  if (!('tax' in shopInfo)) return false;
+  if (!('taxRate' in shopInfo)) return false;
   return true;
 }
 
@@ -251,11 +263,15 @@ function updateSignTextTranslation(
   Bukkit.dispatchCommand(console, cmd);
 }
 
+/**
+ * Set the text in the shop chest sign
+ * @param session Current shop making session
+ */
 function updateShopSign(session: ShopMakingSession) {
   const signBlock = session.sign;
   const shop = session.shopInfo as ValidShopInfo;
   const sign = signBlock.state as Sign;
-  const taxes = getTaxes(shop.tax, shop.price);
+  const taxes = getTaxes(shop.taxRate, shop.price);
   const price = shop.type == 'BUYING' ? shop.price - taxes : shop.price;
 
   const name = getItemName(shop.item);
@@ -292,47 +308,57 @@ registerEvent(PlayerInteractEvent, async (event) => {
   const step = session.step;
 
   if (step == 'SET_ITEM') {
-    session.shopInfo.item = player.inventory.itemInMainHand;
-    const name = getItemName(session.shopInfo.item);
-    player.sendMessage('Asetit esineen ');
-    player.sendMessage(name);
-    startNextTask(player);
-    return;
+    return setShopItem(session, player);
   }
 
   if (step == 'SET_CURRENCY') {
-    const item = player.inventory.itemInMainHand;
-    const data = getCoinData(item);
-
-    if (!data?.unit || !data.subUnit) {
-      errorMessage(player, 'Viallinen valuutta!');
-      stopMakingShop(player);
-      return;
-    }
-    const currencyModel = coinModelIdToCurrencyId(
-      item.itemMeta.customModelData,
-    );
-    if (currencyModel === undefined) {
-      errorMessage(player, 'Viallinen valuutta');
-      stopMakingShop(player);
-      log.error('Viallinen valuutta');
-      return;
-    }
-
-    const currency: Currency = {
-      model: currencyModel,
-      unit: data.unit.slice(0, -1),
-      unitPlural: data.unit,
-      subunit: data.subUnit.slice(0, -1),
-      subunitPlural: data.subUnit,
-    };
-    session.shopInfo.currency = currency;
-    player.sendMessage('Asetit valuutan ' + currency.unit);
-    startNextTask(player);
-
-    return;
+    return setShopCurrency(session, player);
   }
 });
+
+/**
+ * Set the currency for the shop
+ */
+function setShopCurrency(session: ShopMakingSession, player: Player) {
+  const item = player.inventory.itemInMainHand;
+  const data = getCoinData(item);
+
+  const currencyModel = coinModelIdToCurrencyId(item.itemMeta.customModelData);
+  if (!data?.unit || !data.subUnit) {
+    errorMessage(player, 'Viallinen valuutta!');
+    stopMakingShop(player);
+    return;
+  }
+
+  if (currencyModel === undefined) {
+    errorMessage(player, 'Viallinen valuutta');
+    stopMakingShop(player);
+    log.error('Viallinen valuutta');
+    return;
+  }
+
+  const currency: Currency = {
+    model: currencyModel,
+    unit: data.unit.slice(0, -1),
+    unitPlural: data.unit,
+    subunit: data.subUnit.slice(0, -1),
+    subunitPlural: data.subUnit,
+  };
+  session.shopInfo.currency = currency;
+  player.sendMessage('Asetit valuutan ' + currency.unit);
+  startNextTask(player);
+}
+
+/**
+ * Set the item for the shop
+ */
+function setShopItem(session: ShopMakingSession, player: Player) {
+  session.shopInfo.item = player.inventory.itemInMainHand;
+  const name = getItemName(session.shopInfo.item);
+  player.sendMessage('Asetit esineen ');
+  player.sendMessage(name);
+  startNextTask(player);
+}
 
 function canBecomeShop(block: Block | null): block is Block {
   if (!block) return false;
@@ -411,14 +437,14 @@ function detectShopSetup(msg: ChatMessage) {
         return;
       }
       case 'SET_TAXES': {
-        const tax = Number.parseFloat(msg.content);
-        if (isNaN(tax) || tax < 0) {
+        const taxRate = Number.parseFloat(msg.content);
+        if (isNaN(taxRate) || taxRate < 0) {
           errorMessage(msg.sender, 'Virheellinen veroprosentti');
           stopMakingShop(msg.sender);
           return;
         }
-        msg.sender.sendMessage('Asetit veroprosentiksi ' + tax);
-        session.shopInfo.tax = tax;
+        msg.sender.sendMessage('Asetit veroprosentiksi ' + taxRate);
+        session.shopInfo.taxRate = taxRate;
         startNextTask(msg.sender);
         return;
       }

@@ -16,7 +16,7 @@ export const SHOP_DATA = {
     .required(),
   price: yup.number().required(),
   currency: YUP_CURRENCY.required(),
-  tax: yup.number().required(),
+  taxRate: yup.number().required(),
   taxCollector: yup.string().notRequired(),
 };
 

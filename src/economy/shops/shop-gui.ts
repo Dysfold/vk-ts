@@ -55,7 +55,7 @@ function createShopGuiInventory(sign: Block) {
 
   const price =
     shop.type === 'BUYING'
-      ? shop.price - getTaxes(shop.tax, shop.price)
+      ? shop.price - getTaxes(shop.taxRate, shop.price)
       : shop.price;
 
   const unit =
