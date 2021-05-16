@@ -32,7 +32,7 @@ export function giveItem(
     }
   }
   // MainHand
-  if (hand === EquipmentSlot.OFF_HAND) {
+  if (hand === EquipmentSlot.HAND) {
     if (inventory.itemInMainHand.type.isEmpty()) {
       inventory.itemInMainHand = item;
       return;
