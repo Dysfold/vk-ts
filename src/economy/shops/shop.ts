@@ -88,7 +88,9 @@ function displayShopInfo(p: Player, sign: Block) {
     color(
       '#FFFF99',
       text(
-        `Hinta: ${ChatColor.GOLD}${view.price}${ChatColor.RESET} ${unit} / kpl`,
+        `Hinta: ${ChatColor.GOLD}${round(view.price, 4)}${
+          ChatColor.RESET
+        } ${unit} / kpl`,
       ),
     ),
   );
@@ -111,7 +113,9 @@ function displayShopInfo(p: Player, sign: Block) {
       color(
         '#FFFF99',
         text(
-          `Veroton hinta: ${ChatColor.GOLD}${taxFreePrice}${ChatColor.RESET} ${taxFreeUnit} / kpl`,
+          `Veroton hinta: ${ChatColor.GOLD}${round(taxFreePrice, 4)}${
+            ChatColor.RESET
+          } ${taxFreeUnit} / kpl`,
         ),
       ),
     );
@@ -313,7 +317,7 @@ function sell(
   player.sendMessage(
     color(
       '#55FF55',
-      text(`Myit ${howMany} kpl hintaan ${round(price - tax, 2)} ${unit}`),
+      text(`Myit ${howMany} kpl hintaan ${round(price - tax, 4)} ${unit}`),
     ),
   );
   return { taxAmount: tax };
@@ -359,7 +363,7 @@ function buy(
   player.sendMessage(
     color(
       '#55FF55',
-      text(`Ostit ${howMany} kpl hintaan ${round(price, 2)} ${unit}`),
+      text(`Ostit ${howMany} kpl hintaan ${round(price, 4)} ${unit}`),
     ),
   );
   return { taxAmount: tax };
