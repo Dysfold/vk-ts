@@ -37,11 +37,11 @@ const Blade = new CustomItem({
 
 // prettier-ignore
 const HEADS = new Map<EntityType, ItemStack>([
-  [EntityType.ZOMBIE,           new ItemStack(Material.ZOMBIE_HEAD, 1)],
-  [EntityType.CREEPER,          new ItemStack(Material.CREEPER_HEAD, 1)],
-  [EntityType.CREEPER,          new ItemStack(Material.CREEPER_HEAD, 1)],
-  [EntityType.SKELETON,         new ItemStack(Material.SKELETON_SKULL, 1)],
-  [EntityType.WITHER_SKELETON,  new ItemStack(Material.WITHER_SKELETON_SKULL, 1)],
+  [EntityType.ZOMBIE, new ItemStack(Material.ZOMBIE_HEAD, 1)],
+  [EntityType.CREEPER, new ItemStack(Material.CREEPER_HEAD, 1)],
+  [EntityType.CREEPER, new ItemStack(Material.CREEPER_HEAD, 1)],
+  [EntityType.SKELETON, new ItemStack(Material.SKELETON_SKULL, 1)],
+  [EntityType.WITHER_SKELETON, new ItemStack(Material.WITHER_SKELETON_SKULL, 1)],
 ]);
 
 async function dropBlade(armorStand: ArmorStand) {
@@ -74,16 +74,15 @@ async function dropBlade(armorStand: ArmorStand) {
 }
 
 async function chopIfHit(location: Location, y_velocity: number) {
-  const entities = location.getNearbyEntities(1, 1.2, 1);
+  const entities = location.getNearbyEntities(1, 1.2, 1); // y 1.2 is required for chained player detection
+  await wait(4, 'ticks'); // Wait for blade to be over entity
   for (const entity of entities) {
     if (!(entity instanceof LivingEntity)) return;
     if (entity instanceof ArmorStand) return;
+    if (entity.isDead()) return; // Head already dropped etc.
     // Set cooldown
     if (cooldowns.has(entity)) return;
     cooldowns.add(entity);
-
-    // Wait for better timing
-    await wait(4, 'ticks');
 
     // Deal damage
     if (y_velocity >= DEADLY_CHOP_VELOCITY) entity.health = 0;
@@ -97,7 +96,6 @@ async function chopIfHit(location: Location, y_velocity: number) {
     if (entity.isDead()) dropHead(entity, eyeLocation);
 
     // Delete cooldown
-    await wait(20, 'ticks');
     cooldowns.delete(entity);
   }
 }
