@@ -9,6 +9,7 @@ import { PlayerSwapHandItemsEvent } from 'org.bukkit.event.player';
 import { findItemsFromInventory, getBlockBehind, getShopItem } from './helpers';
 import { getShop } from './ShopData';
 import { getTaxes } from './taxes';
+import { getCurrencyNames, Currency } from '../currency';
 
 const GUI_ICON = '\uE009';
 
@@ -58,12 +59,12 @@ function createShopGuiInventory(sign: Block) {
       ? shop.price - getTaxes(shop.taxRate, shop.price)
       : shop.price;
 
-  const unit =
-    price === 1
-      ? shop.currency.unitPlural.slice(0, -1)
-      : shop.currency.unitPlural;
+  const unitNames = getCurrencyNames(shop.currency as Currency)?.plainText;
+  if (!unitNames) return;
 
-  // There wasn't enough black magic?
+  const unit = price === 1 ? unitNames.unit : unitNames.unitPlural;
+
+  // Add custom characters to the inventory name for GUI
   return Bukkit.createInventory(
     null,
     3 * 9,

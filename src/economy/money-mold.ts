@@ -1,21 +1,22 @@
 import { text, translate } from 'craftjs-plugin/chat';
-import { Location, Material } from 'org.bukkit';
+import { Location, Material, ChatColor } from 'org.bukkit';
 import { BlockFace, Dispenser } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
 import { Action, BlockPistonRetractEvent } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import * as yup from 'yup';
-import { dataType } from '../common/datas/holder';
-import { dataView } from '../common/datas/view';
-import { CustomItem, CUSTOM_DATA_KEY } from '../common/items/CustomItem';
+import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
-import { Currency, CurrencyModel, isCurrencyModel } from './currency';
+import { Currency, getCurrencyNames } from './currency';
 
 const MoneyMold = new CustomItem({
   name: translate('vk.money_mold'),
   id: 10,
   type: VkItem.MISC,
+  data: {
+    currency: yup.number().required(),
+  },
 });
 
 // Block pushed by piston
@@ -26,23 +27,23 @@ const MATERIAL_CONTAINER = Material.DROPPER;
 const COPPER_MATERIAL = Material.BRICK; //Material.COPPER_INGOT
 
 // Config for coins materials. Number is the id of the currency
-const RAW_MATERIALS = new Map<CurrencyModel, ItemStack[]>([
+const RAW_MATERIALS = new Map<Currency, ItemStack[]>([
   [
-    CurrencyModel.GOLDEN,
+    Currency.CLASSIC_GOLD,
     [
       new ItemStack(Material.GOLD_INGOT, 10),
       new ItemStack(COPPER_MATERIAL, 10),
     ],
   ],
   [
-    CurrencyModel.SILVER,
+    Currency.SILVER,
     [
       new ItemStack(Material.IRON_INGOT, 10),
       new ItemStack(COPPER_MATERIAL, 10),
     ],
   ],
   [
-    CurrencyModel.PAPER,
+    Currency.GREEN_PAPER,
     [
       new ItemStack(Material.PAPER, 10),
       new ItemStack(Material.INK_SAC, 10),
@@ -52,39 +53,14 @@ const RAW_MATERIALS = new Map<CurrencyModel, ItemStack[]>([
 ]);
 const CURRENCY_MODELS = Array.from(RAW_MATERIALS.keys());
 
-/**
- * Data for coin custom item
- */
-const COIN_DATA = {
-  unit: yup.string().notRequired(),
-  subUnit: yup.string().notRequired(),
-};
-
 interface Coin {
-  item: CustomItem<typeof COIN_DATA>;
+  item: CustomItem<{}>;
   amount: number;
   value: number;
 }
 
-export function getCoinData(item: ItemStack) {
-  if (!isMoney(item)) return undefined;
-  const DATA_TYPE = dataType(CUSTOM_DATA_KEY, COIN_DATA);
-  const view = dataView(DATA_TYPE, item);
-  if (!view.subUnit || !view.unit) return undefined;
-  return view;
-}
-
-function isMoney(item: ItemStack) {
-  if (item.type !== VkItem.MONEY) return false;
-  if (!item.itemMeta.hasCustomModelData()) return false;
-  const DATA_TYPE = dataType(CUSTOM_DATA_KEY, COIN_DATA);
-  const view = dataView(DATA_TYPE, item);
-  if (!view.unit || !view.subUnit) return false;
-  return true;
-}
-
 const VALUES_IN_CURRENCY = [0.01, 0.1, 1, 10, 100, 1000];
-export const CURRENCY_ITEMS = new Map<CurrencyModel, Coin[]>();
+export const CURRENCY_ITEMS = new Map<Currency, Coin[]>();
 
 /**
  * Generate custom model data (or model id) for the custom item
@@ -102,20 +78,19 @@ function getCoinModelId(currencyModel: number, value: number) {
  * @param currencyModel Model of the currency (from 1 to 3(?))
  * @param value Value of the coin. From 0.01 to 1000
  */
-export function makeCoinItem(currencyModel: number, value: number) {
+function makeCoinItem(currencyModel: number, value: number) {
   const modelId = getCoinModelId(currencyModel, value);
   if (modelId === undefined) return undefined;
   const customItem = new CustomItem({
     id: modelId,
     type: VkItem.MONEY,
-    data: COIN_DATA,
   });
   return customItem;
 }
 
 /**
  * Generate list of Coin items that belong to same texture group
- * @param currencyModel Model of the currency (from 1 to 3(?))
+ * @param currencyModel Model of the currency (from 0 to 2(currently))
  */
 function generateCoins(currencyModel: number) {
   const coins: Coin[] = [];
@@ -137,17 +112,14 @@ CURRENCY_MODELS.forEach((currencyModel) => {
   CURRENCY_ITEMS.set(currencyModel, coins);
 });
 
-const MODEL_ID_TO_CURRENCY_MODEL = new Map<number, CurrencyModel>();
+const MODEL_ID_TO_CURRENCY = new Map<number, Currency>();
 CURRENCY_ITEMS.forEach((items, id) =>
   items.forEach((coin) =>
-    MODEL_ID_TO_CURRENCY_MODEL.set(
-      coin.item.create({}).itemMeta.customModelData,
-      id,
-    ),
+    MODEL_ID_TO_CURRENCY.set(coin.item.create({}).itemMeta.customModelData, id),
   ),
 );
 export function coinModelIdToCurrencyId(modelId: number) {
-  return MODEL_ID_TO_CURRENCY_MODEL.get(modelId);
+  return MODEL_ID_TO_CURRENCY.get(modelId);
 }
 
 registerEvent(BlockPistonRetractEvent, (event) => {
@@ -165,26 +137,16 @@ registerEvent(BlockPistonRetractEvent, (event) => {
 
   // Properties of the currency are stored in the lore of the money mold
   const lore = mold.itemMeta.lore;
-  if (!lore || lore.length !== 5) return;
-  const unit = lore[0];
-  const unitPlural = lore[1];
-  const subunit = lore[2];
-  const subunitPlural = lore[3];
-  const model = Number(lore[4]);
-  if (!unit || !subunit || !model) return;
-  if (!isCurrencyModel(model)) return;
+  if (lore?.length !== 1) return;
 
-  const materials = RAW_MATERIALS.get(model);
+  const model = Number(lore[0]);
+  if (isNaN(model)) return;
+  const currency = model as Currency;
+
+  const materials = RAW_MATERIALS.get(currency);
   if (!materials) return;
   if (!removeMaterials(inventory, materials)) return;
 
-  const currency: Currency = {
-    model,
-    unit,
-    unitPlural,
-    subunit,
-    subunitPlural,
-  };
   createMoney(dropperBlock.location.add(0.5, 1.1, 0.5), currency);
 });
 
@@ -207,19 +169,13 @@ function removeMaterials(inventory: Inventory, items: ItemStack[]) {
 }
 
 async function createMoney(location: Location, currency: Currency) {
-  const coins = CURRENCY_ITEMS.get(currency.model);
+  const coins = CURRENCY_ITEMS.get(currency);
   if (!coins) return;
   await wait(2, 'ticks');
   for (const coin of coins) {
-    const item = coin.item.create(
-      {
-        unit: currency.unitPlural,
-        subUnit: currency.subunitPlural,
-      },
-      coin.amount,
-    );
+    const item = coin.item.create({}, coin.amount);
     const meta = item.itemMeta;
-    meta.displayName = getCoinDisplayName(coin, currency);
+    meta.displayNameComponent = getCoinDisplayName(coin, currency);
     item.itemMeta = meta;
 
     // Drop the item without velocity.
@@ -236,15 +192,27 @@ export function getCoinDisplayName(coin: Coin, currency: Currency) {
   const value = isSubunit ? coin.value * 100 : coin.value;
   const isPlural = value !== 1;
 
+  const valueString = '' + value;
+
+  const translations = getCurrencyNames(currency)?.translations;
+
+  if (!translations) return [text('Tunnistamaton valuutta')];
+
   // Construct the display name
-  const valueString = '§r' + value + ' ';
+  // components.push(text(ChatColor.RESET + '' + value + ' '));
+
+  let translation = '';
   if (isSubunit) {
-    if (isPlural) return valueString + currency.subunitPlural;
-    else return valueString + currency.subunit;
+    if (isPlural) translation = translations.subunitPlural;
+    else translation = translations.subunit;
   } else {
-    if (isPlural) return valueString + currency.unitPlural;
-    else return valueString + currency.unit;
+    if (isPlural) translation = translations.unitPlural;
+    else translation = translations.unit;
   }
+
+  const component = translate(translation, valueString);
+  component.italic = false;
+  return [component];
 }
 
 // Admin command for creating money molds
@@ -253,29 +221,18 @@ registerCommand('rahamuotti', (sender, label, args) => {
   if (!(sender instanceof Player)) return;
   const player = sender as Player;
 
-  if (args.length !== 3) {
-    player.sendMessage(
-      '/rahamuotti <yksikön monikko> <alayksikön monikko> <malli>',
-    );
-    player.sendMessage('Esim: /rahamuotti Euroa Senttiä 2');
+  if (args.length !== 1) {
+    player.sendMessage('/rahamuotti <malli>');
+    player.sendMessage('Esim: /rahamuotti 2');
     return;
   }
 
-  const unitPlural = args[0];
-  const subunitPlural = args[1];
-  const model = args[2];
+  const model = Number(args[0]);
+  if (isNaN(model)) return;
 
-  if (!unitPlural || !subunitPlural || !Number(model)) return;
-
-  const item = MoneyMold.create({});
+  const item = MoneyMold.create({ currency: model });
   const meta = item.itemMeta;
-  const lore = [
-    unitPlural.slice(0, -1),
-    unitPlural,
-    subunitPlural.slice(0, -1),
-    subunitPlural,
-    model,
-  ];
+  const lore = ['' + model];
   meta.lore = lore;
   item.itemMeta = meta;
 
@@ -286,25 +243,20 @@ registerCommand('rahamuotti', (sender, label, args) => {
 MoneyMold.event(
   PlayerInteractEvent,
   (event) => event.item,
-  async (event) => {
+  async (event, data) => {
     const a = event.action;
     if (a !== Action.RIGHT_CLICK_AIR && a !== Action.RIGHT_CLICK_BLOCK) return;
-    const lore = event.item?.itemMeta.lore;
 
-    if (!lore || lore.length !== 5) return;
-
-    const line = lore[4];
-    console.log(line);
-    const model = Number(line);
-    if (!isCurrencyModel(model)) return;
+    const model = data.currency as Currency;
     const items = RAW_MATERIALS.get(model);
     if (!items) return;
 
-    event.player.sendMessage('Tarvitset tätä valuuttaa varten: ');
+    event.player.sendMessage(
+      'Tarvitset tätä valuuttaa (' + model + ') varten: ',
+    );
     for (const item of items) {
       const type = item.type.translationKey;
       const amount = item.amount;
-      // TODO: Chat icons for the material
       event.player.sendMessage(
         ...[text(' - '), translate(type), text(` (${amount}kpl)`)],
       );

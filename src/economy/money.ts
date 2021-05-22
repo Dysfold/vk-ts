@@ -1,7 +1,7 @@
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import { addItemTo } from '../common/helpers/inventory';
-import { Currency } from './currency';
-import { CURRENCY_ITEMS, getCoinData, getCoinDisplayName } from './money-mold';
+import { Currency, getCurrency, getMoneyValue } from './currency';
+import { CURRENCY_ITEMS, getCoinDisplayName } from './money-mold';
 
 /**
  * Calculate total value of given currency in an inventory
@@ -9,32 +9,18 @@ import { CURRENCY_ITEMS, getCoinData, getCoinDisplayName } from './money-mold';
  * @param currency Currency unit
  */
 export function getInventoryBalance(inv: Inventory, currency: Currency) {
-  const unit = currency.unit.toLowerCase();
   const sum = inv.contents.reduce((total, item) => {
     if (!item) return total;
-    const data = getCoinData(item);
-    if (!data?.unit) return total;
 
-    if (!isSameCurrency(data.unit, unit)) return total;
+    if (currency !== getCurrency(item)) return total;
 
-    const nameList = item.itemMeta.displayName.toLowerCase().split(' ');
-    if (nameList.length !== 2) return total;
-    const [nameAmount, nameUnit] = nameList;
+    const value = getMoneyValue(item);
+    if (value === undefined) return total;
 
-    // TODO: Refactor this after CustomItems have static variables
-    if (isSameCurrency(nameUnit, unit)) {
-      // Is primary unit
-      const value = Number.parseInt(nameAmount) || 0;
-
-      return total + value * item.amount;
-    }
-    // Is sub unit
-    const value = Number.parseInt(nameAmount) || 0;
-    return total + 0.01 * value * item.amount;
+    return total + value * item.amount;
   }, 0);
 
-  // Round with 2 desimals
-  return Math.round(sum * 100) / 100;
+  return sum;
 }
 
 /**
@@ -56,32 +42,16 @@ export function takeMoneyFrom(
 
   // Collect the itemstacks to the map above
   inventory.contents.forEach((item) => {
-    if (!item?.itemMeta?.hasDisplayName()) return;
-    const display = item.itemMeta.displayName;
-    const names = display.split(' ');
-    if (names.length !== 2) return;
-    const [displayAmount, displayUnit] = names;
-    const amount = Number.parseInt(displayAmount);
-    if (isNaN(amount)) return;
+    // Check if the item is the wanted currency
+    if (currency !== getCurrency(item)) return;
 
-    const data = getCoinData(item);
-    if (!data?.unit) return;
+    const value = getMoneyValue(item);
+    if (value === undefined) return;
 
-    if (!isSameCurrency(data.unit, currency.unit)) return;
-
-    if (isSameCurrency(displayUnit, currency.unit)) {
-      // Units
-      const itemStacks = invCoins.get(amount);
-      if (!itemStacks) invCoins.set(amount, [item]);
-      else itemStacks.push(item);
-      return;
-    }
-    // Sub units
-    const subAmount = amount / 100;
-    const itemStacks = invCoins.get(subAmount);
-    if (!itemStacks) invCoins.set(subAmount, [item]);
+    // Save the itemstack to the Map
+    const itemStacks = invCoins.get(value);
+    if (!itemStacks) invCoins.set(value, [item]);
     else itemStacks.push(item);
-    return;
   });
 
   const AMOUNTS = [0.01, 0.1, 1, 10, 100, 1000];
@@ -112,7 +82,7 @@ export function giveMoney(
   totalAmount: number,
   currency: Currency,
 ) {
-  const coins = CURRENCY_ITEMS.get(currency.model);
+  const coins = CURRENCY_ITEMS.get(currency);
   if (!coins) return;
 
   let amount = totalAmount;
@@ -125,15 +95,9 @@ export function giveMoney(
     if (!coin) return;
     const customItem = coin.item;
     if (!customItem) return;
-    const item = customItem.create(
-      {
-        unit: currency.unitPlural,
-        subUnit: currency.subunitPlural,
-      },
-      howMany,
-    );
+    const item = customItem.create({}, howMany);
     const meta = item.itemMeta;
-    meta.displayName = getCoinDisplayName(coin, currency);
+    meta.displayNameComponent = getCoinDisplayName(coin, currency);
     item.itemMeta = meta;
 
     addItemTo(inventory, item);

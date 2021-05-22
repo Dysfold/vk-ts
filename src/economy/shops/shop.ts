@@ -16,7 +16,7 @@ import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
 import { addItemTo, giveItem } from '../../common/helpers/inventory';
 import { getItemName } from '../../common/helpers/items';
-import { Currency, getShopCurrency } from '../currency';
+import { Currency, getCurrencyNames } from '../currency';
 import { getInventoryBalance, giveMoney, takeMoneyFrom } from '../money';
 import { findItemsFromInventory, getBlockBehind, getShopItem } from './helpers';
 import { openShopGUI } from './shop-gui';
@@ -53,14 +53,13 @@ function displayShopInfo(p: Player, sign: Block) {
   if (!item) return;
   const taxes = getTaxes(view.taxRate, view.price);
   const taxFreePrice = view.price - taxes;
-  const unit =
-    view.price === 1
-      ? view.currency.unitPlural.slice(0, -1)
-      : view.currency.unitPlural;
-  const taxFreeUnit =
-    taxFreePrice === 1
-      ? view.currency.unitPlural.slice(0, -1)
-      : view.currency.unitPlural;
+
+  const currency = view.currency as Currency;
+  const unitNames = getCurrencyNames(currency)?.plainText;
+  if (!unitNames) return;
+
+  const unit = view.price == 1 ? unitNames.unit : unitNames.unitPlural;
+  const taxFreeUnit = taxFreePrice == 1 ? unitNames.unit : unitNames.unitPlural;
 
   const itemName = getItemName(item);
   const taxCollector = view.taxCollector
@@ -213,8 +212,8 @@ function handleMessage(msg: ChatMessage) {
   const view = getShop(shopSign);
   if (!view) return;
   const shopItem = getShopItem(view.item);
-  const currency = getShopCurrency(view.currency);
-  if (!shopItem || !currency) return;
+  const currency = view.currency as Currency;
+  if (!shopItem || currency == undefined) return;
 
   const amount = Number.parseInt(msg.content);
   if (isNaN(amount) || amount <= 0) {
@@ -293,6 +292,9 @@ function sell(
     return undefined;
   }
 
+  const unitNames = getCurrencyNames(currency)?.plainText;
+  if (!unitNames) return;
+
   const tax = getTaxes(taxRate, price);
   takeMoneyFrom(chest.inventory, price, currency);
   giveMoney(player.inventory, price - tax, currency);
@@ -313,7 +315,7 @@ function sell(
     addItemTo(chest.inventory, item);
   });
 
-  const unit = price - tax == 1 ? currency.unit : currency.unitPlural;
+  const unit = price - tax == 1 ? unitNames.unit : unitNames.unitPlural;
   player.sendMessage(
     color(
       '#55FF55',
@@ -338,9 +340,13 @@ function buy(
     player.sendMessage(ChatColor.RED + 'Sinulla ei ole tarpeeksi rahaa!');
     return undefined;
   }
+  const unitNames = getCurrencyNames(currency)?.plainText;
+  if (!unitNames) return;
 
   const tax = getTaxes(taxRate, price);
+
   takeMoneyFrom(player.inventory, price, currency);
+
   giveMoney(chest.inventory, price - tax, currency);
 
   const allProducts = findItemsFromInventory(chest.inventory, shopItem);
@@ -359,7 +365,7 @@ function buy(
     giveItem(player, item, player.mainHand);
   });
 
-  const unit = price == 1 ? currency.unit : currency.unitPlural;
+  const unit = price == 1 ? unitNames.unit : unitNames.unitPlural;
   player.sendMessage(
     color(
       '#55FF55',

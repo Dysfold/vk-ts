@@ -16,7 +16,7 @@ import {
   yupLocToLoc,
   YUP_LOCATION,
 } from '../../common/helpers/locations';
-import { Currency, getShopCurrency, YUP_CURRENCY } from '../currency';
+import { Currency, getCurrencyNames } from '../currency';
 import { giveMoney } from '../money';
 import { getBlockBehind } from './helpers';
 
@@ -47,7 +47,7 @@ const TAX_COLLECTOR_DATA = {
   untransferred: yup
     .array(
       yup.object({
-        currency: YUP_CURRENCY.required(),
+        currency: yup.number().required(),
         amount: yup.number().default(0),
       }),
     )
@@ -68,21 +68,12 @@ export function sendTaxes(
   }
 
   const arr = view.untransferred;
-  const transmission = arr.find(
-    (i) =>
-      i.currency.model == currency.model &&
-      i.currency.unitPlural == currency.unitPlural &&
-      i.currency.subunitPlural == currency.subunitPlural,
-  );
+  const transmission = arr.find((i) => i.currency == currency);
   if (transmission) {
     transmission.amount += amount;
   } else {
     arr.push({
-      currency: {
-        model: currency.model,
-        unitPlural: currency.unitPlural,
-        subunitPlural: currency.subunitPlural,
-      },
+      currency: currency,
       amount: amount,
     });
   }
@@ -186,8 +177,8 @@ registerEvent(PlayerInteractEvent, (event) => {
   if (collectorView.untransferred.length) {
     player.sendMessage(color('#FFFF99', text('Uusia veroja:')));
     for (const tax of collectorView.untransferred) {
-      const currency = getShopCurrency(tax.currency);
-      if (!currency) return;
+      const currency = tax.currency as Currency;
+      const currencyName = getCurrencyNames(currency)?.plainText;
       giveMoney(chest.inventory, tax.amount, currency);
       player.sendMessage(
         color(
@@ -198,7 +189,7 @@ registerEvent(PlayerInteractEvent, (event) => {
               round(tax.amount, 2) +
               ' ' +
               ChatColor.RESET +
-              currency.unitPlural,
+              currencyName?.unit,
           ),
         ),
       );

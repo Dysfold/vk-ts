@@ -10,9 +10,9 @@ import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
 import { dataView } from '../../common/datas/view';
 import { getItemName, getCustomTranslation } from '../../common/helpers/items';
-import { coinModelIdToCurrencyId, getCoinData } from '../money-mold';
+import { coinModelIdToCurrencyId } from '../money-mold';
 import { ShopData } from './ShopData';
-import { Currency } from '../currency';
+import { Currency, getCurrency, getCurrencyNames } from '../currency';
 import { distanceBetween } from '../../common/helpers/locations';
 import { errorMessage } from '../../chat/system';
 import { getTaxCollector, getTaxes } from './taxes';
@@ -150,8 +150,8 @@ function stopMakingShop(player: Player) {
  * Start making a new shop by writing a sign
  */
 registerEvent(SignChangeEvent, async (event) => {
-  if (!canBecomeShop(event.block)) return;
   await wait(1, 'ticks'); // Wait to sign actually update
+  if (!canBecomeShop(event.block)) return;
   if (canStartMakingShop(event.player)) {
     startMakingShop(event.player, event.block);
   }
@@ -190,13 +190,10 @@ function startMakingShop(player: Player, sign: Block) {
 function saveShop(player: Player) {
   const session = sessions.get(player);
   if (!session) return;
-  player.sendMessage('0');
 
   // Use the sign as dataholder. Check if it still exists
   const signDataHolder = session.sign.state;
   if (!(signDataHolder instanceof Sign)) return;
-
-  player.sendMessage('1');
 
   // Store the session shopInfo data
   const shop = session.shopInfo;
@@ -206,7 +203,6 @@ function saveShop(player: Player) {
   const modelId = shop.item.itemMeta.hasCustomModelData()
     ? shop.item.itemMeta.customModelData
     : undefined;
-  player.sendMessage('2');
 
   view.type = shop.type;
   view.item.material = shop.item.type.toString();
@@ -215,9 +211,7 @@ function saveShop(player: Player) {
   view.item.material = shop.item.type.toString();
   view.item.translationKey = getCustomTranslation(shop.item)?.translate;
   view.price = shop.price;
-  view.currency.model = shop.currency.model;
-  view.currency.unitPlural = shop.currency.unitPlural;
-  view.currency.subunitPlural = shop.currency.subunitPlural;
+  view.currency = shop.currency;
   view.taxRate = shop.taxRate;
   view.taxCollector = shop.taxCollector?.uniqueId.toString();
   signDataHolder.update();
@@ -251,6 +245,8 @@ function updateSignTextTranslation(
   text: TranslatableComponent,
   sign: Block,
   type: ShopType,
+  price: number,
+  currency: Currency,
 ) {
   const shopTypeTranslation = type === 'SELLING' ? 'vk.selling' : 'vk.buying';
   const shopTypeColor = type === 'SELLING' ? 'green' : 'blue';
@@ -258,7 +254,15 @@ function updateSignTextTranslation(
     sign.world.name === 'world'
       ? 'minecraft:overworld'
       : 'minecraft:' + sign.world.name;
-  const cmd = `execute in ${world} run data merge block ${sign.x} ${sign.y} ${sign.z} {Text1:'{"translate":"${shopTypeTranslation}","color":"${shopTypeColor}"}',Text2:'{"translate":"${text.translate}"}'}`;
+
+  const currencyTranslation = getCurrencyNames(currency)?.translations;
+  if (!currencyTranslation) return;
+  const unit =
+    price === 1 ? currencyTranslation.unit : currencyTranslation.unitPlural;
+
+  const cmd = `execute in ${world} run data merge block ${sign.x} ${sign.y} ${sign.z} {Text1:'{"translate":"${shopTypeTranslation}","color":"${shopTypeColor}"}',
+  Text2:'{"translate":"${text.translate}"}',
+  Text3:'{"translate":"${unit}","with":["${price}"],"italic":"false"}'}`;
   const console = Bukkit.server.consoleSender;
   Bukkit.dispatchCommand(console, cmd);
 }
@@ -273,19 +277,31 @@ function updateShopSign(session: ShopMakingSession) {
   const sign = signBlock.state as Sign;
   const taxes = getTaxes(shop.taxRate, shop.price);
   const price = shop.type == 'BUYING' ? shop.price - taxes : shop.price;
+  const currency: Currency = shop.currency;
 
   const name = getItemName(shop.item);
-  const unit = price === 1 ? shop.currency.unit : shop.currency.unitPlural;
+  const unitNames = getCurrencyNames(currency)?.plainText;
+  if (!unitNames) return;
+
+  const unit = price === 1 ? unitNames.unit : unitNames.unitPlural;
 
   sign.setLine(0, shopTypeToString(shop.type));
-  // TODO: remove .toString() (and the hack) when chat components are accepted
+  // TODO: remove .toString() (and the hack) when chat components are accepted and use translation instead
   sign.setLine(1, getShopItemName(shop.item).toString());
+
+  // TODO: remove string (and the hack) when chat components are accepted and use translation instead
   sign.setLine(2, price + ' ' + unit);
   sign.update();
 
   // HACK. Remove this later
   if (name instanceof TranslatableComponent) {
-    updateSignTextTranslation(name, signBlock, shop.type as ShopType);
+    updateSignTextTranslation(
+      name,
+      signBlock,
+      shop.type as ShopType,
+      price,
+      currency,
+    );
   }
 }
 
@@ -321,31 +337,20 @@ registerEvent(PlayerInteractEvent, async (event) => {
  */
 function setShopCurrency(session: ShopMakingSession, player: Player) {
   const item = player.inventory.itemInMainHand;
-  const data = getCoinData(item);
+  const currency = getCurrency(item);
 
-  const currencyModel = coinModelIdToCurrencyId(item.itemMeta.customModelData);
-  if (!data?.unit || !data.subUnit) {
-    errorMessage(player, 'Viallinen valuutta!');
-    stopMakingShop(player);
-    return;
-  }
-
-  if (currencyModel === undefined) {
+  if (currency == undefined) {
     errorMessage(player, 'Viallinen valuutta');
     stopMakingShop(player);
-    log.error('Viallinen valuutta');
+    log.error('Invalid currency from item: ' + item);
     return;
   }
 
-  const currency: Currency = {
-    model: currencyModel,
-    unit: data.unit.slice(0, -1),
-    unitPlural: data.unit,
-    subunit: data.subUnit.slice(0, -1),
-    subunitPlural: data.subUnit,
-  };
+  const currencyNames = getCurrencyNames(currency)?.plainText;
+  if (!currencyNames) return;
+
   session.shopInfo.currency = currency;
-  player.sendMessage('Asetit valuutan ' + currency.unit);
+  player.sendMessage('Asetit valuutan ' + currencyNames.unit);
   startNextTask(player);
 }
 
@@ -392,8 +397,8 @@ function shopTypeToString(type: ShopType) {
 
 function getShopType(block: Block) {
   const signData = block.state as Sign;
-  const firstLine = signData.getLine(0);
-
+  const firstLine = signData.lines?.[0];
+  if (!firstLine) return undefined;
   return SHOP_TYPES.get(firstLine.toLowerCase());
 }
 
