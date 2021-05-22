@@ -460,9 +460,9 @@ function setBrewHeatSource(brewItemFrame: ItemFrame, active: boolean) {
 }
 
 /**
- * Validate playr interaction with a brew item frame
+ * Validate player interaction with a brew item frame
  */
-function validatePlayerBrewInteraction(event: PlayerInteractEntityEvent) {
+function isValidPlayerBrewInteraction(event: PlayerInteractEntityEvent) {
   if (
     event.hand !== EquipmentSlot.HAND ||
     event.rightClicked.type !== EntityType.ITEM_FRAME
@@ -510,7 +510,7 @@ Brew.event(
   PlayerInteractEntityEvent,
   (event) => (event.rightClicked as ItemFrame).item,
   async (event) => {
-    if (!validatePlayerBrewInteraction(event)) return;
+    if (!isValidPlayerBrewInteraction(event)) return;
 
     const itemInMainHand = event.player.inventory.itemInMainHand;
 
@@ -629,14 +629,12 @@ Brew.event(
 );
 
 /**
- * By default, puts the brew into a bucket.
- * Can be cancelled by some other feature for custom behaviour.
- * Possible cases could be custom foods, drinks, potions etc...
+ * Put brew into a bucket, if clicked with one
  */
 registerEvent(
   PlayerInteractEntityEvent,
   (event) => {
-    if (event.isCancelled() || !validatePlayerBrewInteraction(event)) return;
+    if (!isValidPlayerBrewInteraction(event)) return;
 
     const itemInMainHand = event.player.inventory.itemInMainHand;
 
