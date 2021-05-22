@@ -53,3 +53,4 @@ require('./placable-items');
 require('./rope');
 require('./like');
 require('./paper-write');
+require('./guillotine');
