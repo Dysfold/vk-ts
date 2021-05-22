@@ -34,7 +34,7 @@ import { text } from 'craftjs-plugin/chat';
  */
 export const IngredientSchema = {
   /**
-   * Material name and or modelId
+   * Material name and possibly modelId separated by colon
    */
   id: yup.string().required(),
 
@@ -65,6 +65,8 @@ export const BrewSchema = {
 
   /**
    * Location of the owning cauldron
+   *
+   * TODO: Replace with /common/helpers/locations.ts at some point in the future
    */
   cauldron: yup
     .object({
@@ -145,14 +147,6 @@ export const BrewBucket = new CustomItem({
     ...BrewContainerSchema,
   },
 });
-
-// /**
-//  * Define ingredient.
-//  * Each ingredient can have multiple nested ingredients for each modelId
-//  */
-// export type Ingredient = {
-//   [x in string | number]: Ingredient | IngredientProperties;
-// };
 
 /**
  * Define properties for ingredient
@@ -263,8 +257,8 @@ export const INGREDIENTS: { [id: string]: IngredientProperties } = {
  */
 export enum WaterTemp {
   LUKEWARM = 25,
-  WARM = 45,
-  HOT = 90,
+  WARM = 50,
+  HOT = 75,
   BOILING = 100,
 }
 
@@ -305,6 +299,7 @@ function getItemFramesAt(location: Location) {
 /**
  * Create new brew itemframe at given location
  * @param location must be the location of a cauldron
+ * @return Spawned item frame or undefined
  */
 function spawnBrewItemFrame(location: Location) {
   // Return if the face is obstructed
@@ -318,7 +313,7 @@ function spawnBrewItemFrame(location: Location) {
     heatSource: {
       active: true,
       since: Date.now(),
-      temp: 20.0, // ? Could biome temperature be used here to get initial ambient temperature?
+      temp: 20.0, // ? Biome-specific ambient temperature
     },
   });
 
@@ -355,6 +350,24 @@ function removeBrewItemFrame(location: Location) {
 }
 
 /**
+ * Marks item frame for removal and empties owning cauldron
+ */
+function removeBrewStation(brewItemFrame: ItemFrame) {
+  const brew = Brew.get(brewItemFrame.item);
+
+  if (!brew) return;
+
+  // Set owning cauldron empty
+  const cauldron = objToLocation(brew.cauldron).block;
+  const data = cauldron.blockData as Levelled;
+  data.level = 0.0;
+  cauldron.setBlockData(data, true);
+
+  // Mark entity for removal
+  brewItemFrame.remove();
+}
+
+/**
  * Check if the given block is a valid heat source
  * @param validate set to false to ignore blockData
  */
@@ -369,7 +382,7 @@ function isValidHeatSource(block: Block, validate?: boolean): boolean {
 
 /**
  * Get the expected location of a cauldron relative to given block.
- * Returns -1 if block is not a part of a heat source
+ * @return -1 if block is not a part of a heat source
  */
 function getCauldronOffset(block: Block): number {
   switch (block.type) {
@@ -450,27 +463,45 @@ function setBrewHeatSource(brewItemFrame: ItemFrame, active: boolean) {
  * Validate playr interaction with a brew item frame
  */
 function validatePlayerBrewInteraction(event: PlayerInteractEntityEvent) {
-  if (event.rightClicked.type !== EntityType.ITEM_FRAME) return;
+  if (
+    event.hand !== EquipmentSlot.HAND ||
+    event.rightClicked.type !== EntityType.ITEM_FRAME
+  )
+    return;
 
   const itemFrame = event.rightClicked as ItemFrame;
 
-  if (Brew.check(itemFrame.item))
-    return event.hand === EquipmentSlot.HAND && !itemFrame.isDead();
+  if (Brew.check(itemFrame.item)) return !itemFrame.isDead();
 
   return;
 }
 
-// function colorDistance(st: Color, nd: Color) {
-//   return Math.sqrt(
-//     (nd.red - st.red) ** 2 +
-//       (nd.green - st.green) ** 2 +
-//       (nd.blue - st.blue) ** 2,
-//   );
-// }
+/**
+ * Perform a weighted color mixing where parameter w adjusts the percentage of how much color from A is "preserved"
+ * https://sighack.com/post/procedural-color-algorithms-color-variations
+ * @param w Color A weight from 0 to 1 (0-100%)
+ * @returns Resulting color
+ */
+export function weightedColorMix(w: number, a: Color, b: Color) {
+  return Color.fromRGB(
+    (w * a.red + (1 - w) * b.red) | 0,
+    (w * a.green + (1 - w) * b.green) | 0,
+    (w * a.blue + (1 - w) * b.blue) | 0,
+  );
+}
 
-// function colorDistancePercentage(st: Color, nd: Color) {
-//   return colorDistance(st, nd) / Math.sqrt(255 ** 2 + 255 ** 2 + 255 ** 2);
-// }
+/**
+ * Create brew container schema from brew
+ * @param brew BrewSchema data
+ */
+export function createBrewContainerSchema(brew: Data<typeof BrewSchema>) {
+  return {
+    ingredients: brew.ingredients,
+    date: Date.now(),
+    brewCreationDate: brew.date,
+    brewTemp: calculateBrewTemp(brew),
+  };
+}
 
 /**
  * Handle player interaction with a brew
@@ -529,7 +560,7 @@ Brew.event(
         .map((ingredient) => INGREDIENTS[ingredient.id].description)
         .filter((ingredient, index, self) => self.indexOf(ingredient) == index);
 
-      // Join descriptions into one string and replace the last delimiter with 'ja'
+      // Generate human readable description of the brew ingredients
       description +=
         ' ja siinä vaikuttaisi olevan ' +
         descriptions.join(', ').replace(/,([^,]*)$/, ' ja$1');
@@ -574,25 +605,8 @@ Brew.event(
     if (properties && properties.color) {
       const meta = itemFrameItem.itemMeta as LeatherArmorMeta;
 
-      // Specify what percentage of the final color should come from the current brew color
-      const w = 0.7;
-
-      // Blend ingredient color with brew color
-      const blend = Color.fromRGB(
-        (w * meta.color.red + (1 - w) * properties.color.color.red) | 0,
-        (w * meta.color.green + (1 - w) * properties.color.color.green) | 0,
-        (w * meta.color.blue + (1 - w) * properties.color.color.blue) | 0,
-      );
-
-      meta.color = blend;
-
-      // const distance = colorDistancePercentage(meta.color, blend);
-
-      // log.info(distance);
-
-      // if (distance > 0.05) {
-      //   meta.color = blend;
-      // }
+      // Blend ingredient color into brew color
+      meta.color = weightedColorMix(0.7, meta.color, properties.color.color);
 
       itemFrameItem.itemMeta = meta;
     }
@@ -641,12 +655,7 @@ registerEvent(
     // Create new bucket from brew. If brew has no ingredients, create a water bucket instead
     if (brew.ingredients.length > 0) {
       // Copy ingredients from brew to brew bucket
-      brewBucketItem = BrewBucket.create({
-        ingredients: brew.ingredients,
-        date: Date.now(),
-        brewCreationDate: brew.date,
-        brewTemp: calculateBrewTemp(brew),
-      });
+      brewBucketItem = BrewBucket.create(createBrewContainerSchema(brew));
 
       // Set color
       const meta = brewBucketItem.itemMeta as LeatherArmorMeta;
@@ -656,28 +665,23 @@ registerEvent(
       brewBucketItem = new ItemStack(Material.WATER_BUCKET);
     }
 
-    // Set owning cauldron empty
-    const cauldron = objToLocation(brew.cauldron).block;
-    const data = cauldron.blockData as Levelled;
-    data.level = 0.0;
-    cauldron.setBlockData(data, true);
+    // Play sound
+    event.player.world.playSound(
+      itemFrame.location,
+      'item.bucket.fill',
+      SoundCategory.PLAYERS,
+      1.0,
+      1.0,
+    );
 
-    // Remove brew item
-    event.rightClicked.remove();
+    // Remove item frame and empty cauldron
+    removeBrewStation(itemFrame);
 
     // Remove bucket
     itemInMainHand.amount -= 1;
 
     // Add new bucket
     event.player.inventory.addItem(brewBucketItem);
-
-    event.player.world.playSound(
-      cauldron.location,
-      'item.bucket.fill',
-      SoundCategory.PLAYERS,
-      1.0,
-      1.0,
-    );
   },
   {
     priority: EventPriority.HIGH, // event is called last to let either validation cancel it or some other feature override it
