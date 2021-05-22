@@ -105,7 +105,7 @@ const MODEL_ID_TO_VALUE = new Map([
 
 export function getMoneyValue(item: ItemStack) {
   if (!item.itemMeta.hasCustomModelData()) return undefined;
-  return MODEL_ID_TO_VALUE.get(item.itemMeta.customModelData);
+  return MODEL_ID_TO_VALUE.get(item.itemMeta.customModelData % 10);
 }
 
 export function isSubunit(item: ItemStack) {

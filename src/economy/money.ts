@@ -15,6 +15,7 @@ export function getInventoryBalance(inv: Inventory, currency: Currency) {
     if (currency !== getCurrency(item)) return total;
 
     const value = getMoneyValue(item);
+
     if (value === undefined) return total;
 
     return total + value * item.amount;
