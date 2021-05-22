@@ -296,7 +296,8 @@ function sell(
   if (!unitNames) return;
 
   const tax = getTaxes(taxRate, price);
-  takeMoneyFrom(chest.inventory, price, currency);
+  const success = takeMoneyFrom(chest.inventory, price, currency);
+  if (!success) return;
   giveMoney(player.inventory, price - tax, currency);
 
   const allProducts = findItemsFromInventory(player.inventory, shopItem);
@@ -345,7 +346,8 @@ function buy(
 
   const tax = getTaxes(taxRate, price);
 
-  takeMoneyFrom(player.inventory, price, currency);
+  const success = takeMoneyFrom(player.inventory, price, currency);
+  if (!success) return;
 
   giveMoney(chest.inventory, price - tax, currency);
 

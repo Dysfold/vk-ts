@@ -1,5 +1,5 @@
 import { text, translate } from 'craftjs-plugin/chat';
-import { Location, Material, ChatColor } from 'org.bukkit';
+import { Location, Material } from 'org.bukkit';
 import { BlockFace, Dispenser } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
 import { Action, BlockPistonRetractEvent } from 'org.bukkit.event.block';

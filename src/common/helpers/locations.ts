@@ -26,20 +26,6 @@ export const YUP_LOCATION = yup
 // export type YupLocation = typeof YUP_LOCATION;
 export type YupLocation = yup.TypeOf<typeof YUP_LOCATION>;
 
-// export function locToYupLoc(location: Location) {
-//   let yupLoc: YupLocation = {
-//     x: location.x,
-//     y: location.y,
-//     z: location.z,
-//     worldId: location.world.uID.toString(),
-//   };
-//   // yupLoc = {
-//   //   x: location.x,
-//   //   y: location.y,
-//   //   z: location.z,
-//   //   worldId: location.world.uID,
-//   // };
-// }
 export function yupLocToLoc(yupLoc: YupLocation) {
   const world = Bukkit.getWorld(UUID.fromString(yupLoc.worldId || ''));
   if (!world) return undefined;

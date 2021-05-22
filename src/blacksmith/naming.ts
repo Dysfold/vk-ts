@@ -7,12 +7,20 @@ import { Key } from '../locks/key';
 import { VkItem } from '../common/items/VkItem';
 
 // TODO: Allow renaming of locks
+/**
+ * Check if item naming is allowed for this item.
+ * This has priority over blacklist.
+ */
 function isAllowedItem(item: ItemStack) {
   if (Key.check(item)) return true;
   if (Handcuffs.check(item)) return true;
   return false;
 }
 
+/**
+ * Check if item naming is not allowed for this item.
+ * Whitelist has priority over blacklist.
+ */
 function isBlackListed(item: ItemStack) {
   return item.type === VkItem.MONEY;
 }

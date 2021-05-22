@@ -43,7 +43,7 @@ export function giveItem(
   const leftOver = inventory.addItem(item);
 
   // Drop leftover on the ground
-  if (leftOver.size()) {
+  if (leftOver.size() > 0) {
     player.world.dropItem(player.location, leftOver.get(0));
   }
 }
@@ -69,7 +69,7 @@ export function addItemTo(inventory: Inventory, item: ItemStack) {
     // The location should always exist unless we are adding items to some kind of virtual inventory
     // In that case more checks will be needed or we need to get the location with some other way (maybe additional argument)
     if (!location) {
-      log.error('Inventorya ei ole olemassa!');
+      log.error('Inventory is not found!');
       return;
     }
 

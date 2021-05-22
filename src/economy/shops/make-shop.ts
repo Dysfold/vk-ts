@@ -8,25 +8,15 @@ import { Action, SignChangeEvent } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
-import { dataView } from '../../common/datas/view';
-import { getItemName, getCustomTranslation } from '../../common/helpers/items';
-import { coinModelIdToCurrencyId } from '../money-mold';
-import { ShopData } from './ShopData';
-import { Currency, getCurrency, getCurrencyNames } from '../currency';
-import { distanceBetween } from '../../common/helpers/locations';
 import { errorMessage } from '../../chat/system';
-import { getTaxCollector, getTaxes } from './taxes';
+import { dataView } from '../../common/datas/view';
+import { getItemName } from '../../common/helpers/items';
+import { distanceBetween } from '../../common/helpers/locations';
+import { Currency, getCurrency, getCurrencyNames } from '../currency';
 import { getBlockBehind } from './helpers';
+import { ShopData } from './ShopData';
+import { getTaxCollector, getTaxes } from './taxes';
 export type ShopType = 'SELLING' | 'BUYING';
-
-interface ShopInfo {
-  type?: ShopType;
-  item?: ItemStack;
-  price?: number;
-  currency?: Currency;
-  taxRate?: number;
-  taxCollector?: OfflinePlayer;
-}
 
 export interface ValidShopInfo {
   type: ShopType;
@@ -51,7 +41,7 @@ type Step =
 interface ShopMakingSession {
   sign: Block;
   step: Step;
-  shopInfo: ShopInfo;
+  shopInfo: Partial<ValidShopInfo>;
   updated: Date;
 }
 
@@ -63,7 +53,7 @@ const sessions = new Map<Player, ShopMakingSession>();
 /**
  * Stop shop making sessions if the player has been idle or moved far away from the shop
  */
-const SHOP_MAKING_TIMEOUT_MS = 1000 * 10;
+const SHOP_MAKING_TIMEOUT_MS = 1000 * 15;
 const MAX_DISTANCE = 5;
 setInterval(() => {
   sessions.forEach((session, player) => {
@@ -93,7 +83,7 @@ const TASK_ORDER: { step: Step; prompt: string }[] = [
   { step: 'START', prompt: '' },
   { step: 'SET_ITEM', prompt: 'Klikkaa kylttiä haluamallasi tuotteella.' },
   { step: 'SET_CURRENCY', prompt: 'Klikkaa kylttiä haluamallasi valuutalla.' },
-  { step: 'SET_PRICE', prompt: 'Kirjoita chattiin tuotteen hinta. Esim: "4.5"' },
+  { step: 'SET_PRICE', prompt: 'Kirjoita chattiin tuotteesta maksettava (verollinen) hinta. Esim: "4.5"' },
   { step: 'SET_TAXES', prompt: 'Kirjoita chattiin veroprosentti. Esim: "10"' },
   { step: 'SET_TAX_COLLECTOR', prompt: 'Kirjoita chattiin veronkerääjän nimi. Esim: "Steve"' },
 ];
@@ -204,12 +194,20 @@ function saveShop(player: Player) {
     ? shop.item.itemMeta.customModelData
     : undefined;
 
+  const itemName = getItemName(shop.item);
+  let translationKey: undefined | string;
+  if (itemName instanceof TranslatableComponent) {
+    const key = itemName.translate;
+    if (key.startsWith('vk.')) {
+      translationKey = key;
+    }
+  }
   view.type = shop.type;
   view.item.material = shop.item.type.toString();
   view.item.modelId = modelId;
   view.item.name = name.startsWith('vk.') ? undefined : name;
   view.item.material = shop.item.type.toString();
-  view.item.translationKey = getCustomTranslation(shop.item)?.translate;
+  view.item.translationKey = translationKey;
   view.price = shop.price;
   view.currency = shop.currency;
   view.taxRate = shop.taxRate;
@@ -223,7 +221,9 @@ function saveShop(player: Player) {
 /**
  * Check that all required fields are filled
  */
-function isShopInfoValid(shopInfo: ShopInfo): shopInfo is ValidShopInfo {
+function isShopInfoValid(
+  shopInfo: Partial<ValidShopInfo>,
+): shopInfo is ValidShopInfo {
   if (!('type' in shopInfo)) return false;
   if (!('item' in shopInfo)) return false;
   if (!('price' in shopInfo)) return false;

@@ -57,6 +57,13 @@ const TAX_COLLECTOR_DATA = {
 const TaxChestData = dataType('tax-chest-data', TAX_CHEST_DATA);
 const TaxCollectorData = dataType('tax-chest-data', TAX_COLLECTOR_DATA);
 
+/**
+ * Add money to untransferred taxes (store in database). These taxes will be added to
+ * the tax chest when it is opened.
+ * @param collector Tax collector as offline player
+ * @param amount Amount of money to be sent
+ * @param currency Currency of the tax
+ */
 export function sendTaxes(
   collector: OfflinePlayer,
   amount: number,
@@ -162,7 +169,7 @@ registerEvent(PlayerInteractEvent, (event) => {
   const location = yupLocToLoc(yupLoc);
   if (!location) return;
 
-  if (distanceBetween(location, chest.location)) {
+  if (distanceBetween(location, chest.location) > 0.1) {
     errorMessage(player, 'Tämä veroarkku ei ole enää käytössä!');
     return;
   }
@@ -179,6 +186,9 @@ registerEvent(PlayerInteractEvent, (event) => {
     for (const tax of collectorView.untransferred) {
       const currency = tax.currency as Currency;
       const currencyName = getCurrencyNames(currency)?.plainText;
+      const unit =
+        tax.amount == 1 ? currencyName?.unit : currencyName?.unitPlural;
+
       giveMoney(chest.inventory, tax.amount, currency);
       player.sendMessage(
         color(
@@ -189,7 +199,7 @@ registerEvent(PlayerInteractEvent, (event) => {
               round(tax.amount, 2) +
               ' ' +
               ChatColor.RESET +
-              currencyName?.unit,
+              unit,
           ),
         ),
       );

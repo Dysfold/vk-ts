@@ -71,10 +71,25 @@ export function takeMoneyFrom(
     }
   }
 
+  // If the inventory does not have enought money. This should never be true, but just in case
+  if (price > 0) {
+    log.error(
+      `Player did not have enought money (${price})! This message should never be shown. `,
+    );
+    inventory.viewers.forEach((viewer) => {
+      viewer.sendMessage(
+        'Rahan ottaminen epäonnistui. Ota tästä viestistä kuva ja ota yhteyttä ylläpitäjiin tai kehittäjiin',
+      );
+    });
+    // Give the money back to the inventory
+    giveMoney(inventory, amount - price, currency);
+    return false;
+  }
   // If the price goes negative, player has payed too much -> return change coins
   if (price < 0) {
     giveMoney(inventory, -price, currency);
   }
+  return true;
 }
 
 export function giveMoney(

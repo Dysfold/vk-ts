@@ -51,17 +51,3 @@ export function getItemName(item: ItemStack) {
   }
   return text(item.itemMeta.displayName);
 }
-
-/**
- * Tries to custom (vk.) translation from the item
- */
-export function getCustomTranslation(item: ItemStack) {
-  const components = item.itemMeta.displayNameComponent;
-  for (const component of components) {
-    // Check if the name is the original name
-    if (component instanceof TranslatableComponent) {
-      return component;
-    }
-  }
-  return undefined;
-}
