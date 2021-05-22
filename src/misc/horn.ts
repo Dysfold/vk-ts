@@ -8,9 +8,9 @@ import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 
 const GoldenHorn = new CustomItem({
-  id: 5,
+  id: 21,
   name: translate('vk.golden_horn'),
-  type: VkItem.MISC,
+  type: VkItem.TOOL,
 });
 
 const hornUsers = new Set<Player>();

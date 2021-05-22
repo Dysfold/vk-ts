@@ -80,7 +80,7 @@ export function setBlockDrops<T extends ObjectShape>(
     const block = event.block;
     // Drop contents if block is container
     if (block.state instanceof Container) {
-      for (const item of block.state.inventory.contents) {
+      for (const item of block.state.inventory.contents ?? []) {
         if (item) {
           block.world.dropItemNaturally(block.location, item);
         }

@@ -81,9 +81,17 @@ registerEvent(InventoryClickEvent, (event) => {
     event.setCancelled(true);
     return;
   }
-  if (event.action !== InventoryAction.PLACE_ALL) return;
   if (event.slot !== HELMET_SLOT) return;
   const inventory = event.whoClicked.inventory as PlayerInventory;
+  if (event.action === InventoryAction.NOTHING) {
+    // Swap hats by clicking on the slot
+    const hat = event.cursor.clone();
+    event.cursor = inventory.helmet;
+    inventory.helmet = hat;
+    event.setCancelled(true);
+    return;
+  }
+  if (event.action !== InventoryAction.PLACE_ALL) return;
   inventory.helmet = event.cursor;
   event.cursor.amount = 0;
   event.setCancelled(true);

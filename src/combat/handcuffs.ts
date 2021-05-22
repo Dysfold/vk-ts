@@ -20,6 +20,7 @@ import * as yup from 'yup';
 import { equippedItem, giveItem } from '../common/helpers/inventory';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
+import { Key } from '../locks/key';
 
 const draggedPlayers = new Map<
   Player /* Who is being dragged */,
@@ -34,25 +35,19 @@ export function stopDragging(dragged: Player) {
 }
 
 export const Handcuffs = new CustomItem({
-  id: 2,
+  id: 11,
   name: translate('vk.handcuffs'),
-  type: VkItem.MISC,
+  type: VkItem.UNSTACKABLE,
 });
 const HandcuffsItem = Handcuffs.create({});
 
 export const LockedHandcuffs = new CustomItem({
-  id: 3,
+  id: 12,
   name: translate('vk.handcuffs_locked'),
-  type: VkItem.MISC,
+  type: VkItem.UNSTACKABLE,
   data: {
     key: yup.string(),
   },
-});
-
-export const Key = new CustomItem({
-  id: 4,
-  name: translate('vk.key'),
-  type: VkItem.MISC,
 });
 
 const MAX_CAPTURE_DISTANCE = 2;

@@ -7,17 +7,17 @@ import { PlayerAttemptPickupItemEvent } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
 import { dataHolder } from '../common/datas/holder';
 import { chanceOf } from '../common/helpers/math';
+/**
+ * Colorable custom items are in leather horse armor and
+ * colorable items with modelId >= 1000, are reserved for hidden or forbidden items
+ */
+import { COLORABLE_MATERIAL } from './horse-armor-items';
 
 /**
  * Prevent players from getting heart of the sea -items
  * because they are reserved for hidden or forbidden items.
  */
 export const HIDDEN_MATERIAL = Material.HEART_OF_THE_SEA;
-/**
- * Colorable custom items are in leather horse armor and
- * colorable items with modelId >= 1000, are reserved for hidden or forbidden items
- */
-import { COLORABLE_MATERIAL } from './horse-armor-items';
 
 /**
  * Key for boolean value used to mark items that would normally not be hidden.
@@ -32,6 +32,7 @@ const HIDDEN_KEY = 'hidden_item';
  */
 export function isHiddenItem(item: ItemStack | null): boolean {
   if (!item) return false;
+  if (item.type === Material.AIR) return false;
 
   // Check if default hidden item
   if (item.type === HIDDEN_MATERIAL) return true;
