@@ -1,6 +1,6 @@
 import { translate } from 'craftjs-plugin/chat';
-import { CustomItem } from '../common/items/CustomItem';
-import { VkItem } from '../common/items/VkItem';
+import { CustomItem } from '../../common/items/CustomItem';
+import { VkItem } from '../../common/items/VkItem';
 
 export const Key = new CustomItem({
   id: 13,

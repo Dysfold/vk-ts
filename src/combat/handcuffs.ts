@@ -20,7 +20,7 @@ import * as yup from 'yup';
 import { equippedItem, giveItem } from '../common/helpers/inventory';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
-import { Key } from '../locks/key';
+import { Key } from '../locks/keys/key';
 
 const draggedPlayers = new Map<
   Player /* Who is being dragged */,

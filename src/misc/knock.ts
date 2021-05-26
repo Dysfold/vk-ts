@@ -1,10 +1,10 @@
-import { PlayerInteractEvent } from 'org.bukkit.event.player';
+import { Location, Material, SoundCategory } from 'org.bukkit';
 import { Action } from 'org.bukkit.event.block';
-import { Material, Location } from 'org.bukkit';
+import { PlayerInteractEvent } from 'org.bukkit.event.player';
 
 function knockSound(location: Location, sound: string) {
   const pitch = 1.45 + 0.1 * Math.random();
-  location.world.playSound(location, sound, 1, pitch);
+  location.world.playSound(location, sound, SoundCategory.PLAYERS, 1, pitch);
 }
 
 registerEvent(PlayerInteractEvent, (event) => {
