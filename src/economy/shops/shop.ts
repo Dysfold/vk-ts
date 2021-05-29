@@ -26,6 +26,9 @@ import { errorMessage } from '../../chat/system';
 import { getTaxes, sendTaxes } from './taxes';
 import { round } from '../../common/helpers/math';
 
+/**
+ * Display shop info to customer
+ */
 registerEvent(PlayerInteractEvent, (event) => {
   if (event.action !== BlockAction.RIGHT_CLICK_BLOCK) return;
   if (event.hand !== EquipmentSlot.HAND) return;
@@ -234,7 +237,7 @@ function handleMessage(msg: ChatMessage) {
       p.sendMessage(ChatColor.RED + 'Kaupassa ei tarpeeksi tilaa');
       return;
     }
-    result = sell(
+    result = sellToShop(
       p,
       shopItem,
       amount,
@@ -252,7 +255,7 @@ function handleMessage(msg: ChatMessage) {
       p.sendMessage(ChatColor.RED + 'Kaupassa ei tarpeeksi tuotetta');
       return;
     }
-    result = buy(
+    result = buyFromShop(
       p,
       shopItem,
       amount,
@@ -276,7 +279,7 @@ function handleMessage(msg: ChatMessage) {
   }
 }
 
-function sell(
+function sellToShop(
   player: Player,
   shopItem: ItemStack,
   howMany: number,
@@ -326,7 +329,7 @@ function sell(
   return { taxAmount: tax };
 }
 
-function buy(
+function buyFromShop(
   player: Player,
   shopItem: ItemStack,
   howMany: number,

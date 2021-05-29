@@ -53,7 +53,7 @@ const sessions = new Map<Player, ShopMakingSession>();
 /**
  * Stop shop making sessions if the player has been idle or moved far away from the shop
  */
-const SHOP_MAKING_TIMEOUT_MS = 1000 * 15;
+const SHOP_MAKING_TIMEOUT_MS = 1000 * 30;
 const MAX_DISTANCE = 5;
 setInterval(() => {
   sessions.forEach((session, player) => {

@@ -94,7 +94,14 @@ function isMoney(item: ItemStack) {
   return true;
 }
 
-const MODEL_ID_TO_VALUE = new Map([
+/**
+ * Coin model ids are 10*n + offset
+ * For example currency X might be
+ * 31, 32, 33, 34, 35 and 36
+ * and currency Y might be
+ * 61, 62, 63, 64, 65 and 36
+ */
+const MODEL_OFFSET_TO_VALUE = new Map([
   [1, 0.01],
   [2, 0.1],
   [3, 1],
@@ -104,57 +111,12 @@ const MODEL_ID_TO_VALUE = new Map([
 ]);
 
 export function getMoneyValue(item: ItemStack) {
+  const modelOffset = getModelOffset(item);
+  if (modelOffset == undefined) return undefined;
+  return MODEL_OFFSET_TO_VALUE.get(modelOffset);
+}
+
+function getModelOffset(item: ItemStack) {
   if (!item.itemMeta.hasCustomModelData()) return undefined;
-  return MODEL_ID_TO_VALUE.get(item.itemMeta.customModelData % 10);
+  return item.itemMeta.customModelData % 10;
 }
-
-export function isSubunit(item: ItemStack) {
-  const meta = item.itemMeta;
-  if (!meta.hasCustomModelData) return false;
-  const indexInCurrency = meta.customModelData % 10;
-  // Subunits can be for examle 1, 2, 11, 12, 21, 22, 31, 32 etc
-  if (indexInCurrency == 1 || indexInCurrency == 2) return true;
-  return false;
-}
-
-export function isWholeUnit(item: ItemStack) {
-  const meta = item.itemMeta;
-  if (!meta.hasCustomModelData) return false;
-  const indexInCurrency = meta.customModelData % 10;
-  // Wholeunits can be for examle 3, 4, 5, 6, 13, 14, 15, 16, 23, 24, 25, 26 etc
-  if (indexInCurrency >= 3 && indexInCurrency <= 6) return true;
-  return false;
-}
-
-// export function isCurrencyModel(model: number): model is CurrencyModel {
-//   return Object.values(CurrencyModel).includes(model as CurrencyModel);
-// }
-
-// export function getCurrency(
-//   model: CurrencyModel | number,
-//   unitPlural: string,
-//   subunitPlural: string,
-// ) {
-//   if (!isCurrencyModel(model)) return undefined;
-
-//   return {
-//     model,
-//     unit: unitPlural.slice(0, -1),
-//     unitPlural,
-//     subunit: subunitPlural.slice(0, -1),
-//     subunitPlural,
-//   } as Currency;
-// }
-
-// export function getShopCurrency(
-//   currencyData: yup.TypeOf<typeof SHOP_DATA.currency>,
-// ) {
-//   if (!currencyData.model) return undefined;
-//   if (!currencyData.unitPlural) return undefined;
-//   if (!currencyData.subunitPlural) return undefined;
-//   return getCurrency(
-//     currencyData.model,
-//     currencyData.unitPlural,
-//     currencyData.subunitPlural,
-//   );
-// }
