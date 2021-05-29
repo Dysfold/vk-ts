@@ -157,9 +157,11 @@ function displayShopInfo(p: Player, sign: Block) {
 }
 
 function countEmptyStacks(chest: Container) {
-  return chest.inventory.contents.reduce(
-    (total, i) => total + (i === null ? 1 : 0),
-    0,
+  return (
+    chest.inventory.contents?.reduce(
+      (total, i) => total + (i === null ? 1 : 0),
+      0,
+    ) ?? 0
   );
 }
 

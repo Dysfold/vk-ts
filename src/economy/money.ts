@@ -9,7 +9,8 @@ import { CURRENCY_ITEMS, getCoinDisplayName } from './money-mold';
  * @param currency Currency unit
  */
 export function getInventoryBalance(inv: Inventory, currency: Currency) {
-  const sum = inv.contents.reduce((total, item) => {
+  const contents = inv.contents ?? [];
+  const sum = contents.reduce((total, item) => {
     if (!item) return total;
 
     if (currency !== getCurrency(item)) return total;
@@ -42,7 +43,7 @@ export function takeMoneyFrom(
   const invCoins = new Map<number, ItemStack[]>();
 
   // Collect the itemstacks to the map above
-  inventory.contents.forEach((item) => {
+  inventory.contents?.forEach((item) => {
     // Check if the item is the wanted currency
     if (currency !== getCurrency(item)) return;
 

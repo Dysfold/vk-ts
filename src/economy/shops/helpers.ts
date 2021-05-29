@@ -15,7 +15,8 @@ export function findItemsFromInventory(
   inventory: Inventory,
   lookfor: ItemStack,
 ) {
-  return inventory.contents.filter((i) => {
+  const contents = inventory.contents ?? [];
+  return contents.filter((i) => {
     if (!i) return false;
     if (i.type != lookfor.type) return false;
     const metaA = i.itemMeta;

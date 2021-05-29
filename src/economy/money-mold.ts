@@ -131,6 +131,7 @@ registerEvent(BlockPistonRetractEvent, (event) => {
   const dropper = dropperBlock.state as Dispenser;
   const inventory = dropper.inventory;
   const items = inventory.contents;
+  if (!items) return;
 
   const mold = getMoneyMold(items);
   if (!mold) return;
