@@ -1,4 +1,5 @@
 import { Bukkit, ChatColor } from 'org.bukkit';
+import { getTranslator, localize } from '../common/localization/localization';
 
 const MESSAGES = [
   'Valtakaudessa voit myös käydä saunomassa! Saunakiuas rakentuu mukulakivilaatasta ja uunista, jossa on tulet. Kiukaalle pystyt heittämään vettä kauhalla tai vaikkapa vesipullolla.',
@@ -32,3 +33,19 @@ setInterval(() => {
   index++;
   index = index % MESSAGES_LENGTH;
 }, INTERVAL_MINUTES * 60 * 1000);
+
+// Commented for testing. Should be deleted before merging to master
+// for (const player of Bukkit.onlinePlayers) {
+//   const msg0 = localize(player, 'test', 'a', 'b');
+//   Bukkit.server.broadcastMessage(msg0);
+
+//   const tr = getTranslator(player);
+//   const msg1 = tr('hello_world', 'Moi');
+//   Bukkit.server.broadcastMessage(msg1);
+// }
+
+// export function broadcastTranslation(
+//   players = Bukkit.onlinePlayers,
+//   translationKey: string,
+//   ...formatArgs: string[]
+// ) {}

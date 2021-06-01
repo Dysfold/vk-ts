@@ -89,7 +89,7 @@ registerCommand('updatehash', () => {
 
 // Command to download latest resource pack
 registerCommand(
-  'resurssipaketti',
+  ['resurssipaketti', 'resourcepack'],
   (sender) => {
     downloadResourcePack((sender as unknown) as Player);
   },
