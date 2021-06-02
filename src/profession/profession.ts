@@ -52,7 +52,7 @@ interface BaseProfession {
   type: string;
 
   /**
-   * Display name of the profession.
+   * Display name of the profession. This is always in lower case.
    */
   name: string;
 
@@ -107,9 +107,9 @@ export type Profession = SystemProfession | PlayerProfession;
  */
 export function professionId(profession: Profession) {
   if (profession.type == 'system') {
-    return 'system:' + profession.name.toLowerCase();
+    return 'system:' + profession.name;
   } else {
-    return `${profession.nation}:${profession.name.toLowerCase()}`;
+    return `${profession.nation}:${profession.name}`;
   }
 }
 
@@ -156,14 +156,15 @@ function updateCaches(id: string) {
   }
   permissionCache.set(id, perms);
 
-  if (profession.type == 'player') {
-    // Update name -> nation, profession lookup table
-    const name = profession.name.toLowerCase();
-    if (!professionsByNames.has(name)) {
-      professionsByNames.set(name, new Map());
-    }
-    professionsByNames.get(name)?.set(profession.nation, profession);
+  // Update name -> nation, profession lookup table
+  const name = profession.name;
+  if (!professionsByNames.has(name)) {
+    professionsByNames.set(name, new Map());
+  }
+  const key = profession.type == 'player' ? profession.nation : 'system';
+  professionsByNames.get(name)?.set(key, profession);
 
+  if (profession.type == 'player') {
     // Update nation -> profession list lookup table
     let nationProfs = professionsByNation.get(profession.nation) ?? [];
     nationProfs = nationProfs.filter((prof) => prof.name == name); // Clear previous
@@ -209,6 +210,10 @@ export function professionInNation(
   return professionById(
     nation.id + ':' + name.toLowerCase(),
   ) as PlayerProfession;
+}
+
+export function systemProfession(name: string) {
+  return professionById('system:' + name);
 }
 
 export function professionsInNation(nation: Nation): PlayerProfession[] {
@@ -338,7 +343,7 @@ export function getAppointTime(player: OfflinePlayer): number {
  */
 export function filterProfessions(
   callback: (uuid: UUID, name: string) => boolean,
-) {
+): void {
   const removeQueue = [];
   for (const [uuid, name] of playerProfessions) {
     if (!callback(uuid, name)) {
@@ -350,6 +355,26 @@ export function filterProfessions(
   for (const uuid of removeQueue) {
     clearProfession(Bukkit.getOfflinePlayer(uuid));
   }
+}
+
+export function isSubordinateProfession(
+  leader: Profession,
+  subordinate: Profession,
+): boolean {
+  if (leader.subordinates.includes(subordinate.name)) {
+    return true; // Direct subordinate
+  } else if (leader.subordinates.length == 0) {
+    return false; // Definitely not subordinate of this
+  }
+
+  // Not direct subordinate, but could be indirect one
+  for (const id of leader.subordinates) {
+    const prof = professionById(id);
+    if (prof && isSubordinateProfession(prof, subordinate)) {
+      return true; // Indirect subordinate
+    }
+  }
+  return false; // Not subordinate
 }
 
 // Plug in player profession to permission system
