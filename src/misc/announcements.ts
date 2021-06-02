@@ -1,5 +1,6 @@
 import { Bukkit, ChatColor } from 'org.bukkit';
-import { getTranslator, localize } from '../common/localization/localization';
+import { Player } from 'org.bukkit.entity';
+import { t } from '../common/localization/localization';
 
 const MESSAGES = [
   'Valtakaudessa voit myös käydä saunomassa! Saunakiuas rakentuu mukulakivilaatasta ja uunista, jossa on tulet. Kiukaalle pystyt heittämään vettä kauhalla tai vaikkapa vesipullolla.',
@@ -34,18 +35,24 @@ setInterval(() => {
   index = index % MESSAGES_LENGTH;
 }, INTERVAL_MINUTES * 60 * 1000);
 
-// Commented for testing. Should be deleted before merging to master
-// for (const player of Bukkit.onlinePlayers) {
-//   const msg0 = localize(player, 'test', 'a', 'b');
-//   Bukkit.server.broadcastMessage(msg0);
+/**
+ * Broadcast the localized string to all players
+ */
+export function announceTranslation(translationKey: string, ...args: string[]) {
+  const players = Array.from(Bukkit.onlinePlayers);
+  announceTranslationTo(players, translationKey, ...args);
+}
 
-//   const tr = getTranslator(player);
-//   const msg1 = tr('hello_world', 'Moi');
-//   Bukkit.server.broadcastMessage(msg1);
-// }
-
-// export function broadcastTranslation(
-//   players = Bukkit.onlinePlayers,
-//   translationKey: string,
-//   ...formatArgs: string[]
-// ) {}
+/**
+ * Broadcast the localized string to specified players
+ */
+export function announceTranslationTo(
+  players: Player[],
+  translationKey: string,
+  ...args: string[]
+) {
+  for (const player of players) {
+    const msg = t(player, translationKey, ...args);
+    player.sendMessage(PREFIX + msg);
+  }
+}

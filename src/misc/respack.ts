@@ -1,10 +1,11 @@
-import { Bukkit } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import {
   PlayerJoinEvent,
   PlayerResourcePackStatusEvent,
 } from 'org.bukkit.event.player';
 import { Status } from 'org.bukkit.event.player.PlayerResourcePackStatusEvent';
+import { addTranslation, t } from '../common/localization/localization';
+import { announceTranslation } from './announcements';
 
 const URL =
   'https://github.com/Laetta/respack/releases/download/latest/vk-respack.zip';
@@ -21,9 +22,7 @@ async function updateHash(announce = false) {
   if (announce) {
     // Check if the hash has changed, and then announce the new resource pack
     if (newHash && hash !== newHash) {
-      Bukkit.server.broadcastMessage(
-        '[Ilmoitus] Resurssipaketti on päivittynyt! Ota uusi resurssipaketti käyttöön liittymällä peliin uudelleen tai komennolla /resurssipaketti',
-      );
+      announceTranslation('respack.updated');
     }
   }
   hash = newHash || hash;
@@ -50,7 +49,7 @@ registerEvent(PlayerResourcePackStatusEvent, async (event) => {
     case Status.FAILED_DOWNLOAD:
       if (failedDownloads.has(player)) {
         // Second time player failed to download
-        console.warn('Pelaajan ' + player.name + ' respack lataus epäonnistui');
+        console.warn(`${player.name} failed to download the resource pack`);
         sendWarning(player);
         failedDownloads.delete(player);
       }
@@ -72,14 +71,14 @@ function downloadResourcePack(player: Player) {
     player.setResourcePack(URL, hash);
   } else {
     // This might happen if the API breaks
-    console.error('Resource pack hash ei löytynyt');
+    console.error('Resource pack hash missing');
     player.resourcePack = URL;
   }
 }
 
 function sendWarning(player: Player) {
   const seconds = player.isOp() ? 2 : 5;
-  player.sendTitle('HUOMIO!', 'Resurssipaketti puuttuu', 1, 20 * seconds, 1);
+  player.sendTitle('!!!', t(player, 'respack.missing'), 1, 20 * seconds, 1);
 }
 
 // Command to manually get the hash from the github
@@ -105,3 +104,19 @@ const INTERVAL_MINUTES = 1.5;
 setInterval(() => {
   updateHash(true);
 }, INTERVAL_MINUTES * 60 * 1000);
+
+/***************
+ * Translations
+ ***************/
+
+addTranslation('respack.updated', {
+  fi_fi:
+    'Resurssipaketti on päivittynyt! Ota uusi resurssipaketti käyttöön liittymällä peliin uudelleen tai komennolla /resurssipaketti',
+  en_us:
+    'Resource pack has been updated! Apply the new resource pack by relogging or with the command "/resourcepack"',
+});
+
+addTranslation('respack.missing', {
+  fi_fi: 'Resurssipaketti puuttuu',
+  en_us: 'Resource pack is missing',
+});
