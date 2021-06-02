@@ -1,6 +1,7 @@
 import { Bukkit, ChatColor } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { t } from '../common/localization/localization';
+import { Collection } from 'java.util';
 
 const MESSAGES = [
   'Valtakaudessa voit myös käydä saunomassa! Saunakiuas rakentuu mukulakivilaatasta ja uunista, jossa on tulet. Kiukaalle pystyt heittämään vettä kauhalla tai vaikkapa vesipullolla.',
@@ -37,17 +38,21 @@ setInterval(() => {
 
 /**
  * Broadcast the localized string to all players
+ * @param translationKey Translation key in the server. Not respack translation key
+ * @param args Formatting args for the strins
  */
-export function announceTranslation(translationKey: string, ...args: string[]) {
-  const players = Array.from(Bukkit.onlinePlayers);
-  announceTranslationTo(players, translationKey, ...args);
+export function announce(translationKey: string, ...args: string[]) {
+  announceTo(Bukkit.onlinePlayers, translationKey, ...args);
 }
 
 /**
- * Broadcast the localized string to specified players
+ * Broadcast the localized string to all players
+ * @param players List of players who should receive the message
+ * @param translationKey Translation key in the server. Not respack translation key
+ * @param args Formatting args for the strins
  */
-export function announceTranslationTo(
-  players: Player[],
+export function announceTo(
+  players: Player[] | Collection<Player>,
   translationKey: string,
   ...args: string[]
 ) {

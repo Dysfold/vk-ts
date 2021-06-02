@@ -90,5 +90,5 @@ addTranslation('book.signature_removed', {
 
 addTranslation('book.unknown_author', {
   fi_fi: 'Tuntematon',
-  en_us: 'Unkown',
+  en_us: 'Unknown',
 });

@@ -13,7 +13,7 @@ const TRANSLATIONS = new Map<string, Translations>();
  * @param player Who is receiving the message
  * @param key Translation key for the message
  * @param formatArgs Arguments to be added to the translated string
- * @returns The translated string
+ * @returns The translated and formatted string.
  */
 export function t(player: Player, key: string, ...formatArgs: string[]) {
   const locale = player.locale.toString();
@@ -24,9 +24,9 @@ export function t(player: Player, key: string, ...formatArgs: string[]) {
 
 /**
  * Get a translator function. It can be used as:
- * const t = getTranslator(player);
- * player.sendMessage(t("hello_world"));
- * player.sendMessage(t("hello_player",player.name));
+ * const tr = getTranslator(player);
+ * player.sendMessage(tr("hello_world"));
+ * player.sendMessage(tr("hello_player", player.name));
  *
  * @param player Player who will be receiving the message
  * @returns Function to call for translation

@@ -5,7 +5,7 @@ import {
 } from 'org.bukkit.event.player';
 import { Status } from 'org.bukkit.event.player.PlayerResourcePackStatusEvent';
 import { addTranslation, t } from '../common/localization/localization';
-import { announceTranslation } from './announcements';
+import { announce as announceMessage } from './announcements';
 
 const URL =
   'https://github.com/Laetta/respack/releases/download/latest/vk-respack.zip';
@@ -22,7 +22,7 @@ async function updateHash(announce = false) {
   if (announce) {
     // Check if the hash has changed, and then announce the new resource pack
     if (newHash && hash !== newHash) {
-      announceTranslation('respack.updated');
+      announceMessage('respack.updated');
     }
   }
   hash = newHash || hash;

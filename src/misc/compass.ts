@@ -8,7 +8,7 @@ import {
 
 registerCommand(['kompassi', 'compass'], (sender, label, args) => {
   if (!(sender instanceof Player)) return;
-  const t = getTranslator(sender);
+  const tr = getTranslator(sender);
 
   let x, z;
   switch (args.length) {
@@ -26,18 +26,18 @@ registerCommand(['kompassi', 'compass'], (sender, label, args) => {
       z = Number(args[2]);
       break;
     default:
-      sender.sendMessage(t('compass.invalid_coordinates'));
+      sender.sendMessage(tr('compass.invalid_coordinates'));
       return;
   }
 
   if (isNaN(x) || isNaN(z)) {
-    sender.sendMessage(t('compass.invalid_coordinates'));
+    sender.sendMessage(tr('compass.invalid_coordinates'));
     return;
   }
 
   const location = new Location(sender.world, x, 0, z);
   sender.compassTarget = location;
-  sender.sendMessage(t('compass.pointing_to', `${x}`, `${z}`));
+  sender.sendMessage(tr('compass.pointing_to', `${x}`, `${z}`));
 });
 
 registerEvent(PlayerInteractEvent, (event) => {
