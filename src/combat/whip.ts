@@ -1,4 +1,5 @@
-import { Location, Material } from 'org.bukkit';
+import { translate } from 'craftjs-plugin/chat';
+import { Location, SoundCategory } from 'org.bukkit';
 import { EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
 import {
@@ -10,7 +11,9 @@ import {
 } from 'org.bukkit.event.player';
 import { EquipmentSlot, PlayerInventory } from 'org.bukkit.inventory';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
+import { equippedItem } from '../common/helpers/inventory';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 const MAX_WHIP_DISTANCE = 3;
 
@@ -20,9 +23,8 @@ const whipPlayers = new Set<Player>();
 
 export const Whip = new CustomItem({
   id: 10,
-  modelId: 10,
-  name: 'Ruoska',
-  type: Material.IRON_HOE,
+  name: translate('vk.whip'),
+  type: VkItem.TOOL,
 });
 
 Whip.event(
@@ -58,9 +60,7 @@ Whip.event(
 
 Whip.event(
   EntityDamageByEntityEvent,
-  (event) =>
-    (((event.damager as unknown) as Player).inventory as PlayerInventory)
-      .itemInMainHand,
+  (event) => equippedItem(event.damager, EquipmentSlot.HAND),
   async (event) => {
     const player = (event.damager as unknown) as Player;
     if (whipPlayers.has(player)) return;
@@ -159,9 +159,24 @@ Whip.event(
 );
 
 function playWhipSound(location: Location) {
-  location.world.playSound(location, 'custom.whip', 1, 0.8);
+  location.world.playSound(
+    location,
+    'custom.whip',
+    SoundCategory.PLAYERS,
+    1,
+    0.8,
+  );
 }
 
+const HURT_SOUNDS = [
+  'custom.hurt',
+  'custom.hurt',
+  'custom.hurt',
+  'minecraft:entity.player.hurt',
+  'minecraft:entity.player.hurt',
+  'custom.scream',
+];
 function playHurtSound(location: Location) {
-  location.world.playSound(location, 'custom.hurt', 1, 1);
+  const sound = HURT_SOUNDS[Math.floor(Math.random() * HURT_SOUNDS.length)];
+  location.world.playSound(location, sound, SoundCategory.PLAYERS, 1, 1);
 }

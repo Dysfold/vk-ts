@@ -1,7 +1,9 @@
-import { Material } from 'org.bukkit';
+import { translate } from 'craftjs-plugin/chat';
+import { Material, GameMode } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 export const CROPS = new Map<Material, { hasDrops: boolean }>([
   [Material.WHEAT, { hasDrops: true }],
@@ -14,20 +16,19 @@ const CHANCE_WITHOUT_TOOL = 0.02;
 
 const Sickle = new CustomItem({
   id: 1,
-  name: 'Sirppi',
-  type: Material.IRON_HOE,
-  modelId: 1,
+  name: translate('vk.sickle'),
+  type: VkItem.TOOL,
 });
 
 const Scythe = new CustomItem({
   id: 2,
-  name: 'Viitake',
-  type: Material.IRON_HOE,
-  modelId: 2,
+  name: translate('vk.scythe'),
+  type: VkItem.TOOL,
 });
 
 registerEvent(BlockBreakEvent, (event) => {
   if (!CROPS.has(event.block.type)) return;
+  if (event.player.gameMode === GameMode.CREATIVE) return;
   if (Sickle.check(event.player.itemInHand)) return;
   if (Scythe.check(event.player.itemInHand)) {
     useScythe(event.block);

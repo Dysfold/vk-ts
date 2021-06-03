@@ -11,17 +11,17 @@ import { EquipmentSlot, PlayerInventory } from 'org.bukkit.inventory';
 import { Vector } from 'org.bukkit.util';
 import { CustomItem } from '../common/items/CustomItem';
 import { PlayerLaunchProjectileEvent } from 'com.destroystokyo.paper.event.player';
+import { translate } from 'craftjs-plugin/chat';
 
 const BALL_DESPAWN_SECONDS = 30;
 const JUMP_KICK_MULTIPLIER = 2;
 
 const Football = new CustomItem({
   id: 3,
-  name: 'Jalkapallo',
+  name: translate('vk.football'),
   type: Material.SNOWBALL,
-  modelId: 3,
 });
-const FootballItemStack = Football.create();
+const FootballItemStack = Football.create({});
 
 // Player can pick up the football by clicking on the ground with empty hand
 registerEvent(PlayerInteractEvent, (event) => {

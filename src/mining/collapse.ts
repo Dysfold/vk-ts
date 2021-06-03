@@ -1,4 +1,4 @@
-import { Location, Material, Sound, SoundCategory } from 'org.bukkit';
+import { GameMode, Location, Material, Sound, SoundCategory } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
@@ -34,6 +34,7 @@ function isSupport(type: Material) {
 registerEvent(BlockBreakEvent, (event) => {
   const block = event.block;
 
+  if (event.player.gameMode === GameMode.CREATIVE) return;
   // We only collapse underground mines
   if (event.player.location.block.lightFromSky !== 0) return;
   // Breaking a stone or a support block can cause the mine to collapse

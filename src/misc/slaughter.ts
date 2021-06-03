@@ -1,3 +1,4 @@
+import { text } from 'craftjs-plugin/chat';
 import { Material, Sound, Location, Particle } from 'org.bukkit';
 import { EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
@@ -13,23 +14,23 @@ import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import { Vector } from 'org.bukkit.util';
 import { CustomItem } from '../common/items/CustomItem';
 import { LootDrop, generateLoot } from '../common/items/drops';
+import { VkItem } from '../common/items/VkItem';
 
 const MIN_BODY_HITS = 3;
 const MAX_BODY_HITS = 6;
 const CORPSE_NAME = 'Dinnerbone';
 
 const slaughterableAnimals = new Map<string, Array<LootDrop<undefined>>>();
-const slaughterTools = new Set([Material.IRON_SWORD, Material.IRON_AXE]);
+const slaughterTools = new Set([VkItem.SWORD, Material.IRON_AXE]);
 const slaugtherSound = Sound.BLOCK_SLIME_BLOCK_STEP;
 
 const Namehider = new CustomItem({
   id: 15,
-  name: 'Namehider',
+  name: text('Namehider'),
   type: Material.HEART_OF_THE_SEA,
-  modelId: 15,
 });
 
-const nameHiderItem = Namehider.create();
+const nameHiderItem = Namehider.create({});
 
 addSlaughterableAnimal(EntityType.COW, [
   { item: Material.LEATHER, rarity: 0.3, count: 1 },

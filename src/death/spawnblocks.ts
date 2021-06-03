@@ -8,7 +8,7 @@ import { dataView } from '../common/datas/view';
 import { locationToObj, objToLocation } from './helpers';
 
 const spawnBlockDatabaseEntry = new DatabaseEntry('spawns', 'spawnblocks-key');
-const spawnBlockData = dataType('spanwBlockData', {
+const spawnBlockData = dataType('spawnBlockData', {
   blocks: yup.array(
     yup
       .object({
@@ -39,6 +39,7 @@ registerEvent(BlockPlaceEvent, (event) => {
 
 registerEvent(BlockBreakEvent, (event) => {
   if (event.block.type !== SPAWN_BLOCK_TYPE) return;
+  if (event.isCancelled()) return;
   if (!deleteSpawnBlockAt(event.block.location)) return;
 
   event.player.sendTitle('', 'Spawn poistettu', 10, 40, 20);

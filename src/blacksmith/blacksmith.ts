@@ -17,100 +17,87 @@ import {
 } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { isRightClick } from '../common/helpers/click';
-import { spawnInvisibleItemFrame } from '../common/helpers/itemframes';
+import { spawnHiddenItemFrame } from '../common/entities/item-frame';
 import { CustomItem } from '../common/items/CustomItem';
 import { Damageable } from 'org.bukkit.inventory.meta';
-
-const MOLTEN_MATERIAL = Material.IRON_NUGGET;
+import { VkItem } from '../common/items/VkItem';
+import { equippedItem } from '../common/helpers/inventory';
+import { translate } from 'craftjs-plugin/chat';
 
 export const Pliers = new CustomItem({
   id: 9,
-  type: Material.IRON_HOE,
-  modelId: 9,
-  name: 'Pihdit',
+  type: VkItem.TOOL,
+  name: translate('vk.pliers'),
 });
 
 export const Hammer = new CustomItem({
   id: 8,
-  type: Material.IRON_HOE,
-  modelId: 8,
-  name: 'Vasara',
+  type: VkItem.TOOL,
+  name: translate('vk.hammer'),
 });
 
 // Pliers with items
 export const PliersAndIronBar = new CustomItem({
   id: 12,
-  type: Material.IRON_HOE,
-  modelId: 12,
-  name: 'Pihdit',
+  type: VkItem.TOOL,
+  name: translate('vk.pliers'),
 });
 export const PliersAndIronBlade = new CustomItem({
   id: 13,
-  type: Material.IRON_HOE,
-  modelId: 13,
-  name: 'Pihdit',
+  type: VkItem.TOOL,
+  name: translate('vk.pliers'),
 });
 export const PliersAndIronIngot = new CustomItem({
   id: 14,
-  type: Material.IRON_HOE,
-  modelId: 14,
-  name: 'Pihdit',
+  type: VkItem.TOOL,
+  name: translate('vk.pliers'),
 });
 export const PliersAndIronNugget = new CustomItem({
   id: 15,
-  type: Material.IRON_HOE,
-  modelId: 15,
-  name: 'Pihdit',
+  type: VkItem.TOOL,
+  name: translate('vk.pliers'),
 });
 export const PliersAndIronPlate = new CustomItem({
   id: 16,
-  type: Material.IRON_HOE,
-  modelId: 16,
-  name: 'Pihdit',
+  type: VkItem.TOOL,
+  name: translate('vk.pliers'),
 });
 export const PliersAndIronStick = new CustomItem({
   id: 17,
-  type: Material.IRON_HOE,
-  modelId: 17,
-  name: 'Pihdit',
+  type: VkItem.TOOL,
+  name: translate('vk.pliers'),
 });
 
 // Molten metal items
 export const HotIronIngot = new CustomItem({
   id: 1,
-  type: MOLTEN_MATERIAL,
-  modelId: 1,
-  name: 'Kuuma rautaharkko',
+  type: VkItem.MOLTEN,
+  name: translate('vk.hot_iron_ingot'),
 });
 export const HotIronBlade = new CustomItem({
   id: 2,
-  type: MOLTEN_MATERIAL,
-  modelId: 2,
-  name: 'Kuuma rautaterä',
+  type: VkItem.MOLTEN,
+  name: translate('vk.hot_iron_blade'),
 });
 export const HotIronStick = new CustomItem({
   id: 3,
-  type: MOLTEN_MATERIAL,
-  modelId: 3,
-  name: 'Kuuma rautatikku',
+  type: VkItem.MOLTEN,
+  name: translate('vk.hot_iron_stick'),
 });
 export const HotIronPlate = new CustomItem({
   id: 4,
-  type: MOLTEN_MATERIAL,
-  modelId: 4,
-  name: 'Kuuma rautaharkko',
+  type: VkItem.MOLTEN,
+  name: translate('vk.hot_iron_plate'),
 });
 export const HotIronBar = new CustomItem({
   id: 5,
-  type: MOLTEN_MATERIAL,
-  modelId: 5,
-  name: 'Kuuma rautaharkko',
+  type: VkItem.MOLTEN,
+  name: translate('vk.hot_iron_bar'),
 });
 export const HotIronNugget = new CustomItem({
   id: 6,
-  type: MOLTEN_MATERIAL,
-  modelId: 6,
-  name: 'Kuuma rautaharkko',
+  type: VkItem.MOLTEN,
+  name: translate('vk.hot_iron_nugget'),
 });
 
 // Pair pliers with corresponding molten items
@@ -128,7 +115,7 @@ function getPliersForItem(item: ItemStack): ItemStack | undefined {
   let pliers = undefined;
   PLIERS_ITEMS.forEach((value, key) => {
     if (value.check(item)) {
-      pliers = key.create();
+      pliers = key.create({});
     }
   });
   return pliers;
@@ -136,11 +123,11 @@ function getPliersForItem(item: ItemStack): ItemStack | undefined {
 
 // Iron ingot can form into these items
 const IRON_INGOT_DERIVATIVES = new Map<CustomItem<{}>, ItemStack>([
-  [HotIronBar, PliersAndIronBar.create()],
-  [HotIronBlade, PliersAndIronBlade.create()],
-  [HotIronIngot, PliersAndIronIngot.create()],
-  [HotIronPlate, PliersAndIronPlate.create()],
-  [HotIronStick, PliersAndIronStick.create()],
+  [HotIronBar, PliersAndIronBar.create({})],
+  [HotIronBlade, PliersAndIronBlade.create({})],
+  [HotIronIngot, PliersAndIronIngot.create({})],
+  [HotIronPlate, PliersAndIronPlate.create({})],
+  [HotIronStick, PliersAndIronStick.create({})],
 ]);
 const IRON_INGOT_DERIVATIVES_ARRAY = Array.from(IRON_INGOT_DERIVATIVES.keys());
 
@@ -156,7 +143,7 @@ function getPliersWithItem(item: ItemStack) {
 }
 
 export function isMoltenMetal(item: ItemStack | null) {
-  if (item?.type !== MOLTEN_MATERIAL) return false;
+  if (item?.type !== VkItem.MOLTEN) return false;
   if (!item.itemMeta.hasCustomModelData()) return false;
   return true;
 }
@@ -193,7 +180,7 @@ Pliers.event(
 
     itemInOtherHand.amount--;
     // Keep the original damage of the pliers
-    const pliers = copyDamage(event.item, pliersWithItem.create());
+    const pliers = copyDamage(event.item, pliersWithItem.create({}));
     if (hand === EquipmentSlot.HAND) {
       inventory.itemInMainHand = pliers;
     } else {
@@ -224,7 +211,6 @@ function copyDamage(from: ItemStack, to: ItemStack) {
 // Place iron on anvil
 registerEvent(PlayerInteractEvent, (event) => {
   if (event.clickedBlock?.type !== Material.ANVIL) return;
-  if (event.blockFace !== BlockFace.UP) return;
   if (!isRightClick(event.action)) return;
   const tool = event.item;
   if (!tool) return;
@@ -236,21 +222,17 @@ registerEvent(PlayerInteractEvent, (event) => {
       // Place hot iron on the anvil
       const anvil = event.clickedBlock;
       if (!anvil) return;
-      const smeltedItem = smelted.create();
+      const smeltedItem = smelted.create({});
       const meta = smeltedItem.itemMeta;
       meta.displayName = ''; // Displayname would hover on top of the itemframe
       smeltedItem.itemMeta = meta;
-      const frame = spawnInvisibleItemFrame(
-        anvil,
-        event.blockFace,
-        smeltedItem,
-      );
+      const frame = spawnHiddenItemFrame(anvil, BlockFace.UP, smeltedItem);
       if (!frame) return;
       frame.rotation = getAnvilFrameRotation(anvil.blockData as Directional);
 
       // Give player empty pliers
       // Keep the original damage of the pliers
-      const emptyPliers = copyDamage(tool, Pliers.create());
+      const emptyPliers = copyDamage(tool, Pliers.create({}));
       if (event.hand === EquipmentSlot.HAND) {
         event.player.inventory.itemInMainHand = emptyPliers;
       } else {
@@ -280,7 +262,7 @@ async function hammerHit(frame: ItemFrame, player: Player) {
   IRON_INGOT_DERIVATIVES_ARRAY.forEach((iron, index) => {
     if (iron.check(item)) {
       const nextIndex = (index + 1) % IRON_INGOT_DERIVATIVES_ARRAY.length;
-      newIronItem = IRON_INGOT_DERIVATIVES_ARRAY[nextIndex].create();
+      newIronItem = IRON_INGOT_DERIVATIVES_ARRAY[nextIndex].create({});
 
       // Hide nametag from the item
       const meta = newIronItem.itemMeta;
@@ -318,10 +300,7 @@ Hammer.event(
 
 Hammer.event(
   EntityDamageByEntityEvent,
-  (event) =>
-    event.damager.type === EntityType.PLAYER
-      ? ((event.damager as unknown) as Player).inventory.itemInMainHand
-      : null,
+  (event) => equippedItem(event.damager, EquipmentSlot.HAND),
   async (event) => {
     event.setCancelled(true);
     const entity = event.entity;
@@ -386,7 +365,7 @@ Pliers.event(
     if (clicked.type !== EntityType.ITEM_FRAME) return;
     const frame = clicked as ItemFrame;
     const item = frame.item;
-    if (item.type !== MOLTEN_MATERIAL) return;
+    if (item.type !== VkItem.MOLTEN) return;
     if (!item.itemMeta.hasCustomModelData()) return;
     const player = event.player;
     event.setCancelled(true);
@@ -463,10 +442,10 @@ PLIERS_ITEMS.forEach((iron, plier) => {
       const pliersInHand = event.player.inventory.itemInMainHand;
       event.player.inventory.itemInMainHand = copyDamage(
         pliersInHand,
-        Pliers.create(),
+        Pliers.create({}),
       );
 
-      const ironItem = iron.create();
+      const ironItem = iron.create({});
       if (event.player.inventory.addItem(ironItem).size()) {
         event.player.world.dropItem(event.player.location, ironItem);
       }
@@ -484,7 +463,7 @@ registerEvent(PlayerInteractEvent, (event) => {
 
 // Allow crafting (with molten items) only with smithing table
 registerEvent(CraftItemEvent, (event) => {
-  if (!event.inventory.contains(MOLTEN_MATERIAL)) return;
+  if (!event.inventory.contains(VkItem.MOLTEN)) return;
   const inv = event.inventory;
   if (
     inv.type !== InventoryType.CRAFTING &&
@@ -492,7 +471,7 @@ registerEvent(CraftItemEvent, (event) => {
   ) {
     return;
   }
-  if (inv.contains(new ItemStack(MOLTEN_MATERIAL))) return;
+  if (inv.contains(new ItemStack(VkItem.MOLTEN))) return;
   const crafter = event.whoClicked;
   if (crafter.getTargetBlock(5)?.type === Material.SMITHING_TABLE) return;
   if (!(crafter instanceof Player)) return;

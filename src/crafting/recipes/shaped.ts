@@ -2,14 +2,12 @@ import { Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
 import { HandSaw } from '../../misc/saw';
 import { shapedRecipe } from './utilities/shaped-recipe';
-import { IronSwordPart } from '../../blacksmith/metal-parts';
-import { HotIronBlade } from '../../blacksmith/blacksmith';
 
 shapedRecipe({
   key: 'itemstack_test',
   shape: ['G'],
   ingredients: {
-    G: HandSaw.create(),
+    G: HandSaw.create({}),
   },
   result: Material.STONE,
 });
@@ -30,7 +28,7 @@ shapedRecipe({
     S: Material.OAK_PLANKS,
     I: Material.IRON_INGOT,
   },
-  result: HandSaw.create(),
+  result: HandSaw.create({}),
 });
 
 shapedRecipe({

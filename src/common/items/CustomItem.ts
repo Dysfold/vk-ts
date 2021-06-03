@@ -2,17 +2,26 @@ import { ItemStack } from 'org.bukkit.inventory';
 import { Material } from 'org.bukkit';
 import { Event } from 'org.bukkit.event';
 import { dataHolder, DataType, dataType } from '../datas/holder';
-import * as yup from 'yup';
 import { dataView, saveView } from '../datas/view';
+import { ObjectShape } from 'yup/lib/object';
+import { isEmpty } from 'lodash';
+import { Data, PartialData } from '../datas/yup-utils';
+import { BaseComponent } from 'net.md_5.bungee.api.chat';
 
-const CUSTOM_TYPE_KEY = 'ct';
-const CUSTOM_DATA_KEY = 'cd';
+export const CUSTOM_DATA_KEY = 'cd';
 
-type CustomItemOptions<T extends {}> = {
+type CustomItemOptions<T extends ObjectShape> = {
   /**
    * Id of this custom item. Unique per Vanilla type/material.
    */
   id: number;
+
+  /**
+   * If this item has a custom model; defaults to true.
+   * Items with this set to false are assigned very large and likely unused
+   * CustomModelData values.
+   */
+  customModel?: boolean;
 
   /**
    * The Vanilla type/material used for this item.
@@ -22,19 +31,13 @@ type CustomItemOptions<T extends {}> = {
   /**
    * Display name of this item.
    */
-  name?: string;
-
-  /**
-   * CustomModelData model identifier of this item. When set, client selects a
-   * model with matching id from resource pack.
-   */
-  modelId?: number;
+  name?: BaseComponent;
 
   /**
    * Schema definition for custom data associated with this item.
    * If not present, this item does not have custom data.
    */
-  data?: yup.ObjectSchemaDefinition<T>;
+  data?: T;
 
   /**
    * Callback for creating this item.
@@ -43,7 +46,7 @@ type CustomItemOptions<T extends {}> = {
    * @returns An ItemStack that is returned from create(...). It can but does
    * not have to be the item given to this function.
    */
-  create?: (item: ItemStack, data: T) => ItemStack;
+  create?: (item: ItemStack, data: Data<T>) => ItemStack;
 
   /**
    * If specified, overrides the default function for checking if an ItemStack
@@ -68,11 +71,16 @@ function checkItemId(type: Material, id: number) {
   }
 }
 
-export class CustomItem<T extends {}> {
+export class CustomItem<T extends ObjectShape> {
   /**
    * Options of this item.
    */
   private options: CustomItemOptions<T>;
+
+  /**
+   * CustomModelData to assign and check for this item.
+   */
+  private customModelData: number;
 
   /**
    * Type of data associated with this item.
@@ -81,13 +89,10 @@ export class CustomItem<T extends {}> {
 
   constructor(options: CustomItemOptions<T>) {
     this.options = options;
+    this.customModelData =
+      options.customModel !== false ? options.id : 100000 + options.id;
     checkItemId(options.type, options.id);
-    this.dataType = dataType(
-      CUSTOM_DATA_KEY,
-      this.options.data
-        ? this.options.data
-        : ({} as yup.ObjectSchemaDefinition<T>),
-    );
+    this.dataType = dataType(CUSTOM_DATA_KEY, this.options.data);
   }
 
   /**
@@ -107,7 +112,7 @@ export class CustomItem<T extends {}> {
   event<E extends Event>(
     event: Newable<E>,
     itemPredicate: (event: E) => ItemStack | null | undefined,
-    callback: (event: E, item: T) => Promise<void>,
+    callback: (event: E, item: Data<T>) => Promise<void>,
   ) {
     registerEvent(event, async (event) => {
       const item = itemPredicate(event); // Get ItemStack
@@ -118,14 +123,9 @@ export class CustomItem<T extends {}> {
       // this.get(item), but...
       // - No auto-save (saved at most once AFTER event has passed)
       // - No validation on load (because we'll probably save and validate then)
-      if (this.dataType == undefined) {
-        // TS compiler doesn't know that !this.dataType implies T == undefined
-        callback(event, {} as T);
-      } else {
-        const data = dataView(this.dataType, item, false, false, true);
-        await callback(event, data);
-        saveView(data); // Save if modified, AFTER event has passed
-      }
+      const data = dataView(this.dataType, item, false, false, true);
+      await callback(event, data);
+      saveView(data); // Save if modified, AFTER event has passed
     });
   }
 
@@ -133,29 +133,29 @@ export class CustomItem<T extends {}> {
    * Create an ItemStack representing this CustomItem instance.
    * @param data If specified, this is the data that the created item
    * will have. If not, the default data will be used.
+   * @param amount Initial size of the created item stack.
    */
-  create(data?: Partial<T>) {
+  create(data: PartialData<T>, amount = 1): ItemStack {
     const item = new ItemStack(this.options.type);
     const meta = item.itemMeta;
     const holder = dataHolder(meta);
-    // Unique identifier of this custom item
-    holder.set(CUSTOM_TYPE_KEY, 'integer', this.options.id);
+    // Unique identifier of this custom item (and possible a resource pack model)
+    meta.customModelData = this.customModelData;
 
     // Data overrides given as parameter
-    let defaultData: T | undefined; // Created only if needed
-    if (data) {
-      defaultData = this.dataType.schema.default();
-      const allData = data ? { ...defaultData, ...data } : defaultData;
+    let defaultData: Data<T> | undefined = undefined; // Created only if needed
+    if (!isEmpty(data)) {
+      const allData = this.dataType.schema.validateSync(data);
       holder.set(CUSTOM_DATA_KEY, this.dataType, allData);
+      defaultData = allData;
       // Data available later with dataView
     } // else: don't bother applying default data, can get it later from this.data
 
     // Set values to meta based on item options
-    if (this.options.name != undefined) {
-      meta.displayName = this.options.name;
-    }
-    if (this.options.modelId != undefined) {
-      meta.customModelData = this.options.modelId;
+    const component = this.options.name;
+    if (component != undefined) {
+      component.italic = false; // Explicitly disable italic item name
+      meta.displayNameComponent = [component];
     }
     item.itemMeta = meta; // Set new meta to item
 
@@ -164,8 +164,13 @@ export class CustomItem<T extends {}> {
       // Give same default data if possible, generate if we didn't need it before
       return this.options.create(
         item,
-        defaultData ?? this.dataType.schema.default(),
+        defaultData ?? this.dataType.schema.validateSync(data),
       );
+    }
+
+    // Don't overwrite stack size set by create() unless necessary
+    if (amount != 1) {
+      item.amount = amount;
     }
     return item;
   }
@@ -182,7 +187,7 @@ export class CustomItem<T extends {}> {
    * @param item The itemstack to fetch data from.
    * @returns Custom item data or undefined.
    */
-  get(item: ItemStack | null | undefined): T | undefined {
+  get(item: ItemStack | null | undefined): Data<T> | undefined {
     if (!item || !this.check(item)) {
       return undefined; // Not a custom item, or wrong custom item
     }
@@ -199,7 +204,7 @@ export class CustomItem<T extends {}> {
    */
   set(
     item: ItemStack | null | undefined,
-    data: Partial<T> | ((data: T) => Partial<T>),
+    data: Partial<Data<T>> | ((data: Data<T>) => Partial<Data<T>>),
   ): boolean {
     if (!item) {
       return false; // Not going to set anything to null
@@ -209,10 +214,11 @@ export class CustomItem<T extends {}> {
     // (it might also be a tiny bit faster)
     const objData =
       holder.get(CUSTOM_DATA_KEY, this.dataType, false) ??
-      this.dataType.schema.default();
+      this.dataType.schema.getDefault();
 
     // Overwrite with given data
     Object.assign(objData, typeof data == 'function' ? data(objData) : data);
+    this.dataType.schema.validateSync(objData); // Validate the new data
     holder.set(CUSTOM_DATA_KEY, this.dataType, objData);
     return true;
   }
@@ -228,7 +234,10 @@ export class CustomItem<T extends {}> {
     if (!this.options.type.equals(item.type)) {
       return false; // Item id is per Vanilla material
     }
-    const itemId = dataHolder(item.itemMeta).get(CUSTOM_TYPE_KEY, 'integer');
-    return itemId == this.options.id;
+    const meta = item.itemMeta;
+    // Check if item has custom model data to avoid getCustomModelData() throwing
+    return (
+      meta.hasCustomModelData() && meta.customModelData == this.customModelData
+    );
   }
 }

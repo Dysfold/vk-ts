@@ -3,3 +3,5 @@ require('./handcuffs');
 require('./whip');
 require('./body-seach');
 require('./armor/index');
+require('./pillory');
+require('./shuriken');

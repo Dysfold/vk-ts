@@ -1,23 +1,27 @@
+import { translate } from 'craftjs-plugin/chat';
 import { Material, Particle, Sound, SoundCategory } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
-import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { ItemStack, PlayerInventory } from 'org.bukkit.inventory';
-import { Damageable, ItemMeta } from 'org.bukkit.inventory.meta';
+import * as yup from 'yup';
+import { isRightClick } from '../common/helpers/click';
+import { useFlintAndSteel } from '../common/helpers/items';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 export const DriedTobacco = new CustomItem({
   id: 11,
-  modelId: 11,
-  type: Material.SHULKER_SHELL,
-  name: 'Kuivattu tupakka',
+  type: VkItem.MISC,
+  name: translate('vk.dried_tobacco'),
 });
 
 export const Pipe = new CustomItem({
   id: 24,
-  modelId: 24,
-  type: Material.DIAMOND_HOE,
-  name: 'Piippu',
+  type: VkItem.HAT,
+  name: translate('vk.pipe'),
+  data: {
+    tobaccoLevel: yup.number().default(0),
+  },
 });
 
 const smokers = new Set<Player>();
@@ -33,8 +37,7 @@ Pipe.event(
   PlayerInteractEvent,
   (event) => event.item,
   async (event) => {
-    const a = event.action;
-    if (a !== Action.RIGHT_CLICK_AIR && a !== Action.RIGHT_CLICK_BLOCK) return;
+    if (!isRightClick(event.action)) return;
 
     const player = event.player;
     const inventory = player.inventory as PlayerInventory;
@@ -78,24 +81,6 @@ export function equipPipe(player: Player) {
   return true;
 }
 
-function useFlintAndSteel(player: Player, item: ItemStack) {
-  const meta = (item.itemMeta as unknown) as Damageable;
-  meta.damage++;
-  item.itemMeta = (meta as unknown) as ItemMeta;
-
-  // Check if the tools breaks. 64 -> broken item
-  if (meta.damage >= 64) {
-    item.amount = 0;
-    player.world.playSound(
-      player.location,
-      Sound.ENTITY_ITEM_BREAK,
-      SoundCategory.PLAYERS,
-      1,
-      1,
-    );
-  }
-}
-
 function startSmoking(player: Player) {
   player.world.playSound(
     player.location,
@@ -108,58 +93,51 @@ function startSmoking(player: Player) {
 }
 
 function getTobaccoLevel(item: ItemStack) {
-  const meta = item.itemMeta;
-  const lore = meta.lore;
-  if (!lore) return 0;
-  // Parse the percentage from the lore
-  const line = lore[0];
-  const percentage = parseLore(line);
-  return Number(percentage) || 0;
+  return Pipe.get(item)?.tobaccoLevel ?? 0;
 }
 
 function changeTobaccoLevel(item: ItemStack, amount: number) {
-  const meta = item.itemMeta;
-  const lore = meta.lore;
-  let percentage = 0;
-  if (lore) {
-    // Parse the percentage from the lore
-    const line = lore[0];
-    percentage = Number(parseLore(line)) || 0;
-  }
+  const data = Pipe.get(item);
+  let percentage = data?.tobaccoLevel ?? 0;
+  if (!data) return;
+
   // Add the amount, but limit the number to 0-100
   percentage = Math.max(Math.min(percentage + amount, 100), 0);
+  data.tobaccoLevel = percentage;
 
-  const newLore = [createLore(percentage)];
-  meta.lore = newLore;
+  const meta = item.itemMeta;
+  meta.lore = createLore(percentage);
   item.itemMeta = meta;
-}
 
-function parseLore(str: string) {
-  // Lore looks like this "§r§7100%", so we take the string between "7" and "%"
-  return str.substring(str.indexOf('7') + 1, str.indexOf('%'));
+  return item;
 }
 
 function createLore(number: number) {
-  return '§r§7' + number + '%';
+  return ['§r§7' + number + '%'];
 }
 
 setInterval(() => {
   smokers.forEach((player) => {
-    const pipe = (player.inventory as PlayerInventory).helmet;
-    if (!pipe || !Pipe.check(pipe)) {
+    const pipe = player.inventory.helmet;
+    if (!isPipe(pipe)) {
       smokers.delete(player);
       return;
-    } else {
-      playSmokeParticles(player);
-      const level = getTobaccoLevel(pipe);
-      if (level >= TOBACCO_LEVEL_CHANGE) {
-        changeTobaccoLevel(pipe, -TOBACCO_LEVEL_CHANGE);
-      } else {
-        smokers.delete(player);
-      }
     }
+
+    const level = getTobaccoLevel(pipe);
+    if (level >= TOBACCO_LEVEL_CHANGE) {
+      changeTobaccoLevel(pipe, -TOBACCO_LEVEL_CHANGE);
+      playSmokeParticles(player);
+      return;
+    }
+
+    smokers.delete(player);
   });
 }, INTERVAL);
+
+function isPipe(item: ItemStack | null): item is ItemStack {
+  return !!item && Pipe.check(item);
+}
 
 function playSmokeParticles(player: Player) {
   const location = player.location;

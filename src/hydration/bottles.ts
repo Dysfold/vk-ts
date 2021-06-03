@@ -1,7 +1,7 @@
-import { Material } from 'org.bukkit';
+import { Material, Bukkit } from 'org.bukkit';
 import { Levelled, Waterlogged } from 'org.bukkit.block.data';
-import { Player } from 'org.bukkit.entity';
-import { Action } from 'org.bukkit.event.block';
+import { Player, Entity } from 'org.bukkit.entity';
+import { Action, CauldronLevelChangeEvent } from 'org.bukkit.event.block';
 import {
   PlayerInteractEvent,
   PlayerItemConsumeEvent,
@@ -12,54 +12,55 @@ import {
   PlayerInventory,
 } from 'org.bukkit.inventory';
 import { PotionMeta } from 'org.bukkit.inventory.meta';
-import { PotionData, PotionType } from 'org.bukkit.potion';
+import { isRightClick } from '../common/helpers/click';
 import { CustomItem } from '../common/items/CustomItem';
+import {
+  canFillCauldron,
+  getPotionData,
+  getWaterQuality,
+  WaterQuality,
+} from './water-quality';
+import { ChangeReason } from 'org.bukkit.event.block.CauldronLevelChangeEvent';
+import { Block } from 'org.bukkit.block';
+import { translate } from 'craftjs-plugin/chat';
 
-const WATER_POTION_DATA = new PotionData(PotionType.WATER, false, false);
-
-const WineGlass = new CustomItem({
-  name: 'Viinilasi',
+export const WineGlass = new CustomItem({
+  name: translate('vk.wine_glass'),
   id: 1,
-  modelId: 1,
   type: Material.POTION,
 });
-const WineGlassEmpty = new CustomItem({
-  name: 'Viinilasi',
+export const WineGlassEmpty = new CustomItem({
+  name: translate('vk.wine_glass'),
   id: 1,
-  modelId: 1,
   type: Material.GLASS_BOTTLE,
 });
 
-const Mug = new CustomItem({
-  name: 'Muki',
+export const Mug = new CustomItem({
+  name: translate('vk.mug'),
   id: 2,
-  modelId: 2,
   type: Material.POTION,
 });
-const MugEmpty = new CustomItem({
-  name: 'Muki',
+export const MugEmpty = new CustomItem({
+  name: translate('vk.mug'),
   id: 2,
-  modelId: 2,
   type: Material.GLASS_BOTTLE,
 });
 
-const Scoop = new CustomItem({
-  name: 'Kauha',
+export const Scoop = new CustomItem({
+  name: translate('vk.scoop'),
   id: 3,
-  modelId: 3,
   type: Material.POTION,
 });
-const ScoopEmpty = new CustomItem({
-  name: 'Kauha',
+export const ScoopEmpty = new CustomItem({
+  name: translate('vk.scoop'),
   id: 3,
-  modelId: 3,
   type: Material.GLASS_BOTTLE,
 });
 
 const BOTTLES = new Map<number, { full: ItemStack; empty: ItemStack }>([
-  [1, { full: WineGlass.create(), empty: WineGlassEmpty.create() }],
-  [2, { full: Mug.create(), empty: MugEmpty.create() }],
-  [3, { full: Scoop.create(), empty: ScoopEmpty.create() }],
+  [1, { full: WineGlass.create({}), empty: WineGlassEmpty.create({}) }],
+  [2, { full: Mug.create({}), empty: MugEmpty.create({}) }],
+  [3, { full: Scoop.create({}), empty: ScoopEmpty.create({}) }],
 ]);
 
 export function canBreak(item: ItemStack): boolean {
@@ -70,11 +71,19 @@ export function canBreak(item: ItemStack): boolean {
   return true;
 }
 
-export function getFullBottle(modelId: number) {
+export function getFullBottle(item: ItemStack) {
+  const modelId = item?.itemMeta.hasCustomModelData()
+    ? item?.itemMeta.customModelData
+    : 0;
+
   return BOTTLES.get(modelId)?.full || new ItemStack(Material.POTION);
 }
 
-export function getEmptyBottle(modelId: number) {
+export function getEmptyBottle(item?: ItemStack) {
+  const modelId = item?.itemMeta.hasCustomModelData()
+    ? item?.itemMeta.customModelData
+    : 0;
+
   return BOTTLES.get(modelId)?.empty || new ItemStack(Material.GLASS_BOTTLE);
 }
 
@@ -88,14 +97,11 @@ because those items would otherwise become normal bottles without custom model d
 // Fill a bottle
 registerEvent(PlayerInteractEvent, async (event) => {
   if (event.item?.type !== Material.GLASS_BOTTLE) return;
-  if (!event.item.itemMeta.hasCustomModelData()) return; // Default glass bottle
-  const a = event.action;
-  if (a !== Action.RIGHT_CLICK_AIR && a !== Action.RIGHT_CLICK_BLOCK) return;
+  if (!isRightClick(event.action)) return;
 
-  // Didn't compile? Could this be used instead of setCancelled?
-  //event.setUseItemInHand(Result.DENY)
   event.setCancelled(true);
   let bottleCanFill = false;
+  let waterQuality: WaterQuality | undefined = undefined;
 
   const clickedBlock = event.clickedBlock;
   if (clickedBlock) {
@@ -109,9 +115,19 @@ registerEvent(PlayerInteractEvent, async (event) => {
       // TODO 1.17: Check if the cauldroin contains water instead of lava :)
       if (blockData.level > 0) {
         bottleCanFill = true;
+
+        // Call cauldron level change event because the level changes
+        if (
+          !checkCauldronEvent(clickedBlock, event.player, blockData.level, -1)
+        )
+          return;
+
         // Decrease the level of the cauldron
         blockData.level--;
         clickedBlock.blockData = blockData;
+
+        // Cauldrons provide normal water
+        waterQuality = 'NORMAL';
       }
     }
     // If the block on the clicked side was water
@@ -132,12 +148,17 @@ registerEvent(PlayerInteractEvent, async (event) => {
 
   if (bottleCanFill) {
     // Get corresponding customitem
-    const modelId = event.item.itemMeta.customModelData;
-    const potion = getFullBottle(modelId);
+    const potion = getFullBottle(event.item);
     const meta = potion.itemMeta;
+    meta.displayName = '';
 
     // Clear weird data from the potion (it would be pink)
-    (meta as PotionMeta).basePotionData = WATER_POTION_DATA;
+    if (!waterQuality) {
+      waterQuality = getWaterQuality(event);
+    }
+
+    const potionData = getPotionData(waterQuality);
+    (meta as PotionMeta).basePotionData = potionData;
     potion.itemMeta = meta;
 
     event.item.amount--;
@@ -148,7 +169,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
 // Fill a cauldron
 registerEvent(PlayerInteractEvent, async (event) => {
   if (event.item?.type !== Material.POTION) return;
-  if (!event.item.itemMeta.hasCustomModelData()) return; // Default glass bottle
+
   const a = event.action;
   if (a !== Action.RIGHT_CLICK_AIR && a !== Action.RIGHT_CLICK_BLOCK) return;
 
@@ -157,9 +178,24 @@ registerEvent(PlayerInteractEvent, async (event) => {
   const levelled = block.blockData as Levelled;
   if (levelled.level === levelled.maximumLevel) return;
 
+  event.setCancelled(true);
+
+  if (!canFillCauldron(event.item)) {
+    event.player.sendActionBar(
+      'Voit täyttää padan vain tavallisella tai kirkkaalla vedellä',
+    );
+    return;
+  }
+
+  // Call cauldron level change event because the level changes
+  if (!checkCauldronEvent(block, event.player, levelled.level, 1)) return;
+
+  // Fill the cauldron
+  levelled.level++;
+  block.blockData = levelled;
+
   // Player is filling a cauldron with custom bottle
-  const modelId = event.item.itemMeta.customModelData;
-  const bottle = getEmptyBottle(modelId);
+  const bottle = getEmptyBottle(event.item);
 
   // Wait 1 millis so we dont fire bottle fill event
   await wait(1, 'millis');
@@ -177,8 +213,7 @@ registerEvent(PlayerItemConsumeEvent, (event) => {
   if (event.item.type !== Material.POTION) return;
   if (!event.item.itemMeta.hasCustomModelData()) return; // Default bottle
 
-  const modelId = event.item.itemMeta.customModelData;
-  const replacement = getEmptyBottle(modelId);
+  const replacement = getEmptyBottle(event.item);
 
   event.replacement = replacement;
 });
@@ -204,4 +239,31 @@ function giveItem(player: Player, item: ItemStack, hand: EquipmentSlot | null) {
   if (leftOver.size()) {
     player.world.dropItem(player.location, leftOver.get(0));
   }
+}
+
+/**
+ * Call CauldonLevelChangeEvent
+ * @param block The cauldron
+ * @param player Who clicked
+ * @param oldLevel Level of the cauldron
+ * @param change How much the level did change? -1 or +1
+ */
+export function checkCauldronEvent(
+  block: Block,
+  player: Player,
+  oldLevel: number,
+  change: -1 | 1,
+) {
+  const reason =
+    change === 1 ? ChangeReason.BOTTLE_EMPTY : ChangeReason.BOTTLE_FILL;
+
+  const cauldronEvent = new CauldronLevelChangeEvent(
+    block,
+    (player as unknown) as Entity,
+    reason,
+    oldLevel,
+    oldLevel + change,
+  );
+  Bukkit.server.pluginManager.callEvent(cauldronEvent);
+  return !cauldronEvent.isCancelled();
 }

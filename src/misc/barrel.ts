@@ -4,6 +4,7 @@ import { setBlockDrops, bindItemBlock } from '../common/items/drops';
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { CustomItem } from '../common/items/CustomItem';
 import { BlockPlaceEvent } from 'org.bukkit.event.block';
+import { text, translate } from 'craftjs-plugin/chat';
 
 // Uses some of barrel block states for other blocks
 
@@ -20,7 +21,7 @@ const BarrelItem = new CustomItem({
   id: 0,
   type: Material.BARREL,
 });
-bindItemBlock(BarrelItem, Barrel);
+bindItemBlock(BarrelItem, {}, Barrel, {});
 
 const Bookshelf = new CustomBlock({
   type: Material.BARREL,
@@ -30,11 +31,10 @@ const Bookshelf = new CustomBlock({
 });
 const BookshelfItem = new CustomItem({
   id: 1,
-  name: 'Kirjahylly',
+  name: translate('block.minecraft.bookshelf'),
   type: Material.BARREL,
-  modelId: 1,
 });
-bindItemBlock(BookshelfItem, Bookshelf);
+bindItemBlock(BookshelfItem, {}, Bookshelf, {});
 
 const Dresser = new CustomBlock({
   type: Material.BARREL,
@@ -44,11 +44,10 @@ const Dresser = new CustomBlock({
 });
 const DresserItem = new CustomItem({
   id: 2,
-  name: 'Lipasto',
+  name: text('Lipasto'),
   type: Material.BARREL,
-  modelId: 2,
 });
-setBlockDrops(Dresser, [{ item: DresserItem, rarity: 1, count: 1 }]);
+setBlockDrops(Dresser, [{ item: DresserItem.create({}), rarity: 1, count: 1 }]);
 
 // Handle placement on our own to get direction correctly
 const dresserFaces: CustomBlock<any>[] = [];
@@ -78,6 +77,6 @@ DresserItem.event(
       default:
         block = Dresser;
     }
-    block.create(event.block);
+    block.create(event.block, {});
   },
 );

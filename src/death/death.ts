@@ -6,6 +6,7 @@ import { DamageCause } from 'org.bukkit.event.entity.EntityDamageEvent';
 import { PlayerRespawnEvent } from 'org.bukkit.event.player';
 import { dataHolder } from '../common/datas/holder';
 import { dataView } from '../common/datas/view';
+import { spawnCorpse } from './corpses';
 import { DeathData } from './DeathData';
 import { locationToObj } from './helpers';
 import {
@@ -68,10 +69,12 @@ registerEvent(PlayerDeathEvent, async (event) => {
     view.isPrisoner = true;
     view.deathLocation = locationToObj(prisonBed.location.toCenterLocation());
   }
+
+  spawnCorpse(event);
 });
 
 registerEvent(PlayerRespawnEvent, (event) => {
-  event.respawnLocation = getTuonelaSpawnLocation(event.player);
+  event.respawnLocation = getTuonelaSpawnLocation();
 });
 
 registerEvent(PlayerPostRespawnEvent, (event) => {

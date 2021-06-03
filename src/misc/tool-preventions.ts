@@ -2,6 +2,7 @@ import { Material } from 'org.bukkit';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { BlockBreakEvent, Action } from 'org.bukkit.event.block';
 import { HandSaw } from './saw';
+import { VkItem } from '../common/items/VkItem';
 
 const DIRT_LIKE = new Set([
   Material.DIRT,
@@ -10,7 +11,7 @@ const DIRT_LIKE = new Set([
 ]);
 
 function isHoe(type: Material | undefined) {
-  return type === Material.IRON_HOE || type === Material.DIAMOND_HOE;
+  return type === VkItem.TOOL;
 }
 
 function isAxe(type: Material | undefined) {

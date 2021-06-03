@@ -1,9 +1,9 @@
-import { Material } from 'org.bukkit';
+import { text } from 'craftjs-plugin/chat';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 export const IronSwordPart = new CustomItem({
   id: 19,
-  modelId: 19,
-  type: Material.BLAZE_ROD,
-  name: 'Rautamiekan terä',
+  type: VkItem.SMITHING,
+  name: text('Rautamiekan terä'),
 });

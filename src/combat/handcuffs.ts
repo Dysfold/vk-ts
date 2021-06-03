@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { GameMode, Material } from 'org.bukkit';
 import { EntityType, Player } from 'org.bukkit.entity';
 import {
@@ -13,69 +14,67 @@ import {
   PlayerItemHeldEvent,
   PlayerSwapHandItemsEvent,
 } from 'org.bukkit.event.player';
-import {
-  EquipmentSlot,
-  ItemStack,
-  PlayerInventory,
-} from 'org.bukkit.inventory';
+import { EquipmentSlot } from 'org.bukkit.inventory';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import * as yup from 'yup';
+import { equippedItem, giveItem } from '../common/helpers/inventory';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
+import { Key } from '../locks/key';
 
-const draggedPlayers = new Map<Player, Player>();
+const draggedPlayers = new Map<
+  Player /* Who is being dragged */,
+  Player /* Who is dragging */
+>();
 
-const Handcuffs = new CustomItem({
-  id: 2,
-  name: 'Käsiraudat',
-  type: Material.SHULKER_SHELL,
-  modelId: 2,
+/**
+ * @param dragged Player who is currently being dragged
+ */
+export function stopDragging(dragged: Player) {
+  draggedPlayers.delete(dragged);
+}
+
+export const Handcuffs = new CustomItem({
+  id: 11,
+  name: translate('vk.handcuffs'),
+  type: VkItem.UNSTACKABLE,
 });
-const HandcuffsItem = Handcuffs.create();
+const HandcuffsItem = Handcuffs.create({});
 
 export const LockedHandcuffs = new CustomItem({
-  id: 3,
-  name: 'Lukitut käsiraudat',
-  type: Material.SHULKER_SHELL,
-  modelId: 3,
+  id: 12,
+  name: translate('vk.handcuffs_locked'),
+  type: VkItem.UNSTACKABLE,
   data: {
     key: yup.string(),
   },
-});
-
-const Key = new CustomItem({
-  id: 4,
-  name: 'Avain',
-  type: Material.SHULKER_SHELL,
-  modelId: 4,
 });
 
 const MAX_CAPTURE_DISTANCE = 2;
 const CAPTURE_HEALTH_TRESHOLD = 4;
 
 export function isHandcuffed(player: Player) {
-  return LockedHandcuffs.check(
-    (player.inventory as PlayerInventory).itemInOffHand,
-  );
+  return LockedHandcuffs.check(player.inventory.itemInOffHand);
 }
 
 // Handcuff a player
 Handcuffs.event(
   PlayerInteractEntityEvent,
-  (event) => (event.player.inventory as PlayerInventory).itemInHand,
+  (event) => event.player.inventory.itemInHand,
   async (event) => {
     const entity = event.rightClicked;
     if (entity.type !== EntityType.PLAYER) return;
     if (event.hand !== EquipmentSlot.HAND) return;
     const captive = (entity as unknown) as Player;
+    if (isHandcuffed(captive)) return;
     const captor = event.player;
-    const captiveInventory = captive.inventory as PlayerInventory;
-    const captorInventory = captor.inventory as PlayerInventory;
+    const captiveInventory = captive.inventory;
+    const captorInventory = captor.inventory;
     const handcuffs = captorInventory.itemInHand;
 
     // Empty both hands
     const offHandItem = captiveInventory.itemInOffHand;
     const mainHandItem = captiveInventory.itemInMainHand;
-    if (LockedHandcuffs.check(offHandItem)) return;
     if (!canCapturePlayer(captor, captive)) {
       captor.sendActionBar('Et onnistu kahlitsemaan pelaajaa');
       captive.sendActionBar('Sinua yritettiin kahlita');
@@ -84,12 +83,12 @@ Handcuffs.event(
     // Add locked handcuffs to both hands
     const keycode = handcuffs.itemMeta.displayName;
     captiveInventory.itemInOffHand = LockedHandcuffs.create({ key: keycode });
-    captiveInventory.itemInMainHand = LockedHandcuffs.create(); // Mainhand handcuffs are only for visuals
+    captiveInventory.itemInMainHand = LockedHandcuffs.create({}); // Mainhand handcuffs are only for visuals
     handcuffs.amount -= 1;
 
     // Give player back the previous items from hands
-    giveItem(captive, mainHandItem);
-    giveItem(captive, offHandItem);
+    giveItem(captive, mainHandItem, EquipmentSlot.HAND);
+    giveItem(captive, offHandItem, EquipmentSlot.OFF_HAND);
 
     captive.sendActionBar('Sinut on kahlittu');
     captor.sendActionBar('Kahlitset pelaajan');
@@ -109,7 +108,7 @@ function canCapturePlayer(captor: Player, captive: Player) {
 // Remove handcuffs from a player
 Key.event(
   PlayerInteractEntityEvent,
-  (event) => (event.player.inventory as PlayerInventory).itemInHand,
+  (event) => event.player.inventory.itemInHand,
   async (event) => {
     const entity = event.rightClicked;
     if (entity.type !== EntityType.PLAYER) return;
@@ -126,18 +125,18 @@ Key.event(
 );
 
 function removeHandcuffs(from: Player, to: Player) {
-  const itemInOffHand = (from.inventory as PlayerInventory).itemInOffHand;
+  const itemInOffHand = from.inventory.itemInOffHand;
   const handcuffs = LockedHandcuffs.get(itemInOffHand);
   if (!handcuffs) return false;
 
-  const inventory = to.inventory as PlayerInventory;
+  const inventory = to.inventory;
   const key = inventory.itemInHand;
   const keycode = key.itemMeta.displayName;
 
   if (!(handcuffs?.key === keycode)) return false;
 
   // Remove Handcuffs
-  const openedHandcuffs = Handcuffs.create();
+  const openedHandcuffs = Handcuffs.create({});
   const meta = openedHandcuffs.itemMeta;
   // TODO: Make used handcuffs stackable with new ones
   //   Data:
@@ -145,9 +144,9 @@ function removeHandcuffs(from: Player, to: Player) {
   //      display: {Name: '{"text":"Käsiraudat"}'}
   meta.displayName = keycode;
   openedHandcuffs.itemMeta = meta;
-  giveItem(to, openedHandcuffs);
-  (from.inventory as PlayerInventory).itemInOffHand.amount = 0;
-  (from.inventory as PlayerInventory).itemInMainHand.amount = 0;
+  giveItem(to, openedHandcuffs, EquipmentSlot.HAND);
+  from.inventory.itemInOffHand.amount = 0;
+  from.inventory.itemInMainHand.amount = 0;
   return true;
 }
 
@@ -162,7 +161,8 @@ registerEvent(PlayerDeathEvent, (event) => {
 
   if (LockedHandcuffs.check(offHandItem)) {
     if (event.drops.removeValue(offHandItem)) {
-      player.world.dropItem(player.location, HandcuffsItem);
+      const drop = player.world.dropItem(player.location, HandcuffsItem);
+      drop.setInvulnerable(true);
     }
   }
   if (LockedHandcuffs.check(mainHandItem)) {
@@ -170,10 +170,10 @@ registerEvent(PlayerDeathEvent, (event) => {
   }
 });
 
-// Lock handcuffs in the inventory
+// This should prevent all inventory click actions
 LockedHandcuffs.event(
   InventoryClickEvent,
-  (event) => event.currentItem,
+  (event) => event.whoClicked.inventory.itemInOffHand,
   async (event) => {
     if (event.whoClicked.gameMode === GameMode.CREATIVE) return;
     event.setCancelled(true);
@@ -203,7 +203,7 @@ LockedHandcuffs.event(
 // Lock handcuffs in the mainhand
 LockedHandcuffs.event(
   PlayerItemHeldEvent,
-  (event) => (event.player.inventory as PlayerInventory).itemInOffHand,
+  (event) => event.player.inventory.itemInOffHand,
   async (event) => {
     if (event.player.gameMode === GameMode.CREATIVE) return;
     event.setCancelled(true);
@@ -213,7 +213,7 @@ LockedHandcuffs.event(
 // Prevent handcuffed player from clicking
 LockedHandcuffs.event(
   PlayerInteractEvent,
-  (event) => (event.player.inventory as PlayerInventory).itemInOffHand,
+  (event) => event.player.inventory.itemInOffHand,
   async (event) => {
     event.player.sendActionBar('Et voi tehdä näin kahlittuna');
     event.setCancelled(true);
@@ -223,9 +223,7 @@ LockedHandcuffs.event(
 // Prevent handcuffed player from attacking
 LockedHandcuffs.event(
   EntityDamageByEntityEvent,
-  (event) =>
-    (((event.damager as unknown) as Player).inventory as PlayerInventory)
-      .itemInOffHand,
+  (event) => equippedItem(event.damager, EquipmentSlot.OFF_HAND),
   async (event) => {
     ((event.damager as unknown) as Player).sendActionBar(
       'Et voi tehdä näin kahlittuna',
@@ -237,7 +235,7 @@ LockedHandcuffs.event(
 // Prevent handcuffed player from clicking armorstands
 LockedHandcuffs.event(
   PlayerInteractAtEntityEvent,
-  (event) => (event.player.inventory as PlayerInventory).itemInOffHand,
+  (event) => event.player.inventory.itemInOffHand,
   async (event) => {
     event.player.sendActionBar('Et voi tehdä näin kahlittuna');
     event.setCancelled(true);
@@ -247,20 +245,12 @@ LockedHandcuffs.event(
 // Prevent handcuffed player from clicking entities
 LockedHandcuffs.event(
   PlayerInteractEntityEvent,
-  (event) => (event.player.inventory as PlayerInventory).itemInOffHand,
+  (event) => event.player.inventory.itemInOffHand,
   async (event) => {
     event.player.sendActionBar('Et voi tehdä näin kahlittuna');
     event.setCancelled(true);
   },
 );
-
-function giveItem(player: Player, item: ItemStack) {
-  if (item.type === Material.AIR) return;
-  const leftOver = player.inventory.addItem(item);
-  if (leftOver.size()) {
-    player.world.dropItem(player.location, leftOver.get(0));
-  }
-}
 
 // Drag handcuffed player
 registerEvent(PlayerInteractEntityEvent, (event) => {
@@ -273,8 +263,7 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
   if (player.isSneaking()) return;
 
   if (player.itemInHand.type !== Material.AIR) return;
-  const offHandItem = (dragged.inventory as PlayerInventory).itemInOffHand;
-  if (!LockedHandcuffs.check(offHandItem)) return;
+  if (!isHandcuffed(dragged)) return;
   if (player.location.distance(dragged.location) > 2) return;
   if (draggedPlayers.has(dragged)) {
     // Stop dragging
@@ -300,13 +289,20 @@ setInterval(() => {
   for (const pair of draggedPlayers) {
     const dragged = pair[0];
     const dragger = pair[1];
+
     if (!dragged.isOnline()) {
       draggedPlayers.delete(dragged);
+      continue;
     }
+    if (!isHandcuffed(dragged)) {
+      draggedPlayers.delete(dragged);
+      continue;
+    }
+
     const draggerLoc = dragger.location;
     const draggedLoc = dragged.location;
     const distanceSquared = draggerLoc.distanceSquared(draggedLoc); // Squared is more lightweight
-    if (distanceSquared < 1.5 * 1.5) return;
+    if (distanceSquared < 1.5 * 1.5) continue;
 
     if (distanceSquared < 10 * 10) {
       // Teleport player to same height, (if the dragger goes up)
@@ -327,8 +323,8 @@ setInterval(() => {
       draggedPlayers.delete(dragged);
       dragged.sendActionBar('Irtoat raahauksesta');
       dragger.sendActionBar('Menetät otteesi raahatusta pelaajasta');
-      return;
+      continue;
     }
     dragged.addPotionEffect(JUMP);
   }
-}, 600);
+}, 400);

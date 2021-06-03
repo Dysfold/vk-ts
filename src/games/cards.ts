@@ -10,6 +10,8 @@ import * as yup from 'yup';
 import { Action } from 'org.bukkit.event.block';
 import { isRightClick } from '../common/helpers/click';
 import { giveItem } from '../common/helpers/inventory';
+import { VkItem } from '../common/items/VkItem';
+import { text } from 'craftjs-plugin/chat';
 
 const ZERO_VECTOR = new Vector();
 const PICKUP_DELAY = 12000; // TICKS -> 10 minutes
@@ -28,29 +30,26 @@ const shuffleCooldowns = new Set<Player>();
  */
 const FullDeck = new CustomItem({
   id: 56,
-  name: ChatColor.RESET + 'Korttipakka',
-  type: Material.PRISMARINE_CRYSTALS,
-  modelId: 56,
+  name: text('Korttipakka'),
+  type: VkItem.CARD,
   data: {
-    cards: yup.array<string>(),
+    cards: yup.array(yup.string().required()),
   },
 });
 const HalfDeck = new CustomItem({
   id: 57,
-  name: ChatColor.RESET + 'Korttipakka',
-  type: Material.PRISMARINE_CRYSTALS,
-  modelId: 57,
+  name: text('Korttipakka'),
+  type: VkItem.CARD,
   data: {
-    cards: yup.array<string>(),
+    cards: yup.array(yup.string().required()),
   },
 });
 const LowDeck = new CustomItem({
   id: 58,
-  name: ChatColor.RESET + 'Korttipakka',
-  type: Material.PRISMARINE_CRYSTALS,
-  modelId: 58,
+  name: text('Korttipakka'),
+  type: VkItem.CARD,
   data: {
-    cards: yup.array<string>(),
+    cards: yup.array(yup.string().required()),
   },
 });
 
@@ -59,11 +58,10 @@ const LowDeck = new CustomItem({
  */
 const HiddenCard = new CustomItem({
   id: 55,
-  name: ChatColor.RESET + 'Pelikortti',
-  type: Material.PRISMARINE_CRYSTALS,
-  modelId: 55,
+  name: text('Pelikortti'),
+  type: VkItem.CARD,
   data: {
-    cardID: yup.string(),
+    cardID: yup.string().required(),
   },
 });
 
@@ -76,9 +74,8 @@ for (let modelID = 1; modelID <= MAX_CARDS_IN_DECK; modelID++) {
     cardID,
     new CustomItem({
       id: modelID,
-      name: ChatColor.RESET + `Pelikortti [${cardID}]`,
-      type: Material.PRISMARINE_CRYSTALS,
-      modelId: modelID,
+      name: text(`Pelikortti [${cardID}]`),
+      type: VkItem.CARD,
     }),
   );
 }
@@ -368,7 +365,7 @@ function isDeck(item: ItemStack): boolean {
 }
 
 function isCard(item: ItemStack): boolean {
-  return item.type === Material.PRISMARINE_CRYSTALS && !isDeck(item);
+  return item.type === VkItem.CARD && !isDeck(item);
 }
 // ######################
 
@@ -467,7 +464,7 @@ function clickedOnce(
       const card = CARDS.get(hiddenCard.cardID);
       if (!card) return;
 
-      player.inventory.itemInMainHand = card.create();
+      player.inventory.itemInMainHand = card.create({});
     } else if (isCard(mainHandItem)) {
       const cardID = getCardID(mainHandItem.itemMeta.customModelData);
       const hiddenCard = HiddenCard.create({ cardID: cardID });
@@ -477,7 +474,7 @@ function clickedOnce(
   }
 
   // LEFT CLICK EVENTS - SHUFFLE / COMBINE / SPLIT DECK / INSERT CARD
-  if (isDeck(mainHandItem)) {
+  if (isDeck(mainHandItem) && isDeck(offHandItem)) {
     if (player.isSneaking()) {
       shuffleDeck(offHandItem, mainHandItem, player);
     } else {

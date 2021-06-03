@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { Material, Particle } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
@@ -9,6 +10,7 @@ import {
   PlayerInventory,
 } from 'org.bukkit.inventory';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 const GRINDSTONE_EFFIENCY = 0.1;
 const GRINDSTONE_DURATION = 1; // Seconds
@@ -21,17 +23,16 @@ const TOOLS = new Set([
   Material.IRON_PICKAXE,
   Material.IRON_AXE,
   Material.IRON_SHOVEL,
-  Material.IRON_SWORD,
-  Material.IRON_HOE,
+  VkItem.SWORD,
+  VkItem.TOOL,
   Material.SHEARS,
   // TODO: Add more tools
 ]);
 
 export const HandGrindstone = new CustomItem({
   id: 1,
-  name: 'Hiomakivi',
-  type: Material.SHULKER_SHELL,
-  modelId: 1,
+  name: translate('vk.hand_grindstone'),
+  type: VkItem.MISC,
 });
 
 HandGrindstone.event(
@@ -64,6 +65,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
   if (event.hand !== EquipmentSlot.HAND) return;
   const block = event.clickedBlock;
   if (!block || block.type !== Material.GRINDSTONE) return;
+  if (event.isBlockInHand()) return;
 
   event.setCancelled(true);
 

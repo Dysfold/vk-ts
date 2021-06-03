@@ -1,6 +1,6 @@
 import { Material, Particle } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
-import { EntityType, Item, ItemFrame } from 'org.bukkit.entity';
+import { Item, ItemFrame } from 'org.bukkit.entity';
 import { Action, BlockBreakEvent } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import {
@@ -9,8 +9,15 @@ import {
   PlayerInventory,
 } from 'org.bukkit.inventory';
 import { Vector } from 'org.bukkit.util';
+import {
+  getItemFrame,
+  spawnHiddenItemFrame,
+} from '../common/entities/item-frame';
 import { CustomItem } from '../common/items/CustomItem';
+import { getEmptyBottle } from '../hydration/bottles';
 import { Bowl } from './Bowl';
+import { VkItem } from '../common/items/VkItem';
+import { translate } from 'craftjs-plugin/chat';
 
 const INGREDIENT_PICKUP_DELAY = 5; // Seconds
 
@@ -18,49 +25,42 @@ const INGREDIENT_PICKUP_DELAY = 5; // Seconds
 const DOUGH_BREAD = new CustomItem({
   type: Material.HEART_OF_THE_SEA,
   id: 16,
-  modelId: 16,
 });
 const DOUGH_BREAD_RISEN = new CustomItem({
   type: Material.HEART_OF_THE_SEA,
   id: 17,
-  modelId: 17,
 });
 const DOUGH_PUMPKIN_PIE = new CustomItem({
   type: Material.HEART_OF_THE_SEA,
   id: 19,
-  modelId: 19,
 });
 const DOUGH_COOKIE = new CustomItem({
   type: Material.HEART_OF_THE_SEA,
   id: 18,
-  modelId: 18,
 });
 
 // Dough items for furnace
 const DOUGH_BREAD_ITEM = new CustomItem({
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
   id: 6,
-  modelId: 6,
-  name: 'Leipätaikina',
+  name: translate('vk.dough_bread'),
 });
 const DOUGH_COOKIE_ITEM = new CustomItem({
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
   id: 7,
-  modelId: 7,
-  name: 'Keksitaikina',
+  name: translate('vk.dough_cookie'),
 });
 const DOUGH_PUMPKIN_PIE_ITEM = new CustomItem({
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
   id: 8,
-  modelId: 8,
-  name: 'Kurpitsapiirakkataikina',
+  name: translate('vk.dough_pumpkin_pie'),
 });
 
 const RECIPES = [
   {
     dough: DOUGH_BREAD,
     doughRisen: DOUGH_BREAD_RISEN,
-    result: DOUGH_BREAD_ITEM.create(),
+    result: DOUGH_BREAD_ITEM.create({}),
     ingredients: [
       Material.PHANTOM_MEMBRANE,
       Material.NETHER_WART,
@@ -71,7 +71,7 @@ const RECIPES = [
   {
     dough: DOUGH_PUMPKIN_PIE,
     doughRisen: DOUGH_PUMPKIN_PIE,
-    result: DOUGH_PUMPKIN_PIE_ITEM.create(),
+    result: DOUGH_PUMPKIN_PIE_ITEM.create({}),
     ingredients: [
       Material.PUMPKIN,
       Material.SUGAR,
@@ -82,7 +82,7 @@ const RECIPES = [
   {
     dough: DOUGH_COOKIE,
     doughRisen: DOUGH_COOKIE,
-    result: DOUGH_COOKIE_ITEM.create(),
+    result: DOUGH_COOKIE_ITEM.create({}),
     ingredients: [
       Material.PHANTOM_MEMBRANE,
       Material.SUGAR,
@@ -156,7 +156,7 @@ Bowl.event(
     const blockUp = bowl.getRelative(BlockFace.UP);
     if (!blockUp.isEmpty()) return;
 
-    const frame = getItemFrame(bowl, BlockFace.UP);
+    const frame = getItemFrame(bowl.getRelative(BlockFace.DOWN), BlockFace.UP);
     if (frame) {
       // There was already a dough in the bowl
       const frameItem = frame.item;
@@ -201,7 +201,6 @@ function dropItem(block: Block, item: ItemStack) {
   return drop;
 }
 
-const GLASS_BOTTLE = new ItemStack(Material.GLASS_BOTTLE);
 function bake(block: Block) {
   const center = block.location.add(0.5, 0.1, 0.5);
   const entities = block.world.getNearbyEntities(center, 0.3, 0.3, 0.3);
@@ -219,14 +218,22 @@ function bake(block: Block) {
     // Check if the recipe contains the incredients
     if (types.every((i) => recipe.ingredients.includes(i))) {
       drops.forEach((drop) => {
-        if (drop.type === Material.POTION) dropItem(block, GLASS_BOTTLE);
+        if (drop.type === Material.POTION) {
+          const empty = getEmptyBottle(drop);
+          dropItem(block, empty);
+        }
         drop.amount--;
       });
-      const frame = summonItemFrame(block, BlockFace.UP, recipe.dough.create());
+      const frame = spawnHiddenItemFrame(
+        block.getRelative(BlockFace.DOWN),
+        BlockFace.UP,
+        recipe.dough.create({}),
+      );
+      if (!frame) return;
       if (recipe.risingTime && recipe.doughRisen) {
         risingDoughs.set(frame, {
           seconds: recipe.risingTime,
-          risen: recipe.doughRisen.create(),
+          risen: recipe.doughRisen.create({}),
         });
       }
       break;
@@ -234,38 +241,11 @@ function bake(block: Block) {
   }
   block.world.spawnParticle(
     Particle.CLOUD,
-    block.location.add(0.5, 0.1, 0.5),
+    block.location.add(0.5, 0.3, 0.5),
     5,
     0.2,
     0.2,
     0.2,
     0,
   );
-}
-
-// TODO: Common api for item frames?qq
-function summonItemFrame(block: Block, face: BlockFace, item: ItemStack) {
-  const loc = block.getRelative(face).location;
-  const frame = block.world.spawnEntity(
-    loc,
-    EntityType.ITEM_FRAME,
-  ) as ItemFrame;
-  frame.facingDirection = face;
-  frame.setVisible(false);
-  frame.setItem(item, false); // false = no sound
-  return frame;
-}
-
-function getItemFrame(block: Block, face: BlockFace) {
-  const loc = block.getRelative(face).location.add(0.5, 0, 0.5);
-  const entities = block.world.getNearbyEntities(loc, 0.5, 0.5, 0.5);
-  for (const entity of entities) {
-    if (entity.type !== EntityType.ITEM_FRAME) continue;
-    const frame = entity as ItemFrame;
-    const hangedBlock = entity.location.block.getRelative(frame.attachedFace);
-    if (hangedBlock.location.equals(block.location)) {
-      return frame;
-    }
-  }
-  return undefined;
 }

@@ -1,6 +1,8 @@
 import { Material } from 'org.bukkit';
+import { ItemFrame } from 'org.bukkit.entity';
 import { BlockPlaceEvent } from 'org.bukkit.event.block';
 import { CustomBlock } from '../common/blocks/CustomBlock';
+import { isHiddenEntity } from '../common/entities/hidden-entity';
 import { CustomItem } from '../common/items/CustomItem';
 
 export const Bowl = new CustomBlock({
@@ -15,8 +17,19 @@ const BowlItem = new CustomItem({
 Bowl.onBreak(async (event) => {
   event.block.world.dropItem(
     event.block.location.add(0.5, 0.5, 0.5),
-    BowlItem.create(),
+    BowlItem.create({}),
   );
+  const entities = event.block.world.getNearbyEntities(
+    event.block.location.add(0.5, 0, 0.5),
+    0.3,
+    0.3,
+    0.3,
+  );
+  for (const entity of entities) {
+    if (isHiddenEntity(entity) && entity instanceof ItemFrame) {
+      entity.remove();
+    }
+  }
   return true;
 });
 

@@ -1,14 +1,11 @@
 import { Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
 import { Damageable } from 'org.bukkit.inventory.meta';
-import { CustomItem } from '../common/items/CustomItem';
 
-export function makeDamaged(tool: Material | ItemStack | CustomItem<{}>) {
+export function makeDamaged(tool: Material | ItemStack) {
   let item: ItemStack;
   if (tool instanceof Material) {
     item = new ItemStack(tool);
-  } else if (tool instanceof CustomItem) {
-    item = tool.create();
   } else {
     item = tool;
   }

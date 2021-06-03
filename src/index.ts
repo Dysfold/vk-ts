@@ -1,4 +1,5 @@
 require('./common/polyfill');
+require('./common/entities/index');
 require('./misc/index');
 require('./mining/index');
 require('./mobs/index');
@@ -15,5 +16,6 @@ require('./crafting/index');
 require('./chat/index');
 require('./economy/index');
 require('./death/index');
+require('./locks/index');
 
 log.info('Valtakausi systems loaded');

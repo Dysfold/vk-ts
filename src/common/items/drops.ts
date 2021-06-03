@@ -4,8 +4,10 @@ import { ItemStack } from 'org.bukkit.inventory';
 import { Container } from 'org.bukkit.block';
 import { BlockPlaceEvent, BlockBreakEvent } from 'org.bukkit.event.block';
 import { CustomBlock } from '../blocks/CustomBlock';
+import { Data, PartialData } from '../datas/yup-utils';
+import { ObjectShape } from 'yup/lib/object';
 
-type LootItem = CustomItem<any> | Material | ItemStack;
+type LootItem = Material | ItemStack;
 
 /**
  * Single item loot drop.
@@ -44,9 +46,7 @@ export function generateLoot<T>(data: T, loot: LootDrop<T>[]): ItemStack[] {
     // Make ItemStack of the loot drop
     const result = typeof drop.item == 'function' ? drop.item(data) : drop.item;
     let item;
-    if (result instanceof CustomItem) {
-      item = result.create();
-    } else if (result instanceof Material) {
+    if (result instanceof Material) {
       item = new ItemStack(result);
     } else if (result instanceof ItemStack) {
       item = result;
@@ -72,12 +72,15 @@ export function generateLoot<T>(data: T, loot: LootDrop<T>[]): ItemStack[] {
  * @param block Custom block.
  * @param loot Loot table of the block.
  */
-export function setBlockDrops<T>(block: CustomBlock<T>, loot: LootDrop<T>[]) {
+export function setBlockDrops<T extends ObjectShape>(
+  block: CustomBlock<T>,
+  loot: LootDrop<Data<T>>[],
+) {
   block.onBreak(async (event, data) => {
     const block = event.block;
     // Drop contents if block is container
     if (block.state instanceof Container) {
-      for (const item of block.state.inventory.contents) {
+      for (const item of block.state.inventory.contents ?? []) {
         if (item) {
           block.world.dropItemNaturally(block.location, item);
         }
@@ -103,14 +106,19 @@ export function setBlockDrops<T>(block: CustomBlock<T>, loot: LootDrop<T>[]) {
  * Sets block form of given custom item.
  * @param item Custom item.
  * @param block Custom block.
+ * @param data Data for the custom block.
  */
-export function setBlockForm(item: CustomItem<any>, block: CustomBlock<any>) {
+export function setBlockForm<T extends ObjectShape>(
+  item: CustomItem<any>,
+  block: CustomBlock<T>,
+  data: PartialData<T>,
+) {
   item.event(
     BlockPlaceEvent,
     (event) => event.itemInHand,
     async (event) => {
       // Place custom block over Vanilla one
-      block.create(event.block);
+      block.create(event.block, data);
     },
   );
 }
@@ -119,9 +127,16 @@ export function setBlockForm(item: CustomItem<any>, block: CustomBlock<any>) {
  * Binds given item and block. Placing the item in world creates custom block.
  * Breaking the block drops one custom item.
  * @param item Custom item.
+ * @param itemData Data for the custom item.
  * @param block Custom block.
+ * @param blockData Data for the custom block.
  */
-export function bindItemBlock(item: CustomItem<any>, block: CustomBlock<any>) {
-  setBlockDrops(block, [{ item: item, rarity: 1, count: 1 }]);
-  setBlockForm(item, block);
+export function bindItemBlock<T extends ObjectShape, U extends ObjectShape>(
+  item: CustomItem<T>,
+  itemData: PartialData<T>,
+  block: CustomBlock<U>,
+  blockData: PartialData<U>,
+) {
+  setBlockDrops(block, [{ item: item.create(itemData), rarity: 1, count: 1 }]);
+  setBlockForm(item, block, blockData);
 }

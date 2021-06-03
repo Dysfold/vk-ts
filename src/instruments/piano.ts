@@ -1,6 +1,5 @@
-import { Location, Material } from 'org.bukkit';
+import { Location, Material, SoundCategory } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
-import { Player } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot } from 'org.bukkit.inventory';
@@ -8,7 +7,7 @@ import { Directional } from 'org.bukkit.material';
 import { Vector } from 'org.bukkit.util';
 import { Note, NoteName } from './Note';
 
-const PIANO = Material.BROWN_GLAZED_TERRACOTTA;
+export const PIANO = Material.BROWN_GLAZED_TERRACOTTA;
 const MAX_PIANO_WIDTH = 5;
 const MAX_OCTAVE = 4;
 const NOTES_PER_BLOCK = 12;
@@ -24,30 +23,24 @@ const KEYS_VERTICAL_MIN = 0.62;
 const KEYS = new Map<NoteName, number>([
   ['C', 6],
   ['C#', 7],
+  ['Db', 7],
   ['D', 8],
   ['D#', 9],
+  ['Eb', 9],
   ['E', 10],
   ['F', 11],
   ['F#', 12],
+  ['Gb', 12],
   ['G', 13],
   ['G#', 14],
+  ['Ab', 14],
   ['A', 15],
   ['A#', 16],
+  ['Hb', 16],
   ['H', 17],
+  ['Bb', 16],
+  ['B', 17],
 ]);
-
-// Command for sound testing
-registerCommand('piano', (sender, _label, args) => {
-  if (sender instanceof Player) {
-    const player = sender as Player;
-    const note = new Note(
-      args[0] as NoteName,
-      Number(args[1]),
-      Number(args[2]),
-    );
-    playNote(player.location, note);
-  }
-});
 
 export function playNote(loc: Location, note: Note) {
   let noteNumber = KEYS.get(note.name);
@@ -65,7 +58,13 @@ function playNoteNumber(location: Location, note: number) {
 
   const pitch = 0.5 * 2 ** ((note - octave * KEYS_IN_OCTAVE) / KEYS_IN_OCTAVE);
 
-  location.world.playSound(location, `custom.piano${octave + 2}`, 2, pitch);
+  location.world.playSound(
+    location,
+    `custom.piano${octave + 2}`,
+    SoundCategory.RECORDS, // Noteblocks
+    2,
+    pitch,
+  );
 }
 
 export function playPianoChord(loc: Location, chord: number, minor = false) {
