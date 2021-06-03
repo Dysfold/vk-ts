@@ -8,7 +8,7 @@ import { isEmpty } from 'lodash';
 import { Data, PartialData } from '../datas/yup-utils';
 import { BaseComponent } from 'net.md_5.bungee.api.chat';
 
-const CUSTOM_DATA_KEY = 'cd';
+export const CUSTOM_DATA_KEY = 'cd';
 
 type CustomItemOptions<T extends ObjectShape> = {
   /**

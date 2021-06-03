@@ -8,6 +8,7 @@ import {
 } from 'org.bukkit.event.entity';
 import { giveItem } from '../common/helpers/inventory';
 import { CustomItem } from '../common/items/CustomItem';
+import { EquipmentSlot } from 'org.bukkit.inventory';
 
 const Boomerang = new CustomItem({
   id: 2,
@@ -84,7 +85,7 @@ BoomerangSpin.event(
     entity.remove();
     if (event.collidedWith instanceof Player) {
       // Player catches the boomerang
-      giveItem(event.collidedWith, Boomerang.create({}));
+      giveItem(event.collidedWith, Boomerang.create({}), EquipmentSlot.HAND);
       entity.world.playSound(
         entity.location,
         Sound.BLOCK_WOOD_PLACE,

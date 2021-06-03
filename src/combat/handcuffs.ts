@@ -87,8 +87,8 @@ Handcuffs.event(
     handcuffs.amount -= 1;
 
     // Give player back the previous items from hands
-    giveItem(captive, mainHandItem);
-    giveItem(captive, offHandItem);
+    giveItem(captive, mainHandItem, EquipmentSlot.HAND);
+    giveItem(captive, offHandItem, EquipmentSlot.OFF_HAND);
 
     captive.sendActionBar('Sinut on kahlittu');
     captor.sendActionBar('Kahlitset pelaajan');
@@ -144,7 +144,7 @@ function removeHandcuffs(from: Player, to: Player) {
   //      display: {Name: '{"text":"Käsiraudat"}'}
   meta.displayName = keycode;
   openedHandcuffs.itemMeta = meta;
-  giveItem(to, openedHandcuffs);
+  giveItem(to, openedHandcuffs, EquipmentSlot.HAND);
   from.inventory.itemInOffHand.amount = 0;
   from.inventory.itemInMainHand.amount = 0;
   return true;
