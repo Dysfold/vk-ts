@@ -1,156 +1,229 @@
-import { Bukkit, Statistic } from 'org.bukkit';
-import { CommandSender } from 'org.bukkit.command';
+import { Table } from 'craftjs-plugin/database';
+import { OfflinePlayer, Statistic, Bukkit } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
+import { getTable } from '../common/datas/database';
+import { UUID } from 'java.util';
+import { addTranslation, t } from '../common/localization/localization';
+import { color, text } from 'craftjs-plugin/chat';
+import { errorMessage } from '../chat/system';
 import { PlayerQuitEvent } from 'org.bukkit.event.player';
-import * as yup from 'yup';
-import { DatabaseEntry } from '../common/datas/database';
-import { dataType } from '../common/datas/holder';
-import { dataView } from '../common/datas/view';
+import { ticksToTime } from '../common/helpers/time';
+import { getOnlinePlayerNames } from '../common/helpers/player';
 
-const OntimeDatabaseEntry = new DatabaseEntry('ontime', 'ontime-key');
-const OntimeData = dataType('ontimeData', {
-  list: yup
-    .array(
-      yup
-        .object({
-          uuid: yup.string().required(),
-          name: yup.string().required(),
-          ticks: yup.number().required(),
-        })
-        .required(),
-    )
-    .required()
-    .default([]),
-});
-const view = dataView(OntimeData, OntimeDatabaseEntry);
+const TOP_LIST_DEFAULT = 10;
+const TOP_LIST_MAX = 100;
+
+const ontimesDb: Table<string, number> = getTable('ontime-table');
+const ontimes: Map<string, number> = new Map();
+
+interface PlayerOntime {
+  player: OfflinePlayer;
+  time: number;
+}
+
+function getOntime(player: OfflinePlayer) {
+  if (isOnline(player)) {
+    return getOnlinePlayerOntime(player);
+  }
+  return getOfflinePlayerOntime(player);
+}
+
+function getOnlinePlayerOntime(player: Player) {
+  const time = player.getStatistic(Statistic.PLAY_ONE_MINUTE);
+  return { player, time };
+}
+
+function getOfflinePlayerOntime(player: OfflinePlayer) {
+  const uuid = player.uniqueId.toString();
+  const time = ontimes.get(uuid) || 0;
+  return { player, time };
+}
+
+function isOnline(player: OfflinePlayer): player is Player {
+  return player.isOnline();
+}
+
+function updateOntime(player: Player) {
+  const ontime = getOnlinePlayerOntime(player);
+  setOntime(player, ontime.time);
+}
+
+function setOntime(player: Player, time: number) {
+  const uuid = player.uniqueId.toString();
+  ontimes.set(uuid, time); // In memory
+  ontimesDb.set(uuid, time); // Persistent
+}
+
+/**
+ * Update the ontime for every online player
+ */
+function updateOntimeList() {
+  for (const player of Bukkit.onlinePlayers) {
+    updateOntime(player);
+  }
+}
+
+function getOntimeTop(howMany: number): PlayerOntime[] {
+  updateOntimeList();
+  const sorted = getSortedOntimes();
+  return sorted.slice(0, howMany);
+}
+
+function getSortedOntimes(): PlayerOntime[] {
+  const ontimeList = getOntimeList();
+  return ontimeList.sort((a, b) => b.time - a.time);
+}
+
+function getOntimeList(): PlayerOntime[] {
+  return Array.from(ontimes, (ontime) => {
+    const [uuid, time] = ontime;
+    const player = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
+    return { player, time };
+  });
+}
+
+function displayOntimeTop(to: Player, howMany: number) {
+  displayOntimeTitle(to);
+
+  const ontimeTop = getOntimeTop(howMany);
+  for (const [index, ontime] of ontimeTop.entries()) {
+    const rank = index + 1;
+    displayOntimeRow(to, ontime, rank);
+  }
+
+  displayOntimeFooter(to);
+}
+
+const yellow = (msg: string) => color('#FFFF55', text(msg));
+const gold = (msg: string) => color('#FFAA00', text(msg));
+const green = (msg: string) => color('#55FF55', text(msg));
+
+function displayOntimeTitle(to: Player) {
+  to.sendMessage(gold('-------------------------------'));
+  to.sendMessage(yellow(`   ${t(to, 'ontime.title')}:`));
+  to.sendMessage(gold('-------------------------------'));
+}
+
+function displayOntimeRow(to: Player, ontime: PlayerOntime, ranking?: number) {
+  const rank = ranking ? gold(`${ranking}: `) : text('');
+  const name = yellow(`${ontime.player.name}: `);
+  const time = green(ticksToString(ontime.time));
+  to.sendMessage(rank, name, time);
+}
+
+function displayOntimeFooter(to: Player) {
+  to.sendMessage(gold('-------------------------------'));
+}
+
+function displayOntime(to: Player, player: OfflinePlayer) {
+  const ontime = getOntime(player);
+  to.sendMessage(gold('-------------------------------'));
+  displayOntimeRow(to, ontime);
+  to.sendMessage(gold('-------------------------------'));
+}
+
+function displayOwnOntime(player: Player) {
+  const ontime = getOntime(player);
+  player.sendMessage(gold('-------------------------------'));
+  displayOntimeRow(player, ontime);
+  player.sendMessage(gold('-------------------------------'));
+}
+
+function displayOntimeByName(to: Player, name: string) {
+  const player = Bukkit.getOfflinePlayer(name);
+  if (!isValidPlayer(player)) {
+    return errorMessage(to, t(to, 'ontime.player_not_found'));
+  }
+  displayOntime(to, player);
+}
+
+function isValidPlayer(player: OfflinePlayer | null) {
+  if (!player) return false;
+  return getOntime(player).time > 0;
+}
 
 registerCommand(
   ['ontime'],
   (sender, _label, args) => {
-    // Get your own ontime
-    if (args.length === 0) {
-      if (!(sender instanceof Player)) return;
-      const ticks = getTicks(sender);
-      sender.sendMessage('§e-------------------------------');
-      displayOntime(sender, sender.name, ticks);
-      sender.sendMessage('§e-------------------------------');
-      return;
+    if (!(sender instanceof Player)) return;
+
+    if (args.length == 0) {
+      return displayOwnOntime(sender);
     }
 
-    // Get ontime top list
-    if (args[0] !== 'top') return;
-    let top = 10;
-    if (args.length > 1) top = Number.parseInt(args[1]) || 10;
-    top = Math.min(top, 100);
-    displayOntimeTop(sender, top);
+    if (args[0] == 'top') {
+      return displayOntimeTop(sender, TOP_LIST_DEFAULT);
+    }
+
+    if (args.length == 1) {
+      return displayOntimeByName(sender, args[0]);
+    }
+
+    if (args[0] !== 'top') {
+      return errorMessage(sender, t(sender, 'ontime.incorrect_command'));
+    }
+
+    const howMany = parseTopNumber(args[1]);
+    displayOntimeTop(sender, howMany);
   },
   {
     completer: (_sender, _alias, args) => {
-      return args.length === 1 ? ['top'] : [];
+      return commandCompleter(args);
     },
-    executableBy: 'both',
+    executableBy: 'players',
     accessChecker: () => true,
     usage: '/ontime, /ontime top, /ontime top <n>',
   },
 );
 
-// We cant update ontime for offline players,
-// so we need to get it on PlayerQuitEvent
-registerEvent(PlayerQuitEvent, (event) => {
-  updateOntime(event.player);
-});
-
-/**
- * Get how many ticks the player has been online
- */
-function getTicks(player: Player) {
-  return player.getStatistic(Statistic.PLAY_ONE_MINUTE);
-}
-
-/**
- * Display players ontime information in one line
- * @param to The player to whom the time is displayed
- * @param username Username of the player whos ontime is displayed
- * @param ticks How many ticks the player has played
- * @param ranking Ranking of the player if displayed in a list
- */
-function displayOntime(
-  to: CommandSender,
-  username: string,
-  ticks: number,
-  ranking?: number,
-) {
-  const time = ticksToString(ticks);
-  if (ranking) to.sendMessage(`§e${ranking}: §r${username}: §a${time}`);
-  else to.sendMessage(`§r${username}: §a${time}`);
-}
-
-/**
- * Display ontime top list
- * @param to The player to whom the list is displayed
- * @param top The number of displayed players
- */
-function displayOntimeTop(to: CommandSender, top: number) {
-  // Update ontime of every player
-  view.list.forEach((player) => {
-    const onlinePlayer = Bukkit.server.getPlayer(player.uuid);
-    if (onlinePlayer) {
-      player.ticks = getTicks(onlinePlayer);
-    }
-  });
-
-  // Sort the list with most active player first
-  view.list.sort((a, b) => b.ticks - a.ticks);
-
-  // Size of the displayed list
-  const size = Math.min(view.list.length, top);
-
-  to.sendMessage('§e-------------------------------');
-  to.sendMessage('§e  Valtakauden aktiivisimmat pelaajat:');
-  to.sendMessage('§e-------------------------------');
-  for (let i = 0; i < size; i++) {
-    const player = view.list[i];
-    displayOntime(to, player.name, player.ticks, i + 1);
+function commandCompleter(args: string[]): string[] {
+  if (args.length == 1) {
+    const suggestions = getOnlinePlayerNames();
+    suggestions.push('top');
+    return suggestions;
   }
-  to.sendMessage('§e-------------------------------');
+  return ['10', '20', '30', '40', '60', '70', '80', '90', '100'];
 }
 
-const MINUTE = 60 * 20;
-const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
 /**
  * Return formatted string with days, hours and minutes
  * @param ticks Played ticks
  */
 function ticksToString(ticks: number) {
-  if (ticks < 1) return '';
-  const days = Math.floor(ticks / DAY);
-  const hours = Math.floor((ticks % DAY) / HOUR);
-  const minutes = Math.floor((ticks % HOUR) / MINUTE);
+  const time = ticksToTime(ticks);
 
-  const daysStr = days > 0 ? `${days}d ` : '';
-  const hoursStr = hours > 0 ? `${hours}h ` : '';
-  const minutesStr = minutes > 0 ? `${minutes}min ` : '';
+  const days = time.days > 0 ? `${time.days}d ` : '';
+  const hours = time.hours > 0 ? `${time.hours}h ` : '';
+  const minutes = time.minutes > 0 ? `${time.minutes}min ` : '';
 
-  return daysStr + hoursStr + minutesStr;
+  return days + hours + minutes;
 }
 
-/**
- * Update ontime of an online player
- * @param player Online player to be updated
- */
-function updateOntime(player: Player) {
-  const elem = {
-    name: player.name,
-    uuid: player.uniqueId.toString(),
-    ticks: getTicks(player),
-  };
-  const index = view.list.findIndex(
-    (p) => p.uuid === player.uniqueId.toString(),
-  );
-  if (index === -1) {
-    view.list.push(elem);
-  } else {
-    view.list[index] = elem;
-  }
+function parseTopNumber(str: string) {
+  const howMany = Number.parseInt(str) || TOP_LIST_DEFAULT;
+  return Math.min(howMany, TOP_LIST_MAX);
 }
+
+// Load ontimes from the database
+for (const [uuid, time] of ontimesDb) {
+  ontimes.set(uuid, time);
+}
+
+registerEvent(PlayerQuitEvent, (event) => {
+  updateOntime(event.player);
+});
+
+addTranslation('ontime.title', {
+  fi_fi: 'Valtakauden aktiivisimmat pelaajat',
+  en_us: 'Ontime Leaderboards',
+});
+
+addTranslation('ontime.player_not_found', {
+  fi_fi: 'Pelaajaa ei löydy',
+  en_us: 'Player is not found',
+});
+
+addTranslation('ontime.incorrect_command', {
+  fi_fi: 'Väärä argumentti komennossa. /ontime top <n>',
+  en_us: 'Incorrect argument for command. /ontime top <n>',
+});
