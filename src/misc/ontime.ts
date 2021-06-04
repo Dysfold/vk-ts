@@ -7,14 +7,14 @@ import { addTranslation, t } from '../common/localization/localization';
 import { color, text } from 'craftjs-plugin/chat';
 import { errorMessage } from '../chat/system';
 import { PlayerQuitEvent } from 'org.bukkit.event.player';
-import { ticksToTime } from '../common/helpers/time';
+import { ticksToDuration } from '../common/helpers/duration';
 import { getOnlinePlayerNames } from '../common/helpers/player';
 
 const TOP_LIST_DEFAULT = 10;
 const TOP_LIST_MAX = 100;
 
 const ontimesDb: Table<string, number> = getTable('ontime-table');
-const ontimes: Map<string, number> = new Map();
+// const ontimes: Map<string, number> = new Map();
 
 interface PlayerOntime {
   player: OfflinePlayer;
@@ -35,7 +35,7 @@ function getOnlinePlayerOntime(player: Player) {
 
 function getOfflinePlayerOntime(player: OfflinePlayer) {
   const uuid = player.uniqueId.toString();
-  const time = ontimes.get(uuid) || 0;
+  const time = ontimesDb.get(uuid) || 0;
   return { player, time };
 }
 
@@ -50,7 +50,6 @@ function updateOntime(player: Player) {
 
 function setOntime(player: Player, time: number) {
   const uuid = player.uniqueId.toString();
-  ontimes.set(uuid, time); // In memory
   ontimesDb.set(uuid, time); // Persistent
 }
 
@@ -75,7 +74,7 @@ function getSortedOntimes(): PlayerOntime[] {
 }
 
 function getOntimeList(): PlayerOntime[] {
-  return Array.from(ontimes, (ontime) => {
+  return Array.from(ontimesDb, (ontime) => {
     const [uuid, time] = ontime;
     const player = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
     return { player, time };
@@ -190,7 +189,7 @@ function commandCompleter(args: string[]): string[] {
  * @param ticks Played ticks
  */
 function ticksToString(ticks: number) {
-  const time = ticksToTime(ticks);
+  const time = ticksToDuration(ticks);
 
   const days = time.days > 0 ? `${time.days}d ` : '';
   const hours = time.hours > 0 ? `${time.hours}h ` : '';
@@ -202,11 +201,6 @@ function ticksToString(ticks: number) {
 function parseTopNumber(str: string) {
   const howMany = Number.parseInt(str) || TOP_LIST_DEFAULT;
   return Math.min(howMany, TOP_LIST_MAX);
-}
-
-// Load ontimes from the database
-for (const [uuid, time] of ontimesDb) {
-  ontimes.set(uuid, time);
 }
 
 registerEvent(PlayerQuitEvent, (event) => {
