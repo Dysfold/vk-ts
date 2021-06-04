@@ -38,6 +38,7 @@ require('./tree-felling');
 require('./fishing');
 require('./farmland-trampling');
 require('./announcements');
+require('./ontime');
 require('./bombs');
 require('./starting-items');
 require('./secret-doors');
