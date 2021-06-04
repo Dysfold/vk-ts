@@ -5,6 +5,11 @@ import { FallingBlock } from 'org.bukkit.entity';
 import { EntityChangeBlockEvent } from 'org.bukkit.event.entity';
 
 /**
+ * Falling blocks that don't break any blocks.
+ */
+const LIGHT_BLOCKS = [Material.SNOW];
+
+/**
  * Breakable full blocks
  * This is does not contain slabs, torches etc
  */
@@ -21,6 +26,8 @@ registerEvent(EntityChangeBlockEvent, (event) => {
   if (event.entity instanceof FallingBlock) {
     const oldFallingBlock = event.entity as FallingBlock;
     const blockBelow = event.block.getRelative(BlockFace.DOWN);
+
+    if (LIGHT_BLOCKS.includes(oldFallingBlock.blockData.material)) return;
 
     if (isBreakable(blockBelow)) {
       blockBelow.type = Material.AIR;

@@ -55,3 +55,4 @@ require('./like');
 require('./paper-write');
 require('./ice-breaking');
 require('./guillotine');
+require('./falling-snow');
