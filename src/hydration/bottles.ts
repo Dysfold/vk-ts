@@ -29,6 +29,7 @@ export const WineGlass = new CustomItem({
   id: 1,
   type: Material.POTION,
 });
+
 export const WineGlassEmpty = new CustomItem({
   name: translate('vk.wine_glass'),
   id: 1,
@@ -40,6 +41,7 @@ export const Mug = new CustomItem({
   id: 2,
   type: Material.POTION,
 });
+
 export const MugEmpty = new CustomItem({
   name: translate('vk.mug'),
   id: 2,
@@ -51,16 +53,31 @@ export const Scoop = new CustomItem({
   id: 3,
   type: Material.POTION,
 });
+
 export const ScoopEmpty = new CustomItem({
   name: translate('vk.scoop'),
   id: 3,
   type: Material.GLASS_BOTTLE,
 });
 
+export const GlassMug = new CustomItem({
+  name: translate('vk.glass_mug'),
+  id: 4,
+  type: Material.POTION,
+});
+
+export const GlassMugEmpty = new CustomItem({
+  name: translate('vk.glass_mug'),
+  id: 4,
+  type: Material.GLASS_BOTTLE,
+});
+
+// prettier-ignore
 const BOTTLES = new Map<number, { full: ItemStack; empty: ItemStack }>([
-  [1, { full: WineGlass.create({}), empty: WineGlassEmpty.create({}) }],
-  [2, { full: Mug.create({}), empty: MugEmpty.create({}) }],
-  [3, { full: Scoop.create({}), empty: ScoopEmpty.create({}) }],
+  [1, { full: WineGlass.create({}),   empty: WineGlassEmpty.create({}) }],
+  [2, { full: Mug.create({}),         empty: MugEmpty.create({}) }],
+  [3, { full: Scoop.create({}),       empty: ScoopEmpty.create({}) }],
+  [4, { full: GlassMug.create({}),    empty: GlassMugEmpty.create({}) }],
 ]);
 
 export function canBreak(item: ItemStack): boolean {

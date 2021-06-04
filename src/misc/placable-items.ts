@@ -44,6 +44,8 @@ const TABLES = new Set([
   Material.ACACIA_SLAB,
   Material.DARK_OAK_SLAB,
 
+  Material.WARPED_SLAB,
+
   Material.OAK_STAIRS,
   Material.SPRUCE_STAIRS,
   Material.BIRCH_STAIRS,
