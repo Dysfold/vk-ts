@@ -14,7 +14,6 @@ const TOP_LIST_DEFAULT = 10;
 const TOP_LIST_MAX = 100;
 
 const ontimesDb: Table<string, number> = getTable('ontime-table');
-// const ontimes: Map<string, number> = new Map();
 
 interface PlayerOntime {
   player: OfflinePlayer;
