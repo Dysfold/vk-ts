@@ -15,7 +15,11 @@ const TRANSLATIONS = new Map<string, Translations>();
  * @param formatArgs Arguments to be added to the translated string
  * @returns The translated and formatted string.
  */
-export function t(player: Player, key: string, ...formatArgs: string[]) {
+export function t(
+  player: Player,
+  key: string,
+  ...formatArgs: (string | number)[]
+) {
   const locale = player.locale.toString();
   const msg = translateKey(key, locale);
 
@@ -32,7 +36,7 @@ export function t(player: Player, key: string, ...formatArgs: string[]) {
  * @returns Function to call for translation
  */
 export function getTranslator(player: Player) {
-  return (key: string, ...formatArgs: string[]) =>
+  return (key: string, ...formatArgs: (string | number)[]) =>
     t(player, key, ...formatArgs);
 }
 

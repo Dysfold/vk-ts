@@ -1,6 +1,6 @@
 import { color, text, tooltip, translate } from 'craftjs-plugin/chat';
 import { UUID } from 'java.util';
-import { TranslatableComponent } from 'net.md_5.bungee.api.chat';
+import { TranslatableComponent, TextComponent } from 'net.md_5.bungee.api.chat';
 import {
   Bukkit,
   ChatColor,
@@ -25,6 +25,14 @@ import { distanceBetween } from '../../common/helpers/locations';
 import { errorMessage } from '../../chat/system';
 import { getTaxes, sendTaxes } from './taxes';
 import { round } from '../../common/helpers/math';
+import { t, getTranslator } from '../../common/localization/localization';
+
+const YELLOW = '#FFFF99';
+const GOLD = '#FFAA00';
+const GREEN = '#55FF55';
+const yellow = (msg: string) => color(YELLOW, text(msg));
+const gold = (msg: string) => color(GOLD, text(msg));
+const green = (msg: string) => color(GREEN, text(msg));
 
 /**
  * Display shop info to customer
@@ -69,16 +77,60 @@ function displayShopInfo(p: Player, sign: Block) {
     ? Bukkit.server.getOfflinePlayer(UUID.fromString(view.taxCollector))
     : undefined;
 
-  p.sendMessage(text('\n\n\n'));
-  p.sendMessage(color('#FFAA00', text('----------Kauppa-arkku----------')));
+  const shopTypeTranslationKey =
+    view.type === 'SELLING' ? 'shops.selling' : 'shops.buying';
 
+  const tr = getTranslator(p);
+
+  p.sendMessage(text('\n\n\n'));
+  p.sendMessage(gold(tr('shops.title')));
+  p.sendMessage(yellow(tr(shopTypeTranslationKey)));
+  displayShopItemName(p, itemName);
   p.sendMessage(
-    color(
-      '#FFFF99',
-      translate(view.type === 'SELLING' ? 'vk.selling' : 'vk.buying'),
-    ),
+    yellow(`${tr('shops.price')}: `),
+    gold(`${round(view.price)} `),
+    yellow(tr('shops.unit_per_item', unit)),
   );
 
+  // Tax info
+  if (view.taxRate) {
+    const taxCollectorName = taxCollector?.name ?? tr('shops.unknown');
+    p.sendMessage(
+      tooltip(
+        text(tr('shops.tax_tooltip', taxCollectorName, taxes)),
+        yellow(`${tr('shops.VAT')}: ${ChatColor.GOLD}${view.taxRate}%`),
+      ),
+    );
+    p.sendMessage(
+      yellow(tr('shops.tax_free_price', taxFreePrice, taxFreeUnit)),
+    );
+  }
+
+  if (view.type === 'SELLING') {
+    const amount = countItemsInShop(chest, item);
+    p.sendMessage(yellow(tr('shops.items_left', amount)));
+    p.sendMessage(gold(tr('shops.footer')));
+    p.sendMessage(yellow('shops.how_many_to_buy'));
+  }
+
+  if (view.type === 'BUYING') {
+    const amount = countEmptyStacks(chest);
+    if (amount) {
+      p.sendMessage(yellow(tr('shops.space_left', amount)));
+    } else {
+      p.sendMessage(yellow(tr('shops.space_low')));
+    }
+    p.sendMessage(gold(tr('shops.footer')));
+    p.sendMessage(yellow('shops.how_many_to_buy'));
+  }
+
+  activeCustomers.set(p, { sign: sign, startTime: new Date() });
+}
+
+function displayShopItemName(
+  p: Player,
+  itemName: TranslatableComponent | TextComponent,
+) {
   if (itemName instanceof TranslatableComponent) {
     p.sendMessage(color('#FFAA00', itemName));
   } else {
@@ -86,74 +138,6 @@ function displayShopInfo(p: Player, sign: Block) {
       color('#FFAA00', text(ChatColor.ITALIC + '"' + itemName.text + '"')),
     );
   }
-  p.sendMessage(
-    color(
-      '#FFFF99',
-      text(
-        `Hinta: ${ChatColor.GOLD}${round(view.price, 4)}${
-          ChatColor.RESET
-        } ${unit} / kpl`,
-      ),
-    ),
-  );
-
-  if (view.taxRate) {
-    p.sendMessage(
-      color(
-        '#FFFF99',
-        tooltip(
-          text(
-            `Verottaja: ${
-              taxCollector?.name || 'Tuntematon'
-            } \nVeroton arvo: ${taxes}`,
-          ),
-          text(`Arvonlisävero: ${ChatColor.GOLD}${view.taxRate}%`),
-        ),
-      ),
-    );
-    p.sendMessage(
-      color(
-        '#FFFF99',
-        text(
-          `Veroton hinta: ${ChatColor.GOLD}${round(taxFreePrice, 4)}${
-            ChatColor.RESET
-          } ${taxFreeUnit} / kpl`,
-        ),
-      ),
-    );
-  }
-  if (view.type === 'SELLING') {
-    const amount = countItemsInShop(chest, item);
-    p.sendMessage(
-      color(
-        '#FFFF99',
-        text(
-          `Kaupassa on ${ChatColor.GOLD}${amount}${ChatColor.RESET} tuotetta jäljellä.`,
-        ),
-      ),
-    );
-  }
-  if (view.type === 'BUYING') {
-    const amount = countEmptyStacks(chest);
-    if (amount) {
-      p.sendMessage(
-        color(
-          '#FFFF99',
-          text(
-            `Kaupassa on tilaa ainakin ${ChatColor.GOLD}${amount}${ChatColor.RESET} stackille.`,
-          ),
-        ),
-      );
-    } else {
-      p.sendMessage(color('#FFFF99', text(`Kaupan tila on lopussa.`)));
-    }
-  }
-  p.sendMessage(color('#FFAA00', text('--------------------------------')));
-  const action = view.type == 'SELLING' ? 'ostaa' : 'myydä';
-  p.sendMessage(
-    color('#FFFF99', text('Montako tuotetta haluat ' + action + '?')),
-  );
-  activeCustomers.set(p, { sign: sign, startTime: new Date() });
 }
 
 function countEmptyStacks(chest: Container) {
@@ -196,7 +180,7 @@ setInterval(() => {
 
 function stopTransaction(player: Player) {
   if (activeCustomers.has(player)) {
-    errorMessage(player, 'Kaupankäynti keskeytetty.');
+    errorMessage(player, t(player, 'shops.transaction_cancelled'));
   }
   activeCustomers.delete(player);
 }
@@ -222,7 +206,7 @@ function handleMessage(msg: ChatMessage) {
 
   const amount = Number.parseInt(msg.content);
   if (isNaN(amount) || amount <= 0) {
-    p.sendMessage(ChatColor.RED + 'Viallinen kappalemäärä');
+    errorMessage(p, t(p, 'shops.invalid_amount'));
     return;
   }
 
@@ -236,7 +220,7 @@ function handleMessage(msg: ChatMessage) {
     const stackSize = material?.maxStackSize;
     const maxAmount = stackSize * emptyStacks;
     if (amount > maxAmount) {
-      p.sendMessage(ChatColor.RED + 'Kaupassa ei tarpeeksi tilaa');
+      errorMessage(p, t(p, 'shops.not_enought_space'));
       return;
     }
     result = sellToShop(
@@ -254,7 +238,7 @@ function handleMessage(msg: ChatMessage) {
   if (view.type === 'SELLING') {
     const itemsInShop = countItemsInShop(chest.state, shopItem);
     if (itemsInShop < amount) {
-      p.sendMessage(ChatColor.RED + 'Kaupassa ei tarpeeksi tuotetta');
+      errorMessage(p, t(p, 'shops.not_enought_items'));
       return;
     }
     result = buyFromShop(
@@ -293,7 +277,7 @@ function sellToShop(
   const moneyInShop = getInventoryBalance(chest.inventory, currency);
   const price = productPrice * howMany;
   if (moneyInShop < price) {
-    player.sendMessage(ChatColor.RED + 'Kaupassa ei ole tarpeeksi rahaa!');
+    errorMessage(player, t(player, 'shops.not_enought_money'));
     return undefined;
   }
 
@@ -323,11 +307,9 @@ function sellToShop(
 
   const unit = price - tax == 1 ? unitNames.unit : unitNames.unitPlural;
   player.sendMessage(
-    color(
-      '#55FF55',
-      text(`Myit ${howMany} kpl hintaan ${round(price - tax, 4)} ${unit}`),
-    ),
+    green(t(player, 'shops.you_sold', howMany, price - tax, unit)),
   );
+
   return { taxAmount: tax };
 }
 
@@ -343,7 +325,7 @@ function buyFromShop(
   const price = howMany * productPrice;
   const balance = getInventoryBalance(player.inventory, currency);
   if (price > balance) {
-    player.sendMessage(ChatColor.RED + 'Sinulla ei ole tarpeeksi rahaa!');
+    errorMessage(player, t(player, 'shops.you_no_enought_money'));
     return undefined;
   }
   const unitNames = getCurrencyNames(currency)?.plainText;
@@ -376,7 +358,7 @@ function buyFromShop(
   player.sendMessage(
     color(
       '#55FF55',
-      text(`Ostit ${howMany} kpl hintaan ${round(price, 4)} ${unit}`),
+      text(t(player, 'shops.you_bought', howMany, round(price, 4), unit)),
     ),
   );
   return { taxAmount: tax };
