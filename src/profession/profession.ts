@@ -207,9 +207,7 @@ export function professionInNation(
   name: string,
 ): PlayerProfession | undefined {
   // All professions in nations are player-created
-  return professionById(
-    nation.id + ':' + name.toLowerCase(),
-  ) as PlayerProfession;
+  return professionById(nation.id + ':' + name) as PlayerProfession;
 }
 
 export function systemProfession(name: string) {

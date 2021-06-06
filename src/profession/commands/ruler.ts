@@ -3,7 +3,6 @@ import { errorMessage, successMessage } from '../../chat/system';
 import { Nation } from '../nation';
 import {
   PlayerProfession,
-  Profession,
   professionInNation,
   removeProfession,
   updateProfession,
@@ -23,7 +22,7 @@ export function createProfession(
   }
   const profession: PlayerProfession = {
     type: 'player',
-    name: name,
+    name: name.toLowerCase(),
     description: '', // No description yet
     nation: nation.id,
     creator: sender.name,
@@ -46,7 +45,7 @@ export function deleteProfession(
   } else if (!nation) {
     return errorMessage(sender, 'Et kuulu valtioon.');
   }
-  const profession = professionInNation(nation, name);
+  const profession = professionInNation(nation, name.toLowerCase());
   if (!profession) {
     return errorMessage(
       sender,
@@ -54,7 +53,7 @@ export function deleteProfession(
     );
   }
   removeProfession(profession);
-  //successMessage(sender, `Ammatti ${name} poistettu.`);
+  successMessage(sender, `Ammatti ${name} poistettu.`);
 }
 
 export function manageProfession(

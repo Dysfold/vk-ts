@@ -1,12 +1,15 @@
+import { clickEvent, color, text } from 'craftjs-plugin/chat';
+import { Action } from 'net.md_5.bungee.api.chat.ClickEvent';
 import { Bukkit, Location } from 'org.bukkit';
 import { CommandSender } from 'org.bukkit.command';
 import { Player } from 'org.bukkit.entity';
-import { errorMessage } from '../../chat/system';
+import { errorMessage, successMessage } from '../../chat/system';
 import {
   getProfession,
   isSubordinateProfession,
   Profession,
   professionInNation,
+  setProfession,
   systemProfession,
 } from '../profession';
 import { getContextNation } from './core';
@@ -23,14 +26,14 @@ registerCommand(
 
     const player = Bukkit.getPlayer(args[0]);
     if (!player) {
-      return errorMessage(sender, `${args[0]} is ole juuri nyt paikalla.`);
+      return errorMessage(sender, `${args[0]} ei ole juuri nyt paikalla.`);
     }
 
     const targetProf = nation
       ? professionInNation(nation, args[1])
       : systemProfession(args[1]);
     if (!targetProf) {
-      return errorMessage(sender, `Ammattia ${args[0]} ei löydy valtiostasi.`);
+      return errorMessage(sender, `Ammattia ${args[1]} ei löydy valtiostasi.`);
     }
 
     // Some sanity checks for non-admin players
@@ -72,12 +75,85 @@ registerCommand(
   },
 );
 
+/**
+ * Profession changes pending approval from the appointed players.
+ */
+const pendingChanges: Map<Player, Profession> = new Map();
+
 async function requestProfessionChange(
   nominator: CommandSender,
   target: Player,
   profession: Profession,
 ) {
-  // TODO
+  // Check if another profession is currently offered to target
+  if (pendingChanges.has(target)) {
+    errorMessage(
+      nominator,
+      `${target.name} ei voi juuri nyt ottaa vastaan ammattia.`,
+    );
+    return;
+  }
+
+  // If not, offer it to them
+  successMessage(target, `${nominator.name} tarjoaa sinulle ammattia!`);
+  target.sendMessage(
+    text(`Ota vastaan ammatti: ${profession.name}? `),
+    color('#00AA00', text('✔')),
+    clickEvent(
+      Action.RUN_COMMAND,
+      '/nimitys hyväksy',
+      color('#55FF55', text('Hyväksy ')),
+    ),
+    color('#AA0000', text('✘')),
+    clickEvent(
+      Action.RUN_COMMAND,
+      '/nimitys hylkää',
+      color('#FF5555', text('Hylkää')),
+    ),
+  );
+  pendingChanges.set(target, profession);
+
+  // Clean up pending profession change if target does nothing
+  await wait(15, 'seconds');
+  if (pendingChanges.has(target)) {
+    errorMessage(target, 'Ammattitarjous peruttu, odotit liian pitkään.');
+    pendingChanges.delete(target);
+  }
+}
+
+registerCommand(
+  'nimitys',
+  (sender, _alias, args) => {
+    if (!(sender instanceof Player)) {
+      return;
+    }
+    const profession = pendingChanges.get(sender);
+    if (!profession) {
+      return;
+    }
+    if (args[0] == 'hyväksy') {
+      successMessage(sender, 'Ammattitarjous hyväksytty!');
+      changeProfession(sender, profession);
+    } else if (args[0] == 'hylkää') {
+      successMessage(sender, 'Ammattitarjous hylätty.');
+      pendingChanges.delete(sender);
+    }
+  },
+  {
+    executableBy: 'players',
+    permission: 'vk.profession.player',
+  },
+);
+
+function changeProfession(player: Player, profession: Profession) {
+  pendingChanges.delete(player); // They accepted it
+
+  // Let everyone know about this
+  // TODO profession name formatting
+  Bukkit.broadcast(
+    color('#55FF55', text(`${player.name} on nyt ${profession.name}`)),
+  );
+  setProfession(player, profession); // Actually change profession
 }
 
 // TODO wait for common/helpers/locations.ts from PR 204 (shops)
