@@ -1,5 +1,5 @@
-import { Location } from 'org.bukkit';
 import { ArmorStand, Player } from 'org.bukkit.entity';
+import { distanceBetween } from '../../common/helpers/locations';
 import { SpeakerStaff } from '../items';
 import { ChatMessage } from '../pipeline';
 import { IsMention } from './mention';
@@ -99,13 +99,6 @@ export function rangeCheckHandler(
       msg.discard = true; // Not visible
     }
   };
-}
-
-function distanceBetween(a: Location, b: Location): number {
-  if (a.world != b.world) {
-    return Number.MAX_VALUE; // Different worlds are very far away, indeed
-  }
-  return a.distance(b); // Calculate distance normally
 }
 
 function computeScramble(opts: Range, range: number) {

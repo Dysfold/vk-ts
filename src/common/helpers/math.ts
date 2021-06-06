@@ -20,6 +20,17 @@ export function minMax(x: number, min: number, max: number) {
   return Math.min(1, Math.max(value, 0));
 }
 
+/**
+ * Round a (small) number with given decimal places
+ * @param n Number to be rounded
+ * @param decimals Number of decimals places
+ * @returns The rounded number
+ */
+export function round(n: number, decimals = 1) {
+  const multiplier = 10 ** decimals;
+  return Math.round(multiplier * n) / multiplier;
+}
+
 export function degToRad(degrees: number) {
   return degrees * (Math.PI / 180);
 }

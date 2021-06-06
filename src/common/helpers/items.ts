@@ -1,3 +1,5 @@
+import { text, translate } from 'craftjs-plugin/chat';
+import { TranslatableComponent } from 'net.md_5.bungee.api.chat';
 import { Sound, SoundCategory } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { ItemStack } from 'org.bukkit.inventory';
@@ -24,4 +26,28 @@ export function useFlintAndSteel(player: Player, item: ItemStack) {
       1,
     );
   }
+}
+
+/**
+ * Tries to get translated name of the item or the display name
+ */
+export function getItemName(item: ItemStack) {
+  if (!item?.itemMeta?.hasDisplayName()) {
+    const key = item.type.translationKey;
+    // For some reason
+    // spigot gives "item.minecraft..." instead of "block.minecraft..."
+    if (item.type.isBlock()) {
+      return translate(key.replace('item', 'block'));
+    }
+    return translate(key);
+  }
+
+  const components = item.itemMeta.displayNameComponent;
+  for (const component of components) {
+    // Check if the name is the original name
+    if (component instanceof TranslatableComponent) {
+      return component;
+    }
+  }
+  return text(item.itemMeta.displayName);
 }
