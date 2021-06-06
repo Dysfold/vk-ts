@@ -7,7 +7,7 @@ const LikeCooldownData = dataType('playerLikeCooldownData', {
   previousTime: yup.number().notRequired(),
 });
 
-const LOKE_COOLDOWN_HOURS = 12;
+const LIKE_COOLDOWN_HOURS = 12;
 
 /**
  * Get how much player has cooldown left (in milliseconds)
@@ -33,7 +33,7 @@ export function startLikeCooldown(player: Player) {
   view.previousTime = new Date().getTime();
 }
 
-const LIKE_COOLDOWN_MS = 1000 * 60 * 60 * LOKE_COOLDOWN_HOURS;
+const LIKE_COOLDOWN_MS = 1000 * 60 * 60 * LIKE_COOLDOWN_HOURS;
 function getRemainingCooldownMs(previousTime: number) {
   return LIKE_COOLDOWN_MS - (new Date().getTime() - previousTime);
 }

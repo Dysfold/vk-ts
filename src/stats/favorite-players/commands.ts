@@ -6,6 +6,7 @@ import {
 } from './messages';
 import { addLikeToUsername, getTopLikeList, canLike } from './likes';
 import { getLikeCooldown, startLikeCooldown } from './command-cooldown';
+import { getOnlinePlayerNames } from '../../common/helpers/player';
 
 registerCommand(
   ['suosikit', 'favourites'],
@@ -45,5 +46,6 @@ registerCommand(
     permission: 'vk.like',
     description: 'Tykkää pelaajasta',
     executableBy: 'players',
+    completer: () => getOnlinePlayerNames(),
   },
 );
