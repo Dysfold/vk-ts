@@ -243,7 +243,7 @@ function getShopItemName(item: ItemStack) {
 
 // THIS IS HACK
 function updateSignTextTranslation(
-  text: TranslatableComponent,
+  text: TranslatableComponent | TextComponent,
   sign: Block,
   type: ShopType,
   price: number,
@@ -261,9 +261,14 @@ function updateSignTextTranslation(
   const unit =
     price === 1 ? currencyTranslation.unit : currencyTranslation.unitPlural;
 
-  const cmd = `execute in ${world} run data merge block ${sign.x} ${sign.y} ${sign.z} {Text1:'{"translate":"${shopTypeTranslation}","color":"${shopTypeColor}"}',
-  Text2:'{"translate":"${text.translate}"}',
-  Text3:'{"translate":"${unit}","with":["${price}"],"italic":"false"}'}`;
+  const row1 = `Text1:'{"translate":"${shopTypeTranslation}","color":"${shopTypeColor}"}',`;
+  const row2 =
+    text instanceof TranslatableComponent
+      ? `Text2:'{"translate":"${text.translate}"}',`
+      : '';
+  const row3 = `Text3:'{"translate":"${unit}","with":["${price}"],"italic":"false"}'`;
+
+  const cmd = `execute in ${world} run data merge block ${sign.x} ${sign.y} ${sign.z} {${row1}${row2}${row3}}`;
   const console = Bukkit.server.consoleSender;
   Bukkit.dispatchCommand(console, cmd);
 }
@@ -281,27 +286,20 @@ function updateShopSign(session: ShopMakingSession) {
   const currency: Currency = shop.currency;
 
   const name = getItemName(shop.item);
-  const unitNames = getCurrencyTranslation(currency);
-
-  const unit = price === 1 ? unitNames.unit : unitNames.unitPlural;
 
   // TODO: remove .toString() (and the hack) when chat components are accepted and use translation instead
   sign.setLine(1, getShopItemName(shop.item).toString());
 
-  // TODO: remove string (and the hack) when chat components are accepted and use translation instead
-  sign.setLine(2, price + ' ' + unit);
   sign.update();
 
   // HACK. Remove this later
-  if (name instanceof TranslatableComponent) {
-    updateSignTextTranslation(
-      name,
-      signBlock,
-      shop.type as ShopType,
-      price,
-      currency,
-    );
-  }
+  updateSignTextTranslation(
+    name,
+    signBlock,
+    shop.type as ShopType,
+    price,
+    currency,
+  );
 }
 
 /**
@@ -342,7 +340,6 @@ function setShopCurrency(session: ShopMakingSession, player: Player) {
   if (currency == undefined) {
     errorMessage(player, tr('shops.invalid_currency'));
     stopMakingShop(player);
-    log.error('Invalid currency from item: ' + item);
     return;
   }
 

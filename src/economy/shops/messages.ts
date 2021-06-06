@@ -1,6 +1,5 @@
-import { addTranslation } from '../../common/localization/localization';
-import { ChatColor } from 'org.bukkit';
 import { color, text } from 'craftjs-plugin/chat';
+import { addTranslation } from '../../common/localization/localization';
 
 export const SHOP_YELLOW = '#FFFF99';
 export const SHOP_GOLD = '#FFAA00';
@@ -29,7 +28,7 @@ addTranslation('shops.selling', {
   en_us: 'Selling',
 });
 
-addTranslation('shops.bying', {
+addTranslation('shops.buying', {
   fi_fi: 'Ostetaan',
   en_us: 'Buying',
 });
@@ -60,18 +59,18 @@ addTranslation('shops.VAT', {
 });
 
 addTranslation('shops.tax_free_price', {
-  fi_fi: `Veroton hinta: ${ChatColor.GOLD}%.2f${ChatColor.RESET} %s / kpl`,
-  en_us: `Tax free price: ${ChatColor.GOLD}%.2f${ChatColor.RESET} %s / item`,
+  fi_fi: `Veroton hinta`,
+  en_us: `Tax free price`,
 });
 
 addTranslation('shops.items_left', {
-  fi_fi: `Kaupassa on ${ChatColor.GOLD}%s${ChatColor.RESET} tuotetta jäljellä`,
-  en_us: `The shop has ${ChatColor.GOLD}%s${ChatColor.RESET} items left`,
+  fi_fi: `Kaupassa on %s tuotetta jäljellä`,
+  en_us: `The shop has %s items left`,
 });
 
 addTranslation('shops.space_left', {
-  fi_fi: `Kaupassa on tilaa ainakin ${ChatColor.GOLD}%s${ChatColor.RESET} stackille`,
-  en_us: `The shop has space for atleast ${ChatColor.GOLD}%s${ChatColor.RESET} stacks`,
+  fi_fi: `Kaupassa on tilaa ainakin %s stackille`,
+  en_us: `The shop has space for atleast %s stacks`,
 });
 
 addTranslation('shops.space_low', {

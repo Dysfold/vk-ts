@@ -1,13 +1,7 @@
-import { color, text, tooltip } from 'craftjs-plugin/chat';
+import { color, text } from 'craftjs-plugin/chat';
 import { UUID } from 'java.util';
 import { TextComponent, TranslatableComponent } from 'net.md_5.bungee.api.chat';
-import {
-  Bukkit,
-  ChatColor,
-  Location,
-  Material,
-  SoundCategory,
-} from 'org.bukkit';
+import { Bukkit, Location, Material, SoundCategory } from 'org.bukkit';
 import { Block, Chest, Container } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
 import { Action as BlockAction } from 'org.bukkit.event.block';
@@ -95,13 +89,19 @@ function displayShopInfo(p: Player, sign: Block) {
   if (view.taxRate) {
     const taxCollectorName = taxCollector?.name ?? tr('shops.unknown');
     p.sendMessage(
-      tooltip(
-        text(tr('shops.tax_tooltip', taxCollectorName, taxes)),
-        yellow(`${tr('shops.VAT')}: ${ChatColor.GOLD}${view.taxRate}%`),
-      ),
+      // tooltip(
+      //   text(tr('shops.tax_tooltip', taxCollectorName, taxes)),
+      //   yellow(`${tr('shops.VAT')}: `),
+      //   gold(`${view.taxRate}%`),
+      // ),
+      yellow(`${tr('shops.VAT')}: `),
+      gold(`${view.taxRate}%`),
+      yellow(` (${taxCollectorName})`),
     );
     p.sendMessage(
-      yellow(tr('shops.tax_free_price', taxFreePrice, taxFreeUnit)),
+      yellow(`${tr('shops.tax_free_price')}: `),
+      gold(`${taxFreePrice}`),
+      yellow(` ${taxFreeUnit}`),
     );
   }
 
@@ -134,9 +134,9 @@ function displayShopItemName(
     p.sendMessage(color(SHOP_GOLD, itemName));
     return;
   }
-  p.sendMessage(
-    color(SHOP_GOLD, text(ChatColor.ITALIC + '"' + itemName.text + '"')),
-  );
+  const msg = gold(`"${itemName.text}"`);
+  msg.italic = true;
+  p.sendMessage(msg);
 }
 
 function countEmptyStacks(chest: Container) {

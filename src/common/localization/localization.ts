@@ -8,6 +8,7 @@ interface Translations {
 }
 const TRANSLATIONS = new Map<string, Translations>();
 
+type FormatArg = string | number;
 /**
  * Gets a localized string in player's language.
  * @param player Who is receiving the message
@@ -15,11 +16,7 @@ const TRANSLATIONS = new Map<string, Translations>();
  * @param formatArgs Arguments to be added to the translated string
  * @returns The translated and formatted string.
  */
-export function t(
-  player: Player,
-  key: string,
-  ...formatArgs: (string | number)[]
-) {
+export function t(player: Player, key: string, ...formatArgs: FormatArg[]) {
   const locale = player.locale.toString();
   const msg = translateKey(key, locale);
 
@@ -36,7 +33,7 @@ export function t(
  * @returns Function to call for translation
  */
 export function getTranslator(player: Player) {
-  return (key: string, ...formatArgs: (string | number)[]) =>
+  return (key: string, ...formatArgs: FormatArg[]) =>
     t(player, key, ...formatArgs);
 }
 
