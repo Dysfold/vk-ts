@@ -1,5 +1,4 @@
 import { Table } from 'craftjs-plugin/database';
-import { UUID } from 'java.util';
 import { Bukkit, OfflinePlayer } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { errorMessage } from '../../chat/system';
@@ -8,6 +7,7 @@ import { isAdminAccount } from '../../common/helpers/player';
 import { getTranslator } from '../../common/localization/localization';
 import { displayLikeSuccess } from './messages';
 import { PlayerLikes } from './PlayerLikes';
+import { UUID } from 'java.util';
 
 /*********************
  * Exported functions
@@ -49,13 +49,13 @@ export function canLike(liker: Player, username: string) {
  * Private functions
  ************************/
 
-const likesDb: Table<string, number> = getTable('likes-table');
+const likesDb: Table<UUID, number> = getTable('likes');
 
-function getLikesOfUuid(uuid: string) {
+function getLikesOfUuid(uuid: UUID) {
   return likesDb.get(uuid) ?? 0;
 }
 
-function addLikeToUuid(uuid: string) {
+function addLikeToUuid(uuid: UUID) {
   const likes = getLikesOfUuid(uuid);
   likesDb.set(uuid, likes + 1);
 }
@@ -65,7 +65,7 @@ function addLikeToUuid(uuid: string) {
  * @param uuid Uuid of the player as string
  * @param oldLikes Likes before the removal. This is passed in for performance
  */
-function removeLikesFromUuid(uuid: string, amount: number, oldLikes?: number) {
+function removeLikesFromUuid(uuid: UUID, amount: number, oldLikes?: number) {
   const likes = oldLikes ?? getLikesOfUuid(uuid);
   const newLikes = likes - amount;
   if (newLikes <= 0) {
@@ -76,7 +76,7 @@ function removeLikesFromUuid(uuid: string, amount: number, oldLikes?: number) {
 }
 
 function addLike(player: OfflinePlayer) {
-  const uuid = player.uniqueId.toString();
+  const uuid = player.uniqueId;
   addLikeToUuid(uuid);
 }
 
@@ -102,7 +102,7 @@ function getSortedLikeList(): PlayerLikes[] {
 function getLikeList(): PlayerLikes[] {
   return Array.from(likesDb, (playerLikes) => {
     const [uuid, likes] = playerLikes;
-    const player = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
+    const player = Bukkit.getOfflinePlayer(uuid);
     return { player, likes };
   });
 }
