@@ -1,6 +1,6 @@
-import { color, text, tooltip, translate } from 'craftjs-plugin/chat';
+import { color, text, tooltip } from 'craftjs-plugin/chat';
 import { UUID } from 'java.util';
-import { TranslatableComponent, TextComponent } from 'net.md_5.bungee.api.chat';
+import { TextComponent, TranslatableComponent } from 'net.md_5.bungee.api.chat';
 import {
   Bukkit,
   ChatColor,
@@ -14,25 +14,24 @@ import { Action as BlockAction } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
+import { errorMessage } from '../../chat/system';
 import { addItemTo, giveItem } from '../../common/helpers/inventory';
 import { getItemName } from '../../common/helpers/items';
+import { distanceBetween } from '../../common/helpers/locations';
+import { round } from '../../common/helpers/math';
+import { getTranslator, t } from '../../common/localization/localization';
 import { Currency, getCurrencyTranslation } from '../currency';
 import { getInventoryBalance, giveMoney, takeMoneyFrom } from '../money';
 import { findItemsFromInventory, getBlockBehind, getShopItem } from './helpers';
-import { openShopGUI } from './shop-gui';
-import { getShop } from './ShopData';
-import { distanceBetween } from '../../common/helpers/locations';
-import { errorMessage } from '../../chat/system';
-import { getTaxes, sendTaxes } from './taxes';
-import { round } from '../../common/helpers/math';
-import { t, getTranslator } from '../../common/localization/localization';
-
 import {
-  shopYellow as yellow,
   shopGold as gold,
   shopGreen as green,
+  shopYellow as yellow,
   SHOP_GOLD,
 } from './messages';
+import { openShopGUI } from './shop-gui';
+import { getShop } from './ShopData';
+import { getTaxes, sendTaxes } from './taxes';
 
 /**
  * Display shop info to customer

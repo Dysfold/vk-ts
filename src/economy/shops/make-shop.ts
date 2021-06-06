@@ -1,4 +1,3 @@
-import { color, text } from 'craftjs-plugin/chat';
 import { TextComponent, TranslatableComponent } from 'net.md_5.bungee.api.chat';
 import { Bukkit, ChatColor, OfflinePlayer } from 'org.bukkit';
 import { Block, Sign } from 'org.bukkit.block';
@@ -12,18 +11,17 @@ import { errorMessage } from '../../chat/system';
 import { dataView } from '../../common/datas/view';
 import { getItemName } from '../../common/helpers/items';
 import { distanceBetween } from '../../common/helpers/locations';
+import { getTranslator, t } from '../../common/localization/localization';
 import { Currency, getCurrency, getCurrencyTranslation } from '../currency';
 import { getBlockBehind } from './helpers';
+import {
+  shopGold as gold,
+  shopGreen as green,
+  shopYellow as yellow,
+} from './messages';
 import { ShopData } from './ShopData';
 import { getTaxCollector, getTaxes } from './taxes';
 export type ShopType = 'SELLING' | 'BUYING';
-
-import {
-  shopYellow as yellow,
-  shopGold as gold,
-  shopGreen as green,
-} from './messages';
-import { t, getTranslator } from '../../common/localization/localization';
 
 export interface ValidShopInfo {
   type: ShopType;
