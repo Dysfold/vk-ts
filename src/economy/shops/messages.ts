@@ -133,13 +133,8 @@ addTranslation('shops.old_tax_chest', {
 });
 
 addTranslation('shops.tax_chest_title', {
-  fi_fi: '-----------Veroarkku-----------',
-  en_us: '-----------Tax-chest-----------',
-});
-
-addTranslation('shops.tax_chest_footer', {
-  fi_fi: '-------------------------------',
-  en_us: '-------------------------------',
+  fi_fi: '-----------Veroarkku------------',
+  en_us: '-----------Tax-chest------------',
 });
 
 addTranslation('shops.tax_collector', {

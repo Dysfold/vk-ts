@@ -205,7 +205,7 @@ registerEvent(PlayerInteractEvent, (event) => {
     collectorView.untransferred = [];
   }
 
-  player.sendMessage(gold(tr('shops.tax_chest_footer')));
+  player.sendMessage(gold(tr('shops.footer')));
 });
 
 /**
