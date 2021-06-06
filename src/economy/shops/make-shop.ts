@@ -12,11 +12,18 @@ import { errorMessage } from '../../chat/system';
 import { dataView } from '../../common/datas/view';
 import { getItemName } from '../../common/helpers/items';
 import { distanceBetween } from '../../common/helpers/locations';
-import { Currency, getCurrency, getCurrencyNames } from '../currency';
+import { Currency, getCurrency, getCurrencyTranslation } from '../currency';
 import { getBlockBehind } from './helpers';
 import { ShopData } from './ShopData';
 import { getTaxCollector, getTaxes } from './taxes';
 export type ShopType = 'SELLING' | 'BUYING';
+
+import {
+  shopYellow as yellow,
+  shopGold as gold,
+  shopGreen as green,
+} from './messages';
+import { t, getTranslator } from '../../common/localization/localization';
 
 export interface ValidShopInfo {
   type: ShopType;
@@ -81,11 +88,11 @@ setInterval(() => {
 // prettier-ignore
 const TASK_ORDER: { step: Step; prompt: string }[] = [
   { step: 'START', prompt: '' },
-  { step: 'SET_ITEM', prompt: 'Klikkaa kylttiä haluamallasi tuotteella.' },
-  { step: 'SET_CURRENCY', prompt: 'Klikkaa kylttiä haluamallasi valuutalla.' },
-  { step: 'SET_PRICE', prompt: 'Kirjoita chattiin tuotteesta maksettava (verollinen) hinta. Esim: "4.5"' },
-  { step: 'SET_TAXES', prompt: 'Kirjoita chattiin veroprosentti. Esim: "10"' },
-  { step: 'SET_TAX_COLLECTOR', prompt: 'Kirjoita chattiin veronkerääjän nimi. Esim: "Steve"' },
+  { step: 'SET_ITEM', prompt: 'shops.set_item' },
+  { step: 'SET_CURRENCY', prompt: 'shops.set_currency' },
+  { step: 'SET_PRICE', prompt: 'shops.set_price' },
+  { step: 'SET_TAXES', prompt: 'shops.set_taxes' },
+  { step: 'SET_TAX_COLLECTOR', prompt: 'shops.set_tax_collector' },
 ];
 
 function startNextTask(player: Player) {
@@ -113,13 +120,9 @@ function startNextTask(player: Player) {
     }
   }
 
-  player.sendMessage(
-    color('#FFAA00', text('------------------------------------------')),
-  );
-  player.sendMessage(color('#FFFF55', text(nextTask.prompt)));
-  player.sendMessage(
-    color('#FFAA00', text('------------------------------------------')),
-  );
+  player.sendMessage(gold(t(player, 'shops.footer')));
+  player.sendMessage(yellow(t(player, nextTask.prompt)));
+  player.sendMessage(gold(t(player, 'shops.footer')));
   return true;
 }
 
@@ -131,7 +134,7 @@ function endLastTask(player: Player) {
 
 function stopMakingShop(player: Player) {
   if (sessions.has(player)) {
-    errorMessage(player, 'Kaupan perustaminen peruutettu.');
+    errorMessage(player, t(player, 'shops.shop_making_cancelled'));
   }
   sessions.delete(player);
 }
@@ -215,7 +218,7 @@ function saveShop(player: Player) {
   signDataHolder.update();
 
   updateShopSign(session);
-  player.sendMessage(ChatColor.GREEN + 'Kauppa luotu!');
+  player.sendMessage(green(t(player, 'shops.shop_created')));
 }
 
 /**
@@ -255,8 +258,8 @@ function updateSignTextTranslation(
       ? 'minecraft:overworld'
       : 'minecraft:' + sign.world.name;
 
-  const currencyTranslation = getCurrencyNames(currency)?.translations;
-  if (!currencyTranslation) return;
+  const currencyTranslation = getCurrencyTranslation(currency);
+
   const unit =
     price === 1 ? currencyTranslation.unit : currencyTranslation.unitPlural;
 
@@ -280,12 +283,10 @@ function updateShopSign(session: ShopMakingSession) {
   const currency: Currency = shop.currency;
 
   const name = getItemName(shop.item);
-  const unitNames = getCurrencyNames(currency)?.plainText;
-  if (!unitNames) return;
+  const unitNames = getCurrencyTranslation(currency);
 
   const unit = price === 1 ? unitNames.unit : unitNames.unitPlural;
 
-  sign.setLine(0, shopTypeToString(shop.type));
   // TODO: remove .toString() (and the hack) when chat components are accepted and use translation instead
   sign.setLine(1, getShopItemName(shop.item).toString());
 
@@ -338,19 +339,19 @@ registerEvent(PlayerInteractEvent, async (event) => {
 function setShopCurrency(session: ShopMakingSession, player: Player) {
   const item = player.inventory.itemInMainHand;
   const currency = getCurrency(item);
+  const tr = getTranslator(player);
 
   if (currency == undefined) {
-    errorMessage(player, 'Viallinen valuutta');
+    errorMessage(player, tr('shops.invalid_currency'));
     stopMakingShop(player);
     log.error('Invalid currency from item: ' + item);
     return;
   }
 
-  const currencyNames = getCurrencyNames(currency)?.plainText;
-  if (!currencyNames) return;
+  const currencyNames = getCurrencyTranslation(currency);
 
   session.shopInfo.currency = currency;
-  player.sendMessage('Asetit valuutan ' + currencyNames.unit);
+  player.sendMessage(tr('shops.currency_set_success', tr(currencyNames.unit)));
   startNextTask(player);
 }
 
@@ -360,7 +361,7 @@ function setShopCurrency(session: ShopMakingSession, player: Player) {
 function setShopItem(session: ShopMakingSession, player: Player) {
   session.shopInfo.item = player.inventory.itemInMainHand;
   const name = getItemName(session.shopInfo.item);
-  player.sendMessage('Asetit esineen ');
+  player.sendMessage(t(player, 'shops.item_set_success'));
   player.sendMessage(name);
   startNextTask(player);
 }
@@ -387,13 +388,12 @@ const SHOP_TYPES = new Map<string, ShopType>([
   ['myy', 'SELLING'],
   ['ostetaan', 'BUYING'],
   ['osta', 'BUYING'],
-]);
 
-function shopTypeToString(type: ShopType) {
-  return type == 'SELLING'
-    ? ChatColor.GREEN + 'Myydään'
-    : ChatColor.BLUE + 'Ostetaan';
-}
+  ['selling', 'SELLING'],
+  ['sell', 'SELLING'],
+  ['buying', 'BUYING'],
+  ['buy', 'BUYING'],
+]);
 
 function getShopType(block: Block) {
   const signData = block.state as Sign;
@@ -425,44 +425,48 @@ function detectShopSetup(msg: ChatMessage) {
   const session = sessions.get(msg.sender);
   if (session && CHAT_STEPS.has(session.step)) {
     msg.discard = true;
+    const p = msg.sender;
+    const tr = getTranslator(p);
 
     const step = session.step;
     switch (step) {
       case 'SET_PRICE': {
         const price = Number.parseFloat(msg.content);
         if (!price || price < 0) {
-          errorMessage(msg.sender, 'Virheellinen hinta');
-          stopMakingShop(msg.sender);
+          errorMessage(p, tr('shops.invalid_price'));
+          stopMakingShop(p);
           return;
         }
-        msg.sender.sendMessage('Asetit hinnanksi ' + price);
+        p.sendMessage(tr('shops.price_set_success', price));
         session.shopInfo.price = price;
-        startNextTask(msg.sender);
+        startNextTask(p);
 
         return;
       }
       case 'SET_TAXES': {
         const taxRate = Number.parseFloat(msg.content);
         if (isNaN(taxRate) || taxRate < 0) {
-          errorMessage(msg.sender, 'Virheellinen veroprosentti');
-          stopMakingShop(msg.sender);
+          errorMessage(p, tr('shops.invalid_tax_rate'));
+          stopMakingShop(p);
           return;
         }
-        msg.sender.sendMessage('Asetit veroprosentiksi ' + taxRate);
+        p.sendMessage(tr('shops.tax_rate_set_success', taxRate));
         session.shopInfo.taxRate = taxRate;
-        startNextTask(msg.sender);
+        startNextTask(p);
         return;
       }
       case 'SET_TAX_COLLECTOR': {
         const taxCollector = getTaxCollector(msg.content);
         if (!taxCollector) {
-          errorMessage(msg.sender, 'Tämä henkilö ei ole veronkerääjä');
-          stopMakingShop(msg.sender);
+          errorMessage(p, tr('shops.invalid_tax_collector'));
+          stopMakingShop(p);
           return;
         }
-        msg.sender.sendMessage('Asetit veronkerääjäksi ' + taxCollector.name);
+        p.sendMessage(
+          tr('shops.tax_collector_set_success', `${taxCollector.name}`),
+        );
         session.shopInfo.taxCollector = taxCollector;
-        startNextTask(msg.sender);
+        startNextTask(p);
         return;
       }
     }

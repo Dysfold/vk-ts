@@ -1,5 +1,13 @@
 import { addTranslation } from '../../common/localization/localization';
 import { ChatColor } from 'org.bukkit';
+import { color, text } from 'craftjs-plugin/chat';
+
+export const SHOP_YELLOW = '#FFFF99';
+export const SHOP_GOLD = '#FFAA00';
+export const SHOP_GREEN = '#55FF55';
+export const shopYellow = (msg: string) => color(SHOP_YELLOW, text(msg));
+export const shopGold = (msg: string) => color(SHOP_GOLD, text(msg));
+export const shopGreen = (msg: string) => color(SHOP_GREEN, text(msg));
 
 addTranslation('shops.you_bought', {
   fi_fi: 'Ostit %s kpl hintaan %s %s',
@@ -114,4 +122,123 @@ addTranslation('shops.you_no_enought_money', {
 addTranslation('shops.you_sold', {
   fi_fi: 'Myit %s kpl hintaan %.2f %s',
   en_us: 'You sold %s items for %.2f %s',
+});
+
+/**
+ * Taxes
+ */
+
+addTranslation('shops.old_tax_chest', {
+  fi_fi: 'Tämä veroarkku ei ole enää käytössä!',
+  en_us: 'This tax chest is no longer in use!',
+});
+
+addTranslation('shops.tax_chest_title', {
+  fi_fi: '-----------Veroarkku-----------',
+  en_us: '-----------Tax-chest-----------',
+});
+
+addTranslation('shops.tax_chest_footer', {
+  fi_fi: '-------------------------------',
+  en_us: '-------------------------------',
+});
+
+addTranslation('shops.tax_collector', {
+  fi_fi: 'Veronkerääjä',
+  en_us: 'Tax collector',
+});
+
+addTranslation('shops.new_taxes', {
+  fi_fi: 'Uusia veroja',
+  en_us: 'New taxes',
+});
+
+addTranslation('shops.tax_chest_created', {
+  fi_fi: 'Veroarkku luotu!',
+  en_us: 'Tax chest created!',
+});
+
+/**
+ * Shop making session
+ */
+
+addTranslation('shops.set_item', {
+  fi_fi: 'Klikkaa kylttiä haluamallasi tuotteella.',
+  en_us: 'Click the sign with the item you want to sell or buy.',
+});
+
+addTranslation('shops.set_currency', {
+  fi_fi: 'Klikkaa kylttiä haluamallasi valuutalla.',
+  en_us: 'Click the sign with the currency you want to use.',
+});
+
+addTranslation('shops.set_price', {
+  fi_fi:
+    'Kirjoita chattiin tuotteesta maksettava (verollinen) hinta. Esim "4.5"',
+  en_us: 'Type the the price (including tax) in the chat. E.g "4.5',
+});
+
+addTranslation('shops.set_taxes', {
+  fi_fi: 'Kirjoita chattiin veroprosentti',
+  en_us: 'Type the the tax rate in the chat',
+});
+
+addTranslation('shops.set_tax_collector', {
+  fi_fi: 'Kirjoita chattiin veronkerääjä',
+  en_us: 'Type the the name of the tax collector in the chat',
+});
+
+addTranslation('shops.shop_created', {
+  fi_fi: 'Kauppa luotu!',
+  en_us: 'Shop created!',
+});
+
+addTranslation('shops.shop_making_cancelled', {
+  fi_fi: 'Kaupan perustaminen peruutettu!',
+  en_us: 'Shop creation cancelled!',
+});
+
+addTranslation('shops.invalid_currency', {
+  fi_fi: 'Viallinen valuutta!',
+  en_us: 'Invalid currency!',
+});
+
+addTranslation('shops.currency_set_success', {
+  fi_fi: 'Asetit valuutan %s',
+  en_us: 'You set the currency %s',
+});
+
+addTranslation('shops.item_set_success', {
+  fi_fi: 'Asetit esineen',
+  en_us: 'You set the item',
+});
+
+addTranslation('shops.invalid_price', {
+  fi_fi: 'Viallinen hinta!',
+  en_us: 'Invalid price!',
+});
+
+addTranslation('shops.price_set_success', {
+  fi_fi: 'Asetit hinnaksi %.2f',
+  en_us: 'You set the price to %.2f',
+});
+
+addTranslation('shops.tax_rate_set_success', {
+  fi_fi: 'Asetit veroprosentiksi %.2f',
+  en_us: 'You set the tax rate to %.2f',
+});
+
+addTranslation('shops.invalid_tax_rate', {
+  fi_fi: 'Viallinen veroprosentti!',
+  en_us: 'Invalid tax rate!',
+});
+
+addTranslation('shops.invalid_tax_collector', {
+  fi_fi: 'Tämä henkilö ei ole veronkerääjä!',
+  en_us: 'This player is not a tax collector!',
+});
+
+addTranslation('shops.tax_collector_set_success', {
+  fi_fi: 'Asetit veronkerääjäksi %s',
+  en_us: 'You set the tax collector to %s',
 });

@@ -16,7 +16,7 @@ import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
 import { addItemTo, giveItem } from '../../common/helpers/inventory';
 import { getItemName } from '../../common/helpers/items';
-import { Currency, getCurrencyNames } from '../currency';
+import { Currency, getCurrencyTranslation } from '../currency';
 import { getInventoryBalance, giveMoney, takeMoneyFrom } from '../money';
 import { findItemsFromInventory, getBlockBehind, getShopItem } from './helpers';
 import { openShopGUI } from './shop-gui';
@@ -27,12 +27,12 @@ import { getTaxes, sendTaxes } from './taxes';
 import { round } from '../../common/helpers/math';
 import { t, getTranslator } from '../../common/localization/localization';
 
-const YELLOW = '#FFFF99';
-const GOLD = '#FFAA00';
-const GREEN = '#55FF55';
-const yellow = (msg: string) => color(YELLOW, text(msg));
-const gold = (msg: string) => color(GOLD, text(msg));
-const green = (msg: string) => color(GREEN, text(msg));
+import {
+  shopYellow as yellow,
+  shopGold as gold,
+  shopGreen as green,
+  SHOP_GOLD,
+} from './messages';
 
 /**
  * Display shop info to customer
@@ -64,13 +64,15 @@ function displayShopInfo(p: Player, sign: Block) {
   if (!item) return;
   const taxes = getTaxes(view.taxRate, view.price);
   const taxFreePrice = view.price - taxes;
+  const tr = getTranslator(p);
 
   const currency = view.currency as Currency;
-  const unitNames = getCurrencyNames(currency)?.plainText;
-  if (!unitNames) return;
+  const unitNames = getCurrencyTranslation(currency);
 
-  const unit = view.price == 1 ? unitNames.unit : unitNames.unitPlural;
-  const taxFreeUnit = taxFreePrice == 1 ? unitNames.unit : unitNames.unitPlural;
+  const unit = tr(view.price == 1 ? unitNames.unit : unitNames.unitPlural);
+  const taxFreeUnit = tr(
+    taxFreePrice == 1 ? unitNames.unit : unitNames.unitPlural,
+  );
 
   const itemName = getItemName(item);
   const taxCollector = view.taxCollector
@@ -79,8 +81,6 @@ function displayShopInfo(p: Player, sign: Block) {
 
   const shopTypeTranslationKey =
     view.type === 'SELLING' ? 'shops.selling' : 'shops.buying';
-
-  const tr = getTranslator(p);
 
   p.sendMessage(text('\n\n\n'));
   p.sendMessage(gold(tr('shops.title')));
@@ -110,18 +110,18 @@ function displayShopInfo(p: Player, sign: Block) {
     const amount = countItemsInShop(chest, item);
     p.sendMessage(yellow(tr('shops.items_left', amount)));
     p.sendMessage(gold(tr('shops.footer')));
-    p.sendMessage(yellow('shops.how_many_to_buy'));
+    p.sendMessage(yellow(tr('shops.how_many_to_buy')));
   }
 
   if (view.type === 'BUYING') {
     const amount = countEmptyStacks(chest);
-    if (amount) {
+    if (amount > 0) {
       p.sendMessage(yellow(tr('shops.space_left', amount)));
     } else {
       p.sendMessage(yellow(tr('shops.space_low')));
     }
     p.sendMessage(gold(tr('shops.footer')));
-    p.sendMessage(yellow('shops.how_many_to_buy'));
+    p.sendMessage(yellow(tr('shops.how_many_to_sell')));
   }
 
   activeCustomers.set(p, { sign: sign, startTime: new Date() });
@@ -132,12 +132,12 @@ function displayShopItemName(
   itemName: TranslatableComponent | TextComponent,
 ) {
   if (itemName instanceof TranslatableComponent) {
-    p.sendMessage(color('#FFAA00', itemName));
-  } else {
-    p.sendMessage(
-      color('#FFAA00', text(ChatColor.ITALIC + '"' + itemName.text + '"')),
-    );
+    p.sendMessage(color(SHOP_GOLD, itemName));
+    return;
   }
+  p.sendMessage(
+    color(SHOP_GOLD, text(ChatColor.ITALIC + '"' + itemName.text + '"')),
+  );
 }
 
 function countEmptyStacks(chest: Container) {
@@ -274,15 +274,15 @@ function sellToShop(
   chest: Container,
   taxRate: number,
 ): TransactionResult | undefined {
+  const tr = getTranslator(player);
   const moneyInShop = getInventoryBalance(chest.inventory, currency);
   const price = productPrice * howMany;
   if (moneyInShop < price) {
-    errorMessage(player, t(player, 'shops.not_enought_money'));
+    errorMessage(player, tr('shops.not_enought_money'));
     return undefined;
   }
 
-  const unitNames = getCurrencyNames(currency)?.plainText;
-  if (!unitNames) return;
+  const unitNames = getCurrencyTranslation(currency);
 
   const tax = getTaxes(taxRate, price);
   const success = takeMoneyFrom(chest.inventory, price, currency);
@@ -306,8 +306,9 @@ function sellToShop(
   });
 
   const unit = price - tax == 1 ? unitNames.unit : unitNames.unitPlural;
+  const unitTranslation = t(player, unit);
   player.sendMessage(
-    green(t(player, 'shops.you_sold', howMany, price - tax, unit)),
+    green(tr('shops.you_sold', howMany, price - tax, tr(unitTranslation))),
   );
 
   return { taxAmount: tax };
@@ -322,14 +323,14 @@ function buyFromShop(
   chest: Container,
   taxRate: number,
 ): TransactionResult | undefined {
+  const tr = getTranslator(player);
   const price = howMany * productPrice;
   const balance = getInventoryBalance(player.inventory, currency);
   if (price > balance) {
-    errorMessage(player, t(player, 'shops.you_no_enought_money'));
+    errorMessage(player, tr('shops.you_no_enought_money'));
     return undefined;
   }
-  const unitNames = getCurrencyNames(currency)?.plainText;
-  if (!unitNames) return;
+  const unitNames = getCurrencyTranslation(currency);
 
   const tax = getTaxes(taxRate, price);
 
@@ -355,12 +356,7 @@ function buyFromShop(
   });
 
   const unit = price == 1 ? unitNames.unit : unitNames.unitPlural;
-  player.sendMessage(
-    color(
-      '#55FF55',
-      text(t(player, 'shops.you_bought', howMany, round(price, 4), unit)),
-    ),
-  );
+  player.sendMessage(green(tr('shops.you_bought', howMany, price, tr(unit))));
   return { taxAmount: tax };
 }
 

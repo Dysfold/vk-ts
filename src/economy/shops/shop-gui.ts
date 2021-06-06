@@ -9,7 +9,8 @@ import { PlayerSwapHandItemsEvent } from 'org.bukkit.event.player';
 import { findItemsFromInventory, getBlockBehind, getShopItem } from './helpers';
 import { getShop } from './ShopData';
 import { getTaxes } from './taxes';
-import { getCurrencyNames, Currency } from '../currency';
+import { getCurrencyTranslation, Currency } from '../currency';
+import { t } from '../../common/localization/localization';
 
 const GUI_ICON = '\uE009';
 
@@ -37,7 +38,7 @@ export function openShopGUI(player: Player, sign: Block) {
   let itemPreview = findItemsFromInventory(chest.state.inventory, item)?.[0];
   if (!itemPreview) itemPreview = item;
 
-  const inv = createShopGuiInventory(sign);
+  const inv = createShopGuiInventory(player, sign);
   if (!inv) return;
   openGUIs.add(player);
 
@@ -50,7 +51,7 @@ export function openShopGUI(player: Player, sign: Block) {
  * Create the (empty) inventory to be displayed
  * @param sign The sign of the shop
  */
-function createShopGuiInventory(sign: Block) {
+function createShopGuiInventory(to: Player, sign: Block) {
   const shop = getShop(sign);
   if (!shop) return undefined;
 
@@ -59,8 +60,7 @@ function createShopGuiInventory(sign: Block) {
       ? shop.price - getTaxes(shop.taxRate, shop.price)
       : shop.price;
 
-  const unitNames = getCurrencyNames(shop.currency as Currency)?.plainText;
-  if (!unitNames) return;
+  const unitNames = getCurrencyTranslation(shop.currency as Currency);
 
   const unit = price === 1 ? unitNames.unit : unitNames.unitPlural;
 
@@ -74,8 +74,9 @@ function createShopGuiInventory(sign: Block) {
       '\uF80C' +
       price +
       ' ' +
-      unit +
-      '/kpl',
+      t(to, unit),
+    // Alternative message to display (needs more space)
+    // t(to, 'shop.unit_per_item', t(to, unit)),
   );
 }
 
@@ -100,24 +101,3 @@ registerEvent(PlayerSwapHandItemsEvent, (event) => {
     event.player.updateInventory();
   }
 });
-
-// Remove comments if chat clickEvent is needed
-// registerCommand('openshopgui', (sender, _alias, args) => {
-//   if (!(sender instanceof Player)) return;
-//   const x = Number.parseInt(args[0]);
-//   const y = Number.parseInt(args[1]);
-//   const z = Number.parseInt(args[2]);
-//   if (isNaN(x) || isNaN(y) || isNaN(z)) return;
-//   const shopSign = sender.world.getBlockAt(x, y, z);
-//   if (!shopSign) return;
-//   if (shopSign.location.distance(sender.location) > 10) {
-//     sender.sendMessage('Olet liian kaukana kaupasta');
-//     return;
-//   }
-
-//   const chest = getBlockBehind(shopSign);
-//   if (!chest) return;
-//   if (!(chest.state instanceof Container)) return;
-
-//   openShopGUI(sender as Player, chest.state, shopSign);
-// });
