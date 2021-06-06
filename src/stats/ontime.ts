@@ -13,7 +13,7 @@ import { getOnlinePlayerNames } from '../common/helpers/player';
 const TOP_LIST_DEFAULT = 10;
 const TOP_LIST_MAX = 100;
 
-const ontimesDb: Table<string, number> = getTable('ontime-table');
+const ontimesDb: Table<UUID, number> = getTable('ontimes');
 
 interface PlayerOntime {
   player: OfflinePlayer;
@@ -33,7 +33,7 @@ function getOnlinePlayerOntime(player: Player) {
 }
 
 function getOfflinePlayerOntime(player: OfflinePlayer) {
-  const uuid = player.uniqueId.toString();
+  const uuid = player.uniqueId;
   const time = ontimesDb.get(uuid) || 0;
   return { player, time };
 }
@@ -48,7 +48,7 @@ function updateOntime(player: Player) {
 }
 
 function setOntime(player: Player, time: number) {
-  const uuid = player.uniqueId.toString();
+  const uuid = player.uniqueId;
   ontimesDb.set(uuid, time); // Persistent
 }
 
@@ -75,7 +75,7 @@ function getSortedOntimes(): PlayerOntime[] {
 function getOntimeList(): PlayerOntime[] {
   return Array.from(ontimesDb, (ontime) => {
     const [uuid, time] = ontime;
-    const player = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
+    const player = Bukkit.getOfflinePlayer(uuid);
     return { player, time };
   });
 }
