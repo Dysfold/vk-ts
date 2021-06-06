@@ -23,3 +23,8 @@ export function ticksToDuration(ticks: number): Duration {
     seconds,
   };
 }
+
+export function millisecondsToDuration(ms: number): Duration {
+  const ticks = ms / 50;
+  return ticksToDuration(ticks);
+}
