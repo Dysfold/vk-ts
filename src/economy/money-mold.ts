@@ -8,7 +8,8 @@ import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import * as yup from 'yup';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
-import { Currency, getCurrencyNames } from './currency';
+import { Currency, getCurrencyTranslation } from './currency';
+import { addTranslation, t } from '../common/localization/localization';
 
 const MoneyMold = new CustomItem({
   name: translate('vk.money_mold'),
@@ -195,9 +196,7 @@ export function getCoinDisplayName(coin: Coin, currency: Currency) {
 
   const valueString = '' + value;
 
-  const translations = getCurrencyNames(currency)?.translations;
-
-  if (!translations) return [text('Tunnistamaton valuutta')];
+  const translations = getCurrencyTranslation(currency);
 
   // Construct the display name
   // components.push(text(ChatColor.RESET + '' + value + ' '));
@@ -217,7 +216,7 @@ export function getCoinDisplayName(coin: Coin, currency: Currency) {
 }
 
 // Admin command for creating money molds
-registerCommand('rahamuotti', (sender, label, args) => {
+registerCommand(['rahamuotti', 'moneymold'], (sender, label, args) => {
   if (!sender.isOp()) return;
   if (!(sender instanceof Player)) return;
   const player = sender as Player;
@@ -252,15 +251,27 @@ MoneyMold.event(
     const items = RAW_MATERIALS.get(model);
     if (!items) return;
 
-    event.player.sendMessage(
-      'Tarvitset tätä valuuttaa (' + model + ') varten: ',
-    );
+    event.player.sendMessage(t(event.player, 'money_mold.you_need'));
     for (const item of items) {
       const type = item.type.translationKey;
       const amount = item.amount;
       event.player.sendMessage(
-        ...[text(' - '), translate(type), text(` (${amount}kpl)`)],
+        ...[
+          text(' - '),
+          translate(type),
+          text(t(event.player, 'money_mold.n_pieces', amount)),
+        ],
       );
     }
   },
 );
+
+addTranslation('money_mold.you_need', {
+  fi_fi: 'Tarvitset tätä valuuttaa varten:',
+  en_us: 'To make this currency, you need:',
+});
+
+addTranslation('money_mold.n_pieces', {
+  fi_fi: ' (%s kappaletta)',
+  en_us: ' (%s pieces)',
+});

@@ -1,5 +1,6 @@
 import { ItemStack } from 'org.bukkit.inventory';
 import { VkItem } from '../common/items/VkItem';
+import { addTranslation } from '../common/localization/localization';
 
 export const Currency = {
   CLASSIC_GOLD: 0,
@@ -8,74 +9,113 @@ export const Currency = {
 } as const;
 export type Currency = typeof Currency[keyof typeof Currency];
 
-interface CurrencyName {
+interface CurrencyTranslation {
   unit: string;
   unitPlural: string;
   subunit: string;
   subunitPlural: string;
 }
 
-interface CurrencyNames {
-  translations: CurrencyName;
-  plainText: CurrencyName;
-}
-
-const currencyNames = new Map<Currency, CurrencyNames>([
+const CURRENCY_TRANSLATIONS = new Map<Currency, CurrencyTranslation>([
   [
     Currency.CLASSIC_GOLD,
     {
-      translations: {
-        unit: 'vk.currency_a_unit',
-        unitPlural: 'vk.currency_a_unit_plural',
-        subunit: 'vk.currency_a_subunit',
-        subunitPlural: 'vk.currency_a_subunit_plural',
-      },
-      plainText: {
-        unit: 'Punta',
-        unitPlural: 'Puntaa',
-        subunit: 'Penni',
-        subunitPlural: 'Penniä',
-      },
+      unit: 'vk.currency_a_unit',
+      unitPlural: 'vk.currency_a_unit_plural',
+      subunit: 'vk.currency_a_subunit',
+      subunitPlural: 'vk.currency_a_subunit_plural',
     },
   ],
   [
     Currency.SILVER,
     {
-      translations: {
-        unit: 'vk.currency_b_unit',
-        unitPlural: 'vk.currency_b_unit_plural',
-        subunit: 'vk.currency_b_subunit',
-        subunitPlural: 'vk.currency_b_subunit_plural',
-      },
-      plainText: {
-        unit: 'Sillinki',
-        unitPlural: 'Sillinkiä',
-        subunit: 'Sentti',
-        subunitPlural: 'Senttiä',
-      },
+      unit: 'vk.currency_b_unit',
+      unitPlural: 'vk.currency_b_unit_plural',
+      subunit: 'vk.currency_b_subunit',
+      subunitPlural: 'vk.currency_b_subunit_plural',
     },
   ],
   [
     Currency.GREEN_PAPER,
     {
-      translations: {
-        unit: 'vk.currency_c_unit',
-        unitPlural: 'vk.currency_c_unit_plural',
-        subunit: 'vk.currency_c_subunit',
-        subunitPlural: 'vk.currency_c_subunit_plural',
-      },
-      plainText: {
-        unit: 'Rupla',
-        unitPlural: 'Ruplaa',
-        subunit: 'Kopeekka',
-        subunitPlural: 'Kopeekkaa',
-      },
+      unit: 'vk.currency_c_unit',
+      unitPlural: 'vk.currency_c_unit_plural',
+      subunit: 'vk.currency_c_subunit',
+      subunitPlural: 'vk.currency_c_subunit_plural',
     },
   ],
 ]);
 
-export function getCurrencyNames(currency: Currency) {
-  return currencyNames.get(currency);
+const FALLBACK_TRANSLATION: CurrencyTranslation = {
+  unit: 'vk.currency_unknown_unit',
+  unitPlural: 'vk.currency_unknown_unit_plural',
+  subunit: 'vk.currency_unknown_subunit',
+  subunitPlural: 'vk.currency_unknown_subunit_plural',
+};
+
+/**
+ * These translation keys must be exacly the same as in respack.
+ * When adding a new currency, add the translation key to
+ * here and to resource pack lang
+ */
+addTranslation('vk.currency_a_unit', {
+  fi_fi: 'Punta',
+  en_us: 'Pound',
+});
+addTranslation('vk.currency_a_unit_plural', {
+  fi_fi: 'Puntaa',
+  en_us: 'Pounds',
+});
+addTranslation('vk.currency_a_subunit', {
+  fi_fi: 'Penni',
+  en_us: 'Penny',
+});
+addTranslation('vk.currency_a_subunit_plural', {
+  fi_fi: 'Penniä',
+  en_us: 'Pennies',
+});
+
+addTranslation('vk.currency_b_unit', {
+  fi_fi: 'Šillinki',
+  en_us: 'Shilling',
+});
+addTranslation('vk.currency_b_unit_plural', {
+  fi_fi: 'Šillinkiä',
+  en_us: 'Shillings',
+});
+addTranslation('vk.currency_b_subunit', {
+  fi_fi: 'Sentti',
+  en_us: 'Cent',
+});
+addTranslation('vk.currency_b_subunit_plural', {
+  fi_fi: 'Senttiä',
+  en_us: 'Cents',
+});
+
+addTranslation('vk.currency_c_unit', {
+  fi_fi: 'Rupla',
+  en_us: 'Ruble',
+});
+addTranslation('vk.currency_c_unit_plural', {
+  fi_fi: 'Ruplaa',
+  en_us: 'Rubles',
+});
+addTranslation('vk.currency_c_subunit', {
+  fi_fi: 'Kopeekka',
+  en_us: 'Kopek',
+});
+addTranslation('vk.currency_c_subunit_plural', {
+  fi_fi: 'Kopeekkaa',
+  en_us: 'Kopeks',
+});
+
+export function getCurrencyTranslation(currency: Currency) {
+  const translation = CURRENCY_TRANSLATIONS.get(currency);
+  if (!translation) {
+    log.error('Missing currency translation for currency ' + currency);
+    return FALLBACK_TRANSLATION;
+  }
+  return translation;
 }
 
 export function getCurrency(item: ItemStack): Currency | undefined {
