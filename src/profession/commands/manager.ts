@@ -1,9 +1,8 @@
-import { clickEvent, color, text } from 'craftjs-plugin/chat';
-import { Action } from 'net.md_5.bungee.api.chat.ClickEvent';
+import { color, text } from 'craftjs-plugin/chat';
 import { Bukkit, Location } from 'org.bukkit';
 import { CommandSender } from 'org.bukkit.command';
 import { Player } from 'org.bukkit.entity';
-import { Prompt } from '../../chat/prompt';
+import { promptYesNo } from '../../chat/prompt';
 import { errorMessage, successMessage } from '../../chat/system';
 import {
   getProfession,
@@ -97,23 +96,11 @@ async function requestProfessionChange(
 
   // If not, offer it to them
   successMessage(target, `${nominator.name} tarjoaa sinulle ammattia!`);
-  const prompt = new Prompt(target);
-  target.sendMessage(
-    text(`Ota vastaan ammatti: ${profession.name}? `),
-    color('#00AA00', text('✔')),
-    clickEvent(
-      Action.RUN_COMMAND,
-      prompt.command('yes'),
-      color('#55FF55', text('Kyllä ')),
-    ),
-    color('#AA0000', text('✘')),
-    clickEvent(
-      Action.RUN_COMMAND,
-      prompt.command('no'),
-      color('#FF5555', text('Ei ')),
-    ),
+  const answer = await promptYesNo(
+    target,
+    10,
+    `Ota vastaan ammatti: ${profession.name}?`,
   );
-  const answer = await prompt.waitAnswer(15);
   if (answer == 'yes') {
     successMessage(target, 'Ammattitarjous hyväksytty!');
     changeProfession(target, profession);

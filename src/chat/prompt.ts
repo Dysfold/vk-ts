@@ -1,6 +1,8 @@
+import { clickEvent, color, text } from 'craftjs-plugin/chat';
 import { UUID } from 'java.util';
 import { CommandSender, ConsoleCommandSender } from 'org.bukkit.command';
 import { Player } from 'org.bukkit.entity';
+import { Action } from 'net.md_5.bungee.api.chat.ClickEvent';
 
 /**
  * Pending prompts.
@@ -65,13 +67,13 @@ export class Prompt {
    * @returns A command, probably for click events.
    */
   command(answer: string): string {
-    const command = `/answerprompt ${this.randomId} ${answer}`;
+    const command = `answerprompt ${this.randomId} ${answer}`;
     // Console can't click links in chat, so we'll help a bit
     // (commands that are commonly used from console may want to do more than this)
     if (this.consoleSupport && this.target instanceof ConsoleCommandSender) {
       this.target.sendMessage(`[Prompt] ${answer} => ${command}`);
     }
-    return command;
+    return '/' + command;
   }
 
   /**
@@ -100,6 +102,11 @@ export class Prompt {
     prompts.set(this.randomId, callback);
 
     // Schedule a function to send a 'timeout' answer
+    if (this.consoleSupport && this.target instanceof ConsoleCommandSender) {
+      // Copy-pasting is slower than clicking a link
+      this.target.sendMessage('[Prompt] Console extra time +30s');
+      timeout += 30;
+    }
     wait(timeout, 'seconds').then(() => {
       const prompts = pendingPrompts.get(this.target);
       if (prompts) {
@@ -142,3 +149,37 @@ registerCommand(
     description: 'Internal command for prompt system.',
   },
 );
+
+/**
+ * Sends a simple yes-no prompt. This uses the more powerful Prompt class
+ * under the hood.
+ * @param target Target command sender.
+ * @param timeout Timeout for prompt.
+ * @param promptText Text to show for in-chat prompt.
+ * @returns 'yes' if the player accepted, 'no' if they did not,
+ * 'timeout' if they did not answer at all OR any other string,
+ * if they typed the right commands in chat by hand.
+ */
+export async function promptYesNo(
+  target: CommandSender | Player,
+  timeout: number,
+  promptText: string,
+): Promise<string> {
+  const prompt = new Prompt(target);
+  target.sendMessage(
+    text(promptText + ' '),
+    color('#00AA00', text('✔')),
+    clickEvent(
+      Action.RUN_COMMAND,
+      prompt.command('yes'),
+      color('#55FF55', text('Kyllä ')),
+    ),
+    color('#AA0000', text('✘')),
+    clickEvent(
+      Action.RUN_COMMAND,
+      prompt.command('no'),
+      color('#FF5555', text('Ei ')),
+    ),
+  );
+  return prompt.waitAnswer(timeout);
+}
