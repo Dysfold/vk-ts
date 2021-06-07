@@ -3,6 +3,7 @@ import { Action } from 'net.md_5.bungee.api.chat.ClickEvent';
 import { Bukkit, Location } from 'org.bukkit';
 import { CommandSender } from 'org.bukkit.command';
 import { Player } from 'org.bukkit.entity';
+import { Prompt } from '../../chat/prompt';
 import { errorMessage, successMessage } from '../../chat/system';
 import {
   getProfession,
@@ -96,54 +97,34 @@ async function requestProfessionChange(
 
   // If not, offer it to them
   successMessage(target, `${nominator.name} tarjoaa sinulle ammattia!`);
+  const prompt = new Prompt(target);
   target.sendMessage(
     text(`Ota vastaan ammatti: ${profession.name}? `),
     color('#00AA00', text('✔')),
     clickEvent(
       Action.RUN_COMMAND,
-      '/nimitys hyväksy',
-      color('#55FF55', text('Hyväksy ')),
+      prompt.command('yes'),
+      color('#55FF55', text('Kyllä ')),
     ),
     color('#AA0000', text('✘')),
     clickEvent(
       Action.RUN_COMMAND,
-      '/nimitys hylkää',
-      color('#FF5555', text('Hylkää')),
+      prompt.command('no'),
+      color('#FF5555', text('Ei ')),
     ),
   );
-  pendingChanges.set(target, profession);
-
-  // Clean up pending profession change if target does nothing
-  await wait(15, 'seconds');
-  if (pendingChanges.has(target)) {
-    errorMessage(target, 'Ammattitarjous peruttu, odotit liian pitkään.');
+  const answer = await prompt.waitAnswer(15);
+  if (answer == 'yes') {
+    successMessage(target, 'Ammattitarjous hyväksytty!');
+    changeProfession(target, profession);
+  } else if (answer == 'no') {
+    successMessage(target, 'Ammattitarjous hylätty.');
     pendingChanges.delete(target);
-  }
+  } else if (answer == 'timeout') {
+    pendingChanges.delete(target);
+    errorMessage(target, 'Ammattitarjous peruttu, odotit liian pitkään.');
+  } // else: do nothing
 }
-
-registerCommand(
-  'nimitys',
-  (sender, _alias, args) => {
-    if (!(sender instanceof Player)) {
-      return;
-    }
-    const profession = pendingChanges.get(sender);
-    if (!profession) {
-      return;
-    }
-    if (args[0] == 'hyväksy') {
-      successMessage(sender, 'Ammattitarjous hyväksytty!');
-      changeProfession(sender, profession);
-    } else if (args[0] == 'hylkää') {
-      successMessage(sender, 'Ammattitarjous hylätty.');
-      pendingChanges.delete(sender);
-    }
-  },
-  {
-    executableBy: 'players',
-    permission: 'vk.profession.player',
-  },
-);
 
 function changeProfession(player: Player, profession: Profession) {
   pendingChanges.delete(player); // They accepted it
