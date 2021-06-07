@@ -1,15 +1,29 @@
-import { CustomItem } from '../../common/items/CustomItem';
-import { VkItem } from '../../common/items/VkItem';
-import { Block } from 'org.bukkit.block';
+import { translate } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
+import { Block } from 'org.bukkit.block';
 import { Door } from 'org.bukkit.block.data.type';
 import { Hinge } from 'org.bukkit.block.data.type.Door';
+import { ItemStack } from 'org.bukkit.inventory';
 import * as yup from 'yup';
-import { translate } from 'craftjs-plugin/chat';
+import { CustomItem } from '../../common/items/CustomItem';
+import { VkItem } from '../../common/items/VkItem';
+import { ItemFrame } from 'org.bukkit.entity';
+import { Data } from '../../common/datas/yup-utils';
 
 const LOCK_DATA = {
   code: yup.number().notRequired(),
+  isLocked: yup.boolean(),
+  created: yup.number(),
 };
+
+export type LockDataType = Data<typeof LOCK_DATA>;
+
+export interface LockInfo {
+  customItem: typeof ClosedLeftDoorLock;
+  itemStack: ItemStack;
+  itemFrame: ItemFrame;
+  data: LockDataType;
+}
 
 /**
  * Obtainable lock item. Used to place locks on blocks
@@ -49,6 +63,13 @@ const OpenedRightDoorLock = new CustomItem({
   data: LOCK_DATA,
 });
 
+const ITEM_FRAME_LOCKS = [
+  ClosedLeftDoorLock,
+  ClosedRightDoorLock,
+  OpenedLeftDoorLock,
+  OpenedRightDoorLock,
+];
+
 const DOORS = new Set([
   Material.OAK_DOOR,
   Material.DARK_OAK_DOOR,
@@ -58,6 +79,7 @@ const DOORS = new Set([
   Material.ACACIA_DOOR,
   // TODO: Stone doors?
 ]);
+
 function isDoor(type: Material) {
   return DOORS.has(type);
 }
@@ -93,4 +115,21 @@ function getDoorLockItem(door: Door) {
       return ClosedRightDoorLock;
     }
   }
+}
+
+export function getLockCustomItem(item: ItemStack) {
+  for (const customItem of ITEM_FRAME_LOCKS) {
+    if (customItem.check(item)) {
+      return customItem;
+    }
+  }
+}
+
+export function getToggledDoorLock(item: ItemStack) {
+  if (ClosedLeftDoorLock.check(item)) return OpenedLeftDoorLock;
+  if (ClosedRightDoorLock.check(item)) return OpenedRightDoorLock;
+
+  if (OpenedLeftDoorLock.check(item)) return ClosedLeftDoorLock;
+  if (OpenedRightDoorLock.check(item)) return ClosedRightDoorLock;
+  throw new Error('Invalid lock item on door');
 }
