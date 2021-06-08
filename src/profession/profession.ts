@@ -333,6 +333,10 @@ export function getAppointTime(player: OfflinePlayer): number {
   return appointTimes.get(player.uniqueId) ?? 0;
 }
 
+export function clearAppointTime(player: OfflinePlayer): void {
+  appointTimes.delete(player.uniqueId);
+}
+
 /**
  * Filters out professions from players.
  * @param callback Function that is called with UUID of each player with
