@@ -23,7 +23,7 @@ registerCommand(
 );
 
 registerCommand(
-  ['tykkää', 'tykkaa', 'like'],
+  ['tykkää', 'like'],
   (sender, _label, args) => {
     if (!(sender instanceof Player)) return;
 
