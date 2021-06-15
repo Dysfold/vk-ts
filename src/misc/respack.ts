@@ -17,7 +17,7 @@ async function updateHash(announce = false) {
   const data = await res.json();
   const newHash = data?.hash as string;
 
-  console.log(newHash);
+  if (newHash == undefined) return;
 
   if (announce) {
     // Check if the hash has changed, and then announce the new resource pack
