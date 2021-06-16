@@ -7,13 +7,13 @@ import { Status } from 'org.bukkit.event.player.PlayerResourcePackStatusEvent';
 import { addTranslation, t } from '../common/localization/localization';
 import { announce as announceMessage } from './announcements';
 
-const DOWNLOAD_URL =
-  'https://github.com/Laetta/respack/releases/download/latest/release.zip';
+const DOWNLOAD_URL = 'http://valtakausi.fi:5001/respack/download';
+const HASH_URL = 'http://valtakausi.fi:5001/respack/hash';
 
 let hash: string;
 
 async function updateHash(announce = false) {
-  const res = await fetch('http://valtakausi.fi:5001/respack');
+  const res = await fetch(HASH_URL);
   const data = await res.json();
   const newHash = data?.hash as string;
 
@@ -99,8 +99,7 @@ registerCommand(
   },
 );
 
-// Try to get new hash every x minutes.
-// Github API will only allow 60 requests per hour
+// Try to get new hash every x seconds
 const INTERVAL_SECONDS = 10;
 setInterval(() => {
   updateHash(true);
