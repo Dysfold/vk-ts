@@ -1,30 +1,31 @@
-import { color, text, tooltip, translate } from 'craftjs-plugin/chat';
+import { color, text } from 'craftjs-plugin/chat';
 import { UUID } from 'java.util';
-import { TranslatableComponent } from 'net.md_5.bungee.api.chat';
-import {
-  Bukkit,
-  ChatColor,
-  Location,
-  Material,
-  SoundCategory,
-} from 'org.bukkit';
+import { TextComponent, TranslatableComponent } from 'net.md_5.bungee.api.chat';
+import { Bukkit, Location, Material, SoundCategory } from 'org.bukkit';
 import { Block, Chest, Container } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
 import { Action as BlockAction } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
+import { errorMessage } from '../../chat/system';
 import { addItemTo, giveItem } from '../../common/helpers/inventory';
 import { getItemName } from '../../common/helpers/items';
-import { Currency, getCurrencyNames } from '../currency';
+import { distanceBetween } from '../../common/helpers/locations';
+import { round } from '../../common/helpers/math';
+import { getTranslator, t } from '../../common/localization/localization';
+import { Currency, getCurrencyTranslation } from '../currency';
 import { getInventoryBalance, giveMoney, takeMoneyFrom } from '../money';
 import { findItemsFromInventory, getBlockBehind, getShopItem } from './helpers';
+import {
+  shopGold as gold,
+  shopGreen as green,
+  shopYellow as yellow,
+  SHOP_GOLD,
+} from './messages';
 import { openShopGUI } from './shop-gui';
 import { getShop } from './ShopData';
-import { distanceBetween } from '../../common/helpers/locations';
-import { errorMessage } from '../../chat/system';
 import { getTaxes, sendTaxes } from './taxes';
-import { round } from '../../common/helpers/math';
 
 /**
  * Display shop info to customer
@@ -56,104 +57,86 @@ function displayShopInfo(p: Player, sign: Block) {
   if (!item) return;
   const taxes = getTaxes(view.taxRate, view.price);
   const taxFreePrice = view.price - taxes;
+  const tr = getTranslator(p);
 
   const currency = view.currency as Currency;
-  const unitNames = getCurrencyNames(currency)?.plainText;
-  if (!unitNames) return;
+  const unitNames = getCurrencyTranslation(currency);
 
-  const unit = view.price == 1 ? unitNames.unit : unitNames.unitPlural;
-  const taxFreeUnit = taxFreePrice == 1 ? unitNames.unit : unitNames.unitPlural;
+  const unit = tr(view.price == 1 ? unitNames.unit : unitNames.unitPlural);
+  const taxFreeUnit = tr(
+    taxFreePrice == 1 ? unitNames.unit : unitNames.unitPlural,
+  );
 
   const itemName = getItemName(item);
   const taxCollector = view.taxCollector
     ? Bukkit.server.getOfflinePlayer(UUID.fromString(view.taxCollector))
     : undefined;
 
+  const shopTypeTranslationKey =
+    view.type === 'SELLING' ? 'shops.selling' : 'shops.buying';
+
   p.sendMessage(text('\n\n\n'));
-  p.sendMessage(color('#FFAA00', text('----------Kauppa-arkku----------')));
-
+  p.sendMessage(gold(tr('shops.title')));
+  p.sendMessage(yellow(tr(shopTypeTranslationKey)));
+  displayShopItemName(p, itemName);
   p.sendMessage(
-    color(
-      '#FFFF99',
-      translate(view.type === 'SELLING' ? 'vk.selling' : 'vk.buying'),
-    ),
+    yellow(`${tr('shops.price')}: `),
+    gold(`${round(view.price)} `),
+    yellow(tr('shops.unit_per_item', unit)),
   );
 
-  if (itemName instanceof TranslatableComponent) {
-    p.sendMessage(color('#FFAA00', itemName));
-  } else {
-    p.sendMessage(
-      color('#FFAA00', text(ChatColor.ITALIC + '"' + itemName.text + '"')),
-    );
-  }
-  p.sendMessage(
-    color(
-      '#FFFF99',
-      text(
-        `Hinta: ${ChatColor.GOLD}${round(view.price, 4)}${
-          ChatColor.RESET
-        } ${unit} / kpl`,
-      ),
-    ),
-  );
-
+  // Tax info
   if (view.taxRate) {
+    const taxCollectorName = taxCollector?.name ?? tr('shops.unknown');
     p.sendMessage(
-      color(
-        '#FFFF99',
-        tooltip(
-          text(
-            `Verottaja: ${
-              taxCollector?.name || 'Tuntematon'
-            } \nVeroton arvo: ${taxes}`,
-          ),
-          text(`Arvonlisävero: ${ChatColor.GOLD}${view.taxRate}%`),
-        ),
-      ),
+      // tooltip(
+      //   text(tr('shops.tax_tooltip', taxCollectorName, taxes)),
+      //   yellow(`${tr('shops.VAT')}: `),
+      //   gold(`${view.taxRate}%`),
+      // ),
+      yellow(`${tr('shops.VAT')}: `),
+      gold(`${view.taxRate}%`),
+      yellow(` (${taxCollectorName})`),
     );
     p.sendMessage(
-      color(
-        '#FFFF99',
-        text(
-          `Veroton hinta: ${ChatColor.GOLD}${round(taxFreePrice, 4)}${
-            ChatColor.RESET
-          } ${taxFreeUnit} / kpl`,
-        ),
-      ),
+      yellow(`${tr('shops.tax_free_price')}: `),
+      gold(`${taxFreePrice}`),
+      yellow(` ${taxFreeUnit}`),
     );
   }
+
   if (view.type === 'SELLING') {
     const amount = countItemsInShop(chest, item);
-    p.sendMessage(
-      color(
-        '#FFFF99',
-        text(
-          `Kaupassa on ${ChatColor.GOLD}${amount}${ChatColor.RESET} tuotetta jäljellä.`,
-        ),
-      ),
-    );
+    p.sendMessage(yellow(tr('shops.items_left', amount)));
+    p.sendMessage(gold(tr('shops.footer')));
+    p.sendMessage(yellow(tr('shops.how_many_to_buy')));
   }
+
   if (view.type === 'BUYING') {
     const amount = countEmptyStacks(chest);
-    if (amount) {
-      p.sendMessage(
-        color(
-          '#FFFF99',
-          text(
-            `Kaupassa on tilaa ainakin ${ChatColor.GOLD}${amount}${ChatColor.RESET} stackille.`,
-          ),
-        ),
-      );
+    if (amount > 0) {
+      p.sendMessage(yellow(tr('shops.space_left', amount)));
     } else {
-      p.sendMessage(color('#FFFF99', text(`Kaupan tila on lopussa.`)));
+      p.sendMessage(yellow(tr('shops.space_low')));
     }
+    p.sendMessage(gold(tr('shops.footer')));
+    p.sendMessage(yellow(tr('shops.how_many_to_sell')));
   }
-  p.sendMessage(color('#FFAA00', text('--------------------------------')));
-  const action = view.type == 'SELLING' ? 'ostaa' : 'myydä';
-  p.sendMessage(
-    color('#FFFF99', text('Montako tuotetta haluat ' + action + '?')),
-  );
+
   activeCustomers.set(p, { sign: sign, startTime: new Date() });
+}
+
+function displayShopItemName(
+  p: Player,
+  itemName: TranslatableComponent | TextComponent,
+) {
+  if (itemName instanceof TranslatableComponent) {
+    p.sendMessage(color(SHOP_GOLD, itemName));
+    return;
+  }
+  const msg = gold(`"${itemName.text}"`);
+  msg.italic = true;
+  p.sendMessage(msg);
 }
 
 function countEmptyStacks(chest: Container) {
@@ -196,7 +179,7 @@ setInterval(() => {
 
 function stopTransaction(player: Player) {
   if (activeCustomers.has(player)) {
-    errorMessage(player, 'Kaupankäynti keskeytetty.');
+    errorMessage(player, t(player, 'shops.transaction_cancelled'));
   }
   activeCustomers.delete(player);
 }
@@ -222,7 +205,7 @@ function handleMessage(msg: ChatMessage) {
 
   const amount = Number.parseInt(msg.content);
   if (isNaN(amount) || amount <= 0) {
-    p.sendMessage(ChatColor.RED + 'Viallinen kappalemäärä');
+    errorMessage(p, t(p, 'shops.invalid_amount'));
     return;
   }
 
@@ -236,7 +219,7 @@ function handleMessage(msg: ChatMessage) {
     const stackSize = material?.maxStackSize;
     const maxAmount = stackSize * emptyStacks;
     if (amount > maxAmount) {
-      p.sendMessage(ChatColor.RED + 'Kaupassa ei tarpeeksi tilaa');
+      errorMessage(p, t(p, 'shops.not_enought_space'));
       return;
     }
     result = sellToShop(
@@ -254,7 +237,7 @@ function handleMessage(msg: ChatMessage) {
   if (view.type === 'SELLING') {
     const itemsInShop = countItemsInShop(chest.state, shopItem);
     if (itemsInShop < amount) {
-      p.sendMessage(ChatColor.RED + 'Kaupassa ei tarpeeksi tuotetta');
+      errorMessage(p, t(p, 'shops.not_enought_items'));
       return;
     }
     result = buyFromShop(
@@ -290,15 +273,15 @@ function sellToShop(
   chest: Container,
   taxRate: number,
 ): TransactionResult | undefined {
+  const tr = getTranslator(player);
   const moneyInShop = getInventoryBalance(chest.inventory, currency);
   const price = productPrice * howMany;
   if (moneyInShop < price) {
-    player.sendMessage(ChatColor.RED + 'Kaupassa ei ole tarpeeksi rahaa!');
+    errorMessage(player, tr('shops.not_enought_money'));
     return undefined;
   }
 
-  const unitNames = getCurrencyNames(currency)?.plainText;
-  if (!unitNames) return;
+  const unitNames = getCurrencyTranslation(currency);
 
   const tax = getTaxes(taxRate, price);
   const success = takeMoneyFrom(chest.inventory, price, currency);
@@ -322,12 +305,11 @@ function sellToShop(
   });
 
   const unit = price - tax == 1 ? unitNames.unit : unitNames.unitPlural;
+  const unitTranslation = t(player, unit);
   player.sendMessage(
-    color(
-      '#55FF55',
-      text(`Myit ${howMany} kpl hintaan ${round(price - tax, 4)} ${unit}`),
-    ),
+    green(tr('shops.you_sold', howMany, price - tax, tr(unitTranslation))),
   );
+
   return { taxAmount: tax };
 }
 
@@ -340,14 +322,14 @@ function buyFromShop(
   chest: Container,
   taxRate: number,
 ): TransactionResult | undefined {
+  const tr = getTranslator(player);
   const price = howMany * productPrice;
   const balance = getInventoryBalance(player.inventory, currency);
   if (price > balance) {
-    player.sendMessage(ChatColor.RED + 'Sinulla ei ole tarpeeksi rahaa!');
+    errorMessage(player, tr('shops.you_no_enought_money'));
     return undefined;
   }
-  const unitNames = getCurrencyNames(currency)?.plainText;
-  if (!unitNames) return;
+  const unitNames = getCurrencyTranslation(currency);
 
   const tax = getTaxes(taxRate, price);
 
@@ -373,12 +355,7 @@ function buyFromShop(
   });
 
   const unit = price == 1 ? unitNames.unit : unitNames.unitPlural;
-  player.sendMessage(
-    color(
-      '#55FF55',
-      text(`Ostit ${howMany} kpl hintaan ${round(price, 4)} ${unit}`),
-    ),
-  );
+  player.sendMessage(green(tr('shops.you_bought', howMany, price, tr(unit))));
   return { taxAmount: tax };
 }
 

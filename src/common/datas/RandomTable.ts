@@ -19,7 +19,9 @@ export class RandomTable<T> {
    * Null if table has no entries.
    */
   randomEntry(): T | null {
-    let rand = Math.floor(Math.random() * this.totalProbability() + 1);
+    let rand = Math.floor(
+      Math.random() * this.totalProbability(this.entries) + 1,
+    );
     for (const entry of this.entries) {
       rand -= entry.probability;
       if (rand <= 0) return entry.value;
@@ -28,17 +30,25 @@ export class RandomTable<T> {
   }
 
   /**
-   * @param amount Amount of entries to get.
+   * @param amount Amount of entries to get. ( Ignored if unique property is set to true
+   * and there isn't enough entries to fullfill amount )
+   * @param unique Whether all entries should be unique. Defaults to false.
    * @returns Array of table entries based on probability. Null if table has no entries.
    */
-  randomEntries(amount: number): T[] | null {
-    if (this.entries.length <= 0) return null;
+  randomEntries(amount: number, unique?: boolean): T[] | null {
+    let allEntries = [...this.entries];
+    if (allEntries.length <= 0) return null;
     const entries: T[] = [];
+
     for (let i = 0; i < amount; i++) {
-      let rand = Math.floor(Math.random() * this.totalProbability() + 1);
-      for (const entry of this.entries) {
+      let rand = Math.floor(
+        Math.random() * this.totalProbability(allEntries) + 1,
+      );
+      for (const entry of allEntries) {
         rand -= entry.probability;
-        if (rand <= 0) entries.push(entry.value);
+        if (rand > 0) continue;
+        entries.push(entry.value);
+        if (unique) allEntries = allEntries.filter((e) => e !== entry);
         break;
       }
     }
@@ -46,9 +56,10 @@ export class RandomTable<T> {
   }
 
   /**
+   * @param entries Table entries.
    * @returns Total probability of all entries.
    */
-  private totalProbability() {
-    return this.entries.reduce((total, entry) => total + entry.probability, 0);
+  private totalProbability(entries: TableEntry<T>[]) {
+    return entries.reduce((total, entry) => total + entry.probability, 0);
   }
 }

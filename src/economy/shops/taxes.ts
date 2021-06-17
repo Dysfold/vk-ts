@@ -1,7 +1,5 @@
-import { color, text } from 'craftjs-plugin/chat';
 import { UUID } from 'java.util';
 import { round } from 'lodash';
-import { ChatColor } from 'net.md_5.bungee.api';
 import { Bukkit, OfflinePlayer } from 'org.bukkit';
 import { Block, Chest, Sign } from 'org.bukkit.block';
 import { WallSign } from 'org.bukkit.block.data.type';
@@ -16,9 +14,15 @@ import {
   yupLocToLoc,
   YUP_LOCATION,
 } from '../../common/helpers/locations';
-import { Currency, getCurrencyNames } from '../currency';
+import { getTranslator, t } from '../../common/localization/localization';
+import { Currency, getCurrencyTranslation } from '../currency';
 import { giveMoney } from '../money';
 import { getBlockBehind } from './helpers';
+import {
+  shopGold as gold,
+  shopYellow as yellow,
+  shopGreen as green,
+} from './messages';
 
 /**
  * Calculate the amount of the tax and round it to 2 decimals points.
@@ -110,7 +114,7 @@ registerEvent(SignChangeEvent, async (event) => {
   playerDataView.chestLocation.y = chest.location.y;
   playerDataView.chestLocation.z = chest.location.z;
 
-  event.player.sendMessage('Veroarkku luotu!');
+  event.player.sendMessage(green(t(event.player, 'shops.tax_chest_created')));
 });
 
 /**
@@ -168,49 +172,40 @@ registerEvent(PlayerInteractEvent, (event) => {
   const yupLoc = collectorView.chestLocation;
   const location = yupLocToLoc(yupLoc);
   if (!location) return;
+  const tr = getTranslator(player);
 
   if (distanceBetween(location, chest.location) > 0.1) {
-    errorMessage(player, 'Tämä veroarkku ei ole enää käytössä!');
+    errorMessage(player, tr('shops.old_tax_chest'));
     return;
   }
 
+  player.sendMessage(gold(tr('shops.tax_chest_title')));
   player.sendMessage(
-    color('#FFAA00', text('-----------------Veroarkku-----------------')),
-  );
-  player.sendMessage(
-    color('#FFFF99', text('Veronkerääjä: ' + ChatColor.GOLD + collector.name)),
+    yellow(tr('shops.tax_collector')),
+    yellow(': '),
+    gold(`${collector.name}`),
   );
 
   if (collectorView.untransferred.length) {
-    player.sendMessage(color('#FFFF99', text('Uusia veroja:')));
+    player.sendMessage(yellow(`${tr('shops.new_taxes')}:`));
     for (const tax of collectorView.untransferred) {
       const currency = tax.currency as Currency;
-      const currencyName = getCurrencyNames(currency)?.plainText;
+      const currencyName = getCurrencyTranslation(currency);
       const unit =
-        tax.amount == 1 ? currencyName?.unit : currencyName?.unitPlural;
+        tax.amount == 1 ? currencyName.unit : currencyName.unitPlural;
 
       giveMoney(chest.inventory, tax.amount, currency);
       player.sendMessage(
-        color(
-          '#FFFF99',
-          text(
-            '+ ' +
-              ChatColor.GOLD +
-              round(tax.amount, 2) +
-              ' ' +
-              ChatColor.RESET +
-              unit,
-          ),
-        ),
+        yellow('+ '),
+        gold(round(tax.amount, 2) + ' '),
+        yellow(tr(unit)),
       );
     }
 
     collectorView.untransferred = [];
   }
 
-  player.sendMessage(
-    color('#FFAA00', text('-------------------------------------------')),
-  );
+  player.sendMessage(gold(tr('shops.footer')));
 });
 
 /**

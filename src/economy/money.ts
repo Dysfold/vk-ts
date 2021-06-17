@@ -2,6 +2,8 @@ import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import { addItemTo } from '../common/helpers/inventory';
 import { Currency, getCurrency, getMoneyValue } from './currency';
 import { CURRENCY_ITEMS, getCoinDisplayName } from './money-mold';
+import { addTranslation, t } from '../common/localization/localization';
+import { Player } from 'org.bukkit.entity';
 
 /**
  * Calculate total value of given currency in an inventory
@@ -80,7 +82,7 @@ export function takeMoneyFrom(
     );
     inventory.viewers.forEach((viewer) => {
       viewer.sendMessage(
-        'Rahan ottaminen epäonnistui. Ota tästä viestistä kuva ja ota yhteyttä ylläpitäjiin tai kehittäjiin',
+        t((viewer as unknown) as Player, "'money.money_taking_error'"),
       );
     });
     // Give the money back to the inventory
@@ -134,3 +136,10 @@ export function isSameCurrency(unitA: string, unitB: string) {
   b = b.substring(0, minLen);
   return a == b;
 }
+
+addTranslation('money.money_taking_error', {
+  fi_fi:
+    'Rahan ottaminen epäonnistui. Ota tästä viestistä kuva ja ota yhteyttä ylläpitäjiin tai kehittäjiin',
+  en_us:
+    'Taking money failed. Take a screenshot and contact developers or admins',
+});
