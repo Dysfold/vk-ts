@@ -1,8 +1,8 @@
 import { PlayerJumpEvent } from 'com.destroystokyo.paper.event.player';
-import { Location, Material, SoundCategory } from 'org.bukkit';
+import { Bukkit, Material, SoundCategory } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Ageable } from 'org.bukkit.block.data';
-import { FallingBlock, Player } from 'org.bukkit.entity';
+import { Entity, FallingBlock, Player } from 'org.bukkit.entity';
 import {
   EntityChangeBlockEvent,
   EntityDamageEvent,
@@ -19,50 +19,60 @@ const materials = [
   Material.FROSTED_ICE,
 ];
 
+const IceBreakChance = {
+  SNEAKING: 0.02,
+  WALKING: 0.08,
+  SPRINTING: 0.15,
+  JUMP_LANDING: 0.15,
+  FALL_DAMAGE_LANDING: 0.9,
+};
+
+function getBlockBelow(entity: Entity | Player) {
+  return entity.location.block.getRelative(BlockFace.DOWN);
+}
+
+const BREAKABLE_ICE_MATERIALS = new Set([
+  Material.ICE,
+  Material.PACKED_ICE,
+  Material.FROSTED_ICE,
+]);
+
+function isIce(material: Material) {
+  return BREAKABLE_ICE_MATERIALS.has(material);
+}
+
 registerEvent(PlayerJumpEvent, async (event) => {
-  if (
-    event.player.location.block.getRelative(BlockFace.DOWN).type !==
-    Material.ICE
-  )
-    return;
+  const blockBelow = getBlockBelow(event.player);
+  if (!isIce(blockBelow.type)) return;
 
   // Chance for the ice to play sound when jumping on ice
   if (chanceOf(0.05)) {
     playCrackSound(event.player.location.block);
   }
 
-  // 70% chance for the ice not to break
-  if (chanceOf(0.7)) return;
+  if (!chanceOf(IceBreakChance.JUMP_LANDING)) return;
 
   // Waiting for the player to be on ground
   await wait(12, 'ticks');
 
-  const ice = event.player.location.block.getRelative(BlockFace.DOWN);
-
-  playIceBreakSound(ice);
-  breakIce(ice.location, Math.floor(2 + Math.random() * 4.3));
+  playIceBreakSound(blockBelow);
+  const breakRadius = Math.floor(2 + Math.random() * 4.3);
+  const landingBlock = getBlockBelow(event.player);
+  breakIce(landingBlock, breakRadius);
 });
 
 registerEvent(EntityDamageEvent, (event) => {
-  if (!(event.entity instanceof Player)) return;
   if (event.cause !== DamageCause.FALL) return;
-  if (
-    event.entity.location.block.getRelative(BlockFace.DOWN).type !==
-    Material.ICE
-  )
-    return;
+  const blockBelow = getBlockBelow(event.entity);
+  if (!chanceOf(IceBreakChance.FALL_DAMAGE_LANDING)) return;
+  if (!isIce(blockBelow.type)) return;
 
-  // Block under player
-  const locBlock = event.entity.location.block.getRelative(BlockFace.DOWN);
-  breakIce(locBlock.location, 5);
+  const radius = Math.min(5, Math.ceil(1.5 * event.damage));
+  breakIce(blockBelow, radius);
 });
 
-function breakIce(location: Location, radius: number) {
-  const ice = location.block;
-
-  if (chanceOf(0.5)) {
-    playCrackSound(ice);
-  }
+function breakIce(ice: Block, radius: number) {
+  playCrackSound(ice);
 
   const iceStength = 0.2 + 0.8 * Math.random();
 
@@ -70,7 +80,7 @@ function breakIce(location: Location, radius: number) {
   for (let x = -radius; x <= radius; x++) {
     for (let z = -radius; z <= radius; z++) {
       const block = ice.getRelative(x, 0.0, z);
-      if (block.type !== Material.ICE) continue;
+      if (!isIce(block.type)) continue;
 
       // Compare against squared radius to check that point is inside circle
       if (x * x + z * z > radius * radius) continue;
@@ -95,6 +105,25 @@ function breakIce(location: Location, radius: number) {
     }
   }
   dropIceBlocks(droppable);
+}
+
+const ICE_CHECK_INTERVAL_SEC = 10;
+setInterval(() => {
+  for (const player of Bukkit.onlinePlayers) {
+    const blockBelow = getBlockBelow(player);
+    if (!isIce(blockBelow.type)) continue;
+    if (player.velocity.length() < 0.1) continue;
+    if (!player.isOnGround()) continue;
+    const breakChance = getIceBreakChance(player);
+    if (!chanceOf(breakChance)) continue;
+    breakIce(blockBelow, 3);
+  }
+}, ICE_CHECK_INTERVAL_SEC * 1000);
+
+function getIceBreakChance(player: Player) {
+  if (player.isSneaking()) return IceBreakChance.SNEAKING;
+  if (player.isSprinting()) return IceBreakChance.SPRINTING;
+  return IceBreakChance.WALKING;
 }
 
 // Drop selected ice blocks as falling blocks
@@ -140,11 +169,9 @@ function playIceBreakSound(block: Block) {
 registerEvent(EntityChangeBlockEvent, (event) => {
   if (event.entity instanceof FallingBlock) {
     const block = event.entity;
-    if (block.blockData.material == Material.ICE) {
-      if (block.fallDistance > 1) {
-        event.setCancelled(true);
-        block.remove();
-      }
+    if (isIce(block.blockData.material)) {
+      event.setCancelled(true);
+      block.remove();
     }
   }
 });
