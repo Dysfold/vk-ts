@@ -1,15 +1,14 @@
 import { Block } from 'org.bukkit.block';
-import { ItemFrame, Player } from 'org.bukkit.entity';
+import { ItemFrame } from 'org.bukkit.entity';
 import { ItemStack } from 'org.bukkit.inventory';
 import { getLockItemFrame } from './helpers';
 import {
   getLockCustomItem,
   LockCustomItem,
   LockDataType,
-  getToggledDoorLock,
+  getToggledLock,
 } from './lock-items';
 import { isLockableMaterial } from './lockable-materials';
-import { PlayerInteractEvent } from 'org.bukkit.event.player';
 
 export class BlockLock {
   private itemFrame: ItemFrame;
@@ -56,9 +55,8 @@ export class BlockLock {
   }
 
   public open() {
-    const toggledLock = getToggledDoorLock(this.lockItem);
     this.lockData.isLocked = false;
-    this.itemFrame.item = toggledLock.create(this.lockData);
+    this.itemFrame.item = this.lockCustomItem.create(this.lockData);
   }
 
   public lock() {
@@ -71,7 +69,7 @@ export class BlockLock {
    * when clicking unlocked door etc
    */
   public interact() {
-    const toggledLock = getToggledDoorLock(this.lockItem);
+    const toggledLock = getToggledLock(this.lockItem);
     this.itemFrame.item = toggledLock.create(this.lockData);
   }
 }

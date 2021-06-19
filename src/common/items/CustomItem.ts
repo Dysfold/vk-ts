@@ -1,12 +1,12 @@
-import { ItemStack } from 'org.bukkit.inventory';
+import { isEmpty } from 'lodash';
+import { BaseComponent } from 'net.md_5.bungee.api.chat';
 import { Material } from 'org.bukkit';
 import { Event } from 'org.bukkit.event';
+import { ItemStack } from 'org.bukkit.inventory';
+import { ObjectShape } from 'yup/lib/object';
 import { dataHolder, DataType, dataType } from '../datas/holder';
 import { dataView, saveView } from '../datas/view';
-import { ObjectShape } from 'yup/lib/object';
-import { isEmpty } from 'lodash';
 import { Data, PartialData } from '../datas/yup-utils';
-import { BaseComponent } from 'net.md_5.bungee.api.chat';
 
 export const CUSTOM_DATA_KEY = 'cd';
 
@@ -60,15 +60,27 @@ type CustomItemOptions<T extends ObjectShape> = {
 /**
  * Used for tracking already used item ids to generate errors on collisions.
  */
-const usedIds: Set<string> = new Set();
+const usedIds: Map<string, number> = new Map();
+let nextOrdinal = 0;
+
+function getStringKey(type: Material, id: number) {
+  return type + '-' + id;
+}
 
 function checkItemId(type: Material, id: number) {
-  const hash = type + '-' + id;
+  const hash = getStringKey(type, id);
   if (usedIds.has(hash)) {
     console.error(`Found item id collision with id ${id} for ${type}`);
   } else {
-    usedIds.add(hash);
+    usedIds.set(hash, nextOrdinal++);
   }
+}
+
+function getIndex(type: Material, id: number) {
+  const key = getStringKey(type, id);
+  const ordinal = usedIds.get(key);
+  if (ordinal == undefined) throw new Error(`Invalid item ordinal ${ordinal}`);
+  return ordinal;
 }
 
 export class CustomItem<T extends ObjectShape> {
@@ -87,12 +99,18 @@ export class CustomItem<T extends ObjectShape> {
    */
   private dataType: DataType<T>;
 
+  /**
+   * Unique id for this custom item.
+   */
+  readonly ordinal: number;
+
   constructor(options: CustomItemOptions<T>) {
     this.options = options;
     this.customModelData =
       options.customModel !== false ? options.id : 100000 + options.id;
     checkItemId(options.type, options.id);
     this.dataType = dataType(CUSTOM_DATA_KEY, this.options.data);
+    this.ordinal = getIndex(options.type, options.id);
   }
 
   /**

@@ -128,7 +128,7 @@ export function getLockCustomItem(item: ItemStack) {
   }
 }
 
-export function getToggledDoorLock(item: ItemStack) {
+export function getToggledLock(item: ItemStack) {
   if (ClosedLeftDoorLock.check(item)) return OpenedLeftDoorLock;
   if (ClosedRightDoorLock.check(item)) return OpenedRightDoorLock;
 
