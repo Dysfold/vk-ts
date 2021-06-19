@@ -25,6 +25,9 @@ export interface LockInfo {
   data: LockDataType;
 }
 
+export type LockCustomItem00000 = typeof ClosedLeftDoorLock;
+export type LockCustomItem = CustomItem<typeof LOCK_DATA>;
+
 /**
  * Obtainable lock item. Used to place locks on blocks
  */

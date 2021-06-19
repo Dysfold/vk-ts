@@ -1,18 +1,17 @@
-import { Bukkit } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { Key } from '../keys/key';
-import { getLockInfo } from './helpers';
-import { getToggledDoorLock, LockInfo } from './lock-items';
+import { BlockLock } from './BlockLock';
 
 registerEvent(PlayerInteractEvent, (event) => {
   if (!event.clickedBlock) return;
-  const lockInfo = getLockInfo(event.clickedBlock);
-  if (!lockInfo) return;
+  const lock = BlockLock.getFrom(event.clickedBlock);
+  if (!lock) return;
 
-  Bukkit.broadcastMessage(JSON.stringify(lockInfo.data));
-  if (lockInfo.data.isLocked) {
-    clickLockedBlock(event, lockInfo);
+  if (lock.isLocked()) {
+    clickLockedBlock(event, lock);
+  } else {
+    clickUnlockedBlock(event, lock);
   }
 });
 
@@ -23,19 +22,39 @@ function hasRightKey(player: Player, code?: number) {
   return code == codeInKey;
 }
 
-function clickLockedBlock(event: PlayerInteractEvent, lockInfo: LockInfo) {
+function clickLockedBlock(event: PlayerInteractEvent, lock: BlockLock) {
   const player = event.player;
+  const codeInLock = lock.getCode();
 
-  if (hasRightKey(player, lockInfo.data.code)) {
-    return openLock(player, lockInfo);
+  if (hasRightKey(player, codeInLock)) {
+    player.sendMessage('Avataan');
+    lock.open();
+    return;
   }
 
   event.setCancelled(true);
   event.player.sendMessage('Lukittu');
 }
 
-function openLock(player: Player, lockInfo: LockInfo) {
-  player.sendMessage('Avataan');
-  const toggledLock = getToggledDoorLock(lockInfo.itemStack);
-  lockInfo.itemFrame.item = toggledLock.create(lockInfo.data);
+function clickUnlockedBlock(event: PlayerInteractEvent, lock: BlockLock) {
+  const player = event.player;
+  const codeInLock = lock.getCode();
+
+  if (hasRightKey(player, codeInLock)) {
+    player.sendMessage('Lukitaan');
+    lock.lock();
+
+    /**
+     * Player can keep the
+     */
+    if (player.isSneaking()) {
+      event.setCancelled(true);
+    } else {
+      lock.interact();
+    }
+    return;
+  }
+
+  lock.interact();
+  event.player.sendMessage('Klikattiin avattua lukkoa');
 }

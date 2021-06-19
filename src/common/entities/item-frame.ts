@@ -87,19 +87,6 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
 
   // Hidden frame, hidden item
   event.setCancelled(true);
-
-  // Call a click event for the block behind the item frame
-  const attachedFace = frame.attachedFace as BlockFace;
-  const clickedBlock = entity.location.block.getRelative(attachedFace);
-  const clickedFace = attachedFace.oppositeFace;
-  const playerInteractEvent = new PlayerInteractEvent(
-    event.player,
-    Action.RIGHT_CLICK_BLOCK,
-    event.player.inventory.itemInMainHand,
-    clickedBlock,
-    clickedFace,
-  );
-  Bukkit.server.pluginManager.callEvent(playerInteractEvent);
 });
 
 // Only allow players to break item frames
