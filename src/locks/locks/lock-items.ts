@@ -1,9 +1,9 @@
 import { translate } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
-import { Block } from 'org.bukkit.block';
-import { Door } from 'org.bukkit.block.data.type';
+import { Block, Chest } from 'org.bukkit.block';
+import { Door, TrapDoor } from 'org.bukkit.block.data.type';
 import { Hinge } from 'org.bukkit.block.data.type.Door';
-import { ItemStack } from 'org.bukkit.inventory';
+import { ItemStack, DoubleChestInventory } from 'org.bukkit.inventory';
 import * as yup from 'yup';
 import { CustomItem } from '../../common/items/CustomItem';
 import { VkItem } from '../../common/items/VkItem';
@@ -38,10 +38,13 @@ export const LockItem = new CustomItem({
   name: translate('vk.lock'),
 });
 
-/**
+/***********************************************************
  * Locks used in ItemFrames. These should not be obtainable
- */
+ ***********************************************************/
 
+/**
+ * Doors
+ */
 const ClosedLeftDoorLock = new CustomItem({
   id: 20,
   type: VkItem.HIDDEN,
@@ -66,11 +69,62 @@ const OpenedRightDoorLock = new CustomItem({
   data: LOCK_DATA,
 });
 
+/**
+ * Chests
+ */
+const DoubleChestLock = new CustomItem({
+  id: 27,
+  type: VkItem.HIDDEN,
+  data: LOCK_DATA,
+});
+
+const SingleChestLock = new CustomItem({
+  id: 26,
+  type: VkItem.HIDDEN,
+  data: LOCK_DATA,
+});
+
+/**
+ * Trapdoors
+ */
+const ClosedTrapdoorLock = new CustomItem({
+  id: 24,
+  type: VkItem.HIDDEN,
+  data: LOCK_DATA,
+});
+
+const OpenedTrapdoorLock = new CustomItem({
+  id: 25,
+  type: VkItem.HIDDEN,
+  data: LOCK_DATA,
+});
+
+const TOGGLED_LOCK_PAIRS = new Map([
+  // Doors
+  [ClosedLeftDoorLock.ordinal, OpenedLeftDoorLock],
+  [ClosedRightDoorLock.ordinal, OpenedRightDoorLock],
+  [OpenedLeftDoorLock.ordinal, ClosedLeftDoorLock],
+  [OpenedRightDoorLock.ordinal, ClosedRightDoorLock],
+
+  // Trapdoors
+  [ClosedTrapdoorLock.ordinal, OpenedTrapdoorLock],
+  [OpenedTrapdoorLock.ordinal, ClosedTrapdoorLock],
+]);
+
 const ITEM_FRAME_LOCKS = [
+  // Doors
   ClosedLeftDoorLock,
   ClosedRightDoorLock,
   OpenedLeftDoorLock,
   OpenedRightDoorLock,
+
+  // Chests
+  DoubleChestLock,
+  SingleChestLock,
+
+  // Trapdoors
+  ClosedTrapdoorLock,
+  OpenedTrapdoorLock,
 ];
 
 const DOORS = new Set([
@@ -83,7 +137,7 @@ const DOORS = new Set([
   // TODO: Stone doors?
 ]);
 
-function isDoor(type: Material) {
+function isLockableDoor(type: Material) {
   return DOORS.has(type);
 }
 
@@ -94,11 +148,26 @@ function isDoor(type: Material) {
  */
 export function getLockItem(lockedBlock: Block) {
   const type = lockedBlock.type;
+  const blockData = lockedBlock.blockData;
+  const blockState = lockedBlock.state;
 
-  if (isDoor(type)) {
-    const door = lockedBlock.blockData as Door;
+  if (isLockableDoor(type)) {
+    const door = blockData as Door;
     return getDoorLockItem(door);
   }
+
+  if (blockState instanceof Chest) {
+    if (blockState.inventory instanceof DoubleChestInventory) {
+      return DoubleChestLock;
+    }
+    return SingleChestLock;
+  }
+
+  if (blockData instanceof TrapDoor) {
+    if (blockData.isOpen()) return OpenedTrapdoorLock;
+    return ClosedTrapdoorLock;
+  }
+
   return undefined;
 }
 
@@ -128,11 +197,6 @@ export function getLockCustomItem(item: ItemStack) {
   }
 }
 
-export function getToggledLock(item: ItemStack) {
-  if (ClosedLeftDoorLock.check(item)) return OpenedLeftDoorLock;
-  if (ClosedRightDoorLock.check(item)) return OpenedRightDoorLock;
-
-  if (OpenedLeftDoorLock.check(item)) return ClosedLeftDoorLock;
-  if (OpenedRightDoorLock.check(item)) return ClosedRightDoorLock;
-  throw new Error('Invalid lock item on door');
+export function getToggledLock(item: LockCustomItem) {
+  return TOGGLED_LOCK_PAIRS.get(item.ordinal);
 }

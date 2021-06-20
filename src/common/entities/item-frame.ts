@@ -1,15 +1,10 @@
-import { Bukkit } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { EntityType, ItemFrame, Player } from 'org.bukkit.entity';
 import { EventPriority } from 'org.bukkit.event';
-import { Action } from 'org.bukkit.event.block';
 import { EntityDamageByEntityEvent } from 'org.bukkit.event.entity';
 import { SpawnReason } from 'org.bukkit.event.entity.CreatureSpawnEvent';
 import { HangingBreakEvent } from 'org.bukkit.event.hanging';
-import {
-  PlayerInteractEntityEvent,
-  PlayerInteractEvent,
-} from 'org.bukkit.event.player';
+import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
 import { dropVisibleItem, isHiddenItem } from '../../misc/hidden-items';
 import { isHiddenEntity } from './hidden-entity';
@@ -27,6 +22,7 @@ export function spawnHiddenItemFrame(
   face: BlockFace,
   item: ItemStack,
 ) {
+  if (!hasSpaceForItemFrame(block, face)) return null;
   const loc = block.getRelative(face).location;
   // Use spawnEntity with a callback to prevent item frame flickering
   // Requires ugly cast to any due to https://github.com/bensku/java-ts-bind/issues/2
@@ -62,7 +58,7 @@ export function spawnHiddenItemFrame(
  * the item frame.
  */
 export function getItemFrame(block: Block, face: BlockFace) {
-  const loc = block.getRelative(face).location.add(0.5, 0, 0.5);
+  const loc = block.getRelative(face).location.add(0.5, 0.5, 0.5);
   const entities = block.world.getNearbyEntities(loc, 0.5, 0.5, 0.5);
   for (const entity of entities) {
     if (entity.type !== EntityType.ITEM_FRAME) continue;
@@ -127,3 +123,8 @@ registerEvent(
     priority: EventPriority.HIGH,
   },
 );
+
+function hasSpaceForItemFrame(attachedTo: Block, facing: BlockFace) {
+  const block = attachedTo.getRelative(facing);
+  return block.isPassable();
+}

@@ -1,10 +1,15 @@
+import { Location, SoundCategory } from 'org.bukkit';
+import { Block } from 'org.bukkit.block';
+import { Openable } from 'org.bukkit.block.data';
 import { Player } from 'org.bukkit.entity';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot } from 'org.bukkit.inventory';
+import { t } from '../../common/localization/localization';
 import { Key } from '../keys/key';
 import { BlockLock } from './BlockLock';
 
 registerEvent(PlayerInteractEvent, (event) => {
+  if (event.isCancelled()) return;
   if (!event.clickedBlock) return;
   if (event.hand !== EquipmentSlot.HAND) return;
   const lock = BlockLock.getFrom(event.clickedBlock);
@@ -27,15 +32,18 @@ function hasRightKey(player: Player, code?: number) {
 function clickLockedBlock(event: PlayerInteractEvent, lock: BlockLock) {
   const player = event.player;
   const codeInLock = lock.getCode();
+  const soundLocation = event.interactionPoint ?? lock.location;
 
   if (hasRightKey(player, codeInLock)) {
-    player.sendMessage('Avataan');
+    player.sendActionBar(`§a${t(player, 'lock.unlocking')}`);
     openTheLock(lock, player, event);
+    playSetUnlockedSound(soundLocation);
     return;
   }
 
   event.setCancelled(true);
-  event.player.sendMessage('Lukittu');
+  player.sendActionBar(`§c${t(player, 'lock.is_locked')}`);
+  playWrongKeySound(soundLocation);
 }
 
 function openTheLock(
@@ -55,26 +63,66 @@ function openTheLock(
 function clickUnlockedBlock(event: PlayerInteractEvent, lock: BlockLock) {
   const player = event.player;
   const codeInLock = lock.getCode();
+  const soundLocation = event.interactionPoint ?? lock.location;
 
   if (hasRightKey(player, codeInLock)) {
     lockTheLock(player, lock, event);
+    player.sendActionBar(`§a${t(player, 'lock.locking')}`);
+    playSetLockedSound(soundLocation);
     return;
   }
 
   lock.interact();
-  event.player.sendMessage('Klikattiin avattua lukkoa');
 }
 function lockTheLock(
   player: Player,
   lock: BlockLock,
   event: PlayerInteractEvent,
 ) {
-  player.sendMessage('Lukitaan');
   lock.lock();
 
   if (player.isSneaking()) {
     event.setCancelled(true);
   } else {
-    lock.interact();
+    if (isOpenable(event.clickedBlock)) {
+      lock.interact();
+    } else {
+      event.setCancelled(true);
+    }
   }
+}
+
+function isOpenable(block: Block | null) {
+  return block?.blockData instanceof Openable;
+}
+
+function playSetUnlockedSound(location: Location) {
+  location.world.playSound(
+    location,
+    'custom.lock',
+    SoundCategory.PLAYERS,
+    0.4,
+    1.7,
+  );
+}
+
+function playSetLockedSound(location: Location) {
+  location.world.playSound(
+    location,
+    'custom.lock',
+    SoundCategory.PLAYERS,
+    0.4,
+    1.1,
+  );
+}
+
+function playWrongKeySound(location: Location) {
+  location.world.playSound(
+    location,
+    // 'minecraft:block.stone_button.click_on',
+    'minecraft:block.iron_trapdoor.open',
+    SoundCategory.PLAYERS,
+    0.7,
+    1.5,
+  );
 }
