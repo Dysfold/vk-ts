@@ -16,6 +16,8 @@ const LOCKABLE_MATERIALS = new Set([
   Material.JUNGLE_TRAPDOOR,
   Material.ACACIA_TRAPDOOR,
   Material.DARK_OAK_TRAPDOOR,
+
+  Material.LECTERN,
 ]);
 
 export function isLockableMaterial(material: Material) {

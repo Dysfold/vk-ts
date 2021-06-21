@@ -1,8 +1,11 @@
-import { Location, SoundCategory } from 'org.bukkit';
+import { Location, SoundCategory, Material } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Openable } from 'org.bukkit.block.data';
 import { Player } from 'org.bukkit.entity';
-import { PlayerInteractEvent } from 'org.bukkit.event.player';
+import {
+  PlayerInteractEvent,
+  PlayerTakeLecternBookEvent,
+} from 'org.bukkit.event.player';
 import { EquipmentSlot } from 'org.bukkit.inventory';
 import { t } from '../../common/localization/localization';
 import { Key } from '../keys/key';
@@ -41,6 +44,10 @@ function clickLockedBlock(event: PlayerInteractEvent, lock: BlockLock) {
     return;
   }
 
+  // When clicking lectern without correct key, we just open it
+  // instead of cancelling it
+  if (event.clickedBlock?.type == Material.LECTERN) return;
+
   event.setCancelled(true);
   player.sendActionBar(`§c${t(player, 'lock.is_locked')}`);
   playWrongKeySound(soundLocation);
@@ -58,6 +65,10 @@ function openTheLock(
   } else {
     lock.interact();
   }
+
+  // Cancel the event always when clicking a lectern
+  // This is because we dont want to read the book when locking/unlocking
+  if (event.clickedBlock?.type == Material.LECTERN) event.setCancelled(true);
 }
 
 function clickUnlockedBlock(event: PlayerInteractEvent, lock: BlockLock) {
@@ -74,6 +85,7 @@ function clickUnlockedBlock(event: PlayerInteractEvent, lock: BlockLock) {
 
   lock.interact();
 }
+
 function lockTheLock(
   player: Player,
   lock: BlockLock,
@@ -90,6 +102,10 @@ function lockTheLock(
       event.setCancelled(true);
     }
   }
+
+  // Cancel the event always when clicking a lectern
+  // This is because we dont want to read the book when locking/unlocking
+  if (event.clickedBlock?.type == Material.LECTERN) event.setCancelled(true);
 }
 
 function isOpenable(block: Block | null) {
@@ -126,3 +142,12 @@ function playWrongKeySound(location: Location) {
     1.5,
   );
 }
+
+registerEvent(PlayerTakeLecternBookEvent, (event) => {
+  const lock = BlockLock.getFrom(event.lectern.block);
+  if (lock?.isLocked()) {
+    event.setCancelled(true);
+    playWrongKeySound(event.lectern.location);
+    event.player.closeInventory();
+  }
+});

@@ -125,6 +125,8 @@ registerEvent(
 );
 
 function hasSpaceForItemFrame(attachedTo: Block, facing: BlockFace) {
+  const oldItemFrame = getItemFrame(attachedTo, facing);
+  if (oldItemFrame) return false;
   const block = attachedTo.getRelative(facing);
   return block.isPassable();
 }

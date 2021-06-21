@@ -99,6 +99,12 @@ const OpenedTrapdoorLock = new CustomItem({
   data: LOCK_DATA,
 });
 
+const LecternLock = new CustomItem({
+  id: 28,
+  type: VkItem.HIDDEN,
+  data: LOCK_DATA,
+});
+
 const TOGGLED_LOCK_PAIRS = new Map([
   // Doors
   [ClosedLeftDoorLock.ordinal, OpenedLeftDoorLock],
@@ -125,9 +131,12 @@ const ITEM_FRAME_LOCKS = [
   // Trapdoors
   ClosedTrapdoorLock,
   OpenedTrapdoorLock,
+
+  // Lectern
+  LecternLock,
 ];
 
-const DOORS = new Set([
+const LOCKABLE_DOORS = new Set([
   Material.OAK_DOOR,
   Material.DARK_OAK_DOOR,
   Material.BIRCH_DOOR,
@@ -138,7 +147,7 @@ const DOORS = new Set([
 ]);
 
 function isLockableDoor(type: Material) {
-  return DOORS.has(type);
+  return LOCKABLE_DOORS.has(type);
 }
 
 /**
@@ -166,6 +175,10 @@ export function getLockItem(lockedBlock: Block) {
   if (blockData instanceof TrapDoor) {
     if (blockData.isOpen()) return OpenedTrapdoorLock;
     return ClosedTrapdoorLock;
+  }
+
+  if (type == Material.LECTERN) {
+    return LecternLock;
   }
 
   return undefined;

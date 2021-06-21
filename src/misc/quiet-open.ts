@@ -22,7 +22,6 @@ registerEvent(
       sound = blockData.isOpen()
         ? 'non-silent.wooden_door.close'
         : 'non-silent.wooden_door.open';
-      block.world.playSound(block.location, sound, 1, 1);
     }
 
     // Fence gates
@@ -31,7 +30,6 @@ registerEvent(
       sound = blockData.isOpen()
         ? 'non-silent.fence_gate.close'
         : 'non-silent.fence_gate.open';
-      block.world.playSound(block.location, sound, 1, 1);
     }
 
     // Fence gates
