@@ -1,14 +1,12 @@
 import { Bukkit } from 'org.bukkit';
-import { Block, Chest, Lectern } from 'org.bukkit.block';
-import { Openable } from 'org.bukkit.block.data';
 import { ItemFrame } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
 import {
   PlayerInteractEntityEvent,
   PlayerInteractEvent,
 } from 'org.bukkit.event.player';
-import { LecternInventory } from 'org.bukkit.inventory';
-import { isLockableMaterial } from './lockable-materials';
+import { getLock } from '../helpers/getLock';
+import { isLockableMaterial } from '../blocklocks/block-lock-list';
 
 /**
  * Allow players to interact with locked blocks by clicking the item frame
@@ -31,27 +29,6 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
   Bukkit.server.pluginManager.callEvent(interactEvent);
   if (interactEvent.isCancelled()) return;
 
-  if (block.blockData instanceof Openable) {
-    toggleOpenable(block);
-  }
-
-  if (block.state instanceof Chest) {
-    player.openInventory(block.state.inventory);
-  }
-
-  if (block.state instanceof Lectern) {
-    if (hasBookInLectern(block.state)) {
-      player.openInventory(block.state.inventory);
-    }
-  }
+  const lock = getLock(block);
+  lock?.useBlock(player);
 });
-
-function toggleOpenable(block: Block) {
-  const openable = block.blockData as Openable;
-  openable.setOpen(!openable.isOpen());
-  block.blockData = openable;
-}
-
-function hasBookInLectern(lectern: Lectern) {
-  return (lectern.inventory as LecternInventory).book !== null;
-}

@@ -1,4 +1,4 @@
-import { addTranslation } from '../../common/localization/localization';
+import { addTranslation } from '../../../common/localization/localization';
 
 addTranslation('lock.is_locked', {
   fi_fi: 'Lukossa',

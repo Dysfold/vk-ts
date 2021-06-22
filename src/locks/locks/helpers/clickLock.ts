@@ -1,29 +1,16 @@
-import { Location, SoundCategory, Material } from 'org.bukkit';
+import { Player } from 'org.bukkit.entity';
+import { Key } from '../../keys/key';
+import { PlayerInteractEvent } from 'org.bukkit.event.player';
+import { BlockLock } from '../blocklocks/BlockLock';
+import { t } from '../../../common/localization/localization';
+import {
+  playSetUnlockedSound,
+  playWrongKeySound,
+  playSetLockedSound,
+} from './sounds';
+import { Material } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Openable } from 'org.bukkit.block.data';
-import { Player } from 'org.bukkit.entity';
-import {
-  PlayerInteractEvent,
-  PlayerTakeLecternBookEvent,
-} from 'org.bukkit.event.player';
-import { EquipmentSlot } from 'org.bukkit.inventory';
-import { t } from '../../common/localization/localization';
-import { Key } from '../keys/key';
-import { BlockLock } from './BlockLock';
-
-registerEvent(PlayerInteractEvent, (event) => {
-  if (event.isCancelled()) return;
-  if (!event.clickedBlock) return;
-  if (event.hand !== EquipmentSlot.HAND) return;
-  const lock = BlockLock.getFrom(event.clickedBlock);
-  if (!lock) return;
-
-  if (lock.isLocked()) {
-    clickLockedBlock(event, lock);
-  } else {
-    clickUnlockedBlock(event, lock);
-  }
-});
 
 function hasRightKey(player: Player, code?: number) {
   const itemInHand = player.inventory.itemInMainHand;
@@ -32,7 +19,7 @@ function hasRightKey(player: Player, code?: number) {
   return code == codeInKey;
 }
 
-function clickLockedBlock(event: PlayerInteractEvent, lock: BlockLock) {
+export function clickLockedBlock(event: PlayerInteractEvent, lock: BlockLock) {
   const player = event.player;
   const codeInLock = lock.getCode();
   const soundLocation = event.interactionPoint ?? lock.location;
@@ -63,7 +50,7 @@ function openTheLock(
   if (player.isSneaking()) {
     event.setCancelled(true);
   } else {
-    lock.interact();
+    lock.update();
   }
 
   // Cancel the event always when clicking a lectern
@@ -71,7 +58,10 @@ function openTheLock(
   if (event.clickedBlock?.type == Material.LECTERN) event.setCancelled(true);
 }
 
-function clickUnlockedBlock(event: PlayerInteractEvent, lock: BlockLock) {
+export function clickUnlockedBlock(
+  event: PlayerInteractEvent,
+  lock: BlockLock,
+) {
   const player = event.player;
   const codeInLock = lock.getCode();
   const soundLocation = event.interactionPoint ?? lock.location;
@@ -83,7 +73,7 @@ function clickUnlockedBlock(event: PlayerInteractEvent, lock: BlockLock) {
     return;
   }
 
-  lock.interact();
+  lock.update();
 }
 
 function lockTheLock(
@@ -97,7 +87,7 @@ function lockTheLock(
     event.setCancelled(true);
   } else {
     if (isOpenable(event.clickedBlock)) {
-      lock.interact();
+      lock.update();
     } else {
       event.setCancelled(true);
     }
@@ -111,43 +101,3 @@ function lockTheLock(
 function isOpenable(block: Block | null) {
   return block?.blockData instanceof Openable;
 }
-
-function playSetUnlockedSound(location: Location) {
-  location.world.playSound(
-    location,
-    'custom.lock',
-    SoundCategory.PLAYERS,
-    0.4,
-    1.7,
-  );
-}
-
-function playSetLockedSound(location: Location) {
-  location.world.playSound(
-    location,
-    'custom.lock',
-    SoundCategory.PLAYERS,
-    0.4,
-    1.1,
-  );
-}
-
-function playWrongKeySound(location: Location) {
-  location.world.playSound(
-    location,
-    // 'minecraft:block.stone_button.click_on',
-    'minecraft:block.iron_trapdoor.open',
-    SoundCategory.PLAYERS,
-    0.7,
-    1.5,
-  );
-}
-
-registerEvent(PlayerTakeLecternBookEvent, (event) => {
-  const lock = BlockLock.getFrom(event.lectern.block);
-  if (lock?.isLocked()) {
-    event.setCancelled(true);
-    playWrongKeySound(event.lectern.location);
-    event.player.closeInventory();
-  }
-});
