@@ -24,7 +24,7 @@ export function getLock(block: Block): BlockLock | undefined {
   if (!itemFrame) return;
 
   const itemInFrame = itemFrame.item;
-  if (!itemInFrame) return;
+  if (!itemInFrame || itemInFrame.type.isAir()) return;
 
   const type = dataType(CUSTOM_DATA_KEY, LOCK_DATA);
   const data = dataView(type, itemInFrame);

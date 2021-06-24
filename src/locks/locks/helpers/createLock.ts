@@ -45,6 +45,7 @@ function createLockItemFrame(block: Block, lockInItemFrame: ItemStack) {
 
   const frame = spawnHiddenItemFrame(attachTo, frameFacing, lockInItemFrame);
   if (!frame) return;
+  frame.setInvulnerable(true);
   frame.rotation = rotation;
   return frame;
 }

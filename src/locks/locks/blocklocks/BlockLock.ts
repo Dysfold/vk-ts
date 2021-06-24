@@ -3,7 +3,7 @@ import { Location, Material, Rotation } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Directional } from 'org.bukkit.block.data';
 import { ItemFrame, Player } from 'org.bukkit.entity';
-import { LockCustomItem, LockDataType } from '../lock-items';
+import { LockCustomItem, LockDataType, LockItem } from '../lock-items';
 
 export interface BlockLockProps {
   itemFrame: ItemFrame;
@@ -47,6 +47,12 @@ export abstract class BlockLock {
   public lock() {
     this.lockData.isLocked = true;
     this.itemFrame.item = this.lockCustomItem.create(this.lockData);
+  }
+
+  public destroy() {
+    this.itemFrame.remove();
+    const lockItem = LockItem.create({ code: this.getCode() });
+    this.location.world.dropItemNaturally(this.location, lockItem);
   }
 
   /**

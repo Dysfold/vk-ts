@@ -8,6 +8,7 @@ import { TrapDoorLock } from './TrapDoorLock';
 const BLOCK_LOCKS = [ChestLock, DoorLock, LecternLock, TrapDoorLock];
 
 const LOCKABLE_MATERIALS = new Set<Material>();
+
 BLOCK_LOCKS.forEach((lock) => {
   lock.materials.forEach((type) => {
     LOCKABLE_MATERIALS.add(type);

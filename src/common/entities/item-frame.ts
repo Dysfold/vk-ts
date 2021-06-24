@@ -8,6 +8,7 @@ import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
 import { dropVisibleItem, isHiddenItem } from '../../misc/hidden-items';
 import { isHiddenEntity } from './hidden-entity';
+import { isLockItem } from '../../locks/locks/lock-items';
 
 /**
  * Spawns a hidden item frame.
@@ -110,6 +111,12 @@ registerEvent(
     const entity = event.entity;
     if (!isHiddenEntity(entity)) return;
     if (!(entity instanceof ItemFrame)) return;
+    if (isLockItem(entity.item)) {
+      event.setCancelled(true);
+      console.log('JUU');
+      return;
+    }
+    console.log('EII');
 
     // Remove, don't drop item form of the entity
     event.setCancelled(true);

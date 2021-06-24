@@ -1,8 +1,11 @@
 import { translate } from 'craftjs-plugin/chat';
 import * as yup from 'yup';
 import { Data } from '../../common/datas/yup-utils';
-import { CustomItem } from '../../common/items/CustomItem';
+import { CustomItem, CUSTOM_DATA_KEY } from '../../common/items/CustomItem';
 import { VkItem } from '../../common/items/VkItem';
+import { ItemStack } from 'org.bukkit.inventory';
+import { dataType } from '../../common/datas/holder';
+import { dataView } from '../../common/datas/view';
 
 export const LOCK_DATA = {
   code: yup.number().notRequired(),
@@ -25,3 +28,11 @@ export const LockItem = new CustomItem({
   },
   name: translate('vk.lock'),
 });
+
+export function isLockItem(item: ItemStack) {
+  if (!item || item.type.isAir()) return false;
+  const type = dataType(CUSTOM_DATA_KEY, LOCK_DATA);
+  const data = dataView(type, item);
+
+  return 'code' in data && 'isLocked' in data && 'created' in data;
+}
