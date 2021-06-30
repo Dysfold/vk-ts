@@ -134,10 +134,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
         bottleCanFill = true;
 
         // Call cauldron level change event because the level changes
-        if (
-          !checkCauldronEvent(clickedBlock, event.player, blockData.level, -1)
-        )
-          return;
+        if (!checkCauldronEvent(clickedBlock, event.player, -1)) return;
 
         // Decrease the level of the cauldron
         blockData.level--;
@@ -167,7 +164,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
     // Get corresponding customitem
     const potion = getFullBottle(event.item);
     const meta = potion.itemMeta;
-    meta.displayName = '';
+    meta.displayName(null);
 
     // Clear weird data from the potion (it would be pink)
     if (!waterQuality) {
@@ -205,7 +202,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
   }
 
   // Call cauldron level change event because the level changes
-  if (!checkCauldronEvent(block, event.player, levelled.level, 1)) return;
+  if (!checkCauldronEvent(block, event.player, 1)) return;
 
   // Fill the cauldron
   levelled.level++;
@@ -259,27 +256,32 @@ function giveItem(player: Player, item: ItemStack, hand: EquipmentSlot | null) {
 }
 
 /**
- * Call CauldonLevelChangeEvent
+ * Calls CauldonLevelChangeEvent.
  * @param block The cauldron
  * @param player Who clicked
- * @param oldLevel Level of the cauldron
  * @param change How much the level did change? -1 or +1
+ * @returns True if the event did not get canceled, false otherwise.
  */
 export function checkCauldronEvent(
   block: Block,
   player: Player,
-  oldLevel: number,
   change: -1 | 1,
 ) {
+  const data = block.blockData;
+  if (!(data instanceof Levelled)) return true; // Can't call event, not a cauldron
   const reason =
     change === 1 ? ChangeReason.BOTTLE_EMPTY : ChangeReason.BOTTLE_FILL;
 
+  // Apply water level change to block state
+  data.level += change; // Change level
+  const state = block.state;
+  state.blockData = data; // Apply to state of cauldron
+
   const cauldronEvent = new CauldronLevelChangeEvent(
     block,
-    (player as unknown) as Entity,
+    player as unknown as Entity,
     reason,
-    oldLevel,
-    oldLevel + change,
+    state,
   );
   Bukkit.server.pluginManager.callEvent(cauldronEvent);
   return !cauldronEvent.isCancelled();

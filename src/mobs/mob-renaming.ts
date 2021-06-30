@@ -9,7 +9,7 @@ registerEvent(PlayerInteractEntityEvent, (event) => {
     inv.itemInOffHand?.type !== Material.NAME_TAG
   )
     return;
-  if (event.rightClicked.customName) {
+  if (event.rightClicked.customName()) {
     event.setCancelled(true);
     event.player.sendActionBar(ChatColor.RED + 'Et voi nimetä tätä uudelleen');
   }

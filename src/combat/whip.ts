@@ -62,7 +62,7 @@ Whip.event(
   EntityDamageByEntityEvent,
   (event) => equippedItem(event.damager, EquipmentSlot.HAND),
   async (event) => {
-    const player = (event.damager as unknown) as Player;
+    const player = event.damager as unknown as Player;
     if (whipPlayers.has(player)) return;
     whipPlayers.add(player);
 
@@ -74,8 +74,9 @@ Whip.event(
     }
 
     // Play animation
-    const item = (((event.damager as unknown) as Player)
-      .inventory as PlayerInventory).itemInMainHand;
+    const item = (
+      (event.damager as unknown as Player).inventory as PlayerInventory
+    ).itemInMainHand;
     const meta = item.itemMeta;
     meta.customModelData = 11;
     item.itemMeta = meta;

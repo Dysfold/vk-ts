@@ -28,7 +28,7 @@ ShepherdsStaff.event(
     if (!(clicked instanceof LivingEntity)) return;
     const target = clicked as LivingEntity;
     if (target.type === EntityType.PLAYER) {
-      if (((target as unknown) as Player).isSneaking()) return;
+      if ((target as unknown as Player).isSneaking()) return;
     }
     if (cooldowns.has(player)) return;
 

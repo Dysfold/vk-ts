@@ -1,8 +1,9 @@
 import { clickEvent, color, text } from 'craftjs-plugin/chat';
-import { BaseComponent } from 'net.md_5.bungee.api.chat';
-import { Action } from 'net.md_5.bungee.api.chat.ClickEvent';
+import { Component } from 'net.kyori.adventure.text';
+import { Action } from 'net.kyori.adventure.text.event.ClickEvent';
 import { Player } from 'org.bukkit.entity';
 import { dataHolder } from '../common/datas/holder';
+import { sendMessages } from './system';
 
 /**
  * All player-configurable chat options.
@@ -71,7 +72,7 @@ function setOption(player: Player, key: keyof ChatOptions, value: string) {
 registerCommand(
   'chat',
   (sender, alias, args) => {
-    const player = (sender as unknown) as Player;
+    const player = sender as unknown as Player;
     const action = args[0];
     if (action == 'options' || action == 'settings' || action == 'asetukset') {
       renderOptions(player);
@@ -110,7 +111,7 @@ function renderOption(
   option: ChatOption,
   selected: string,
 ) {
-  const parts: BaseComponent[] = [text(` ${option[0]} `)];
+  const parts: Component[] = [text(` ${option[0]} `)];
   for (const choice of option.slice(1)) {
     // Render currently selected option differently
     if (choice[0] == selected) {
@@ -128,5 +129,5 @@ function renderOption(
       );
     }
   }
-  player.sendMessage(...parts);
+  sendMessages(player, ...parts);
 }

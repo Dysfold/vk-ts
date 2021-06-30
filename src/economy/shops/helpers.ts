@@ -1,9 +1,11 @@
-import { translate } from 'craftjs-plugin/chat';
+import { text, translate } from 'craftjs-plugin/chat';
+import { TextDecoration } from 'net.kyori.adventure.text.format';
 import { Material } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { WallSign } from 'org.bukkit.block.data.type';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import * as yup from 'yup';
+import { removeDecorations } from '../../chat/utils';
 import { SHOP_DATA } from './ShopData';
 
 /**
@@ -42,9 +44,12 @@ export function getShopItem(itemData: yup.TypeOf<typeof SHOP_DATA.item>) {
   const item = new ItemStack(material);
   const meta = item.itemMeta;
   if (itemData.modelId) meta.customModelData = itemData.modelId;
-  if (itemData.name) meta.displayName = itemData.name;
+  if (itemData.name)
+    meta.displayName(
+      removeDecorations(text(itemData.name), TextDecoration.ITALIC),
+    );
   if (itemData.translationKey)
-    meta.displayNameComponent = [translate(itemData.translationKey)];
+    meta.displayName(translate(itemData.translationKey));
   item.itemMeta = meta;
   return item;
 }

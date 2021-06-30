@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "chess.js": "^0.11.0",
-    "craftjs-plugin": "^0.3.3",
+    "craftjs-plugin": "^0.4.1",
     "lodash": "^4.17.21",
     "npm-run-all": "^4.1.5",
     "sprintf-js": "^1.1.2",
@@ -19,8 +19,8 @@
   "devDependencies": {
     "@commitlint/cli": "^12.0.1",
     "@commitlint/config-conventional": "^12.0.1",
-    "@craftjs-types/java.base": "^11.0.8-2d836a4",
-    "@craftjs-types/paper": "^1.16.5-d0882a3",
+    "@craftjs-types/java.base": "^16.0.1-62a175c",
+    "@craftjs-types/paper": "^1.17.0-3bdc595",
     "@types/chess.js": "^0.10.1",
     "@types/lodash": "^4.14.168",
     "@types/sprintf-js": "^1.1.2",

@@ -1,6 +1,6 @@
-import { color, text } from 'craftjs-plugin/chat';
+import { color, style, text } from 'craftjs-plugin/chat';
 import { UUID } from 'java.util';
-import { TextComponent, TranslatableComponent } from 'net.md_5.bungee.api.chat';
+import { Component } from 'net.kyori.adventure.text';
 import { Bukkit, Location, Material, SoundCategory } from 'org.bukkit';
 import { Block, Chest, Container } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
@@ -8,9 +8,10 @@ import { Action as BlockAction } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
-import { errorMessage } from '../../chat/system';
+import { errorMessage, sendMessages } from '../../chat/system';
+import { isTranslatable } from '../../chat/utils';
 import { addItemTo, giveItem } from '../../common/helpers/inventory';
-import { getItemName } from '../../common/helpers/items';
+import { getDisplayName } from '../../common/helpers/items';
 import { distanceBetween } from '../../common/helpers/locations';
 import { round } from '../../common/helpers/math';
 import { getTranslator, t } from '../../common/localization/localization';
@@ -67,7 +68,7 @@ function displayShopInfo(p: Player, sign: Block) {
     taxFreePrice == 1 ? unitNames.unit : unitNames.unitPlural,
   );
 
-  const itemName = getItemName(item);
+  const itemName = getDisplayName(item);
   const taxCollector = view.taxCollector
     ? Bukkit.server.getOfflinePlayer(UUID.fromString(view.taxCollector))
     : undefined;
@@ -79,7 +80,8 @@ function displayShopInfo(p: Player, sign: Block) {
   p.sendMessage(gold(tr('shops.title')));
   p.sendMessage(yellow(tr(shopTypeTranslationKey)));
   displayShopItemName(p, itemName);
-  p.sendMessage(
+  sendMessages(
+    p,
     yellow(`${tr('shops.price')}: `),
     gold(`${round(view.price)} `),
     yellow(tr('shops.unit_per_item', unit)),
@@ -88,7 +90,8 @@ function displayShopInfo(p: Player, sign: Block) {
   // Tax info
   if (view.taxRate) {
     const taxCollectorName = taxCollector?.name ?? tr('shops.unknown');
-    p.sendMessage(
+    sendMessages(
+      p,
       // tooltip(
       //   text(tr('shops.tax_tooltip', taxCollectorName, taxes)),
       //   yellow(`${tr('shops.VAT')}: `),
@@ -98,7 +101,8 @@ function displayShopInfo(p: Player, sign: Block) {
       gold(`${view.taxRate}%`),
       yellow(` (${taxCollectorName})`),
     );
-    p.sendMessage(
+    sendMessages(
+      p,
       yellow(`${tr('shops.tax_free_price')}: `),
       gold(`${taxFreePrice}`),
       yellow(` ${taxFreeUnit}`),
@@ -126,17 +130,12 @@ function displayShopInfo(p: Player, sign: Block) {
   activeCustomers.set(p, { sign: sign, startTime: new Date() });
 }
 
-function displayShopItemName(
-  p: Player,
-  itemName: TranslatableComponent | TextComponent,
-) {
-  if (itemName instanceof TranslatableComponent) {
-    p.sendMessage(color(SHOP_GOLD, itemName));
-    return;
+function displayShopItemName(p: Player, itemName: Component) {
+  if (!isTranslatable(itemName)) {
+    // Names that are not translatable are player-written
+    itemName = style('italic', itemName);
   }
-  const msg = gold(`"${itemName.text}"`);
-  msg.italic = true;
-  p.sendMessage(msg);
+  p.sendMessage(color(SHOP_GOLD, itemName));
 }
 
 function countEmptyStacks(chest: Container) {

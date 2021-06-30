@@ -82,7 +82,7 @@ export function takeMoneyFrom(
     );
     inventory.viewers.forEach((viewer) => {
       viewer.sendMessage(
-        t((viewer as unknown) as Player, "'money.money_taking_error'"),
+        t(viewer as unknown as Player, "'money.money_taking_error'"),
       );
     });
     // Give the money back to the inventory
@@ -116,7 +116,7 @@ export function giveMoney(
     if (!customItem) return;
     const item = customItem.create({}, howMany);
     const meta = item.itemMeta;
-    meta.displayNameComponent = getCoinDisplayName(coin, currency);
+    meta.displayName(getCoinDisplayName(coin, currency));
     item.itemMeta = meta;
 
     addItemTo(inventory, item);

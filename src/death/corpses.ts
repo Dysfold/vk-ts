@@ -1,3 +1,4 @@
+import { text } from 'craftjs-plugin/chat';
 import { Location, Material, Bukkit } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { Waterlogged } from 'org.bukkit.block.data';
@@ -13,6 +14,7 @@ import { ChunkUnloadEvent } from 'org.bukkit.event.world';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { SkullMeta } from 'org.bukkit.inventory.meta';
 import { EulerAngle } from 'org.bukkit.util';
+import { getPlainText } from '../chat/utils';
 import { chanceOf, minMax } from '../common/helpers/math';
 import { CustomItem } from '../common/items/CustomItem';
 import { HIDDEN_MATERIAL, makeItemHidden } from '../misc/hidden-items';
@@ -99,7 +101,7 @@ export async function spawnCorpse(event: PlayerDeathEvent) {
   armorstand.setArms(true);
   armorstand.setCustomNameVisible(false);
   armorstand.addDisabledSlots(...EquipmentSlot.values());
-  armorstand.customName = '' + new Date().getTime(); // Used to calculate the actual age of the corpse
+  armorstand.customName(text('' + new Date().getTime())); // Used to calculate the actual age of the corpse
   armorstand.setGravity(false);
 
   // Move the corpse to ground
@@ -236,7 +238,7 @@ registerEvent(PlayerInteractAtEntityEvent, (event) => {
 
 function getCorpseAge(armorstand: ArmorStand) {
   if (!armorstand.customName) return undefined;
-  const spawnTime = Number.parseInt(armorstand.customName);
+  const spawnTime = Number.parseInt(getPlainText(armorstand.customName()));
   if (isNaN(spawnTime)) return undefined;
   return new Date().getTime() - spawnTime;
 }

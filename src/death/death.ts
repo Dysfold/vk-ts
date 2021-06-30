@@ -49,7 +49,7 @@ function getTuonelaDuration(event: PlayerDeathEvent) {
 // Save players death location and set the Tuonela duration
 registerEvent(PlayerDeathEvent, async (event) => {
   if (event.entityType !== EntityType.PLAYER) return;
-  event.deathMessage = null;
+  event.deathMessage(null); // Clear death message
   if (event.entity.world === TUONELA_WORLD) {
     event.setCancelled(true);
     return;

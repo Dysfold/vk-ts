@@ -69,7 +69,7 @@ test('Custom block with custom data', (t) => {
 test('Custom block with block states', (t) => {
   TestBlock3.create(block, {});
   t.truthy(TestBlock3.check(block), 'custom block with block states created');
-  const facing = ((block.blockData as unknown) as Directional).facing;
+  const facing = (block.blockData as unknown as Directional).facing;
   t.isNot(facing, BlockFace.UP, 'block facing is valid #1');
   t.isNot(facing, BlockFace.DOWN, 'block facing is valid #2');
 });
@@ -79,7 +79,7 @@ test('Custom block variant', (t) => {
   t.truthy(TestBlock4.check(block), 'custom block variant created');
   t.truthy(TestBlock3.check(block), 'custom block variant matches parent');
   t.is(
-    ((block.blockData as unknown) as Directional).facing,
+    (block.blockData as unknown as Directional).facing,
     BlockFace.SOUTH,
     'custom block variant override works',
   );

@@ -1,5 +1,4 @@
-import { ChatColor } from 'net.md_5.bungee.api';
-import { Material, SoundCategory } from 'org.bukkit';
+import { ChatColor, Material, SoundCategory } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { Item, Player } from 'org.bukkit.entity';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';

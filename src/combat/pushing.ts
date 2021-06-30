@@ -13,7 +13,7 @@ registerEvent(PlayerInteractEntityEvent, async (event) => {
   if (clicked.type !== EntityType.PLAYER) return;
 
   const pusher = event.player;
-  const target = (clicked as unknown) as Player;
+  const target = clicked as unknown as Player;
   if (pusher.itemInHand.type !== Material.AIR) return;
   if (target.isSneaking()) return;
   if (pusher.isSneaking()) return;

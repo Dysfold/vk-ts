@@ -10,6 +10,9 @@ import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 import { Currency, getCurrencyTranslation } from './currency';
 import { addTranslation, t } from '../common/localization/localization';
+import { sendMessages } from '../chat/system';
+import { getPlainText, removeDecorations } from '../chat/utils';
+import { Component } from 'net.kyori.adventure.text';
 
 const MoneyMold = new CustomItem({
   name: translate('vk.money_mold'),
@@ -138,10 +141,10 @@ registerEvent(BlockPistonRetractEvent, (event) => {
   if (!mold) return;
 
   // Properties of the currency are stored in the lore of the money mold
-  const lore = mold.itemMeta.lore;
+  const lore = mold.itemMeta.lore();
   if (lore?.length !== 1) return;
 
-  const model = Number(lore[0]);
+  const model = Number(getPlainText(lore[0]));
   if (isNaN(model)) return;
   const currency = model as Currency;
 
@@ -177,7 +180,7 @@ async function createMoney(location: Location, currency: Currency) {
   for (const coin of coins) {
     const item = coin.item.create({}, coin.amount);
     const meta = item.itemMeta;
-    meta.displayNameComponent = getCoinDisplayName(coin, currency);
+    meta.displayName(getCoinDisplayName(coin, currency));
     item.itemMeta = meta;
 
     // Drop the item without velocity.
@@ -187,7 +190,7 @@ async function createMoney(location: Location, currency: Currency) {
   }
 }
 
-export function getCoinDisplayName(coin: Coin, currency: Currency) {
+export function getCoinDisplayName(coin: Coin, currency: Currency): Component {
   const isSubunit = coin.value < 1;
 
   // Subunits are transformed to integers: 0.1 -> 10
@@ -210,9 +213,8 @@ export function getCoinDisplayName(coin: Coin, currency: Currency) {
     else translation = translations.unit;
   }
 
-  const component = translate(translation, valueString);
-  component.italic = false;
-  return [component];
+  const component = removeDecorations(translate(translation, valueString));
+  return component;
 }
 
 // Admin command for creating money molds
@@ -232,8 +234,7 @@ registerCommand(['rahamuotti', 'moneymold'], (sender, label, args) => {
 
   const item = MoneyMold.create({ currency: model });
   const meta = item.itemMeta;
-  const lore = ['' + model];
-  meta.lore = lore;
+  meta.lore([text('' + model)]);
   item.itemMeta = meta;
 
   player.inventory.addItem(item);
@@ -255,12 +256,11 @@ MoneyMold.event(
     for (const item of items) {
       const type = item.type.translationKey;
       const amount = item.amount;
-      event.player.sendMessage(
-        ...[
-          text(' - '),
-          translate(type),
-          text(t(event.player, 'money_mold.n_pieces', amount)),
-        ],
+      sendMessages(
+        event.player,
+        text(' - '),
+        translate(type),
+        text(t(event.player, 'money_mold.n_pieces', amount)),
       );
     }
   },

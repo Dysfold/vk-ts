@@ -50,9 +50,8 @@ registerEvent(PlayerDropItemEvent, async (event) => {
   snowball.item.amount = 1;
   item.amount--;
 
-  snowball.velocity = player.eyeLocation.direction.multiply(
-    VELOCITY_MULTIPLIER,
-  );
+  snowball.velocity =
+    player.eyeLocation.direction.multiply(VELOCITY_MULTIPLIER);
 
   player.world.playSound(
     player.location,

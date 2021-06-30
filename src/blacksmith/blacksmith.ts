@@ -224,7 +224,7 @@ registerEvent(PlayerInteractEvent, (event) => {
       if (!anvil) return;
       const smeltedItem = smelted.create({});
       const meta = smeltedItem.itemMeta;
-      meta.displayName = ''; // Displayname would hover on top of the itemframe
+      meta.displayName(null); // Displayname would hover on top of the itemframe
       smeltedItem.itemMeta = meta;
       const frame = spawnHiddenItemFrame(anvil, BlockFace.UP, smeltedItem);
       if (!frame) return;
@@ -266,7 +266,7 @@ async function hammerHit(frame: ItemFrame, player: Player) {
 
       // Hide nametag from the item
       const meta = newIronItem.itemMeta;
-      meta.displayName = '';
+      meta.displayName(null);
       newIronItem.itemMeta = meta;
     }
   });
@@ -305,7 +305,7 @@ Hammer.event(
     event.setCancelled(true);
     const entity = event.entity;
     if (!(entity instanceof ItemFrame)) return;
-    await hammerHit(entity, (event.damager as unknown) as Player);
+    await hammerHit(entity, event.damager as unknown as Player);
   },
 );
 

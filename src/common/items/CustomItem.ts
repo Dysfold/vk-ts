@@ -6,7 +6,9 @@ import { dataView, saveView } from '../datas/view';
 import { ObjectShape } from 'yup/lib/object';
 import { isEmpty } from 'lodash';
 import { Data, PartialData } from '../datas/yup-utils';
-import { BaseComponent } from 'net.md_5.bungee.api.chat';
+import { Component } from 'net.kyori.adventure.text';
+import { text } from 'craftjs-plugin/chat';
+import { removeDecorations } from '../../chat/utils';
 
 export const CUSTOM_DATA_KEY = 'cd';
 
@@ -31,7 +33,7 @@ type CustomItemOptions<T extends ObjectShape> = {
   /**
    * Display name of this item.
    */
-  name?: BaseComponent;
+  name?: Component | string;
 
   /**
    * Schema definition for custom data associated with this item.
@@ -152,10 +154,13 @@ export class CustomItem<T extends ObjectShape> {
     } // else: don't bother applying default data, can get it later from this.data
 
     // Set values to meta based on item options
-    const component = this.options.name;
+    let component = this.options.name;
     if (component != undefined) {
-      component.italic = false; // Explicitly disable italic item name
-      meta.displayNameComponent = [component];
+      if (typeof component == 'string') {
+        component = text(component);
+      }
+      // Explicitly disable italic style
+      meta.displayName(removeDecorations(component));
     }
     item.itemMeta = meta; // Set new meta to item
 
