@@ -3,14 +3,11 @@ import {
   Component,
   TranslatableComponent,
 } from 'net.kyori.adventure.text';
-import {
-  ComponentFlattener,
-  FlattenerListener,
-} from 'net.kyori.adventure.text.flattener';
 import { Style, TextDecoration } from 'net.kyori.adventure.text.format';
+import { PlainTextComponentSerializer } from 'net.kyori.adventure.text.serializer.plain';
 import { Builder } from 'net.kyori.adventure.text.TextComponent';
 
-const FLATTENER = ComponentFlattener.textOnly();
+const PLAIN_SERIALIZER = PlainTextComponentSerializer.plainText();
 
 /**
  * Gets all plain text content from a chat component.
@@ -19,15 +16,7 @@ const FLATTENER = ComponentFlattener.textOnly();
  * lacks any and all formatting that the text might have.
  */
 export function getPlainText(component: Component | null): string {
-  if (!component) {
-    return '';
-  }
-  // Type generator has a bug with default methods: https://github.com/bensku/java-ts-bind/issues/7
-  const parts: string[] = [];
-  FLATTENER.flatten(component, ((text: string) => {
-    parts.push(text);
-  }) as unknown as FlattenerListener);
-  return parts.join('');
+  return PLAIN_SERIALIZER.serialize(component);
 }
 
 /**
@@ -41,6 +30,11 @@ export function removeDecorations(
   component: Component,
   ...decorations: TextDecoration[]
 ): Component {
+  if (decorations.length == 0) {
+    throw new Error(
+      'do not call removeDecorations() with no decorations given!',
+    );
+  }
   // Create style that removes desired decorations
   let style = Style.style();
   for (const decoration of decorations) {

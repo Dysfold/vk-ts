@@ -20,7 +20,7 @@
     "@commitlint/cli": "^12.0.1",
     "@commitlint/config-conventional": "^12.0.1",
     "@craftjs-types/java.base": "^16.0.1-62a175c",
-    "@craftjs-types/paper": "^1.17.0-3bdc595",
+    "@craftjs-types/paper": "^1.17.0-65f98c5",
     "@types/chess.js": "^0.10.1",
     "@types/lodash": "^4.14.168",
     "@types/sprintf-js": "^1.1.2",

@@ -13,6 +13,7 @@ import { addTranslation, t } from '../common/localization/localization';
 import { sendMessages } from '../chat/system';
 import { getPlainText, removeDecorations } from '../chat/utils';
 import { Component } from 'net.kyori.adventure.text';
+import { TextDecoration } from 'net.kyori.adventure.text.format';
 
 const MoneyMold = new CustomItem({
   name: translate('vk.money_mold'),
@@ -213,7 +214,10 @@ export function getCoinDisplayName(coin: Coin, currency: Currency): Component {
     else translation = translations.unit;
   }
 
-  const component = removeDecorations(translate(translation, valueString));
+  const component = removeDecorations(
+    translate(translation, valueString),
+    TextDecoration.ITALIC,
+  );
   return component;
 }
 

@@ -9,6 +9,7 @@ import { Data, PartialData } from '../datas/yup-utils';
 import { Component } from 'net.kyori.adventure.text';
 import { text } from 'craftjs-plugin/chat';
 import { removeDecorations } from '../../chat/utils';
+import { TextDecoration } from 'net.kyori.adventure.text.format';
 
 export const CUSTOM_DATA_KEY = 'cd';
 
@@ -160,7 +161,7 @@ export class CustomItem<T extends ObjectShape> {
         component = text(component);
       }
       // Explicitly disable italic style
-      meta.displayName(removeDecorations(component));
+      meta.displayName(removeDecorations(component, TextDecoration.ITALIC));
     }
     item.itemMeta = meta; // Set new meta to item
 
