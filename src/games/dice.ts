@@ -1,4 +1,4 @@
-import { text, translate } from 'craftjs-plugin/chat';
+import { translate } from 'craftjs-plugin/chat';
 import { Location } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { PlayerDropItemEvent } from 'org.bukkit.event.player';
