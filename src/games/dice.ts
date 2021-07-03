@@ -1,44 +1,43 @@
-import { color, text } from 'craftjs-plugin/chat';
-import { NamedTextColor } from 'net.kyori.adventure.text.format';
+import { text, translate } from 'craftjs-plugin/chat';
 import { Location } from 'org.bukkit';
-import { EntityType, Player } from 'org.bukkit.entity';
+import { Player } from 'org.bukkit.entity';
 import { PlayerDropItemEvent } from 'org.bukkit.event.player';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 
 const Dice1 = new CustomItem({
   id: 12,
-  name: text('Noppa [1]'),
+  name: translate('vk.dice'),
   type: VkItem.MISC,
 });
 
 const Dice2 = new CustomItem({
   id: 13,
-  name: text('Noppa [2]'),
+  name: translate('vk.dice'),
   type: VkItem.MISC,
 });
 
 const Dice3 = new CustomItem({
   id: 14,
-  name: text('Noppa [3]'),
+  name: translate('vk.dice'),
   type: VkItem.MISC,
 });
 
 const Dice4 = new CustomItem({
   id: 15,
-  name: text('Noppa [4]'),
+  name: translate('vk.dice'),
   type: VkItem.MISC,
 });
 
 const Dice5 = new CustomItem({
   id: 16,
-  name: text('Noppa [5]'),
+  name: translate('vk.dice'),
   type: VkItem.MISC,
 });
 
 const Dice6 = new CustomItem({
   id: 17,
-  name: text('Noppa [6]'),
+  name: translate('vk.dice'),
   type: VkItem.MISC,
 });
 
