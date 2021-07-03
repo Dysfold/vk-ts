@@ -81,9 +81,7 @@ export function takeMoneyFrom(
       `Player did not have enought money (${price})! This message should never be shown. `,
     );
     inventory.viewers.forEach((viewer) => {
-      viewer.sendMessage(
-        t(viewer as unknown as Player, "'money.money_taking_error'"),
-      );
+      viewer.sendMessage(t(viewer as Player, 'money.money_taking_error'));
     });
     // Give the money back to the inventory
     giveMoney(inventory, amount - price, currency);
