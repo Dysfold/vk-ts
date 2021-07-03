@@ -1,4 +1,5 @@
-import { text } from 'craftjs-plugin/chat';
+import { color, text } from 'craftjs-plugin/chat';
+import { NamedTextColor } from 'net.kyori.adventure.text.format';
 import { Location } from 'org.bukkit';
 import { EntityType, Player } from 'org.bukkit.entity';
 import { PlayerDropItemEvent } from 'org.bukkit.event.player';
@@ -63,8 +64,18 @@ registerEvent(PlayerDropItemEvent, (event) => {
 function announceDice(location: Location, face: number) {
   const entities = location.world.getNearbyEntities(location, 5, 5, 5);
   for (const entity of entities) {
-    if (entity.type === EntityType.PLAYER) {
-      (entity as unknown as Player).sendTitle('§6' + face, '', 0, 40, 20);
+    if (entity instanceof Player) {
+      // FIXME: This code did not work yet.
+
+      // const title = Title.title(
+      //   color(NamedTextColor.GOLD, text(`${face}`)),
+      //   text(''),
+      //   Times.of(0, 30, 30),
+      // );
+
+      // entity.showTitle(title);
+
+      entity.sendTitle(`§6${face}`, '', 0, 40, 20);
     }
   }
 }

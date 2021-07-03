@@ -23,6 +23,7 @@ import { Damageable } from 'org.bukkit.inventory.meta';
 import { VkItem } from '../common/items/VkItem';
 import { equippedItem } from '../common/helpers/inventory';
 import { translate } from 'craftjs-plugin/chat';
+import { addTranslation, t } from '../common/localization/localization';
 
 export const Pliers = new CustomItem({
   id: 9,
@@ -475,8 +476,19 @@ registerEvent(CraftItemEvent, (event) => {
   const crafter = event.whoClicked;
   if (crafter.getTargetBlock(5)?.type === Material.SMITHING_TABLE) return;
   if (!(crafter instanceof Player)) return;
-  crafter.sendTitle('', 'Tarvitset takomispöydän');
+  crafter.sendTitle(
+    ' ',
+    t(crafter, 'blacksmith.smithing_table_needed'),
+    10,
+    40,
+    10,
+  );
   inv.result = null;
   crafter.closeInventory();
   crafter.updateInventory();
+});
+
+addTranslation('blacksmith.smithing_table_needed', {
+  fi_fi: 'Tarvitset takomispöydän',
+  en_us: 'You need a smithing table',
 });

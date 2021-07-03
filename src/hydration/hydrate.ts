@@ -136,7 +136,7 @@ export function hydrate(
     if (barBefore >= Hydration.MAX) {
       msg = `Janosi oli jo sammutettu`;
     }
-    player.sendTitle('', msg, 10, 40, 10);
+    player.sendTitle(' ', msg, 10, 40, 10);
   }
 }
 
