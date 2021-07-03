@@ -1,6 +1,6 @@
 import { color, text } from 'craftjs-plugin/chat';
 import { NamedTextColor } from 'net.kyori.adventure.text.format';
-import { Bukkit, ChatColor, Location, Material } from 'org.bukkit';
+import { Bukkit, Location, Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { Waterlogged } from 'org.bukkit.block.data';
 import { ArmorStand, Entity, EntityType, Player } from 'org.bukkit.entity';
