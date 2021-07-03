@@ -1,3 +1,4 @@
+import { text } from 'craftjs-plugin/chat';
 import {
   Bukkit,
   EntityEffect,
@@ -10,6 +11,7 @@ import { PlayerJoinEvent } from 'org.bukkit.event.player';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import { dataHolder } from '../common/datas/holder';
 import { dataView } from '../common/datas/view';
+import { addTranslation, t } from '../common/localization/localization';
 import { DeathData } from './DeathData';
 import { respawnPlayer } from './respawning';
 
@@ -26,7 +28,7 @@ export async function startTuonela(player: Player) {
   await wait(0.1, 'seconds');
   playTuonelaJoinEffects(player);
   await wait(0.7, 'seconds');
-  player.sendTitle('', 'Olet kuollut', 40, 40, 30);
+  player.sendTitle(' ', t(player, 'death.you_died'), 40, 40, 30);
 }
 
 // TODO: Multiple spawnpoints in the Tuonela
@@ -79,8 +81,8 @@ setInterval(() => {
       return;
     }
     // Player is still in the Tuonela
-    const durationString = getCountdownString(time);
-    player.sendActionBar(durationString);
+    const countdownMsg = getCountdownMsg(time);
+    player.sendActionBar(countdownMsg);
   });
 }, 1000);
 
@@ -89,7 +91,7 @@ const SECOND = 1000;
 const MINUTE = 60 * SECOND;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
-function getCountdownString(time: number) {
+function getCountdownMsg(time: number) {
   const now = new Date().getTime();
   const diff = time - now;
 
@@ -103,7 +105,7 @@ function getCountdownString(time: number) {
   const minutesStr = minutes > 0 ? `${minutes}min ` : '';
   const secondsStr = seconds > 0 ? `${seconds}s ` : '';
 
-  return daysStr + hoursStr + minutesStr + secondsStr;
+  return text(daysStr + hoursStr + minutesStr + secondsStr);
 }
 
 function playTuonelaJoinEffects(player: Player) {
@@ -119,3 +121,8 @@ function playTuonelaJoinEffects(player: Player) {
     1,
   );
 }
+
+addTranslation('death.you_died', {
+  fi_fi: 'Olet kuollut',
+  en_us: 'You died',
+});
