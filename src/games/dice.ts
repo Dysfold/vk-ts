@@ -1,43 +1,43 @@
-import { text } from 'craftjs-plugin/chat';
+import { translate } from 'craftjs-plugin/chat';
 import { Location } from 'org.bukkit';
-import { EntityType, Player } from 'org.bukkit.entity';
+import { Player } from 'org.bukkit.entity';
 import { PlayerDropItemEvent } from 'org.bukkit.event.player';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 
 const Dice1 = new CustomItem({
   id: 12,
-  name: text('Noppa [1]'),
+  name: translate('vk.dice'),
   type: VkItem.MISC,
 });
 
 const Dice2 = new CustomItem({
   id: 13,
-  name: text('Noppa [2]'),
+  name: translate('vk.dice'),
   type: VkItem.MISC,
 });
 
 const Dice3 = new CustomItem({
   id: 14,
-  name: text('Noppa [3]'),
+  name: translate('vk.dice'),
   type: VkItem.MISC,
 });
 
 const Dice4 = new CustomItem({
   id: 15,
-  name: text('Noppa [4]'),
+  name: translate('vk.dice'),
   type: VkItem.MISC,
 });
 
 const Dice5 = new CustomItem({
   id: 16,
-  name: text('Noppa [5]'),
+  name: translate('vk.dice'),
   type: VkItem.MISC,
 });
 
 const Dice6 = new CustomItem({
   id: 17,
-  name: text('Noppa [6]'),
+  name: translate('vk.dice'),
   type: VkItem.MISC,
 });
 
@@ -63,8 +63,18 @@ registerEvent(PlayerDropItemEvent, (event) => {
 function announceDice(location: Location, face: number) {
   const entities = location.world.getNearbyEntities(location, 5, 5, 5);
   for (const entity of entities) {
-    if (entity.type === EntityType.PLAYER) {
-      ((entity as unknown) as Player).sendTitle('§6' + face, '', 0, 40, 20);
+    if (entity instanceof Player) {
+      // FIXME: This code did not work yet.
+
+      // const title = Title.title(
+      //   color(NamedTextColor.GOLD, text(`${face}`)),
+      //   text(''),
+      //   Times.of(0, 30, 30),
+      // );
+
+      // entity.showTitle(title);
+
+      entity.sendTitle(`§6${face}`, '', 0, 40, 20);
     }
   }
 }

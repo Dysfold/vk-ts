@@ -61,7 +61,7 @@ setInterval(() => {
       } else {
         msg = 'Tunnet olosi janoiseksi';
       }
-      player.sendTitle('', msg, 10, 40, 10);
+      player.sendTitle(' ', msg, 10, 40, 10);
     }
   }
 }, THIRST_CYCLE_DURATION * 1000);

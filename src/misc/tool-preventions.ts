@@ -7,7 +7,7 @@ import { VkItem } from '../common/items/VkItem';
 const DIRT_LIKE = new Set([
   Material.DIRT,
   Material.GRASS_BLOCK,
-  Material.GRASS_PATH,
+  Material.DIRT_PATH,
 ]);
 
 function isHoe(type: Material | undefined) {

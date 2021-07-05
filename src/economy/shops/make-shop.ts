@@ -1,5 +1,7 @@
-import { TextComponent, TranslatableComponent } from 'net.md_5.bungee.api.chat';
-import { Bukkit, ChatColor, OfflinePlayer } from 'org.bukkit';
+import { color, style, text, translate } from 'craftjs-plugin/chat';
+import { Component } from 'net.kyori.adventure.text';
+import { NamedTextColor } from 'net.kyori.adventure.text.format';
+import { OfflinePlayer } from 'org.bukkit';
 import { Block, Sign } from 'org.bukkit.block';
 import { Chest, WallSign } from 'org.bukkit.block.data.type';
 import { Player } from 'org.bukkit.entity';
@@ -8,12 +10,16 @@ import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
 import { errorMessage } from '../../chat/system';
+import { getPlainText } from '../../chat/utils';
 import { dataView } from '../../common/datas/view';
-import { getItemName } from '../../common/helpers/items';
+import {
+  getDisplayName,
+  getItemNameAsComponent,
+} from '../../common/helpers/items';
 import { distanceBetween } from '../../common/helpers/locations';
 import { getTranslator, t } from '../../common/localization/localization';
 import { Currency, getCurrency, getCurrencyTranslation } from '../currency';
-import { getBlockBehind } from './helpers';
+import { getBlockBehind, getCustomTranslationKeyForItem } from './helpers';
 import {
   shopGold as gold,
   shopGreen as green,
@@ -190,25 +196,18 @@ function saveShop(player: Player) {
   const shop = session.shopInfo;
   if (!isShopInfoValid(shop)) return;
   const view = dataView(ShopData, signDataHolder);
-  const name = shop.item.itemMeta.displayName;
   const modelId = shop.item.itemMeta.hasCustomModelData()
     ? shop.item.itemMeta.customModelData
     : undefined;
 
-  const itemName = getItemName(shop.item);
-  let translationKey: undefined | string;
-  if (itemName instanceof TranslatableComponent) {
-    const key = itemName.translate;
-    if (key.startsWith('vk.')) {
-      translationKey = key;
-    }
-  }
+  const displayName = getDisplayName(shop.item);
+  const translationKey = getCustomTranslationKeyForItem(shop.item);
   view.type = shop.type;
   view.item.material = shop.item.type.toString();
   view.item.modelId = modelId;
-  view.item.name = name.startsWith('vk.') ? undefined : name;
+  view.item.name = getPlainText(displayName);
   view.item.material = shop.item.type.toString();
-  view.item.translationKey = translationKey;
+  view.item.translationKey = translationKey; // May not exist if not translatable
   view.price = shop.price;
   view.currency = shop.currency;
   view.taxRate = shop.taxRate;
@@ -233,44 +232,34 @@ function isShopInfoValid(
   return true;
 }
 
-function getShopItemName(item: ItemStack) {
-  const component = getItemName(item);
-  if (component instanceof TextComponent) {
-    return ChatColor.ITALIC + '"' + component.toPlainText() + '"';
-  }
-  return component;
-}
-
-// THIS IS HACK
 function updateSignTextTranslation(
-  text: TranslatableComponent | TextComponent,
-  sign: Block,
+  itemName: Component,
+  signBlock: Block,
   type: ShopType,
   price: number,
   currency: Currency,
 ) {
-  const shopTypeTranslation = type === 'SELLING' ? 'vk.selling' : 'vk.buying';
-  const shopTypeColor = type === 'SELLING' ? 'green' : 'blue';
-  const world =
-    sign.world.name === 'world'
-      ? 'minecraft:overworld'
-      : 'minecraft:' + sign.world.name;
+  const sign = signBlock.state;
+  if (sign instanceof Sign) {
+    // Header
+    const shopType = type === 'SELLING' ? 'vk.selling' : 'vk.buying';
+    const shopTypeColor =
+      type === 'SELLING' ? NamedTextColor.GREEN : NamedTextColor.BLUE;
+    sign.line(0, color(shopTypeColor, translate(shopType)));
 
-  const currencyTranslation = getCurrencyTranslation(currency);
+    sign.line(1, itemName); // Item name
 
-  const unit =
-    price === 1 ? currencyTranslation.unit : currencyTranslation.unitPlural;
-
-  const row1 = `Text1:'{"translate":"${shopTypeTranslation}","color":"${shopTypeColor}"}',`;
-  const row2 =
-    text instanceof TranslatableComponent
-      ? `Text2:'{"translate":"${text.translate}"}',`
-      : '';
-  const row3 = `Text3:'{"translate":"${unit}","with":["${price}"],"italic":"false"}'`;
-
-  const cmd = `execute in ${world} run data merge block ${sign.x} ${sign.y} ${sign.z} {${row1}${row2}${row3}}`;
-  const console = Bukkit.server.consoleSender;
-  Bukkit.dispatchCommand(console, cmd);
+    // Price
+    const currencyUnits = getCurrencyTranslation(currency);
+    const unit = price === 1 ? currencyUnits.unit : currencyUnits.unitPlural;
+    sign.line(2, translate(unit, '' + price));
+    sign.update();
+  } else {
+    log.warn(
+      'Tried to update shop sign, but there is no sign at ',
+      signBlock.location,
+    );
+  }
 }
 
 /**
@@ -280,26 +269,30 @@ function updateSignTextTranslation(
 function updateShopSign(session: ShopMakingSession) {
   const signBlock = session.sign;
   const shop = session.shopInfo as ValidShopInfo;
-  const sign = signBlock.state as Sign;
   const taxes = getTaxes(shop.taxRate, shop.price);
   const price = shop.type == 'BUYING' ? shop.price - taxes : shop.price;
   const currency: Currency = shop.currency;
 
-  const name = getItemName(shop.item);
-
-  // TODO: remove .toString() (and the hack) when chat components are accepted and use translation instead
-  sign.setLine(1, getShopItemName(shop.item).toString());
-
-  sign.update();
-
-  // HACK. Remove this later
+  const decoratedName = getDecoratedCustomName(shop.item);
+  const name = getItemNameAsComponent(shop.item);
   updateSignTextTranslation(
-    name,
+    decoratedName || name,
     signBlock,
     shop.type as ShopType,
     price,
     currency,
   );
+}
+
+function getDecoratedCustomName(item: ItemStack) {
+  const translation = getCustomTranslationKeyForItem(item);
+  if (translation) {
+    return null;
+  }
+  const name = getDisplayName(item);
+  if (!name) return null;
+  const plainText = getPlainText(name);
+  return style('italic', text(`"${plainText}"`));
 }
 
 /**
@@ -355,7 +348,7 @@ function setShopCurrency(session: ShopMakingSession, player: Player) {
  */
 function setShopItem(session: ShopMakingSession, player: Player) {
   session.shopInfo.item = player.inventory.itemInMainHand;
-  const name = getItemName(session.shopInfo.item);
+  const name = getItemNameAsComponent(session.shopInfo.item);
   player.sendMessage(t(player, 'shops.item_set_success'));
   player.sendMessage(name);
   startNextTask(player);
@@ -392,9 +385,9 @@ const SHOP_TYPES = new Map<string, ShopType>([
 
 function getShopType(block: Block) {
   const signData = block.state as Sign;
-  const firstLine = signData.lines?.[0];
+  const firstLine = signData.lines()?.[0];
   if (!firstLine) return undefined;
-  return SHOP_TYPES.get(firstLine.toLowerCase());
+  return SHOP_TYPES.get(getPlainText(firstLine).toLowerCase());
 }
 
 function isValidChest(block: Block) {

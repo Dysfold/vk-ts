@@ -1,4 +1,6 @@
-import { Location, Material, Bukkit } from 'org.bukkit';
+import { color, text } from 'craftjs-plugin/chat';
+import { NamedTextColor } from 'net.kyori.adventure.text.format';
+import { Bukkit, Location, Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { Waterlogged } from 'org.bukkit.block.data';
 import { ArmorStand, Entity, EntityType, Player } from 'org.bukkit.entity';
@@ -13,9 +15,17 @@ import { ChunkUnloadEvent } from 'org.bukkit.event.world';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { SkullMeta } from 'org.bukkit.inventory.meta';
 import { EulerAngle } from 'org.bukkit.util';
+import * as yup from 'yup';
+import { dataType } from '../common/datas/holder';
+import { dataView } from '../common/datas/view';
 import { chanceOf, minMax } from '../common/helpers/math';
 import { CustomItem } from '../common/items/CustomItem';
+import { addTranslation, t } from '../common/localization/localization';
 import { HIDDEN_MATERIAL, makeItemHidden } from '../misc/hidden-items';
+
+const CorpseData = dataType('corpse-data', {
+  deathTime: yup.number(),
+});
 
 const BLOOD_MATERIAL = Material.DEAD_BUBBLE_CORAL_FAN;
 
@@ -99,7 +109,7 @@ export async function spawnCorpse(event: PlayerDeathEvent) {
   armorstand.setArms(true);
   armorstand.setCustomNameVisible(false);
   armorstand.addDisabledSlots(...EquipmentSlot.values());
-  armorstand.customName = '' + new Date().getTime(); // Used to calculate the actual age of the corpse
+  setCorpseDeathTime(armorstand);
   armorstand.setGravity(false);
 
   // Move the corpse to ground
@@ -198,7 +208,7 @@ function checkAllCorpsesForDespawning() {
 }
 
 function tryDespawnCorpse(corpse: ArmorStand) {
-  const age = getCorpseAge(corpse);
+  const age = getCorpseAgeMillis(corpse);
   if (age === undefined) {
     corpse.remove();
   } else if (age > CORPSE_MAX_AGE_MILLIS) {
@@ -220,26 +230,43 @@ function isCorpse(entity: Entity): entity is ArmorStand {
 // Display information about the corpse to the player
 registerEvent(PlayerInteractAtEntityEvent, (event) => {
   if (!isCorpse(event.rightClicked)) return;
-  const age = getCorpseAge(event.rightClicked);
-  if (!age) return;
-  const hours = Math.floor(age / 1000 / 60 / 60);
+  const ageMillis = getCorpseAgeMillis(event.rightClicked);
+  if (!ageMillis) return;
+  const hours = Math.round(ageMillis / 1000 / 60 / 60);
+  const player = event.player;
 
   // TODO: Make the information more abstract
   if (!hours) {
-    event.player.sendActionBar('Tämä henkilö on kuollut äskettäin');
+    sendCorpseInfo(player, t(player, 'corpses.died_recently'));
   } else {
-    event.player.sendActionBar(
-      `Ruumis näyttää maanneen tässä jo noin ${hours} tuntia`,
-    );
+    sendCorpseInfo(player, t(player, 'corpses.died_hours_ago', hours));
   }
 });
 
-function getCorpseAge(armorstand: ArmorStand) {
-  if (!armorstand.customName) return undefined;
-  const spawnTime = Number.parseInt(armorstand.customName);
-  if (isNaN(spawnTime)) return undefined;
-  return new Date().getTime() - spawnTime;
+function sendCorpseInfo(player: Player, msg: string) {
+  player.sendActionBar(color(NamedTextColor.YELLOW, text(msg)));
+}
+
+function getCorpseAgeMillis(armorstand: ArmorStand) {
+  const { deathTime } = dataView(CorpseData, armorstand);
+  if (deathTime == undefined) return;
+  return new Date().getTime() - deathTime;
+}
+
+function setCorpseDeathTime(armorstand: ArmorStand) {
+  const view = dataView(CorpseData, armorstand);
+  view.deathTime = new Date().getTime();
 }
 
 // Despawn old armodstands on refresh
 checkAllCorpsesForDespawning();
+
+addTranslation('corpses.died_recently', {
+  fi_fi: 'Tämä henkilö on kuollut äskettäin',
+  en_us: 'This person has died recently',
+});
+
+addTranslation('corpses.died_hours_ago', {
+  fi_fi: 'Ruumis näyttää maanneen tässä noin %s tuntia',
+  en_us: 'This corpse has been lying here about %s hours',
+});
