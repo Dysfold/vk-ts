@@ -29,11 +29,11 @@ export function useFlintAndSteel(player: Player, item: ItemStack) {
 }
 
 /**
- * Gets display name of an item for shop usage.
+ * Gets display name or translation of an item for shop usage.
  * @param item The item.
  * @returns Player-provided display name, or the default translatable name.
  */
-export function getDisplayName(item: ItemStack): Component {
+export function getItemNameAsComponent(item: ItemStack): Component {
   const meta = item.itemMeta;
   if (!meta.hasDisplayName()) {
     const key = item.type.translationKey;
@@ -49,4 +49,16 @@ export function getDisplayName(item: ItemStack): Component {
     throw new Error('display name should exist');
   }
   return name;
+}
+
+/**
+ * Gets display name of an item.
+ * @param item The item.
+ * @returns Display name component
+ */
+export function getDisplayName(item: ItemStack) {
+  if (item.itemMeta.hasDisplayName()) {
+    return item.itemMeta.displayName();
+  }
+  return null;
 }

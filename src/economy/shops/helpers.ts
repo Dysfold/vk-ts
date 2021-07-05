@@ -5,7 +5,12 @@ import { Block } from 'org.bukkit.block';
 import { WallSign } from 'org.bukkit.block.data.type';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import * as yup from 'yup';
-import { removeDecorations } from '../../chat/utils';
+import {
+  getPlainText,
+  getTranslationKey,
+  removeDecorations,
+} from '../../chat/utils';
+import { getDisplayName } from '../../common/helpers/items';
 import { SHOP_DATA } from './ShopData';
 
 /**
@@ -18,12 +23,13 @@ export function findItemsFromInventory(
   lookfor: ItemStack,
 ) {
   const contents = inventory.contents ?? [];
-  return contents.filter((i) => {
-    if (!i) return false;
-    if (i.type != lookfor.type) return false;
-    const metaA = i.itemMeta;
+  return contents.filter((item) => {
+    if (!item) return false;
+    if (item.type != lookfor.type) return false;
+    const metaA = item.itemMeta;
     const metaB = lookfor.itemMeta;
-    if (metaA.displayName != metaB.displayName) return false;
+
+    if (!hasSameName(item, lookfor)) return false;
     if (metaA.hasCustomModelData() !== metaB.hasCustomModelData()) return false;
     if (metaB.hasCustomModelData() && metaA.hasCustomModelData()) {
       if (metaA.customModelData !== metaB.customModelData) return false;
@@ -32,6 +38,12 @@ export function findItemsFromInventory(
     // Items were similar enough
     return true;
   });
+}
+
+function hasSameName(itemA: ItemStack, itemB: ItemStack) {
+  const nameA = getDisplayName(itemA);
+  const nameB = getDisplayName(itemB);
+  return getPlainText(nameA) == getPlainText(nameB);
 }
 
 /**
@@ -57,4 +69,20 @@ export function getShopItem(itemData: yup.TypeOf<typeof SHOP_DATA.item>) {
 export function getBlockBehind(sign: Block) {
   if (!(sign.blockData instanceof WallSign)) return undefined;
   return sign.getRelative(sign.blockData.facing.oppositeFace);
+}
+
+export function getRenamedCustomName(item: ItemStack) {
+  const meta = item.itemMeta;
+  if (meta.hasDisplayName()) {
+    return getPlainText(meta.displayName());
+  }
+}
+
+/**
+ * Get the translation key for this item stack, if it exists
+ * @param item The item
+ */
+export function getCustomTranslationKeyForItem(item: ItemStack) {
+  const displayName = getDisplayName(item);
+  return displayName ? getTranslationKey(displayName) : undefined;
 }

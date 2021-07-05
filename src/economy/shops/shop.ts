@@ -11,7 +11,7 @@ import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
 import { errorMessage, sendMessages } from '../../chat/system';
 import { isTranslatable } from '../../chat/utils';
 import { addItemTo, giveItem } from '../../common/helpers/inventory';
-import { getDisplayName } from '../../common/helpers/items';
+import { getItemNameAsComponent } from '../../common/helpers/items';
 import { distanceBetween } from '../../common/helpers/locations';
 import { round } from '../../common/helpers/math';
 import { getTranslator, t } from '../../common/localization/localization';
@@ -68,7 +68,7 @@ function displayShopInfo(p: Player, sign: Block) {
     taxFreePrice == 1 ? unitNames.unit : unitNames.unitPlural,
   );
 
-  const itemName = getDisplayName(item);
+  const itemName = getItemNameAsComponent(item);
   const taxCollector = view.taxCollector
     ? Bukkit.server.getOfflinePlayer(UUID.fromString(view.taxCollector))
     : undefined;

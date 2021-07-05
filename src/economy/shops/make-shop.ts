@@ -1,4 +1,4 @@
-import { color, translate } from 'craftjs-plugin/chat';
+import { color, style, text, translate } from 'craftjs-plugin/chat';
 import { Component } from 'net.kyori.adventure.text';
 import { NamedTextColor } from 'net.kyori.adventure.text.format';
 import { OfflinePlayer } from 'org.bukkit';
@@ -10,13 +10,16 @@ import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { ChatMessage, GLOBAL_PIPELINE } from '../../chat/pipeline';
 import { errorMessage } from '../../chat/system';
-import { getPlainText, getTranslationKey } from '../../chat/utils';
+import { getPlainText } from '../../chat/utils';
 import { dataView } from '../../common/datas/view';
-import { getDisplayName } from '../../common/helpers/items';
+import {
+  getDisplayName,
+  getItemNameAsComponent,
+} from '../../common/helpers/items';
 import { distanceBetween } from '../../common/helpers/locations';
 import { getTranslator, t } from '../../common/localization/localization';
 import { Currency, getCurrency, getCurrencyTranslation } from '../currency';
-import { getBlockBehind } from './helpers';
+import { getBlockBehind, getCustomTranslationKeyForItem } from './helpers';
 import {
   shopGold as gold,
   shopGreen as green,
@@ -198,11 +201,11 @@ function saveShop(player: Player) {
     : undefined;
 
   const displayName = getDisplayName(shop.item);
-  const translationKey = getTranslationKey(displayName);
+  const translationKey = getCustomTranslationKeyForItem(shop.item);
   view.type = shop.type;
   view.item.material = shop.item.type.toString();
   view.item.modelId = modelId;
-  view.item.name = translationKey ? undefined : getPlainText(displayName);
+  view.item.name = getPlainText(displayName);
   view.item.material = shop.item.type.toString();
   view.item.translationKey = translationKey; // May not exist if not translatable
   view.price = shop.price;
@@ -230,12 +233,13 @@ function isShopInfoValid(
 }
 
 function updateSignTextTranslation(
-  text: Component,
-  sign: Block,
+  itemName: Component,
+  signBlock: Block,
   type: ShopType,
   price: number,
   currency: Currency,
 ) {
+  const sign = signBlock.state;
   if (sign instanceof Sign) {
     // Header
     const shopType = type === 'SELLING' ? 'vk.selling' : 'vk.buying';
@@ -243,16 +247,17 @@ function updateSignTextTranslation(
       type === 'SELLING' ? NamedTextColor.GREEN : NamedTextColor.BLUE;
     sign.line(0, color(shopTypeColor, translate(shopType)));
 
-    sign.line(1, text); // Item name
+    sign.line(1, itemName); // Item name
 
     // Price
     const currencyUnits = getCurrencyTranslation(currency);
     const unit = price === 1 ? currencyUnits.unit : currencyUnits.unitPlural;
     sign.line(2, translate(unit, '' + price));
+    sign.update();
   } else {
     log.warn(
       'Tried to update shop sign, but there is no sign at ',
-      sign.location,
+      signBlock.location,
     );
   }
 }
@@ -268,14 +273,26 @@ function updateShopSign(session: ShopMakingSession) {
   const price = shop.type == 'BUYING' ? shop.price - taxes : shop.price;
   const currency: Currency = shop.currency;
 
-  const name = getDisplayName(shop.item);
+  const decoratedName = getDecoratedCustomName(shop.item);
+  const name = getItemNameAsComponent(shop.item);
   updateSignTextTranslation(
-    name,
+    decoratedName || name,
     signBlock,
     shop.type as ShopType,
     price,
     currency,
   );
+}
+
+function getDecoratedCustomName(item: ItemStack) {
+  const translation = getCustomTranslationKeyForItem(item);
+  if (translation) {
+    return null;
+  }
+  const name = getDisplayName(item);
+  if (!name) return null;
+  const plainText = getPlainText(name);
+  return style('italic', text(`"${plainText}"`));
 }
 
 /**
@@ -331,7 +348,7 @@ function setShopCurrency(session: ShopMakingSession, player: Player) {
  */
 function setShopItem(session: ShopMakingSession, player: Player) {
   session.shopInfo.item = player.inventory.itemInMainHand;
-  const name = getDisplayName(session.shopInfo.item);
+  const name = getItemNameAsComponent(session.shopInfo.item);
   player.sendMessage(t(player, 'shops.item_set_success'));
   player.sendMessage(name);
   startNextTask(player);

@@ -16,6 +16,7 @@ const PLAIN_SERIALIZER = PlainTextComponentSerializer.plainText();
  * lacks any and all formatting that the text might have.
  */
 export function getPlainText(component: Component | null): string {
+  if (!component) return '';
   return PLAIN_SERIALIZER.serialize(component);
 }
 
