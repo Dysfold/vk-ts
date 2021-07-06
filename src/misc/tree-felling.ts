@@ -2,33 +2,21 @@ import { GameMode, Material, TreeSpecies } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { Vector } from 'org.bukkit.util';
-
-const LOGS = new Map([
-  [Material.OAK_LOG, TreeSpecies.GENERIC],
-  [Material.OAK_WOOD, TreeSpecies.GENERIC],
-
-  [Material.SPRUCE_LOG, TreeSpecies.REDWOOD],
-  [Material.SPRUCE_WOOD, TreeSpecies.REDWOOD],
-
-  [Material.BIRCH_LOG, TreeSpecies.BIRCH],
-  [Material.BIRCH_WOOD, TreeSpecies.BIRCH],
-
-  [Material.JUNGLE_LOG, TreeSpecies.JUNGLE],
-  [Material.JUNGLE_WOOD, TreeSpecies.JUNGLE],
-
-  [Material.DARK_OAK_LOG, TreeSpecies.DARK_OAK],
-  [Material.DARK_OAK_WOOD, TreeSpecies.DARK_OAK],
-
-  [Material.ACACIA_LOG, TreeSpecies.ACACIA],
-  [Material.ACACIA_WOOD, TreeSpecies.ACACIA],
-]);
+import {
+  OAK_BEAM,
+  SPRUCE_BEAM,
+  BIRCH_BEAM,
+  JUNGLE_BEAM,
+  DARK_OAK_BEAM,
+  ACACIA_BEAM,
+} from './wooden_beams';
 
 // All blocks that can be part of specific tree (leaves not included)
 const TREE_MATERIALS = new Map([
   [
     TreeSpecies.GENERIC,
     {
-      logs: new Set([Material.OAK_LOG, Material.OAK_WOOD]),
+      logs: new Set([Material.OAK_LOG, Material.OAK_WOOD, OAK_BEAM]),
       leaves: Material.OAK_LEAVES,
     },
   ],
@@ -36,7 +24,7 @@ const TREE_MATERIALS = new Map([
   [
     TreeSpecies.REDWOOD,
     {
-      logs: new Set([Material.SPRUCE_LOG, Material.SPRUCE_WOOD]),
+      logs: new Set([Material.SPRUCE_LOG, Material.SPRUCE_WOOD, SPRUCE_BEAM]),
       leaves: Material.SPRUCE_LEAVES,
     },
   ],
@@ -44,7 +32,7 @@ const TREE_MATERIALS = new Map([
   [
     TreeSpecies.BIRCH,
     {
-      logs: new Set([Material.BIRCH_LOG, Material.BIRCH_WOOD]),
+      logs: new Set([Material.BIRCH_LOG, Material.BIRCH_WOOD, BIRCH_BEAM]),
       leaves: Material.BIRCH_LEAVES,
     },
   ],
@@ -56,6 +44,7 @@ const TREE_MATERIALS = new Map([
         Material.JUNGLE_LOG,
         Material.JUNGLE_WOOD,
         Material.COCOA_BEANS,
+        JUNGLE_BEAM,
       ]),
       leaves: Material.JUNGLE_LEAVES,
     },
@@ -64,7 +53,11 @@ const TREE_MATERIALS = new Map([
   [
     TreeSpecies.DARK_OAK,
     {
-      logs: new Set([Material.DARK_OAK_LOG, Material.DARK_OAK_WOOD]),
+      logs: new Set([
+        Material.DARK_OAK_LOG,
+        Material.DARK_OAK_WOOD,
+        DARK_OAK_BEAM,
+      ]),
       leaves: Material.DARK_OAK_LEAVES,
     },
   ],
@@ -72,11 +65,21 @@ const TREE_MATERIALS = new Map([
   [
     TreeSpecies.ACACIA,
     {
-      logs: new Set([Material.ACACIA_LOG, Material.ACACIA_WOOD]),
+      logs: new Set([Material.ACACIA_LOG, Material.ACACIA_WOOD, ACACIA_BEAM]),
       leaves: Material.ACACIA_LEAVES,
     },
   ],
 ]);
+
+/**
+ * Map all log materials to corresponding tree species
+ */
+const LOGS = new Map<Material, TreeSpecies>();
+TREE_MATERIALS.forEach((materials, species) => {
+  materials.logs.forEach((logType) => {
+    LOGS.set(logType, species);
+  });
+});
 
 // prettier-ignore
 const LAYER_FACES = [
