@@ -146,7 +146,7 @@ export function getChatTheme(player: Player): Theme<TextColor> {
   ];
 }
 
-export function defaultChatTheme(): Theme<ChatColor> {
+export function defaultChatTheme(): Theme<TextColor> {
   return COMPILED_THEMES.default;
 }
 

@@ -1,14 +1,15 @@
 import { clickEvent, color, text } from 'craftjs-plugin/chat';
 import { UUID } from 'java.util';
-import { CommandSender, ConsoleCommandSender } from 'org.bukkit.command';
-import { Player } from 'org.bukkit.entity';
-import { Action } from 'net.md_5.bungee.api.chat.ClickEvent';
+import { ConsoleCommandSender } from 'org.bukkit.command';
+import { sendMessages } from './system';
+import { Audience } from 'net.kyori.adventure.audience';
+import { Action } from 'net.kyori.adventure.text.event.ClickEvent';
 
 /**
  * Pending prompts.
  */
 const pendingPrompts: Map<
-  CommandSender | Player,
+  Audience,
   Map<string, (action: string) => void>
 > = new Map();
 
@@ -25,7 +26,7 @@ export class Prompt {
   /**
    * Target command sender.
    */
-  private target: CommandSender | Player;
+  private target: Audience;
 
   /**
    * If we should try to automatically 'support' console that can't click
@@ -47,7 +48,7 @@ export class Prompt {
    * is not perfect, so commands that are commonly used from console might want
    * to do their own thing and disable this.
    */
-  constructor(target: CommandSender | Player, consoleSupport = true) {
+  constructor(target: Audience, consoleSupport = true) {
     this.target = target;
     this.consoleSupport = consoleSupport;
     this.randomId = UUID.randomUUID().toString(); // No need for secure randomness
@@ -55,7 +56,9 @@ export class Prompt {
     // If console and console support is toggled on, send initial message
     if (consoleSupport && this.target instanceof ConsoleCommandSender) {
       target.sendMessage(
-        `[Prompt] Chat prompt for console created; randomId=${this.randomId}`,
+        text(
+          `[Prompt] Chat prompt for console created; randomId=${this.randomId}`,
+        ),
       );
     }
   }
@@ -161,24 +164,25 @@ registerCommand(
  * if they typed the right commands in chat by hand.
  */
 export async function promptYesNo(
-  target: CommandSender | Player,
+  target: Audience,
   timeout: number,
   promptText: string,
 ): Promise<string> {
   const prompt = new Prompt(target);
-  target.sendMessage(
+  sendMessages(
+    target,
     text(promptText + ' '),
-    color('#00AA00', text('✔')),
+    color('#00AA00', '✔'),
     clickEvent(
       Action.RUN_COMMAND,
       prompt.command('yes'),
-      color('#55FF55', text('Kyllä ')),
+      color('#55FF55', 'Kyllä '),
     ),
-    color('#AA0000', text('✘')),
+    color('#AA0000', '✘'),
     clickEvent(
       Action.RUN_COMMAND,
       prompt.command('no'),
-      color('#FF5555', text('Ei ')),
+      color('#FF5555', 'Ei '),
     ),
   );
   return prompt.waitAnswer(timeout);
