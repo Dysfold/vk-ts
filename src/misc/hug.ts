@@ -69,13 +69,13 @@ addTranslation('hug.you_hugged_someone', {
 });
 
 addTranslation('hug.someone_hugged_you', {
-  fi_fi: 'Pelaaja %s halaa sinua',
-  en_us: 'Player %s hugged you',
+  fi_fi: '%s halasi sinua',
+  en_us: '%s hugged you',
 });
 
 addTranslation('hug.someone_hugged_someone', {
-  fi_fi: 'Pelaaja %s halaa pelaajaa %s',
-  en_us: 'Player %s hugged player %s',
+  fi_fi: '%s halasi pelaajaa %s',
+  en_us: '%s hugged %s',
 });
 
 const hugMsg = (text: string) => {
