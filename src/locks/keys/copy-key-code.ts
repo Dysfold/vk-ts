@@ -9,6 +9,10 @@ import { createKey, Key } from './key';
 
 const RESULT_SLOT = 2;
 
+/******************************************************
+ * Use anvil to copy a code to locks and other keys etc
+ ******************************************************/
+
 /**
  * Copy the code from the first item (key)
  * to the second item (lock, key, handcuff etc)
