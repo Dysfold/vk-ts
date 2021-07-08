@@ -1,4 +1,4 @@
-import { Bukkit, Location } from 'org.bukkit';
+import { Location } from 'org.bukkit';
 import { ItemFrame } from 'org.bukkit.entity';
 import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
 import { dataType } from '../../../common/datas/holder';
@@ -6,8 +6,7 @@ import { dataView } from '../../../common/datas/view';
 import { CUSTOM_DATA_KEY } from '../../../common/items/CustomItem';
 import { VkItem } from '../../../common/items/VkItem';
 import { isLockableMaterial } from '../blocklocks/block-lock-list';
-import { LOCK_DATA, createLockItem } from '../lock-items';
-import { Block } from 'org.bukkit.block';
+import { createLockItem, LOCK_DATA } from '../lock-items';
 const lockDataType = dataType(CUSTOM_DATA_KEY, LOCK_DATA);
 
 registerEvent(PlayerInteractEntityEvent, (event) => {

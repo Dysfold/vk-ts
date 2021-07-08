@@ -1,4 +1,4 @@
-import { Bukkit, Location, SoundCategory, Material } from 'org.bukkit';
+import { Location, Material, SoundCategory } from 'org.bukkit';
 import {
   InventoryClickEvent,
   PrepareAnvilEvent,

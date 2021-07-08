@@ -1,2 +1,2 @@
 require('./key');
-require('./clone-key');
+require('./copy-key-code');

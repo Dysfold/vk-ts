@@ -1,8 +1,6 @@
-import { color, text, translate } from 'craftjs-plugin/chat';
-import { TextDecoration } from 'net.kyori.adventure.text.format';
+import { translate } from 'craftjs-plugin/chat';
 import { Player } from 'org.bukkit.entity';
 import * as yup from 'yup';
-import { removeDecorations } from '../../chat/utils';
 import { giveItem } from '../../common/helpers/inventory';
 import { CustomItem } from '../../common/items/CustomItem';
 import { VkItem } from '../../common/items/VkItem';
