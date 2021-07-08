@@ -11,7 +11,7 @@ import {
 import { BlockLock, BlockLockProps } from '../blocklocks/BlockLock';
 import { LOCK_DATA } from '../lock-items';
 
-const AbstractLock = new CustomItem({
+export const AbstractLock = new CustomItem({
   id: -1,
   type: VkItem.HIDDEN,
   data: LOCK_DATA,
