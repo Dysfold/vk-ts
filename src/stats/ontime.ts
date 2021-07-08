@@ -149,7 +149,7 @@ registerCommand(
       return displayOwnOntime(sender);
     }
 
-    if (args[0] == 'top') {
+    if (args[0] == 'top' && args.length == 1) {
       return displayOntimeTop(sender, TOP_LIST_DEFAULT);
     }
 

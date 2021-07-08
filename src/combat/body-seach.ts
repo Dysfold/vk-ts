@@ -18,7 +18,7 @@ registerEvent(PlayerInteractEntityEvent, async (event) => {
   const target = clicked as unknown as Player;
   if (!clicker.itemInHand.type.isEmpty()) return;
   if (!clicker.isSneaking()) return;
-  if (!canBeBodySeached(target)) return;
+  if (!canBeBodySearched(target)) return;
   const distance = clicker.location.distance(target.location);
   if (distance > MAX_DISTANCE) return;
 
@@ -57,7 +57,7 @@ setInterval(() => {
   });
 }, 3 * 1000);
 
-function canBeBodySeached(target: Player) {
+function canBeBodySearched(target: Player) {
   if (!isHandcuffed(target)) return false; // Only handcuffed players can be seached
   if (target.isSneaking()) return true;
   if (target.hasPotionEffect(PotionEffectType.SLOW)) return true;
