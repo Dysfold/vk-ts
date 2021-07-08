@@ -28,23 +28,20 @@ const MoneyMold = new CustomItem({
 const PRESS_BLOCK = Material.IRON_BLOCK;
 const MATERIAL_CONTAINER = Material.DROPPER;
 
-// Placeholder for copper material (1.17)
-const COPPER_MATERIAL = Material.BRICK; //Material.COPPER_INGOT
-
 // Config for coins materials. Number is the id of the currency
 const RAW_MATERIALS = new Map<Currency, ItemStack[]>([
   [
     Currency.CLASSIC_GOLD,
     [
       new ItemStack(Material.GOLD_INGOT, 10),
-      new ItemStack(COPPER_MATERIAL, 10),
+      new ItemStack(Material.COPPER_INGOT, 10),
     ],
   ],
   [
     Currency.SILVER,
     [
       new ItemStack(Material.IRON_INGOT, 10),
-      new ItemStack(COPPER_MATERIAL, 10),
+      new ItemStack(Material.COPPER_INGOT, 10),
     ],
   ],
   [
@@ -52,7 +49,7 @@ const RAW_MATERIALS = new Map<Currency, ItemStack[]>([
     [
       new ItemStack(Material.PAPER, 10),
       new ItemStack(Material.INK_SAC, 10),
-      new ItemStack(COPPER_MATERIAL, 10),
+      new ItemStack(Material.COPPER_INGOT, 10),
     ],
   ],
 ]);
