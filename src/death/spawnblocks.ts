@@ -5,6 +5,7 @@ import * as yup from 'yup';
 import { DatabaseEntry } from '../common/datas/database';
 import { dataType } from '../common/datas/holder';
 import { dataView } from '../common/datas/view';
+import { addTranslation, t } from '../common/localization/localization';
 import { locationToObj, objToLocation } from './helpers';
 
 const spawnBlockDatabaseEntry = new DatabaseEntry('spawns', 'spawnblocks-key');
@@ -22,7 +23,7 @@ const spawnBlockData = dataType('spawnBlockData', {
 });
 
 const view = dataView(spawnBlockData, spawnBlockDatabaseEntry);
-log.info('[Spawnblocks] Spawnkuutioita löytyi ' + (view.blocks?.length || 0));
+log.info('[Spawnblocks] Spawnblocks found ' + (view.blocks?.length || 0));
 
 const SPAWN_BLOCK_TYPE = Material.END_PORTAL_FRAME;
 
@@ -34,7 +35,8 @@ registerEvent(BlockPlaceEvent, (event) => {
   } else {
     view.blocks.push(locObj);
   }
-  event.player.sendTitle('', 'Spawn asetettu', 10, 40, 20);
+  const subTitle = t(event.player, 'spawnblock.created');
+  event.player.sendTitle(' ', subTitle, 10, 40, 20);
 });
 
 registerEvent(BlockBreakEvent, (event) => {
@@ -42,7 +44,8 @@ registerEvent(BlockBreakEvent, (event) => {
   if (event.isCancelled()) return;
   if (!deleteSpawnBlockAt(event.block.location)) return;
 
-  event.player.sendTitle('', 'Spawn poistettu', 10, 40, 20);
+  const subTitle = t(event.player, 'spawnblock.removed');
+  event.player.sendTitle(' ', subTitle, 10, 40, 20);
 });
 
 export function getNearestSpawnBlock(from: Location) {
@@ -87,4 +90,14 @@ function deleteSpawnBlockAt(location: Location) {
 registerEvent(PlayerInteractEvent, (event) => {
   if (event.clickedBlock?.type !== SPAWN_BLOCK_TYPE) return;
   if (event.item?.type === Material.ENDER_EYE) event.setCancelled(true);
+});
+
+addTranslation('spawnblock.created', {
+  fi_fi: 'Spawn luotu!',
+  en_us: 'Spawn created!',
+});
+
+addTranslation('spawnblock.removed', {
+  fi_fi: 'Spawn poistettu!',
+  en_us: 'Spawn removed!',
 });

@@ -1,9 +1,11 @@
-import { translate, color, text } from 'craftjs-plugin/chat';
+import { color, text, translate, style } from 'craftjs-plugin/chat';
+import { Player } from 'org.bukkit.entity';
+import * as yup from 'yup';
+import { giveItem } from '../../common/helpers/inventory';
 import { CustomItem } from '../../common/items/CustomItem';
 import { VkItem } from '../../common/items/VkItem';
-import * as yup from 'yup';
-import { Player } from 'org.bukkit.entity';
-import { giveItem } from '../../common/helpers/inventory';
+import { removeDecorations } from '../../chat/utils';
+import { TextDecoration } from 'net.kyori.adventure.text.format';
 
 const KEY_DATA = {
   code: yup.number().notRequired(),
@@ -35,9 +37,11 @@ export function createKey(code?: number) {
   const item = Key.create({ code });
   if (code !== undefined) {
     const meta = item.itemMeta;
-    const codeString = color('#FFFFFF', text(`${code}`));
-    codeString.italic = false;
-    meta.loreComponents = [[codeString]];
+
+    const loreText = text(`${code}`);
+    const loreComponent = removeDecorations(loreText, TextDecoration.ITALIC);
+    const styledLore = color('#FFFFFF', loreComponent);
+    meta.lore([styledLore]);
     item.itemMeta = meta;
   }
   return item;

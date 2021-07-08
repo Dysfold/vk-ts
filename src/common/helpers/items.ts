@@ -1,5 +1,5 @@
-import { text, translate } from 'craftjs-plugin/chat';
-import { TranslatableComponent } from 'net.md_5.bungee.api.chat';
+import { translate } from 'craftjs-plugin/chat';
+import { Component } from 'net.kyori.adventure.text';
 import { Sound, SoundCategory } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { ItemStack } from 'org.bukkit.inventory';
@@ -11,9 +11,9 @@ import { Damageable, ItemMeta } from 'org.bukkit.inventory.meta';
  * @param item Flint and steel
  */
 export function useFlintAndSteel(player: Player, item: ItemStack) {
-  const meta = (item.itemMeta as unknown) as Damageable;
+  const meta = item.itemMeta as unknown as Damageable;
   meta.damage++;
-  item.itemMeta = (meta as unknown) as ItemMeta;
+  item.itemMeta = meta as unknown as ItemMeta;
 
   // Check if the tools breaks. 64 -> broken item
   if (meta.damage >= 64) {
@@ -29,10 +29,13 @@ export function useFlintAndSteel(player: Player, item: ItemStack) {
 }
 
 /**
- * Tries to get translated name of the item or the display name
+ * Gets display name or translation of an item for shop usage.
+ * @param item The item.
+ * @returns Player-provided display name, or the default translatable name.
  */
-export function getItemName(item: ItemStack) {
-  if (!item?.itemMeta?.hasDisplayName()) {
+export function getItemNameAsComponent(item: ItemStack): Component {
+  const meta = item.itemMeta;
+  if (!meta.hasDisplayName()) {
     const key = item.type.translationKey;
     // For some reason
     // spigot gives "item.minecraft..." instead of "block.minecraft..."
@@ -41,13 +44,21 @@ export function getItemName(item: ItemStack) {
     }
     return translate(key);
   }
-
-  const components = item.itemMeta.displayNameComponent;
-  for (const component of components) {
-    // Check if the name is the original name
-    if (component instanceof TranslatableComponent) {
-      return component;
-    }
+  const name = meta.displayName();
+  if (!name) {
+    throw new Error('display name should exist');
   }
-  return text(item.itemMeta.displayName);
+  return name;
+}
+
+/**
+ * Gets display name of an item.
+ * @param item The item.
+ * @returns Display name component
+ */
+export function getDisplayName(item: ItemStack) {
+  if (item.itemMeta.hasDisplayName()) {
+    return item.itemMeta.displayName();
+  }
+  return null;
 }

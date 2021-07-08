@@ -1,10 +1,10 @@
-import { TranslatableComponent } from 'net.md_5.bungee.api.chat';
 import { EntityType, Player } from 'org.bukkit.entity';
 import { PrepareAnvilEvent } from 'org.bukkit.event.inventory';
 import { ItemStack } from 'org.bukkit.inventory';
 import { Handcuffs } from '../combat/handcuffs';
 import { Key } from '../locks/keys/key';
 import { VkItem } from '../common/items/VkItem';
+import { isTranslatable } from '../chat/utils';
 
 // TODO: Allow renaming of locks
 /**
@@ -26,17 +26,14 @@ function isBlackListed(item: ItemStack) {
 }
 
 function canBeRenamed(item: ItemStack) {
+  // Whitelisted items can always be renamed, blacklisted cannot
   if (isAllowedItem(item)) return true;
   if (isBlackListed(item)) return false;
-  if (!item.itemMeta.hasDisplayName()) return true;
 
-  const components = item.itemMeta.displayNameComponent;
-  for (const component of components) {
-    // Check if the name is the original name
-    if (component instanceof TranslatableComponent) {
-      return true;
-    }
-  }
+  // Items with Vanilla name or our custom default name can be renamed
+  const name = item.itemMeta.displayName();
+  if (!name || isTranslatable(name)) return true;
+
   return false;
 }
 
@@ -52,7 +49,7 @@ registerEvent(PrepareAnvilEvent, (event) => {
   // Notify the player
   const viewer = event.viewers[0];
   if (viewer.type !== EntityType.PLAYER) return;
-  ((viewer as unknown) as Player).sendActionBar(
+  (viewer as unknown as Player).sendActionBar(
     'Et voi nimetä tätä esinettä uudelleen',
   );
 });

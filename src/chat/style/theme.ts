@@ -1,4 +1,4 @@
-import { ChatColor } from 'net.md_5.bungee.api';
+import { NamedTextColor, TextColor } from 'net.kyori.adventure.text.format';
 import { Player } from 'org.bukkit.entity';
 import { dataHolder } from '../../common/datas/holder';
 
@@ -109,10 +109,12 @@ const CHAT_THEMES: Record<string, Theme<string>> = {
  * @param record Chat theme(s) with color strings.
  */
 function compileThemes(record: Record<string, Record<string, any> | string>) {
-  const compiled: Record<string, Record<string, any> | ChatColor> = {};
+  const compiled: Record<string, Record<string, any> | TextColor> = {};
   for (const [key, value] of Object.entries(record)) {
     compiled[key] =
-      typeof value == 'string' ? ChatColor.of(value) : compileThemes(value);
+      typeof value == 'string'
+        ? TextColor.fromCSSHexString(value) ?? NamedTextColor.WHITE
+        : compileThemes(value);
   }
   return compiled;
 }
@@ -125,14 +127,14 @@ function compileThemes(record: Record<string, Record<string, any> | string>) {
  * This type represents chat themes that have been compiled to use ChatColors
  * instead of hex strings.
  */
-export type ChatTheme = Theme<ChatColor>;
+export type ChatTheme = Theme<TextColor>;
 
 /**
  * Themes that have been compiled to use ChatColors.
  */
 const COMPILED_THEMES = compileThemes(CHAT_THEMES) as Record<string, ChatTheme>;
 
-export function getChatTheme(player: Player): Theme<ChatColor> {
+export function getChatTheme(player: Player): Theme<TextColor> {
   return COMPILED_THEMES[
     dataHolder(player).get('chat.theme', 'string') ?? 'default'
   ];

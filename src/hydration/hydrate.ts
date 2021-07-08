@@ -68,7 +68,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
     const cauldronData = block.blockData as Levelled;
     const waterLevel = cauldronData.level;
     if (waterLevel) {
-      if (!checkCauldronEvent(block, player, cauldronData.level, -1)) return;
+      if (!checkCauldronEvent(block, player, -1)) return;
       cauldronData.level = waterLevel - 1;
       block.blockData = cauldronData;
     } else {
@@ -136,7 +136,7 @@ export function hydrate(
     if (barBefore >= Hydration.MAX) {
       msg = `Janosi oli jo sammutettu`;
     }
-    player.sendTitle('', msg, 10, 40, 10);
+    player.sendTitle(' ', msg, 10, 40, 10);
   }
 }
 

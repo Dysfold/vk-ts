@@ -7,12 +7,13 @@ import {
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { Player } from 'org.bukkit.entity';
 import { color, text, translate } from 'craftjs-plugin/chat';
-import { ChatColor } from 'net.md_5.bungee.api';
 import { isRightClick } from '../common/helpers/click';
 import { ChatMessage, GLOBAL_PIPELINE } from '../chat/pipeline';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 import * as yup from 'yup';
+import { NamedTextColor } from 'net.kyori.adventure.text.format';
+import { getPlainText } from '../chat/utils';
 
 /**
  * Max length of text.
@@ -73,7 +74,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
   if (offHand.type !== Material.FEATHER) return;
   if (playersWriting.has(event.player)) return;
   // Check if the paper already has something written on it
-  if (event.item.itemMeta.lore) {
+  if (event.item.itemMeta.hasLore()) {
     event.player.sendActionBar('§7Tälle paperille on jo kirjoitettu jotakin.');
     return;
   }
@@ -82,7 +83,7 @@ registerEvent(PlayerInteractEvent, async (event) => {
     return;
   }
   event.player.sendMessage(
-    color(ChatColor.GRAY, text('Kirjoita haluamasi teksti chattiin!')),
+    color(NamedTextColor.GRAY, 'Kirjoita haluamasi teksti chattiin!'),
   );
   playersWriting.add(event.player);
 });
@@ -100,11 +101,10 @@ PaperWritten.event(
     if (offHand.type == Material.FEATHER) return;
     if (playersWriting.has(event.player)) return;
     // Check if the paper already has something written on it
-    if (event.item.itemMeta.lore) {
+    const lore = event.item.itemMeta.lore();
+    if (lore) {
       event.player.sendMessage(text('Paperilla lukee:'));
-      event.player.sendMessage(
-        color(ChatColor.WHITE, text(event.item.itemMeta.lore[0])),
-      );
+      event.player.sendMessage(color(NamedTextColor.WHITE, lore[0]));
     }
   },
 );
@@ -119,17 +119,12 @@ PaperSealed.event(
     if (offHand.type == Material.FEATHER) return;
     if (playersWriting.has(event.player)) return;
     // Check if the paper already has something written on it
-    if (event.item.itemMeta.lore) {
+    const lore = event.item.itemMeta.lore();
+    if (lore) {
       event.player.sendMessage(text('Paperilla lukee:'));
-      event.player.sendMessage(
-        color(ChatColor.WHITE, text(event.item.itemMeta.lore[0])),
-      );
-      event.player.sendMessage(
-        color(
-          ChatColor.RED,
-          text(event.item.itemMeta.lore[1] + '' + event.item.itemMeta.lore[2]),
-        ),
-      );
+      event.player.sendMessage(color(NamedTextColor.WHITE, lore[0]));
+
+      event.player.sendMessage(color(NamedTextColor.RED, lore[1], '', lore[2]));
     }
   },
 );
@@ -154,7 +149,7 @@ function handleMessage(msg: ChatMessage) {
   const message = msg.content;
   if (MAX_LENGTH < message.length) {
     msg.sender.sendMessage(
-      color(ChatColor.GRAY, text('Tämä teksti on liian pitkä. Käytä kirjaa!')),
+      color(NamedTextColor.GRAY, 'Tämä teksti on liian pitkä. Käytä kirjaa!'),
     );
     return;
   }
@@ -162,7 +157,7 @@ function handleMessage(msg: ChatMessage) {
   letter.amount = mainHand.amount;
   const itemMeta = letter.itemMeta;
   // Add color to lore
-  itemMeta.lore = [`§7${message}`];
+  itemMeta.lore([color(NamedTextColor.GRAY, message)]);
   letter.itemMeta = itemMeta;
   inventory.itemInMainHand = letter;
   msg.sender.sendActionBar('§7Kirjoittaminen onnistui!');
@@ -206,6 +201,7 @@ Envelope.event(
     const offHand = inventory.itemInOffHand;
     const paperWritten = PaperWritten.get(event.item);
     const paperSealed = PaperSealed.get(event.item);
+    const lore = event.item.itemMeta.lore() ?? [];
     if (paperWritten) {
       if (event.item.amount > offHand.amount) {
         event.player.sendActionBar(
@@ -213,10 +209,11 @@ Envelope.event(
         );
         return;
       }
-      if (!event.item.itemMeta || !event.item.itemMeta.lore) return;
+      const lore = event.item.itemMeta?.lore();
+      if (!lore) return;
       event.player.sendActionBar('§7Laitoit kirjeen kirjekuoreen');
       const envelope = EnvelopeWithLetter.create({
-        letter: ChatColor.stripColor(event.item.itemMeta.lore[0]),
+        letter: getPlainText(lore[0]),
         wax: [],
       });
       envelope.amount = event.item.amount;
@@ -237,8 +234,8 @@ Envelope.event(
         return;
       event.player.sendActionBar('§7Laitoit kirjeen kirjekuoreen');
       const envelope = EnvelopeWithLetter.create({
-        letter: ChatColor.stripColor(event.item.itemMeta.lore[0]),
-        wax: [event.item.itemMeta.lore[1], event.item.itemMeta.lore[2]],
+        letter: getPlainText(lore[0]),
+        wax: [getPlainText(lore[1]), getPlainText(lore[2])],
       });
       envelope.amount = event.item.amount;
       inventory.itemInMainHand = envelope;
@@ -278,13 +275,13 @@ EnvelopeWithLetter.event(
         : PaperSealed.create({});
     const itemMeta = letter.itemMeta;
     if (notSealed.wax.length == 2) {
-      itemMeta.lore = [
-        `§7${notSealed.letter}`,
-        notSealed.wax[0],
-        notSealed.wax[1],
-      ];
+      itemMeta.lore([
+        color(NamedTextColor.GRAY, notSealed.letter),
+        text(notSealed.wax[0]),
+        text(notSealed.wax[1]),
+      ]);
     } else {
-      itemMeta.lore = [`§7${notSealed.letter}`];
+      itemMeta.lore([color(NamedTextColor.GRAY, notSealed.letter)]);
     }
     letter.itemMeta = itemMeta;
     letter.amount = event.item.amount;
@@ -319,9 +316,13 @@ EnvelopeSealed.event(
     letter.amount = event.item.amount;
     const itemMeta = letter.itemMeta;
     if (sealed.wax.length == 2) {
-      itemMeta.lore = [`§7${sealed.letter}`, sealed.wax[0], sealed.wax[1]];
+      itemMeta.lore([
+        color(NamedTextColor.GRAY, sealed.letter),
+        text(sealed.wax[0]),
+        text(sealed.wax[1]),
+      ]);
     } else {
-      itemMeta.lore = [`§7${sealed.letter}`];
+      itemMeta.lore([color(NamedTextColor.GRAY, sealed.letter)]);
     }
     letter.itemMeta = itemMeta;
     inventory.itemInMainHand = letter;

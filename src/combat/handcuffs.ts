@@ -1,4 +1,4 @@
-import { translate } from 'craftjs-plugin/chat';
+import { text, translate } from 'craftjs-plugin/chat';
 import { GameMode, Material } from 'org.bukkit';
 import { EntityType, Player } from 'org.bukkit.entity';
 import {
@@ -17,6 +17,7 @@ import {
 import { EquipmentSlot } from 'org.bukkit.inventory';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import * as yup from 'yup';
+import { getPlainText } from '../chat/utils';
 import { equippedItem, giveItem } from '../common/helpers/inventory';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
@@ -65,7 +66,7 @@ Handcuffs.event(
     const entity = event.rightClicked;
     if (entity.type !== EntityType.PLAYER) return;
     if (event.hand !== EquipmentSlot.HAND) return;
-    const captive = (entity as unknown) as Player;
+    const captive = entity as unknown as Player;
     if (isHandcuffed(captive)) return;
     const captor = event.player;
     const captiveInventory = captive.inventory;
@@ -81,7 +82,7 @@ Handcuffs.event(
       return;
     }
     // Add locked handcuffs to both hands
-    const keycode = handcuffs.itemMeta.displayName;
+    const keycode = getPlainText(handcuffs.itemMeta.displayName());
     captiveInventory.itemInOffHand = LockedHandcuffs.create({ key: keycode });
     captiveInventory.itemInMainHand = LockedHandcuffs.create({}); // Mainhand handcuffs are only for visuals
     handcuffs.amount -= 1;
@@ -113,7 +114,7 @@ Key.event(
     const entity = event.rightClicked;
     if (entity.type !== EntityType.PLAYER) return;
     if (event.hand !== EquipmentSlot.HAND) return;
-    const handcuffed = (entity as unknown) as Player;
+    const handcuffed = entity as unknown as Player;
     const player = event.player;
 
     if (removeHandcuffs(handcuffed, player)) {
@@ -131,7 +132,7 @@ function removeHandcuffs(from: Player, to: Player) {
 
   const inventory = to.inventory;
   const key = inventory.itemInHand;
-  const keycode = key.itemMeta.displayName;
+  const keycode = getPlainText(key.itemMeta.displayName());
 
   if (!(handcuffs?.key === keycode)) return false;
 
@@ -142,7 +143,7 @@ function removeHandcuffs(from: Player, to: Player) {
   //   Data:
   //      display: {Name: '{"extra":[{"text":"Käsiraudat"}],"text":""}'}}
   //      display: {Name: '{"text":"Käsiraudat"}'}
-  meta.displayName = keycode;
+  meta.displayName(text(keycode));
   openedHandcuffs.itemMeta = meta;
   giveItem(to, openedHandcuffs, EquipmentSlot.HAND);
   from.inventory.itemInOffHand.amount = 0;
@@ -225,7 +226,7 @@ LockedHandcuffs.event(
   EntityDamageByEntityEvent,
   (event) => equippedItem(event.damager, EquipmentSlot.OFF_HAND),
   async (event) => {
-    ((event.damager as unknown) as Player).sendActionBar(
+    (event.damager as unknown as Player).sendActionBar(
       'Et voi tehdä näin kahlittuna',
     );
     event.setCancelled(true);
@@ -256,7 +257,7 @@ LockedHandcuffs.event(
 registerEvent(PlayerInteractEntityEvent, (event) => {
   if (event.hand !== EquipmentSlot.HAND) return;
   if (event.rightClicked.type !== EntityType.PLAYER) return;
-  const dragged = (event.rightClicked as unknown) as Player;
+  const dragged = event.rightClicked as unknown as Player;
   const player = event.player;
 
   // If player is sneaking, he is trying to open the inventory of the target

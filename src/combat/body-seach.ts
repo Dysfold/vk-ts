@@ -15,7 +15,7 @@ registerEvent(PlayerInteractEntityEvent, async (event) => {
   if (clicked.type !== EntityType.PLAYER) return;
 
   const clicker = event.player;
-  const target = (clicked as unknown) as Player;
+  const target = clicked as unknown as Player;
   if (!clicker.itemInHand.type.isEmpty()) return;
   if (!clicker.isSneaking()) return;
   if (!canBeBodySeached(target)) return;

@@ -1,4 +1,5 @@
-import { translate } from 'craftjs-plugin/chat';
+import { color, translate } from 'craftjs-plugin/chat';
+import { NamedTextColor } from 'net.kyori.adventure.text.format';
 import { Material, Particle, Sound, SoundCategory } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
@@ -106,14 +107,14 @@ function changeTobaccoLevel(item: ItemStack, amount: number) {
   data.tobaccoLevel = percentage;
 
   const meta = item.itemMeta;
-  meta.lore = createLore(percentage);
+  meta.lore(createLore(percentage));
   item.itemMeta = meta;
 
   return item;
 }
 
 function createLore(number: number) {
-  return ['§r§7' + number + '%'];
+  return [color(NamedTextColor.GRAY, number + '%')];
 }
 
 setInterval(() => {

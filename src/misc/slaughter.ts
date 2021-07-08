@@ -12,6 +12,7 @@ import {
 import { ItemStack } from 'org.bukkit.inventory';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import { Vector } from 'org.bukkit.util';
+import { getPlainText } from '../chat/utils';
 import { CustomItem } from '../common/items/CustomItem';
 import { LootDrop, generateLoot } from '../common/items/drops';
 import { VkItem } from '../common/items/VkItem';
@@ -79,7 +80,7 @@ function getAnimalDrops(entityType: EntityType): ItemStack[] {
  */
 function createAnimalCorpse(entity: LivingEntity) {
   entity.setAI(false);
-  entity.customName = CORPSE_NAME;
+  entity.customName(text(CORPSE_NAME));
   entity.setSilent(true);
   // Add dropped item as passenger to hide nametag
   if (entity.passenger === null) {
@@ -165,7 +166,7 @@ registerEvent(EntityDeathEvent, (event) => {
   if (!slaughterableAnimals.has(event.entity.type.toString())) return;
 
   event.drops.length = 0;
-  event.entity.customName = '';
+  event.entity.customName(null);
   if (event.entity.passenger) event.entity.passenger.remove();
 });
 
@@ -173,7 +174,7 @@ registerEvent(EntityDeathEvent, (event) => {
 registerEvent(EntityRegainHealthEvent, (event) => {
   if (
     slaughterableAnimals.has(event.entity.type.toString()) &&
-    event.entity.customName === CORPSE_NAME
+    getPlainText(event.entity.customName()) === CORPSE_NAME
   ) {
     event.setCancelled(true);
   }
@@ -185,7 +186,7 @@ registerEvent(BlockBreakEvent, (event) => {
   for (const entity of location.add(0, 1, 0).getNearbyLivingEntities(1)) {
     if (
       slaughterableAnimals.has(String(entity.type)) &&
-      entity.customName === CORPSE_NAME
+      getPlainText(entity.customName()) === CORPSE_NAME
     ) {
       // Prevent small movement before function call with slowness effect
       const slow = new PotionEffect(
@@ -210,10 +211,11 @@ registerEvent(EntityDamageByEntityEvent, (event) => {
   const entity = event.entity as LivingEntity;
   const player = event.damager as Player;
 
-  if (entity.health <= event.damage && entity.customName !== CORPSE_NAME) {
+  const name = getPlainText(entity.customName());
+  if (entity.health <= event.damage && name !== CORPSE_NAME) {
     event.damage = 0;
     createAnimalCorpse(entity);
-  } else if (entity.customName === CORPSE_NAME) {
+  } else if (name === CORPSE_NAME) {
     event.damage = 1;
     if (slaughterTools.has(player.itemInHand.type)) handleDrops(entity);
     playSlaughterEffects(entity.location);

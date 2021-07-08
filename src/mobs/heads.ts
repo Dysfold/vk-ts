@@ -1,3 +1,4 @@
+import { text } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
 import { EntityType } from 'org.bukkit.entity';
 import { EntityDeathEvent } from 'org.bukkit.event.entity';
@@ -13,7 +14,7 @@ class HeadItem {
     this.item = new ItemStack(Material.PLAYER_HEAD, 1);
     const skull = this.item.itemMeta as SkullMeta;
     skull.owner = owner;
-    skull.displayName = '§r' + name;
+    skull.displayName(text(name));
     this.item.itemMeta = skull;
     this.name = name;
     this.rarity = rarity;

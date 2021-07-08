@@ -1,11 +1,12 @@
 import { Chess, ChessInstance, Move, Square } from 'chess.js';
-import { HashSet, Set } from 'java.util';
+import { text } from 'craftjs-plugin/chat';
 import { Location, Material, World } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Directional } from 'org.bukkit.block.data';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { RayTraceResult, Vector } from 'org.bukkit.util';
+import { getPlainText } from '../../chat/utils';
 
 const DEFAULT_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
@@ -63,7 +64,7 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
 
   if (!chess) {
     // No active chess instances were found. Creating a new one from backup
-    chess = new Chess(engine.customName || undefined);
+    chess = new Chess(getPlainText(engine.customName()) || undefined);
     games.set(block.location.toString(), chess);
   }
 
@@ -105,7 +106,7 @@ export function clickBoard(raytrace: RayTraceResult, player: Player) {
 
     if (move) {
       // Update storage
-      engine.customName = chess.fen();
+      engine.customName(text(chess.fen()));
 
       // Update pieces on the block
       updateBoard(block, move);
@@ -134,7 +135,7 @@ function announce(block: Block, state: string, winner?: 'w' | 'b') {
   const entities = block.location.getNearbyEntities(3, 2, 3);
   for (const entity of entities) {
     if (entity.type === EntityType.PLAYER) {
-      ((entity as unknown) as Player).sendTitle('§6' + state, msg, 0, 50, 30);
+      (entity as unknown as Player).sendTitle('§6' + state, msg, 0, 50, 30);
     }
   }
 }
@@ -152,7 +153,7 @@ function getSquareLocation(block: Block, square: Square) {
   const relative = new Vector(x, 1, y);
 
   // Get the direction of the block
-  const data = (block.blockData as unknown) as Directional;
+  const data = block.blockData as unknown as Directional;
   const facing = data.facing;
   const forward = facing.direction;
 
@@ -221,7 +222,7 @@ function getRelativeVector(position: Vector, block: Block) {
   const relative = position.subtract(location);
 
   // Get the direction of the block
-  const data = (block.blockData as unknown) as Directional;
+  const data = block.blockData as unknown as Directional;
   const facing = data.facing;
   const forward = facing.direction;
 
@@ -264,7 +265,7 @@ function getEngineArmorStand(block: Block) {
     engine = createArmorstand('engine', block.world);
     const destination = block.location.add(CENTERING_VECTOR);
     engine.teleport(destination);
-    engine.customName = DEFAULT_FEN;
+    engine.customName(text(DEFAULT_FEN));
   }
   return engine;
 }
@@ -383,12 +384,13 @@ function createArmorstand(type: string, world: World) {
   armorstand.setCanPickupItems(false);
   armorstand.setMarker(true);
   armorstand.setCustomNameVisible(false);
-  const disabled: Set<EquipmentSlot> = new HashSet();
-  disabled.add(EquipmentSlot.HAND);
-  disabled.add(EquipmentSlot.OFF_HAND);
-  disabled.add(EquipmentSlot.CHEST);
-  disabled.add(EquipmentSlot.LEGS);
-  disabled.add(EquipmentSlot.FEET);
+  const disabled = [
+    EquipmentSlot.HAND,
+    EquipmentSlot.OFF_HAND,
+    EquipmentSlot.CHEST,
+    EquipmentSlot.LEGS,
+    EquipmentSlot.FEET,
+  ];
   armorstand.disabledSlots = disabled;
 
   return armorstand;

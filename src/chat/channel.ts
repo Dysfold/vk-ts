@@ -260,7 +260,7 @@ const PRIMARY_NAMES = Object.values(CHAT_CHANNELS)
 registerCommand(
   ['ch', 'channel', 'kanava'],
   (sender, _alias, args) => {
-    const player = (sender as unknown) as Player;
+    const player = sender as unknown as Player;
     if (args.length == 1) {
       // One argument: change default channel
       changeChannel(player, args[0]);
@@ -330,7 +330,7 @@ for (const [name, channel] of Object.entries(CHANNEL_NAMES)) {
   registerCommand(
     name,
     (sender, _alias, args) => {
-      const player = (sender as unknown) as Player;
+      const player = sender as unknown as Player;
       if (args.length == 0) {
         // Change default channel
         changeChannel(player, channel.names[0]);
