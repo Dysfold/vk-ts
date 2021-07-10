@@ -13,6 +13,13 @@ const FISHES = new Map([
 
 const FISH_ENTITIES = new Set(FISHES.values());
 
+function isFish(entityType: EntityType | null) {
+  if (entityType) {
+    return FISH_ENTITIES.has(entityType);
+  }
+  return false;
+}
+
 // Replace fished item with fish entity
 registerEvent(PlayerFishEvent, async (event) => {
   const caught = event.caught;
@@ -43,8 +50,8 @@ registerEvent(PlayerFishEvent, async (event) => {
 
 // Make fish harder to kill when it is in water
 registerEvent(EntityDamageByEntityEvent, async (event) => {
-  if (!FISH_ENTITIES.has(event.entityType)) return;
-  if (event.damager.type !== EntityType.PLAYER) return;
+  if (!isFish(event.entityType)) return;
+  if (event.damager?.type !== EntityType.PLAYER) return;
 
   const fish = event.entity as LivingEntity;
   if (fish.isInWater()) {
