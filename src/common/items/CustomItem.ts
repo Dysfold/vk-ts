@@ -79,7 +79,7 @@ function checkItemId(type: Material, id: number) {
   }
 }
 
-function getIndex(type: Material, id: number) {
+function getOrdinal(type: Material, id: number) {
   const key = getStringKey(type, id);
   const ordinal = usedIds.get(key);
   if (ordinal == undefined) throw new Error(`Invalid item ordinal ${ordinal}`);
@@ -103,7 +103,8 @@ export class CustomItem<T extends ObjectShape> {
   private dataType: DataType<T>;
 
   /**
-   * Unique id for this custom item.
+   * Ordinal for this custom item. This might change when
+   * the code is reloaded
    */
   readonly ordinal: number;
 
@@ -113,7 +114,7 @@ export class CustomItem<T extends ObjectShape> {
       options.customModel !== false ? options.id : 100000 + options.id;
     checkItemId(options.type, options.id);
     this.dataType = dataType(CUSTOM_DATA_KEY, this.options.data);
-    this.ordinal = getIndex(options.type, options.id);
+    this.ordinal = getOrdinal(options.type, options.id);
   }
 
   /**

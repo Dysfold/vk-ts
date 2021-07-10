@@ -41,3 +41,13 @@ export function playAddLockSound(location: Location) {
     1.5,
   );
 }
+
+export function playKeyRenameSound(location: Location) {
+  location.world.playSound(
+    location,
+    'minecraft:block.anvil.use',
+    SoundCategory.BLOCKS,
+    1,
+    1,
+  );
+}

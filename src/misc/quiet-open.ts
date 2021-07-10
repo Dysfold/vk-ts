@@ -39,7 +39,7 @@ registerEvent(
         : 'non-silent.wooden_trapdoor.open';
     }
 
-    if (sound) block.world.playSound(block.location, sound, 1, 1);
+    if (sound !== '') block.world.playSound(block.location, sound, 1, 1);
   },
   {
     // Priority is HIGH, because we need other events to fire first,

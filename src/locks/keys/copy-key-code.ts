@@ -4,6 +4,7 @@ import {
   PrepareAnvilEvent,
 } from 'org.bukkit.event.inventory';
 import { AnvilInventory, ItemStack } from 'org.bukkit.inventory';
+import { playKeyRenameSound } from '../locks/helpers/sounds';
 import { createLockItem, LockItem } from '../locks/lock-items';
 import { createKey, Key } from './key';
 
@@ -20,6 +21,8 @@ const RESULT_SLOT = 2;
 registerEvent(PrepareAnvilEvent, (event) => {
   const inv = event.inventory;
   const { firstItem, secondItem } = inv;
+  if (firstItem == null) return;
+  if (secondItem == null) return;
 
   if (!isKey(firstItem)) return;
 
@@ -31,7 +34,7 @@ registerEvent(PrepareAnvilEvent, (event) => {
   }
 
   // Copy the code to a lock
-  if (isLock(secondItem)) {
+  else if (isLock(secondItem)) {
     const data = Key.get(firstItem);
     event.result = createLockItem(data?.code);
     event.result.amount = secondItem.amount;
@@ -45,6 +48,8 @@ registerEvent(InventoryClickEvent, (event) => {
   if (event.clickedInventory instanceof AnvilInventory) {
     const inv = event.clickedInventory;
     const { firstItem, secondItem } = inv;
+    if (firstItem === null) return;
+    if (secondItem === null) return;
     if (!isKey(firstItem)) return;
     if (event.slot != RESULT_SLOT) return;
     if (event.cursor?.type !== Material.AIR) return;
@@ -59,27 +64,17 @@ registerEvent(InventoryClickEvent, (event) => {
       secondItem.amount = 0;
 
       const soundLocation = inv.location ?? event.whoClicked.location;
-      playAnvilSound(soundLocation);
+      playKeyRenameSound(soundLocation);
     }
   }
 });
 
-function isKey(item: ItemStack | null): item is ItemStack {
+function isKey(item: ItemStack) {
   if (!item) return false;
   return Key.check(item);
 }
 
-function isLock(item: ItemStack | null): item is ItemStack {
+function isLock(item: ItemStack) {
   if (!item) return false;
   return LockItem.check(item);
-}
-
-function playAnvilSound(location: Location) {
-  location.world.playSound(
-    location,
-    'minecraft:block.anvil.use',
-    SoundCategory.BLOCKS,
-    1,
-    1,
-  );
 }

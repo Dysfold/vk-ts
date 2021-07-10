@@ -1,3 +1,4 @@
+import { GameMode } from 'org.bukkit';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { createLock } from '../helpers/createLock';
@@ -19,8 +20,10 @@ LockItem.event(
     const lock = createLock(blockToBeLocked);
     if (lock) {
       playAddLockSound(lock.location);
-      event.item.amount--;
       lock.update();
+      if (event.player.gameMode !== GameMode.CREATIVE) {
+        event.item.amount--;
+      }
     }
   },
 );

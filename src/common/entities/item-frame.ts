@@ -113,10 +113,8 @@ registerEvent(
     if (!(entity instanceof ItemFrame)) return;
     if (isLockItem(entity.item)) {
       event.setCancelled(true);
-      console.log('JUU');
       return;
     }
-    console.log('EII');
 
     // Remove, don't drop item form of the entity
     event.setCancelled(true);
