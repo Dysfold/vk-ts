@@ -18,7 +18,7 @@ import { Vector } from 'org.bukkit.util';
 export function giveItem(
   player: Player,
   item: ItemStack,
-  hand?: EquipmentSlot,
+  hand?: EquipmentSlot | null,
 ) {
   if (item.type === Material.AIR) return;
   const inventory = player.inventory as PlayerInventory;
