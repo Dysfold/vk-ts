@@ -1,0 +1,2 @@
+require('./food');
+require('./misc');

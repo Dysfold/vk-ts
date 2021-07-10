@@ -1,6 +1,6 @@
 import { Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
-import { shapelessRecipe } from './utilities/shapeless-recipes';
+import { shapelessRecipe } from '../utilities/shapeless-recipes';
 
 shapelessRecipe({
   key: 'berry_soup',

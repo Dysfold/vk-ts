@@ -1,7 +1,7 @@
 import { Material } from 'org.bukkit';
-import { HandGrindstone } from '../../misc/grindstone';
-import { furnaceRecipe } from './utilities/furnace-recipe';
-import { DriedTobacco } from '../../misc/pipe';
+import { HandGrindstone } from '../../../misc/grindstone';
+import { furnaceRecipe } from '../../utilities/furnace-recipe';
+import { DriedTobacco } from '../../../misc/pipe';
 
 furnaceRecipe({
   key: 'hand_grindstone',
