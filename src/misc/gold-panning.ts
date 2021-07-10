@@ -19,13 +19,14 @@ registerEvent(PlayerInteractEvent, (event) => {
 
   const biome = block.biome;
   if (biome !== Biome.RIVER && biome !== Biome.FROZEN_RIVER) return;
+
+  const water = block.getRelative(event.blockFace);
+  if (water.type !== Material.WATER) return;
+
   player.setCooldown(Material.BOWL, 20);
 
   if (!isLuckyChunk(block.chunk)) return;
   if (Math.random() > GOLD_CHANCE) return;
-
-  const water = block.getRelative(event.blockFace);
-  if (water.type !== Material.WATER) return;
 
   if (event.hand === EquipmentSlot.HAND) {
     player.swingMainHand();

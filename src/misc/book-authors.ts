@@ -5,6 +5,7 @@ import { PlayerInventory } from 'org.bukkit.inventory';
 import { BookMeta } from 'org.bukkit.inventory.meta';
 import { Levelled } from 'org.bukkit.block.data';
 import { addTranslation, t } from '../common/localization/localization';
+import { text } from 'craftjs-plugin/chat';
 
 registerEvent(PlayerInteractEvent, (event) => {
   if (event.item?.type !== Material.FEATHER) return;
@@ -26,13 +27,13 @@ registerEvent(PlayerInteractEvent, (event) => {
     return;
   }
 
-  const author = meta.author;
+  const author = meta.getAuthor();
   if (!author) return;
   if (author.includes(' & ')) return;
   if (author === event.player.name) return;
 
   // Add the signature
-  meta.author += ' & ' + event.player.name;
+  meta.author(text(author + ' & ' + event.player.name));
   book.itemMeta = meta;
   event.player.sendActionBar(t(player, 'book.signature_added'));
 });
@@ -45,9 +46,10 @@ registerEvent(PlayerInteractEvent, (event) => {
   const meta = book.itemMeta as BookMeta;
 
   // Allow only books without custommodeldata, because custom models might be other items
+  // REMIND what if player changes their name?
   if (meta.hasCustomModelData()) return;
   const player = event.player;
-  if (meta.author !== player.name) {
+  if (meta.getAuthor() !== player.name) {
     player.sendActionBar(t(player, 'book.cannot_remove_signature'));
     return;
   }
@@ -59,7 +61,7 @@ registerEvent(PlayerInteractEvent, (event) => {
   cauldron.level--;
   block.blockData = cauldron;
 
-  meta.author = t(event.player, 'book.unknown_author');
+  meta.author(text(t(event.player, 'book.unknown_author')));
   book.itemMeta = meta;
   event.player.sendActionBar(t(event.player, 'book.signature_removed'));
 });

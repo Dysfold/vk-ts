@@ -91,7 +91,7 @@ registerCommand('updatehash', () => {
 registerCommand(
   ['resurssipaketti', 'resourcepack'],
   (sender) => {
-    downloadResourcePack((sender as unknown) as Player);
+    downloadResourcePack(sender as unknown as Player);
   },
   {
     accessChecker: () => true,

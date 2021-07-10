@@ -7,7 +7,7 @@ import { addHydration, getHydration } from './expbar';
  * How often players' hydration level is decreased (seconds)
  * If duration is 60s and hydration -0.01, the bar will last 100 mins
  */
-const THIRST_CYCLE_DURATION = 3;
+const THIRST_CYCLE_DURATION = 60;
 const THIRST_CYCLE_HYDRATION = -0.01;
 
 /**

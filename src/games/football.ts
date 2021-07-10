@@ -11,7 +11,8 @@ import { EquipmentSlot, PlayerInventory } from 'org.bukkit.inventory';
 import { Vector } from 'org.bukkit.util';
 import { CustomItem } from '../common/items/CustomItem';
 import { PlayerLaunchProjectileEvent } from 'com.destroystokyo.paper.event.player';
-import { translate } from 'craftjs-plugin/chat';
+import { text, translate } from 'craftjs-plugin/chat';
+import { getPlainText } from '../chat/utils';
 
 const BALL_DESPAWN_SECONDS = 30;
 const JUMP_KICK_MULTIPLIER = 2;
@@ -36,8 +37,8 @@ registerEvent(PlayerInteractEvent, (event) => {
       const snowball = entity as Snowball;
       if (Football.check(snowball.item)) {
         entity.remove();
-        (event.player
-          .inventory as PlayerInventory).itemInHand = FootballItemStack;
+        (event.player.inventory as PlayerInventory).itemInHand =
+          FootballItemStack;
       }
       break;
     }
@@ -59,7 +60,7 @@ Football.event(
     ball.item = FootballItemStack;
 
     ball.velocity = dir.multiply(0.2);
-    ball.customName = Date.now().toString();
+    ball.customName(text(Date.now().toString()));
     event.itemStack.amount -= 1;
   },
 );
@@ -74,7 +75,7 @@ Football.event(
     const ball = event.entity as Snowball;
     if (ball.isDead()) return;
 
-    const name = event.entity.customName;
+    const name = getPlainText(event.entity.customName());
     const num = parseInt(name || '');
     event.entity.remove();
 
@@ -105,7 +106,7 @@ function bounceOnEntity(entity: Entity, ball: Snowball) {
     return;
   }
 
-  const player = (entity as unknown) as Player;
+  const player = entity as unknown as Player;
   const rand = new Vector(
     Math.random() - 0.5,
     Math.random() - 0.5,
@@ -191,7 +192,7 @@ registerEvent(PlayerToggleSneakEvent, (event) => {
 
     if (entity.velocity.lengthSquared() > 0.1) continue;
 
-    ball.customName = Date.now().toString();
+    ball.customName(text(Date.now().toString()));
 
     const location = player.location;
     const pitch = 90 - location.pitch;

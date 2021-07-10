@@ -22,7 +22,7 @@ Pliers.event(
   async (event) => {
     if (event.hand !== EquipmentSlot.HAND) return;
     if (event.rightClicked.type !== EntityType.PLAYER) return;
-    const victim = (event.rightClicked as unknown) as Player;
+    const victim = event.rightClicked as unknown as Player;
     if (!isHandcuffed(victim)) return;
     if (cooldowns.has(victim)) {
       event.player.sendActionBar('Et onnistu irroittamaan muita hampaita');

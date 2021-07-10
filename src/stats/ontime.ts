@@ -5,7 +5,7 @@ import { getTable } from '../common/datas/database';
 import { UUID } from 'java.util';
 import { addTranslation, t } from '../common/localization/localization';
 import { color, text } from 'craftjs-plugin/chat';
-import { errorMessage } from '../chat/system';
+import { errorMessage, sendMessages } from '../chat/system';
 import { PlayerQuitEvent } from 'org.bukkit.event.player';
 import { ticksToDuration } from '../common/helpers/duration';
 import { getOnlinePlayerNames } from '../common/helpers/player';
@@ -106,7 +106,7 @@ function displayOntimeRow(to: Player, ontime: PlayerOntime, ranking?: number) {
   const rank = ranking ? gold(`${ranking}: `) : text('');
   const name = yellow(`${ontime.player.name}: `);
   const time = green(ticksToString(ontime.time));
-  to.sendMessage(rank, name, time);
+  sendMessages(to, rank, name, time);
 }
 
 function displayOntimeFooter(to: Player) {
@@ -149,7 +149,7 @@ registerCommand(
       return displayOwnOntime(sender);
     }
 
-    if (args[0] == 'top') {
+    if (args[0] == 'top' && args.length == 1) {
       return displayOntimeTop(sender, TOP_LIST_DEFAULT);
     }
 

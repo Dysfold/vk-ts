@@ -14,7 +14,7 @@ registerEvent(PlayerInteractEvent, (event) => {
   if (offHand.type !== Material.FEATHER) return;
 
   const book = inventory.itemInMainHand;
-  const author = (book.itemMeta as BookMeta).author;
+  const author = (book.itemMeta as BookMeta).getAuthor();
   const username = event.player.name;
   event.setCancelled(true);
 

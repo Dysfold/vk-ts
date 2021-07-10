@@ -23,6 +23,7 @@ import { Damageable } from 'org.bukkit.inventory.meta';
 import { VkItem } from '../common/items/VkItem';
 import { equippedItem } from '../common/helpers/inventory';
 import { translate } from 'craftjs-plugin/chat';
+import { addTranslation, t } from '../common/localization/localization';
 
 export const Pliers = new CustomItem({
   id: 9,
@@ -224,7 +225,7 @@ registerEvent(PlayerInteractEvent, (event) => {
       if (!anvil) return;
       const smeltedItem = smelted.create({});
       const meta = smeltedItem.itemMeta;
-      meta.displayName = ''; // Displayname would hover on top of the itemframe
+      meta.displayName(null); // Displayname would hover on top of the itemframe
       smeltedItem.itemMeta = meta;
       const frame = spawnHiddenItemFrame(anvil, BlockFace.UP, smeltedItem);
       if (!frame) return;
@@ -266,7 +267,7 @@ async function hammerHit(frame: ItemFrame, player: Player) {
 
       // Hide nametag from the item
       const meta = newIronItem.itemMeta;
-      meta.displayName = '';
+      meta.displayName(null);
       newIronItem.itemMeta = meta;
     }
   });
@@ -305,7 +306,7 @@ Hammer.event(
     event.setCancelled(true);
     const entity = event.entity;
     if (!(entity instanceof ItemFrame)) return;
-    await hammerHit(entity, (event.damager as unknown) as Player);
+    await hammerHit(entity, event.damager as unknown as Player);
   },
 );
 
@@ -475,8 +476,19 @@ registerEvent(CraftItemEvent, (event) => {
   const crafter = event.whoClicked;
   if (crafter.getTargetBlock(5)?.type === Material.SMITHING_TABLE) return;
   if (!(crafter instanceof Player)) return;
-  crafter.sendTitle('', 'Tarvitset takomispöydän');
+  crafter.sendTitle(
+    ' ',
+    t(crafter, 'blacksmith.smithing_table_needed'),
+    10,
+    40,
+    10,
+  );
   inv.result = null;
   crafter.closeInventory();
   crafter.updateInventory();
+});
+
+addTranslation('blacksmith.smithing_table_needed', {
+  fi_fi: 'Tarvitset takomispöydän',
+  en_us: 'You need a smithing table',
 });

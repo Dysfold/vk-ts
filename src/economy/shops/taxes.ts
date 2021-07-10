@@ -6,7 +6,8 @@ import { WallSign } from 'org.bukkit.block.data.type';
 import { Action, SignChangeEvent } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import * as yup from 'yup';
-import { errorMessage } from '../../chat/system';
+import { errorMessage, sendMessages } from '../../chat/system';
+import { getPlainText } from '../../chat/utils';
 import { dataType } from '../../common/datas/holder';
 import { dataView } from '../../common/datas/view';
 import {
@@ -96,7 +97,13 @@ export function sendTaxes(
  */
 registerEvent(SignChangeEvent, async (event) => {
   const sign = event.block;
-  if (!canBecomeTaxChest(sign, event.lines)) return;
+  if (
+    !canBecomeTaxChest(
+      sign,
+      event.lines().map((line) => getPlainText(line)),
+    )
+  )
+    return;
 
   // Get the chest where the taxes will be stored
   const chest = getBlockBehind(sign)?.state;
@@ -180,7 +187,8 @@ registerEvent(PlayerInteractEvent, (event) => {
   }
 
   player.sendMessage(gold(tr('shops.tax_chest_title')));
-  player.sendMessage(
+  sendMessages(
+    player,
     yellow(tr('shops.tax_collector')),
     yellow(': '),
     gold(`${collector.name}`),
@@ -195,7 +203,8 @@ registerEvent(PlayerInteractEvent, (event) => {
         tax.amount == 1 ? currencyName.unit : currencyName.unitPlural;
 
       giveMoney(chest.inventory, tax.amount, currency);
-      player.sendMessage(
+      sendMessages(
+        player,
         yellow('+ '),
         gold(round(tax.amount, 2) + ' '),
         yellow(tr(unit)),

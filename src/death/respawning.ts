@@ -2,6 +2,7 @@ import { Bukkit, Sound } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { dataHolder } from '../common/datas/holder';
 import { dataView, deleteView } from '../common/datas/view';
+import { addTranslation, t } from '../common/localization/localization';
 import { DeathData } from './DeathData';
 import { objToLocation } from './helpers';
 import { getNearestSpawnBlock } from './spawnblocks';
@@ -14,7 +15,7 @@ export async function respawnPlayer(player: Player) {
 
   // If the player died in prison, respawn there
   if (view.isPrisoner) {
-    player.sendTitle('', 'Heräät sellin sängystä', 20, 40, 20);
+    player.sendTitle(' ', t(player, 'respawn.wake_up_in_cell'), 20, 40, 20);
     respawnLocation = location;
   }
 
@@ -31,9 +32,7 @@ export async function respawnPlayer(player: Player) {
 
   // If no other spawn is valid
   if (!respawnLocation) {
-    log.warn(
-      `${player.name} spawnasi ja yhtään spawnkuutiota ei löytynyt. Virhe?`,
-    );
+    log.warn(`${player.name} spawned and there was 0 spawnblocks. Error?`);
     respawnLocation = location.world.spawnLocation;
   }
 
@@ -54,7 +53,12 @@ registerCommand('respawn', (sender, _label, args) => {
   }
   const player = Bukkit.server.getPlayer(args[0]);
   if (player) {
-    sender.sendMessage('Pelaaja herätetty kuolleista');
+    sender.sendMessage('Player respawned');
     respawnPlayer(player);
   }
+});
+
+addTranslation('respawn.wake_up_in_cell', {
+  fi_fi: 'Heräät sellin sängystä',
+  en_us: 'You woke up in a prison cell',
 });
