@@ -20,6 +20,7 @@ import { spawnHolderArmorStand } from '../common/entities/armor-stand';
 import { isRightClick } from '../common/helpers/click';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
+import { addTranslation, t } from '../common/localization/localization';
 
 const DEADLY_CHOP_VELOCITY = 0.6; // Approx. > 3 block fall kills always.
 const VEL_DAMAGE_MODIFIER = 12; // This is multiplied with y_velocity to get smaller drop damage.
@@ -125,6 +126,17 @@ async function playChopEffects(location: Location) {
     .spawn();
 }
 
+/**
+ * Check if the entity is guillotine blade (armor stand)
+ * @param entity Entity to be checked
+ */
+function isBlade(entity: Entity): entity is ArmorStand {
+  if (!(entity instanceof ArmorStand)) return false;
+  const helmet = entity.equipment?.getItem(EquipmentSlot.HEAD);
+  if (!helmet) return false;
+  return Blade.check(helmet);
+}
+
 // Drop blade on piston retract
 registerEvent(BlockPistonRetractEvent, (event) => {
   const blocks = event.blocks;
@@ -133,7 +145,9 @@ registerEvent(BlockPistonRetractEvent, (event) => {
       .add(0.5, 1, 0.5)
       .getNearbyEntities(0.5, 1, 0.5);
     for (const entity of entities) {
-      if (entity instanceof ArmorStand) dropBlade(entity);
+      if (isBlade(entity)) {
+        dropBlade(entity);
+      }
     }
   }
 });
@@ -144,7 +158,9 @@ registerEvent(BlockBreakEvent, (event) => {
     .add(0.5, 1, 0.5)
     .getNearbyEntities(0.5, 1, 0.5);
   for (const entity of entities) {
-    if (entity instanceof ArmorStand) dropBlade(entity);
+    if (isBlade(entity)) {
+      dropBlade(entity);
+    }
   }
 });
 
@@ -165,7 +181,7 @@ registerEvent(PlayerInteractEvent, (event) => {
   if (event.clickedBlock.type.isInteractable() && !player.isSneaking()) return;
   if (block.type !== Material.AIR) return;
   if (groundBlock.type === Material.AIR)
-    return player.sendActionBar('Et voi asettaa terää ilmaan.');
+    return player.sendActionBar(t(player, 'guillotine.cannot_place_air'));
 
   // Prevent placing inside entities
   const entities = loc.getNearbyEntities(0.5, 0.5, 0.5);
@@ -192,4 +208,9 @@ registerEvent(PlayerInteractEvent, (event) => {
   const stand = spawnHolderArmorStand(loc, item);
   stand.setGravity(false);
   item.amount--;
+});
+
+addTranslation('guillotine.cannot_place_air', {
+  fi_fi: 'Et voi asettaa terää ilmaan',
+  en_us: "You can't place the blade in the air",
 });
