@@ -1,8 +1,8 @@
 import { CommandSender } from 'org.bukkit.command';
 import { Player } from 'org.bukkit.entity';
 import { errorMessage } from '../../chat/system';
+import { getProfession } from '../data/profession';
 import { Nation, nationById } from '../nation';
-import { getProfession } from '../profession';
 
 /**
  * Gets the nation that a command should be operating on.

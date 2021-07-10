@@ -8,13 +8,15 @@ import {
   clearAppointTime,
   clearProfession,
   getAppointTime,
-  getProfession,
-  isSubordinateProfession,
-  Profession,
-  professionInNation,
   setProfession,
+} from '../data/player';
+import {
+  getProfession,
+  professionInNation,
   systemProfession,
-} from '../profession';
+} from '../data/profession';
+import { Profession } from '../profession';
+import { isSubordinateProfession } from '../tools';
 import { getContextNation } from './core';
 
 /**
@@ -153,14 +155,24 @@ registerCommand(
   },
 );
 
-registerCommand('erota', (sender, _alias, args) => {
-  const player = Bukkit.getOfflinePlayer(args[0]);
-  if (!player) {
-    errorMessage(sender, `Pelaajaa ${args[0]} ei löydy.`);
-    return;
-  }
-  firePlayer(sender, player);
-});
+registerCommand(
+  'erota',
+  (sender, _alias, args) => {
+    if (!args[0]) {
+      return false;
+    }
+    const player = Bukkit.getOfflinePlayer(args[0]);
+    if (!player) {
+      errorMessage(sender, `Pelaajaa ${args[0]} ei löydy.`);
+      return;
+    }
+    firePlayer(sender, player);
+  },
+  {
+    permission: 'vk.profession.player',
+    usage: '/erota <pelaaja>',
+  },
+);
 
 async function firePlayer(sender: CommandSender, player: OfflinePlayer) {
   const profession = getProfession(player);

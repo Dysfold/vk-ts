@@ -3,12 +3,12 @@ import { CommandSender } from 'org.bukkit.command';
 import { errorMessage } from '../../chat/system';
 import { getContextNation, guessNation } from './core';
 import { Nation } from '../nation';
+import { createProfession, deleteProfession, manageProfession } from './ruler';
 import {
   getProfession,
   professionsByName,
   professionsInNation,
-} from '../profession';
-import { createProfession, deleteProfession, manageProfession } from './ruler';
+} from '../data/profession';
 
 registerCommand(
   'ammatti',
@@ -29,7 +29,7 @@ registerCommand(
         deleteProfession(sender, nation, args[1]);
         break;
       default:
-        viewOrManage(sender, nation, args[1], args.slice(1));
+        viewOrManage(sender, nation, args[0], args.slice(1));
     }
   },
   {

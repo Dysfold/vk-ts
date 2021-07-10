@@ -1,12 +1,12 @@
 import { CommandSender } from 'org.bukkit.command';
 import { errorMessage, successMessage } from '../../chat/system';
-import { Nation } from '../nation';
 import {
-  PlayerProfession,
   professionInNation,
   removeProfession,
   updateProfession,
-} from '../profession';
+} from '../data/profession';
+import { Nation } from '../nation';
+import { PlayerProfession, professionId } from '../profession';
 
 export function createProfession(
   sender: CommandSender,
@@ -77,15 +77,15 @@ export function updateSubordinates(
   profession: PlayerProfession,
   opts: string[],
 ) {
-  // FIXME use profession ids, not names!
+  const profId = professionId(profession);
   switch (opts[0]) {
     case 'lisää':
       if (!opts[1]) {
         return errorMessage(sender, 'Alaiseksi lisättävä ammatti puuttuu.');
       }
-      // Remove profession from list to prevent diplicates
+      // Remove profession from list to prevent duplicates
       profession.subordinates = profession.subordinates.filter(
-        (name) => name != profession.name,
+        (id) => id != profId,
       );
       profession.subordinates.push(profession.name); // Add it to end
       profession.subordinates.sort(); // Sort alphabetically
@@ -97,7 +97,7 @@ export function updateSubordinates(
       }
       // Remove profession from list
       profession.subordinates = profession.subordinates.filter(
-        (name) => name != profession.name,
+        (id) => id != profId,
       );
       break;
     case 'nollaa':
