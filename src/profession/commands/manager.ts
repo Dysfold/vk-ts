@@ -1,9 +1,10 @@
 import { color, text } from 'craftjs-plugin/chat';
-import { Bukkit, Location, OfflinePlayer } from 'org.bukkit';
+import { Bukkit, OfflinePlayer } from 'org.bukkit';
 import { CommandSender } from 'org.bukkit.command';
 import { Player } from 'org.bukkit.entity';
 import { promptYesNo } from '../../chat/prompt';
 import { errorMessage, successMessage } from '../../chat/system';
+import { distanceBetween } from '../../common/helpers/locations';
 import {
   clearAppointTime,
   clearProfession,
@@ -224,12 +225,4 @@ async function firePlayer(sender: CommandSender, player: OfflinePlayer) {
     case 'timeout':
       errorMessage(sender, 'Erottaminen peruttu.');
   }
-}
-
-// TODO wait for common/helpers/locations.ts from PR 204 (shops)
-function distanceBetween(a: Location, b: Location): number {
-  if (a.world != b.world) {
-    return Number.MAX_VALUE; // Different worlds are very far away, indeed
-  }
-  return a.distance(b); // Calculate distance normally
 }

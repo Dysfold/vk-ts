@@ -1,12 +1,24 @@
+import { clickEvent, color, component, style, text } from 'craftjs-plugin/chat';
+import { Audience } from 'net.kyori.adventure.audience';
+import { Action } from 'net.kyori.adventure.text.event.ClickEvent';
 import { CommandSender } from 'org.bukkit.command';
-import { errorMessage, successMessage } from '../../chat/system';
+import { errorMessage, sendMessages, successMessage } from '../../chat/system';
 import {
+  addTranslation,
+  getTranslator,
+} from '../../common/localization/localization';
+import {
+  professionById,
   professionInNation,
   removeProfession,
   updateProfession,
 } from '../data/profession';
 import { Nation } from '../nation';
-import { PlayerProfession, professionId } from '../profession';
+import {
+  formatProfession,
+  PlayerProfession,
+  professionId,
+} from '../profession';
 
 export function createProfession(
   sender: CommandSender,
@@ -26,7 +38,7 @@ export function createProfession(
     description: '', // No description yet
     nation: nation.id,
     creator: sender.name,
-    features: [],
+    roles: [],
     subordinates: [],
   };
   updateProfession(profession); // Save new profession
@@ -106,3 +118,96 @@ export function updateSubordinates(
   }
   updateProfession(profession); // Save changes
 }
+
+const RULER_TABS = ['profession', 'players'];
+
+export function showRulerOverview(
+  ruler: Audience,
+  profession: PlayerProfession,
+  tab: string,
+) {
+  const tr = getTranslator(ruler);
+  const tabs = RULER_TABS.map((name) => {
+    const translated = tr('prof.ruler.tab_' + name);
+    if (name == tab) {
+      return style('bold', translated);
+    } else {
+      return clickEvent(
+        Action.RUN_COMMAND,
+        `/ammatti ${profession.name} --tab ${name}`,
+        translated,
+      );
+    }
+  });
+  const baseCommand = `/ammatti ${profession.name} --tag ${tab} `;
+  sendMessages(
+    ruler,
+    style('bold', tr('prof.ruler.header'), formatProfession(profession)),
+    '\n',
+    ...tabs,
+  );
+  if (tab == 'profession') {
+    const subordinates = profession.subordinates.map((id) => {
+      const prof = professionById(id);
+      if (!prof) return text(`${id} (error)`);
+      return component(
+        formatProfession(prof),
+        text(' '),
+        clickEvent(
+          Action.RUN_COMMAND,
+          `/${baseCommand} alaiset poista ${prof.name}`,
+          color('#AA0000', '✘'),
+        ),
+      );
+    });
+    sendMessages(
+      ruler,
+      tr('prof.ruler.desc', profession.description),
+      ' ',
+      clickEvent(
+        Action.SUGGEST_COMMAND,
+        `/ammatti ${profession.name} kuvaile `,
+        tr('prof.ruler.edit_button'),
+      ),
+      '\n',
+      tr('prof.ruler.subordinates'),
+      ...subordinates,
+      clickEvent(
+        Action.SUGGEST_COMMAND,
+        `/ammatti ${profession.name} alaiset lisää `,
+        tr('prof.ruler.add_button'),
+      ),
+    );
+  } else if (tab == 'players') {
+    // TODO
+  }
+}
+
+addTranslation('prof.ruler.header', {
+  fi_fi: 'Ammatti: ',
+  en_us: 'Profession: ',
+});
+addTranslation('prof.ruler.tab_profession', {
+  fi_fi: 'Ammatti ',
+  en_us: 'Profession ',
+});
+addTranslation('prof.ruler.tab_players', {
+  fi_fi: 'Harjoittajat ',
+  en_us: 'Players ',
+});
+addTranslation('prof.ruler.desc', {
+  fi_fi: 'Kuvaus: %s',
+  en_us: 'Description: %s',
+});
+addTranslation('prof.ruler.edit_button', {
+  fi_fi: '(muokkaa)',
+  en_us: '(edit)',
+});
+addTranslation('prof.ruler.subordinates', {
+  fi_fi: 'Alaiset: ',
+  en_us: 'Subordinates: ',
+});
+addTranslation('prof.ruler.add_button', {
+  fi_fi: '(lisää)',
+  en_us: '(add)',
+});

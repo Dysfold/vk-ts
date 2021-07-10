@@ -1,11 +1,17 @@
 import { Bukkit } from 'org.bukkit';
 import { CommandSender } from 'org.bukkit.command';
-import { errorMessage } from '../../chat/system';
+import { errorMessage, statusMessage } from '../../chat/system';
 import { getContextNation, guessNation } from './core';
 import { Nation } from '../nation';
-import { createProfession, deleteProfession, manageProfession } from './ruler';
+import {
+  createProfession,
+  deleteProfession,
+  manageProfession,
+  showRulerOverview,
+} from './ruler';
 import {
   getProfession,
+  professionInNation,
   professionsByName,
   professionsInNation,
 } from '../data/profession';
@@ -106,8 +112,24 @@ function viewOrManage(
   }
 
   // Print list of players with the given profession
-  if (opts.length == 0) {
-    // TODO
+  if (opts.length == 0 || opts[0] == '--tab') {
+    if (sender.hasPermission('vk.profession.ruler')) {
+      if (!nation) {
+        return errorMessage(sender, tr('prof.no_nation')); // Likely admin or console
+      }
+      let tab = 'profession';
+      if (opts[0] == '--tab') {
+        tab = opts[1];
+        opts = opts.slice(2);
+      }
+      const profession = professionInNation(nation, name);
+      if (profession) {
+        showRulerOverview(sender, profession, tab);
+      } else {
+        // Not an error, just let the ruler know that why they will see regular player UI
+        statusMessage(sender, tr('prof.nation_no_prof', name));
+      }
+    }
     return;
   }
 

@@ -28,7 +28,7 @@ interface BaseProfession {
   /**
    * Profession features that grant it permissions.
    */
-  features: ProfessionFeature[];
+  roles: ProfessionRole[];
 }
 
 /**
@@ -60,9 +60,9 @@ export interface PlayerProfession extends BaseProfession {
 export type Profession = SystemProfession | PlayerProfession;
 
 /**
- * Special profession feature that grants permissions.
+ * Special profession roles that grants permissions.
  */
-interface ProfessionFeature {
+interface ProfessionRole {
   /**
    * Who can add this feature to a profession.
    */
@@ -87,6 +87,10 @@ export function professionId(profession: Profession) {
   }
 }
 
-export function formatProfession(profession: Profession): Component {
+export function formatProfession(
+  profession: Profession,
+  capitalize = false,
+  tooltip = false,
+): Component {
   return text(profession.name); // TODO
 }

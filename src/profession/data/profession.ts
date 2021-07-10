@@ -10,7 +10,7 @@ import {
   SystemProfession,
 } from '../profession';
 import { reloadPermissions } from './permission';
-import { filterProfessions, getProfessionId } from './player';
+import { clearProfession, getPractitioners, getProfessionId } from './player';
 
 /**
  * Serialized profession data.
@@ -171,14 +171,10 @@ export function removeProfession(
   const id = professionId(profession);
 
   // Remove profession from all players
-  const players: OfflinePlayer[] = [];
-  filterProfessions((uuid, name) => {
-    if (name == id) {
-      players.push(Bukkit.getOfflinePlayer(uuid));
-      return false;
-    }
-    return true;
-  });
+  const players = getPractitioners(profession).map((uuid) =>
+    Bukkit.getOfflinePlayer(uuid),
+  );
+  players.forEach((player) => clearProfession(player));
 
   // Delete the profession
   professions.delete(id);

@@ -4,6 +4,7 @@ import { Bukkit, OfflinePlayer } from 'org.bukkit';
 import { getTable } from '../../common/datas/database';
 import { updatePermissions } from '../permissions';
 import { Profession, professionId } from '../profession';
+import { getProfession } from './profession';
 
 /**
  * Players mapped to their professions.
@@ -16,12 +17,26 @@ const playerProfessions: Table<UUID, string> = getTable('professions');
 const appointTimes: Table<UUID, number> = getTable('profession_appoint_times');
 
 /**
+ * Profession ids mapped to lists of UUIDs. ES6 sets don't support Java UUIDS,
+ * so we'll have to do without (for now).
+ */
+const practitioners: Map<string, UUID[]> = new Map();
+
+/**
  * Gets profession id of a player. See getProfession() in profession.ts.
  * @param player Player.
  * @returns Profession id or null.
  */
 export function getProfessionId(player: OfflinePlayer): string | null {
   return playerProfessions.get(player.uniqueId);
+}
+
+function clearPractitioner(profession: Profession, player: OfflinePlayer) {
+  const uuids = getPractitioners(profession);
+  practitioners.set(
+    professionId(profession),
+    uuids.filter((uuid) => uuid != player.uniqueId),
+  );
 }
 
 /**
@@ -33,8 +48,17 @@ export function setProfession(
   player: OfflinePlayer,
   profession: Profession,
 ): void {
+  const oldProf = getProfession(player);
   playerProfessions.set(player.uniqueId, professionId(profession));
   appointTimes.set(player.uniqueId, Date.now());
+
+  // Update practitioners lookup table
+  if (oldProf) {
+    clearPractitioner(oldProf, player);
+  }
+  const uuids = getPractitioners(profession); // Add to new profession's list
+  uuids.push(player.uniqueId);
+  practitioners.set(professionId(profession), uuids);
 
   // Ensure that profession permissions work immediately
   const online = player.player;
@@ -48,7 +72,13 @@ export function setProfession(
  * @param player Player.
  */
 export function clearProfession(player: OfflinePlayer): void {
+  const oldProf = getProfession(player);
   playerProfessions.delete(player.uniqueId);
+
+  // If the player had profession, update practitioners lookup table
+  if (oldProf) {
+    clearPractitioner(oldProf, player);
+  }
 
   // Ensure that profession permissions are removed immediately
   const online = player.player;
@@ -68,6 +98,16 @@ export function getAppointTime(player: OfflinePlayer): number {
 
 export function clearAppointTime(player: OfflinePlayer): void {
   appointTimes.delete(player.uniqueId);
+}
+
+/**
+ * Gets UUIDs of all players who have the given profession. Note that this does
+ * NOT cross nations; use iteratePractitioners() from tools for that.
+ * @param profession Profession.
+ * @returns List of UUIDs, potentially empty.
+ */
+export function getPractitioners(profession: Profession): UUID[] {
+  return practitioners.get(professionId(profession)) ?? [];
 }
 
 /**

@@ -16,7 +16,7 @@ export function getProfessionPermissions(profession: Profession): string[] {
 
 export function reloadPermissions(profession: Profession): void {
   const perms = [];
-  for (const feature of profession.features) {
+  for (const feature of profession.roles) {
     perms.push(...feature.permissions);
   }
   permissionCache.set(professionId(profession), perms);

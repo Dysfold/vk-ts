@@ -1,5 +1,7 @@
 import { Profession } from './profession';
-import { professionById } from './data/profession';
+import { professionById, professionsByName } from './data/profession';
+import { UUID } from 'java.util';
+import { getPractitioners } from './data/player';
 
 export function isSubordinateProfession(
   leader: Profession,
@@ -19,4 +21,16 @@ export function isSubordinateProfession(
     }
   }
   return false; // Not subordinate
+}
+
+export function iteratePractitioners(
+  name: string,
+  callback: (profession: Profession, uuid: UUID) => void,
+) {
+  const nationsMap = professionsByName(name);
+  for (const profession of nationsMap.values()) {
+    for (const uuid of getPractitioners(profession)) {
+      callback(profession, uuid);
+    }
+  }
 }
