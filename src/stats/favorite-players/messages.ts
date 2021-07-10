@@ -36,6 +36,10 @@ export function displayLikeCooldown(to: Player, cooldownMs: number) {
   to.sendMessage(red(`${t(to, 'likes.cooldown', cooldownString)}`));
 }
 
+export function displayLikeReceived(to: Player) {
+  to.sendMessage(green(t(to, 'likes.like_received')));
+}
+
 /***********************
  * Private functions
  ***********************/
@@ -54,6 +58,14 @@ function displayTopLikeRows(to: Player, topList: PlayerLikes[]) {
     const rank = index + 1;
     displayLikesRow(to, ontime, rank);
   }
+
+  if (topList.length == 0) {
+    displayEmptyLikeList(to);
+  }
+}
+
+function displayEmptyLikeList(to: Player) {
+  to.sendMessage(yellow(t(to, 'likes.like_list_empty')));
 }
 
 function displayLikesTitle(to: Player) {
@@ -80,6 +92,13 @@ function displayLikesFooter(to: Player) {
 addTranslation('likes.title', {
   fi_fi: 'Suosituimmat pelaajat',
   en_us: 'Favorite players',
+});
+
+addTranslation('likes.like_list_empty', {
+  fi_fi:
+    'Kenestäkään ei ole tykätty hetkeen :( \nAnna tykkäys komennolla /tykkää',
+  en_us:
+    'No one has been liked recently :( \nAdd a like with the command /like',
 });
 
 addTranslation('likes.player_not_found', {
@@ -115,4 +134,9 @@ addTranslation('likes.likes', {
 addTranslation('likes.cooldown', {
   fi_fi: 'Sinun täytyy odottaa vielä %s',
   en_us: 'You have to wait for %s to do that again',
+});
+
+addTranslation('likes.like_received', {
+  fi_fi: 'Joku tykkäsi sinusta! \nKatso sijoituksesi /suosikit',
+  en_us: 'Someone liked you! \nCheck out /favourites',
 });

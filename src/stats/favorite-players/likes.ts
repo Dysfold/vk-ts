@@ -5,7 +5,7 @@ import { errorMessage } from '../../chat/system';
 import { getTable } from '../../common/datas/database';
 import { isAdminAccount } from '../../common/helpers/player';
 import { getTranslator } from '../../common/localization/localization';
-import { displayLikeSuccess } from './messages';
+import { displayLikeSuccess, displayLikeReceived } from './messages';
 import { PlayerLikes } from './PlayerLikes';
 import { UUID } from 'java.util';
 
@@ -78,6 +78,10 @@ function removeLikesFromUuid(uuid: UUID, amount: number, oldLikes?: number) {
 function addLike(player: OfflinePlayer) {
   const uuid = player.uniqueId;
   addLikeToUuid(uuid);
+
+  if (player instanceof Player) {
+    displayLikeReceived(player);
+  }
 }
 
 function decreaseAllLikes(amount: number) {
