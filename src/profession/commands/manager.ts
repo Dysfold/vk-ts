@@ -177,7 +177,7 @@ registerCommand(
 async function firePlayer(sender: CommandSender, player: OfflinePlayer) {
   const profession = getProfession(player);
   if (!profession) {
-    errorMessage(sender, `Pelaajalla ${player.name} ei ole ammattia.`);
+    errorMessage(sender, 'prof.player_no_prof', player.name ?? '(unknown)');
     return;
   }
 

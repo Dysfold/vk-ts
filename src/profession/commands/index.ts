@@ -9,6 +9,10 @@ import {
   professionsByName,
   professionsInNation,
 } from '../data/profession';
+import {
+  addTranslation,
+  getTranslator,
+} from '../../common/localization/localization';
 
 registerCommand(
   'ammatti',
@@ -79,6 +83,7 @@ function viewOrManage(
   name: string,
   opts: string[],
 ) {
+  const tr = getTranslator(sender);
   const professions = professionsByName(name.toLowerCase());
   if (professions.size == 0) {
     // Maybe they meant to get a profession of player?
@@ -86,14 +91,16 @@ function viewOrManage(
     if (player) {
       const prof = getProfession(player);
       if (prof) {
-        sender.sendMessage(`${player.name} on ammatiltaan ${prof?.name}.`);
+        sender.sendMessage(
+          tr('prof.player_prof', player.name ?? '(unknown)', prof.name),
+        );
       } else {
         sender.sendMessage(
-          `${player.name} ei tällä hetkellä harjoita ammattia.`,
+          tr('prof.player_no_prof', player.name ?? '(unknown)'),
         );
       }
     } else {
-      errorMessage(sender, `Pelaajaa tai ammattia ${name} ei löydy.`);
+      errorMessage(sender, tr('prof.not_found', name));
     }
     return;
   }
@@ -106,25 +113,44 @@ function viewOrManage(
 
   // All other operations are reserved for rulers and admins
   if (!sender.hasPermission('vk.profession.ruler')) {
-    return errorMessage(sender, 'Sinulla ei ole oikeutta hallita ammatteja.');
+    return errorMessage(sender, tr('prof.not_ruler'));
   } else if (!nation) {
-    return errorMessage(sender, 'Et kuulu valtioon.');
+    return errorMessage(sender, tr('prof.no_nation'));
   }
 
   const profession = professions.get(nation.id);
   if (!profession) {
-    return errorMessage(
-      sender,
-      `Ammattia ${name} ei ole olemassa valtiossasi.`,
-    );
+    return errorMessage(sender, tr('prof.nation_no_prof', name));
   } else if (profession.type != 'player') {
-    return errorMessage(
-      sender,
-      'Tämä ammatti ei ole muokattavissa komennoilla. Ota yhteys ylläpitoon.',
-    );
+    throw new Error(`system profession in player nation ${nation.id}`);
   }
   manageProfession(sender, profession, opts);
 }
 
 // Non-ruler management commands
 require('./manager');
+
+addTranslation('prof.player_prof', {
+  fi_fi: '%s on ammatiltaan %s.',
+  en_us: '%s is a %s.',
+});
+addTranslation('prof.player_no_prof', {
+  fi_fi: '%s ei tällä hetkellä harjoita ammattia.',
+  en_us: '%s is currently without a profession.',
+});
+addTranslation('prof.not_found', {
+  fi_fi: 'Pelaajaa tai ammattia %s ei löydy!',
+  en_us: 'No player or profession %s exists!',
+});
+addTranslation('prof.not_ruler', {
+  fi_fi: 'Sinulla ei ole oikeutta hallita ammatteja!',
+  en_us: 'You do not have permission to manage professions!',
+});
+addTranslation('prof.no_nation', {
+  fi_fi: 'Et kuulu valtioon!',
+  en_us: 'You are not a member of any nation!',
+});
+addTranslation('prof.nation_no_prof', {
+  fi_fi: 'Ammattia %s ei ole olemassa valtiossasi!',
+  en_us: 'Your nation does not have a profession named %s!',
+});
