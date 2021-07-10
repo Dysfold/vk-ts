@@ -1,6 +1,5 @@
 import { UUID } from 'java.util';
 import { Bukkit, Location } from 'org.bukkit';
-import { Block } from 'org.bukkit.block';
 import * as yup from 'yup';
 
 /**
@@ -37,13 +36,4 @@ export function yupLocToLoc(yupLoc: YupLocation) {
   if (z === undefined) return undefined;
 
   return new Location(world, x, y, z);
-}
-
-/**
- * Get the center location of the full block
- * @param block The block
- * @returns Center location
- */
-export function centerOf(block: Block) {
-  return block.location.add(0.5, 0.5, 0.5);
 }
