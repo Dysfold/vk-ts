@@ -1,8 +1,13 @@
-import { Material, SoundCategory } from 'org.bukkit';
+import { translate } from 'craftjs-plugin/chat';
+import { GameMode, Material, SoundCategory } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
-import { Campfire, Dispenser, Stairs } from 'org.bukkit.block.data.type';
+import { Campfire, Dispenser } from 'org.bukkit.block.data.type';
 import { EntityType } from 'org.bukkit.entity';
-import { BlockDispenseEvent, BlockPlaceEvent } from 'org.bukkit.event.block';
+import {
+  Action,
+  BlockDispenseEvent,
+  BlockPlaceEvent,
+} from 'org.bukkit.event.block';
 import { ProjectileHitEvent } from 'org.bukkit.event.entity';
 import {
   PlayerBucketEmptyEvent,
@@ -10,7 +15,7 @@ import {
 } from 'org.bukkit.event.player';
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { CustomItem } from '../common/items/CustomItem';
-import { translate } from 'craftjs-plugin/chat';
+import { VkItem } from '../common/items/VkItem';
 
 const CHAIR = Material.SOUL_CAMPFIRE;
 const SHOVELS = new Set([
@@ -23,8 +28,8 @@ const SHOVELS = new Set([
 ]);
 
 const ChairItem = new CustomItem({
-  id: 1,
-  type: Material.DARK_OAK_STAIRS,
+  id: 2,
+  type: VkItem.MISC,
   name: translate('vk.chair'),
 });
 
@@ -40,16 +45,35 @@ const ChairBlock = new CustomBlock({
  * Use CustomItem (Dark oak stairs) to place the chair block
  */
 ChairItem.event(
-  BlockPlaceEvent,
-  (event) => event.itemInHand,
+  PlayerInteractEvent,
+  (event) => event.item,
   async (event) => {
-    const facing = (event.block.blockData as Stairs).facing;
-    event.blockPlaced.type = CHAIR;
+    if (event.action !== Action.RIGHT_CLICK_BLOCK) return;
+    const block = event.clickedBlock;
+    if (!block) return;
+    const chairBlock = block.type.isSolid()
+      ? block.getRelative(event.blockFace)
+      : block;
+    if (chairBlock?.type.isSolid()) return;
+    if (!event.item) return;
+    if (event.isCancelled()) return;
 
-    const campfire = event.blockPlaced.blockData as Campfire;
+    event.setCancelled(true);
+
+    chairBlock.type = CHAIR;
+    const campfire = chairBlock.blockData as Campfire;
     campfire.setLit(false);
-    campfire.facing = facing;
-    event.block.blockData = campfire;
+    campfire.facing = event.player.facing;
+    chairBlock.blockData = campfire;
+    if (event.player.gameMode !== GameMode.CREATIVE) event.item.amount--;
+
+    block.world.playSound(
+      block.location,
+      'minecraft:block.wood.place',
+      SoundCategory.BLOCKS,
+      1,
+      1,
+    );
   },
 );
 
