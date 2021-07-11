@@ -12,6 +12,18 @@ export interface BlockLockProps {
   block: Block;
 }
 
+/**
+ * Static methods are helper functions for that particular Lock-class and
+ * those can be used globally to get related information about that Lock type.
+ *
+ * Those static methods can be tought as helpers to create actual instance of this particular lock type.
+ * Those can be used for example get position for the itemframe, its facing direction, etc.
+ *
+ * Those static methods might be refactored later into a dirrerent class.
+ * So ChestLock for example might be refactored into "ChestLock" and "ChestLockType"/"ChestLockUtils"/"ChestLockBuilder" etc.
+ * But for now those are part of single class, to make adding new locks easier
+ */
+
 export abstract class BlockLock {
   protected itemFrame: ItemFrame;
   protected lockData: LockDataType;
@@ -64,6 +76,10 @@ export abstract class BlockLock {
 
   /**
    * Check if the given block can have this lock
+   * (Or is this the right class for given block type)
+   *
+   * This is helper to create actual instance of this Lock class
+   *
    * @param _block Block to be checked
    */
   static check(_block: Block) {
@@ -80,6 +96,9 @@ export abstract class BlockLock {
   }
 
   /**
+   * Calculates the item frame rotation for any block in the world,
+   * for this particular Lock class. This is helper to create actual instance of this Lock class.
+   *
    * Get the rotation for the lock item in the item frame.
    * For most blocks this is NONE, but if the lock in top of or below the block,
    * the lock might hava a rotation. -> Trapdoors, Lecterns etc
@@ -88,6 +107,12 @@ export abstract class BlockLock {
     return Rotation.NONE;
   }
 
+  /**
+   * Get facing for item frame for any block in the world,
+   * for this particular Lock class.
+   *
+   * This is helper to create actual instance of this Lock class
+   */
   public static getItemFrameFacing(block: Block) {
     const data = block.blockData;
     if (data instanceof Directional) {
@@ -96,6 +121,10 @@ export abstract class BlockLock {
     return BlockFace.UP;
   }
 
+  /**
+   * Get block for the itemframe to attach to. This can be used for any block in the world,
+   * for this particular Lock class. This is helper to create actual instance of this Lock class
+   */
   public static getBlockForItemFrame(block: Block) {
     return block;
   }
