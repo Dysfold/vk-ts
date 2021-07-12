@@ -19,7 +19,7 @@ import { Directional } from 'org.bukkit.block.data';
 import { Dispenser } from 'org.bukkit.block';
 import { EntityCombustEvent } from 'org.bukkit.event.entity';
 import { useFlintAndSteel } from '../common/helpers/items';
-import { text } from 'craftjs-plugin/chat';
+import { text, translate } from 'craftjs-plugin/chat';
 
 const FUZE_TICK_DELAY = 500; // ms
 const SMOKE_PARTICLE_COUNT = 400;
@@ -28,7 +28,7 @@ const BOMB_VEL_MULTIPLIER = 0.5;
 
 const Bomb = new CustomItem({
   id: 2,
-  name: text('Lankapommi'),
+  name: translate('vk.bomb'),
   type: Material.GOLDEN_HORSE_ARMOR,
   data: {
     lit: yup.boolean(),

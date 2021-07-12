@@ -44,7 +44,7 @@ const Dresser = new CustomBlock({
 });
 const DresserItem = new CustomItem({
   id: 2,
-  name: text('Lipasto'),
+  name: translate('vk.dresser'),
   type: Material.BARREL,
 });
 setBlockDrops(Dresser, [{ item: DresserItem.create({}), rarity: 1, count: 1 }]);
