@@ -56,7 +56,7 @@ registerCommand(
     //   giveItem(sender, customItem.create({ source: 'custom-give' }));
   },
   {
-    completer: (_sender, _alias, args) => {
+    completer: () => {
       return Array.from(RECIPES.keys());
     },
     executableBy: 'players',
