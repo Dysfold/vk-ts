@@ -1,4 +1,4 @@
-import { text, translate } from 'craftjs-plugin/chat';
+import { translate } from 'craftjs-plugin/chat';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 

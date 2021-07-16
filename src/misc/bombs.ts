@@ -1,4 +1,10 @@
-import { Material, Particle, Sound, Location } from 'org.bukkit';
+import { translate } from 'craftjs-plugin/chat';
+import { Location, Material, Particle, Sound } from 'org.bukkit';
+import { Dispenser } from 'org.bukkit.block';
+import { Directional } from 'org.bukkit.block.data';
+import { EntityType, Item, Player } from 'org.bukkit.entity';
+import { BlockDispenseEvent } from 'org.bukkit.event.block';
+import { EntityCombustEvent } from 'org.bukkit.event.entity';
 import {
   PlayerAttemptPickupItemEvent,
   PlayerInteractEvent,
@@ -8,18 +14,12 @@ import {
   ItemStack,
   PlayerInventory,
 } from 'org.bukkit.inventory';
-import { CustomItem } from '../common/items/CustomItem';
-import * as yup from 'yup';
-import { EntityType, Item, Player } from 'org.bukkit.entity';
-import { giveItem } from '../common/helpers/inventory';
-import { isRightClick } from '../common/helpers/click';
-import { BlockDispenseEvent } from 'org.bukkit.event.block';
 import { Vector } from 'org.bukkit.util';
-import { Directional } from 'org.bukkit.block.data';
-import { Dispenser } from 'org.bukkit.block';
-import { EntityCombustEvent } from 'org.bukkit.event.entity';
+import * as yup from 'yup';
+import { isRightClick } from '../common/helpers/click';
+import { giveItem } from '../common/helpers/inventory';
 import { useFlintAndSteel } from '../common/helpers/items';
-import { text, translate } from 'craftjs-plugin/chat';
+import { CustomItem } from '../common/items/CustomItem';
 
 const FUZE_TICK_DELAY = 500; // ms
 const SMOKE_PARTICLE_COUNT = 400;

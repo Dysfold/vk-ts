@@ -1,10 +1,10 @@
+import { translate } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
-import { setBlockDrops, bindItemBlock } from '../common/items/drops';
+import { BlockPlaceEvent } from 'org.bukkit.event.block';
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { CustomItem } from '../common/items/CustomItem';
-import { BlockPlaceEvent } from 'org.bukkit.event.block';
-import { text, translate } from 'craftjs-plugin/chat';
+import { bindItemBlock, setBlockDrops } from '../common/items/drops';
 
 // Uses some of barrel block states for other blocks
 

@@ -1,4 +1,4 @@
-import { text, translate } from 'craftjs-plugin/chat';
+import { translate } from 'craftjs-plugin/chat';
 import { Component } from 'net.kyori.adventure.text';
 import { Material, Sound, SoundCategory } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';

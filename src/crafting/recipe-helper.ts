@@ -1,26 +1,44 @@
-import { text } from 'craftjs-plugin/chat';
 import { Bukkit } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
-import { ComplexRecipe, Recipe, ShapedRecipe } from 'org.bukkit.inventory';
-import { sendMessages } from '../chat/system';
+import { InventoryType } from 'org.bukkit.event.inventory';
+import {
+  BlastingRecipe,
+  FurnaceRecipe,
+  ItemStack,
+  Recipe,
+  ShapedRecipe,
+  ShapelessRecipe,
+  SmokingRecipe,
+} from 'org.bukkit.inventory';
 import { getPlainText } from '../chat/utils';
+import { createGUI } from '../common/gui/gui';
 import { getItemNameAsComponent } from '../common/helpers/items';
-import { shapedRecipe } from './utilities/shaped-recipe';
+import {
+  fetchLangJson,
+  translationKeyToVkKey,
+} from '../common/localization/respack-lang';
 
 const iterator = Bukkit.server.recipeIterator();
 
-// const RECIPES: Recipe[] = [];
 const RECIPES = new Map<string, Recipe>();
 
-while (iterator.hasNext()) {
-  const recipe = iterator.next();
-  const itemName = getItemNameAsComponent(recipe.result);
-  const nameKey = getPlainText(itemName);
-  console.log(itemName);
-  RECIPES.set(nameKey, recipe);
+function getLastPart(str: string) {
+  return str.split('.').pop() ?? str;
 }
 
-console.log('Recipes: ' + RECIPES.size);
+async function getRecipes() {
+  await fetchLangJson();
+  while (iterator.hasNext()) {
+    const recipe = iterator.next();
+    const itemNameAsComponent = getItemNameAsComponent(recipe.result);
+    const nameKey = getPlainText(itemNameAsComponent);
+    const vkKey = translationKeyToVkKey(nameKey);
+
+    const key = getLastPart(vkKey || nameKey);
+    RECIPES.set(key, recipe);
+  }
+}
+getRecipes();
 
 registerCommand(
   ['recipe', 'resepti'],
@@ -29,7 +47,10 @@ registerCommand(
     if (!(sender instanceof Player)) return;
     const recipeResultName = args[0];
     const recipe = RECIPES.get(recipeResultName);
-    displayRecipeGUI(sender, recipe);
+
+    if (recipe !== undefined) {
+      displayRecipeGUI(sender, recipe);
+    }
     //   const customItem = NAME_TO_CUSTOM_ITEM.get(customItemName);
     //   if (customItem == undefined) return;
     //   giveItem(sender, customItem.create({ source: 'custom-give' }));
@@ -43,31 +64,80 @@ registerCommand(
   },
 );
 
-function displayRecipeGUI(to: Player, recipe?: Recipe) {
-  if (!recipe) return;
+type AnyFurnaceRecipe = FurnaceRecipe | BlastingRecipe | SmokingRecipe;
+
+function isFurnaceRecipe(recipe: Recipe): recipe is AnyFurnaceRecipe {
+  return (
+    recipe instanceof FurnaceRecipe ||
+    recipe instanceof BlastingRecipe ||
+    recipe instanceof SmokingRecipe
+  );
+}
+
+function displayRecipeGUI(to: Player, recipe: Recipe) {
   if (recipe instanceof ShapedRecipe) {
-    const ingredientMap = recipe.ingredientMap;
-    const shape = recipe.getShape();
-    console.log(JSON.stringify(shape));
-    console.log(JSON.stringify(ingredientMap));
-    console.log(ingredientMap);
-    for (const row of shape) {
-      to.sendMessage(text(row));
-    }
-
-    for (const entry of ingredientMap.entrySet()) {
-      const { key: symbol, value: item } = entry;
-      if (item == null) continue;
-      sendMessages(to, text(`${symbol} = `), getItemNameAsComponent(item));
-    }
-
-    // const symbols = shape.join('').split('');
-    // for (const symbol of symbols) {
-    //   console.log(symbol);
-    //   const item = ingredientMap.get(symbol);
-
-    //   if (item)
-    //     sendMessages(to, text(`${symbol} = `), getItemNameAsComponent(item));
-    // }
+    displayShapedRecipeGUI(to, recipe);
+    return;
   }
+  if (recipe instanceof ShapelessRecipe) {
+    displayShapelessRecipeGUI(to, recipe);
+    return;
+  }
+  if (isFurnaceRecipe(recipe)) {
+    displayFurnaceRecipeGUI(to, recipe);
+    return;
+  }
+}
+
+function displayShapedRecipeGUI(to: Player, recipe: ShapedRecipe) {
+  const ingredientMap = recipe.ingredientMap;
+  const shape = recipe.getShape();
+
+  const width = shape[0].length;
+
+  const symbols = shape.join('').split('');
+  const getIndex = (symbol: string) => {
+    const idx = symbols.indexOf(symbol);
+    const idxInRow = idx % width;
+    const row = Math.floor(idx / width);
+    const index = 3 * row + idxInRow + 1;
+    return index;
+  };
+
+  const itemStructure = new Map<number, ItemStack>();
+
+  for (const entry of ingredientMap.entrySet()) {
+    const { key: symbol, value: item } = entry;
+    if (item == null) continue;
+    const index = getIndex(symbol);
+    if (index == -1) continue;
+
+    itemStructure.set(index, item);
+  }
+
+  itemStructure.set(0, recipe.result);
+
+  createGUI(to, itemStructure, InventoryType.WORKBENCH);
+}
+
+function displayShapelessRecipeGUI(to: Player, recipe: ShapelessRecipe) {
+  const ingredientMap = recipe.ingredientList;
+
+  const itemStructure = new Map<number, ItemStack>();
+
+  for (const [index, item] of ingredientMap.entries()) {
+    itemStructure.set(index + 1, item);
+  }
+
+  itemStructure.set(0, recipe.result);
+
+  createGUI(to, itemStructure, InventoryType.WORKBENCH);
+}
+
+function displayFurnaceRecipeGUI(to: Player, recipe: AnyFurnaceRecipe) {
+  const itemStructure = new Map<number, ItemStack>([
+    [0, recipe.input],
+    [2, recipe.result],
+  ]);
+  createGUI(to, itemStructure, InventoryType.FURNACE);
 }

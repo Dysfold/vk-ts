@@ -1,16 +1,16 @@
+import { translate } from 'craftjs-plugin/chat';
 import { ChatColor, Material, SoundCategory } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { Item, Player } from 'org.bukkit.entity';
+import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { Vector } from 'org.bukkit.util';
-import { CustomItem } from '../common/items/CustomItem';
 import * as yup from 'yup';
-import { Action } from 'org.bukkit.event.block';
 import { isRightClick } from '../common/helpers/click';
 import { giveItem } from '../common/helpers/inventory';
+import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
-import { text, translate } from 'craftjs-plugin/chat';
 
 const ZERO_VECTOR = new Vector();
 const PICKUP_DELAY = 12000; // TICKS -> 10 minutes

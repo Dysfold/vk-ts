@@ -1,10 +1,10 @@
 import { text, translate } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
-import { CustomItem, NAME_TO_CUSTOM_ITEM } from '../common/items/CustomItem';
-import { VkItem } from '../common/items/VkItem';
 import * as yup from 'yup';
 import { giveItem } from '../common/helpers/inventory';
+import { CustomItem, NAME_TO_CUSTOM_ITEM } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 const CUSTOM_ITEM_TYPES = new Map(Object.entries(VkItem));
 const ALIASES = Object.keys(VkItem).map((key) => key.toLowerCase());
@@ -70,7 +70,7 @@ registerCommand(
     }
   },
   {
-    completer: (_sender, _alias, args) => {
+    completer: () => {
       return Array.from(NAME_TO_CUSTOM_ITEM.keys());
     },
     executableBy: 'players',
