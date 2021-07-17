@@ -13,29 +13,33 @@ import {
 import { getPlainText } from '../chat/utils';
 import { createGUI } from '../common/gui/gui';
 import { getItemNameAsComponent } from '../common/helpers/items';
-import {
-  fetchLangJson,
-  translationKeyToVkKey,
-} from '../common/localization/respack-lang';
+import { translationKeyToVkMaterialAlias } from '../common/localization/respack-lang';
 
 const iterator = Bukkit.server.recipeIterator();
 
-const RECIPES = new Map<string, Recipe>();
+const RECIPES = new Map<string, Recipe[]>();
 
+/**
+ * Parse unnesessary namespaces and other prefixes from the translation key
+ * @param str Translation key for the item. For example block.minecraft.oak_sign
+ * @returns Last string after "." for example "oak_sign"
+ */
 function getLastPart(str: string) {
   return str.split('.').pop() ?? str;
 }
 
 async function getRecipes() {
-  await fetchLangJson();
   while (iterator.hasNext()) {
     const recipe = iterator.next();
     const itemNameAsComponent = getItemNameAsComponent(recipe.result);
     const nameKey = getPlainText(itemNameAsComponent);
-    const vkKey = translationKeyToVkKey(nameKey);
+    const vkKey = translationKeyToVkMaterialAlias(nameKey);
 
     const key = getLastPart(vkKey || nameKey);
-    RECIPES.set(key, recipe);
+
+    const recipeList = RECIPES.get(key) ?? [];
+    recipeList.push(recipe);
+    RECIPES.set(key, recipeList);
   }
 }
 getRecipes();
@@ -48,16 +52,24 @@ registerCommand(
     const recipeResultName = args[0];
     const recipe = RECIPES.get(recipeResultName);
 
+    const recipeIndex = (Number.parseInt(args?.[1]) || 1) - 1;
+
     if (recipe !== undefined) {
-      displayRecipeGUI(sender, recipe);
+      displayRecipeGUI(sender, recipe[recipeIndex]);
+      if (recipe.length > 1) {
+        sender.sendMessage(
+          `Useita reseptejä löytyi (${recipe.length} kpl). Katso muut /resepti ${args[0]} <numero 1-${recipe.length}> `,
+        );
+      }
     }
     //   const customItem = NAME_TO_CUSTOM_ITEM.get(customItemName);
     //   if (customItem == undefined) return;
     //   giveItem(sender, customItem.create({ source: 'custom-give' }));
   },
   {
-    completer: () => {
-      return Array.from(RECIPES.keys());
+    completer: (_label, _alias, args) => {
+      if (args.length == 1) return Array.from(RECIPES.keys());
+      return [];
     },
     executableBy: 'players',
     description: '/recipes <name>',
