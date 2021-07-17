@@ -1,4 +1,6 @@
 import { text, translate } from 'craftjs-plugin/chat';
+import { Component } from 'net.kyori.adventure.text';
+import { TextDecoration } from 'net.kyori.adventure.text.format';
 import { Location, Material } from 'org.bukkit';
 import { BlockFace, Dispenser } from 'org.bukkit.block';
 import { Player } from 'org.bukkit.entity';
@@ -6,14 +8,12 @@ import { Action, BlockPistonRetractEvent } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import * as yup from 'yup';
-import { CustomItem } from '../common/items/CustomItem';
-import { VkItem } from '../common/items/VkItem';
-import { Currency, getCurrencyTranslation } from './currency';
-import { addTranslation, t } from '../common/localization/localization';
 import { sendMessages } from '../chat/system';
 import { getPlainText, removeDecorations } from '../chat/utils';
-import { Component } from 'net.kyori.adventure.text';
-import { TextDecoration } from 'net.kyori.adventure.text.format';
+import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
+import { addTranslation, t } from '../common/localization/localization';
+import { Currency, getCurrencyTranslation } from './currency';
 
 const MoneyMold = new CustomItem({
   name: translate('vk.money_mold'),

@@ -6,7 +6,7 @@ import {
 } from 'org.bukkit.event.player';
 import { dataHolder } from '../common/datas/holder';
 import { TUONELA_WORLD } from '../death/tuonela';
-import { ignoreChannel, IGNORABLE_CHANNELS, setIgnoreChannel } from './ignore';
+import { IGNORABLE_CHANNELS, ignoreChannel, setIgnoreChannel } from './ignore';
 import {
   ChatMessage,
   ChatPipeline,

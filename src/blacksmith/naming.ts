@@ -1,10 +1,10 @@
 import { EntityType, Player } from 'org.bukkit.entity';
 import { PrepareAnvilEvent } from 'org.bukkit.event.inventory';
 import { ItemStack } from 'org.bukkit.inventory';
-import { Handcuffs } from '../combat/handcuffs';
-import { Key } from '../locks/keys/key';
-import { VkItem } from '../common/items/VkItem';
 import { isTranslatable } from '../chat/utils';
+import { Handcuffs } from '../combat/handcuffs';
+import { VkItem } from '../common/items/VkItem';
+import { Key } from '../locks/keys/key';
 
 // TODO: Allow renaming of locks
 /**

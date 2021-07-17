@@ -3,8 +3,9 @@ import { ItemFrame, Player } from 'org.bukkit.entity';
 import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
 import { BookMeta } from 'org.bukkit.inventory.meta';
+import { VkMaterial } from '../common/items/VkMaterial';
 import { Note } from './Note';
-import { PIANO, playNote } from './piano';
+import { playNote } from './piano';
 
 const SHEET_MATERIALS = new Set([
   Material.WRITTEN_BOOK,
@@ -39,7 +40,7 @@ registerEvent(PlayerInteractEntityEvent, async (event) => {
   if (!(event.rightClicked instanceof ItemFrame)) return;
   const frame = event.rightClicked;
   if (!frame.item) return;
-  if (frame.location.add(0, -1, 0).block.type !== PIANO) return;
+  if (frame.location.add(0, -1, 0).block.type !== VkMaterial.PIANO) return;
   const item = frame.item;
   if (!SHEET_MATERIALS.has(item.type)) return;
   event.setCancelled(true);

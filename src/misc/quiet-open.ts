@@ -1,9 +1,9 @@
+import { Material } from 'org.bukkit';
 import { Door, Gate, TrapDoor } from 'org.bukkit.block.data.type';
+import { EventPriority } from 'org.bukkit.event';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { Saw } from './saw';
-import { Material } from 'org.bukkit';
-import { EventPriority } from 'org.bukkit.event';
 
 registerEvent(
   PlayerInteractEvent,

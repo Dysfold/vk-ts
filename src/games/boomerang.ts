@@ -1,25 +1,26 @@
 import { ProjectileCollideEvent } from 'com.destroystokyo.paper.event.entity';
 import { translate } from 'craftjs-plugin/chat';
-import { Material, Sound, SoundCategory } from 'org.bukkit';
+import { Sound, SoundCategory } from 'org.bukkit';
 import { Player, Snowball } from 'org.bukkit.entity';
 import {
   ProjectileHitEvent,
   ProjectileLaunchEvent,
 } from 'org.bukkit.event.entity';
+import { EquipmentSlot } from 'org.bukkit.inventory';
 import { giveItem } from '../common/helpers/inventory';
 import { CustomItem } from '../common/items/CustomItem';
-import { EquipmentSlot } from 'org.bukkit.inventory';
+import { VkItem } from '../common/items/VkItem';
 
 export const Boomerang = new CustomItem({
   id: 2,
   name: translate('vk.boomerang'),
-  type: Material.SNOWBALL,
+  type: VkItem.THROWABLE,
 });
 
 const BoomerangSpin = new CustomItem({
   id: 4,
   name: translate('vk.boomerang'),
-  type: Material.SNOWBALL,
+  type: VkItem.THROWABLE,
 });
 
 const flyingBoomerangs = new Set<Snowball>();

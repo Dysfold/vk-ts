@@ -1,5 +1,5 @@
 import { translate } from 'craftjs-plugin/chat';
-import { Material, GameMode } from 'org.bukkit';
+import { GameMode, Material } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { CustomItem } from '../common/items/CustomItem';

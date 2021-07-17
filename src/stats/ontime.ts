@@ -1,14 +1,14 @@
-import { Table } from 'craftjs-plugin/database';
-import { OfflinePlayer, Statistic, Bukkit } from 'org.bukkit';
-import { Player } from 'org.bukkit.entity';
-import { getTable } from '../common/datas/database';
-import { UUID } from 'java.util';
-import { addTranslation, t } from '../common/localization/localization';
 import { color, text } from 'craftjs-plugin/chat';
-import { errorMessage, sendMessages } from '../chat/system';
+import { Table } from 'craftjs-plugin/database';
+import { UUID } from 'java.util';
+import { Bukkit, OfflinePlayer, Statistic } from 'org.bukkit';
+import { Player } from 'org.bukkit.entity';
 import { PlayerQuitEvent } from 'org.bukkit.event.player';
+import { errorMessage, sendMessages } from '../chat/system';
+import { getTable } from '../common/datas/database';
 import { ticksToDuration } from '../common/helpers/duration';
 import { getOnlinePlayerNames } from '../common/helpers/player';
+import { addTranslation, t } from '../common/localization/localization';
 
 const TOP_LIST_DEFAULT = 10;
 const TOP_LIST_MAX = 100;

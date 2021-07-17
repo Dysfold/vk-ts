@@ -1,15 +1,15 @@
-import { translate, text, color } from 'craftjs-plugin/chat';
-import * as yup from 'yup';
-import { Data } from '../../common/datas/yup-utils';
-import { CustomItem, CUSTOM_DATA_KEY } from '../../common/items/CustomItem';
-import { VkItem } from '../../common/items/VkItem';
+import { color, text, translate } from 'craftjs-plugin/chat';
+import { TextDecoration } from 'net.kyori.adventure.text.format';
+import { Player } from 'org.bukkit.entity';
 import { ItemStack } from 'org.bukkit.inventory';
+import * as yup from 'yup';
+import { removeDecorations } from '../../chat/utils';
 import { dataType } from '../../common/datas/holder';
 import { dataView } from '../../common/datas/view';
-import { Player } from 'org.bukkit.entity';
-import { removeDecorations } from '../../chat/utils';
-import { TextDecoration } from 'net.kyori.adventure.text.format';
+import { Data } from '../../common/datas/yup-utils';
 import { giveItem } from '../../common/helpers/inventory';
+import { CustomItem, CUSTOM_DATA_KEY } from '../../common/items/CustomItem';
+import { VkItem } from '../../common/items/VkItem';
 
 export const LOCK_DATA = {
   code: yup.number().notRequired(),

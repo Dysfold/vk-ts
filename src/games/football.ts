@@ -1,4 +1,6 @@
-import { Material, Location, SoundCategory } from 'org.bukkit';
+import { PlayerLaunchProjectileEvent } from 'com.destroystokyo.paper.event.player';
+import { text, translate } from 'craftjs-plugin/chat';
+import { Location, Material, SoundCategory } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Entity, EntityType, Player, Snowball } from 'org.bukkit.entity';
 import { Action } from 'org.bukkit.event.block';
@@ -9,10 +11,9 @@ import {
 } from 'org.bukkit.event.player';
 import { EquipmentSlot, PlayerInventory } from 'org.bukkit.inventory';
 import { Vector } from 'org.bukkit.util';
-import { CustomItem } from '../common/items/CustomItem';
-import { PlayerLaunchProjectileEvent } from 'com.destroystokyo.paper.event.player';
-import { text, translate } from 'craftjs-plugin/chat';
 import { getPlainText } from '../chat/utils';
+import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 const BALL_DESPAWN_SECONDS = 30;
 const JUMP_KICK_MULTIPLIER = 2;
@@ -20,7 +21,7 @@ const JUMP_KICK_MULTIPLIER = 2;
 export const Football = new CustomItem({
   id: 3,
   name: translate('vk.football'),
-  type: Material.SNOWBALL,
+  type: VkItem.THROWABLE,
 });
 const FootballItemStack = Football.create({});
 

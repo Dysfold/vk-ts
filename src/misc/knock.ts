@@ -1,6 +1,7 @@
 import { Location, Material, SoundCategory } from 'org.bukkit';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
+import { VkMaterial } from '../common/items/VkMaterial';
 
 function knockSound(location: Location, sound: string) {
   const pitch = 1.45 + 0.1 * Math.random();
@@ -21,14 +22,14 @@ registerEvent(PlayerInteractEvent, (event) => {
     }
     const type = event.clickedBlock?.type;
     switch (type) {
-      case Material.ACACIA_DOOR:
+      case VkMaterial.WILLOW_DOOR:
       case Material.BIRCH_DOOR:
       case Material.DARK_OAK_DOOR:
       case Material.JUNGLE_DOOR:
       case Material.OAK_DOOR:
       case Material.SPRUCE_DOOR:
       case Material.OAK_TRAPDOOR:
-      case Material.ACACIA_TRAPDOOR:
+      case VkMaterial.WILLOW_TRAPDOOR:
       case Material.BIRCH_TRAPDOOR:
       case Material.DARK_OAK_TRAPDOOR:
       case Material.JUNGLE_TRAPDOOR:

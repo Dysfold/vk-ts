@@ -1,7 +1,7 @@
+import { Collection } from 'java.util';
 import { Bukkit, ChatColor } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { t } from '../common/localization/localization';
-import { Collection } from 'java.util';
 
 const MESSAGES = [
   'Valtakaudessa voit myös käydä saunomassa! Saunakiuas rakentuu mukulakivilaatasta ja uunista, jossa on tulet. Kiukaalle pystyt heittämään vettä kauhalla tai vaikkapa vesipullolla.',

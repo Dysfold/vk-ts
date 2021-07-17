@@ -20,6 +20,7 @@ import { isRightClick } from '../common/helpers/click';
 import { giveItem } from '../common/helpers/inventory';
 import { useFlintAndSteel } from '../common/helpers/items';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 const FUZE_TICK_DELAY = 500; // ms
 const SMOKE_PARTICLE_COUNT = 400;
@@ -29,7 +30,7 @@ const BOMB_VEL_MULTIPLIER = 0.5;
 const Bomb = new CustomItem({
   id: 2,
   name: translate('vk.bomb'),
-  type: Material.GOLDEN_HORSE_ARMOR,
+  type: VkItem.UNSTACKABLE,
   data: {
     lit: yup.boolean(),
     fuzeLeft: yup.number().required(),

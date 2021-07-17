@@ -1,8 +1,8 @@
-import { Block } from 'org.bukkit.block';
-import { dataHolder } from '../datas/holder';
 import { Material } from 'org.bukkit';
+import { Block } from 'org.bukkit.block';
 import { BlockData } from 'org.bukkit.block.data';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
+import { dataHolder } from '../datas/holder';
 
 const CUSTOM_DATA_KEY = 'cd';
 

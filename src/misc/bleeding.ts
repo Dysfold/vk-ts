@@ -11,9 +11,9 @@ import {
 import { EntityDamageEvent, EntityDeathEvent } from 'org.bukkit.event.entity';
 import { DamageCause } from 'org.bukkit.event.entity.EntityDamageEvent';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
+import { VkMaterial } from '../common/items/VkMaterial';
 
 const TIMER_DELAY = 1000; // timer delay in millis
-const BLOOD_MATERIAL = Material.DEAD_BUBBLE_CORAL_FAN; // blood material
 const PARTICLE_DATA = Material.REDSTONE_BLOCK.createBlockData(); // block data for the blood particle
 const PARTICLE_AMOUNT = 5; // amount of particles
 const TIME_STEP = 0.7; // control how long the bleeding continues. Higher is faster
@@ -173,7 +173,7 @@ class BleedTask {
           return;
 
         // Form a puddle
-        block.type = BLOOD_MATERIAL;
+        block.type = VkMaterial.BLOOD;
         const data = block.blockData as Waterlogged;
         data.setWaterlogged(false);
         block.blockData = data;

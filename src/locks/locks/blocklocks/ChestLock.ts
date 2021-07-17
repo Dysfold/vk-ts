@@ -1,13 +1,13 @@
+import { Material } from 'org.bukkit';
 import { Block, Chest as ChestState } from 'org.bukkit.block';
 import { Chest } from 'org.bukkit.block.data.type';
 import { Type } from 'org.bukkit.block.data.type.Chest';
 import { Player } from 'org.bukkit.entity';
+import { DoubleChestInventory } from 'org.bukkit.inventory';
 import { CustomItem } from '../../../common/items/CustomItem';
 import { VkItem } from '../../../common/items/VkItem';
 import { LOCK_DATA } from '../lock-items';
 import { BlockLock, BlockLockProps } from './BlockLock';
-import { DoubleChestInventory } from 'org.bukkit.inventory';
-import { Material } from 'org.bukkit';
 
 const customItems = {
   single: new CustomItem({

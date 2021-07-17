@@ -5,8 +5,8 @@ import {
   PlayerInteractEntityEvent,
   PlayerInteractEvent,
 } from 'org.bukkit.event.player';
-import { getLock } from '../helpers/getLock';
 import { isLockableMaterial } from '../blocklocks/block-lock-list';
+import { getLock } from '../helpers/getLock';
 
 /**
  * Allow players to interact with locked blocks by clicking the item frame

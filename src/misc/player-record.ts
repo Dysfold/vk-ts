@@ -1,10 +1,10 @@
+import { UUID } from 'java.util';
+import { Bukkit } from 'org.bukkit';
+import { PlayerJoinEvent } from 'org.bukkit.event.player';
+import * as yup from 'yup';
 import { DatabaseEntry } from '../common/datas/database';
 import { dataType } from '../common/datas/holder';
 import { dataView } from '../common/datas/view';
-import * as yup from 'yup';
-import { Bukkit } from 'org.bukkit';
-import { UUID } from 'java.util';
-import { PlayerJoinEvent } from 'org.bukkit.event.player';
 
 const playerRecordData = dataType('playerRecordData', {
   playerUUID: yup.string().required(),

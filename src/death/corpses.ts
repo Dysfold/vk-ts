@@ -20,14 +20,13 @@ import { dataType } from '../common/datas/holder';
 import { dataView } from '../common/datas/view';
 import { chanceOf, minMax } from '../common/helpers/math';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkMaterial } from '../common/items/VkMaterial';
 import { addTranslation, t } from '../common/localization/localization';
 import { HIDDEN_MATERIAL, makeItemHidden } from '../misc/hidden-items';
 
 const CorpseData = dataType('corpse-data', {
   deathTime: yup.number(),
 });
-
-const BLOOD_MATERIAL = Material.DEAD_BUBBLE_CORAL_FAN;
 
 const Body = new CustomItem({
   id: 1,
@@ -160,7 +159,7 @@ function spawnBlood(location: Location) {
         if (!chanceOf(bloodChance)) continue;
 
         // Place the blood block
-        block.type = BLOOD_MATERIAL;
+        block.type = VkMaterial.BLOOD;
         const data = block.blockData as Waterlogged;
         data.setWaterlogged(false);
         block.blockData = data;

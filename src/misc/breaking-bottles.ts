@@ -1,12 +1,10 @@
-import { Material, Particle, Sound } from 'org.bukkit';
+import { Location, Material, Particle, Sound } from 'org.bukkit';
 import { Damageable, Item, Snowball } from 'org.bukkit.entity';
 import { ProjectileHitEvent } from 'org.bukkit.event.entity';
 import { PlayerDropItemEvent } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
 import { PotionMeta } from 'org.bukkit.inventory.meta';
-import { Location } from 'org.bukkit';
 import { Vector } from 'org.bukkit.util';
-
 import { canBreak } from '../hydration/bottles';
 
 // Materials for different colored potion particles

@@ -1,18 +1,18 @@
-import { Player } from 'org.bukkit.entity';
-import { Key } from '../../keys/key';
-import { PlayerInteractEvent } from 'org.bukkit.event.player';
-import { BlockLock } from '../blocklocks/BlockLock';
-import { t } from '../../../common/localization/localization';
-import {
-  playSetUnlockedSound,
-  playWrongKeySound,
-  playSetLockedSound,
-} from './sounds';
+import { color, text } from 'craftjs-plugin/chat';
+import { NamedTextColor } from 'net.kyori.adventure.text.format';
 import { Material } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Openable } from 'org.bukkit.block.data';
-import { color, text } from 'craftjs-plugin/chat';
-import { NamedTextColor } from 'net.kyori.adventure.text.format';
+import { Player } from 'org.bukkit.entity';
+import { PlayerInteractEvent } from 'org.bukkit.event.player';
+import { t } from '../../../common/localization/localization';
+import { Key } from '../../keys/key';
+import { BlockLock } from '../blocklocks/BlockLock';
+import {
+  playSetLockedSound,
+  playSetUnlockedSound,
+  playWrongKeySound,
+} from './sounds';
 
 const red = (msg: string) => color(NamedTextColor.RED, text(msg));
 const green = (msg: string) => color(NamedTextColor.GREEN, text(msg));

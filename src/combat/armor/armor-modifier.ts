@@ -1,8 +1,8 @@
-import { ItemSpawnEvent } from 'org.bukkit.event.entity';
-import { modifyArmor, isArmor } from './armor-config';
-import { PrepareItemCraftEvent } from 'org.bukkit.event.inventory';
 import { PlayerArmorChangeEvent } from 'com.destroystokyo.paper.event.player';
 import { SlotType } from 'com.destroystokyo.paper.event.player.PlayerArmorChangeEvent';
+import { ItemSpawnEvent } from 'org.bukkit.event.entity';
+import { PrepareItemCraftEvent } from 'org.bukkit.event.inventory';
+import { isArmor, modifyArmor } from './armor-config';
 
 // Change armor values of the armor when dropped / spawned
 registerEvent(ItemSpawnEvent, (event) => {

@@ -1,6 +1,6 @@
+import { Block, Sign } from 'org.bukkit.block';
 import * as yup from 'yup';
 import { dataType } from '../../common/datas/holder';
-import { Block, Sign } from 'org.bukkit.block';
 import { dataView } from '../../common/datas/view';
 
 export const SHOP_DATA = {

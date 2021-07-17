@@ -6,9 +6,9 @@ import { SpawnReason } from 'org.bukkit.event.entity.CreatureSpawnEvent';
 import { HangingBreakEvent } from 'org.bukkit.event.hanging';
 import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
 import { ItemStack } from 'org.bukkit.inventory';
+import { isLockItem } from '../../locks/locks/lock-items';
 import { dropVisibleItem, isHiddenItem } from '../../misc/hidden-items';
 import { isHiddenEntity } from './hidden-entity';
-import { isLockItem } from '../../locks/locks/lock-items';
 
 /**
  * Spawns a hidden item frame.

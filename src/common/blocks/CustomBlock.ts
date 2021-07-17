@@ -1,15 +1,15 @@
-import { Material, Bukkit } from 'org.bukkit';
-import { Event } from 'org.bukkit.event';
-import { dataHolder, DataType, dataType } from '../datas/holder';
-import { dataView, saveView } from '../datas/view';
+import { isEmpty } from 'lodash';
+import { Bukkit, Material } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { BlockData } from 'org.bukkit.block.data';
-import { setBlock } from './blocks';
-import { PlayerInteractEvent } from 'org.bukkit.event.player';
+import { Event } from 'org.bukkit.event';
 import { Action, BlockBreakEvent, BlockEvent } from 'org.bukkit.event.block';
+import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { ObjectShape } from 'yup/lib/object';
+import { dataHolder, DataType, dataType } from '../datas/holder';
+import { dataView, saveView } from '../datas/view';
 import { Data, PartialData } from '../datas/yup-utils';
-import { isEmpty } from 'lodash';
+import { setBlock } from './blocks';
 
 const CUSTOM_DATA_KEY = 'cd';
 

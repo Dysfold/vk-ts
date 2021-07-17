@@ -8,10 +8,10 @@ import { isLeftClick } from '../common/helpers/click';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
 import {
-  EnvelopeWithLetter,
   EnvelopeSealed,
-  PaperWritten,
+  EnvelopeWithLetter,
   PaperSealed,
+  PaperWritten,
 } from './paper-write';
 
 export const SealingWax = new CustomItem({

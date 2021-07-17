@@ -1,4 +1,4 @@
-import { OfflinePlayer, Bukkit } from 'org.bukkit';
+import { Bukkit, OfflinePlayer } from 'org.bukkit';
 
 /**
  * @param player Player to be checked.

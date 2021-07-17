@@ -1,12 +1,12 @@
 import { Material } from 'org.bukkit';
-import { HandGrindstone } from '../../../misc/grindstone';
-import { furnaceRecipe } from '../../utilities/furnace-recipe';
-import { DriedTobacco } from '../../../misc/pipe';
-import { shapedRecipe } from '../../utilities/shaped-recipe';
-import { ChairItem } from '../../../misc/chairs';
-import { shapelessRecipe } from '../../utilities/shapeless-recipes';
-import { SealingWax } from '../../../misc/sealing-wax';
 import { Dice } from '../../../games/dice';
+import { ChairItem } from '../../../misc/chairs';
+import { HandGrindstone } from '../../../misc/grindstone';
+import { DriedTobacco } from '../../../misc/pipe';
+import { SealingWax } from '../../../misc/sealing-wax';
+import { furnaceRecipe } from '../../utilities/furnace-recipe';
+import { shapedRecipe } from '../../utilities/shaped-recipe';
+import { shapelessRecipe } from '../../utilities/shapeless-recipes';
 
 furnaceRecipe({
   key: 'hand_grindstone',

@@ -1,10 +1,10 @@
-import { shapelessRecipe } from '../../utilities/shapeless-recipes';
-import { IronSwordPart } from '../../../blacksmith/metal-parts';
 import { Material } from 'org.bukkit';
-import { makeDamaged } from '../../../blacksmith/damaged-tools';
-import { shapedRecipe } from '../../utilities/shaped-recipe';
 import { HotIronBlade } from '../../../blacksmith/blacksmith';
+import { makeDamaged } from '../../../blacksmith/damaged-tools';
+import { IronSwordPart } from '../../../blacksmith/metal-parts';
 import { VkItem } from '../../../common/items/VkItem';
+import { shapedRecipe } from '../../utilities/shaped-recipe';
+import { shapelessRecipe } from '../../utilities/shapeless-recipes';
 
 shapedRecipe({
   key: 'iron_sword_part',

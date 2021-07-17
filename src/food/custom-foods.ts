@@ -1,11 +1,11 @@
+import { translate } from 'craftjs-plugin/chat';
 import { PlayerItemConsumeEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { giveItem } from '../common/helpers/inventory';
+import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 import { CUSTOM_FOOD_INFO } from './FoodInfo';
 import { addFoodPoints, addSaturation } from './helpers';
-import { VkItem } from '../common/items/VkItem';
-import { CustomItem } from '../common/items/CustomItem';
-import { translate } from 'craftjs-plugin/chat';
 
 export function isCustomFood(item: ItemStack) {
   if (item.type !== VkItem.FOOD) return false;

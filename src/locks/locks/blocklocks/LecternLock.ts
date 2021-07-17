@@ -1,12 +1,12 @@
-import { Block, Lectern as LecternState, BlockFace } from 'org.bukkit.block';
+import { Material, Rotation } from 'org.bukkit';
+import { Block, BlockFace, Lectern as LecternState } from 'org.bukkit.block';
 import { Lectern } from 'org.bukkit.block.data.type';
+import { Player } from 'org.bukkit.entity';
+import { LecternInventory } from 'org.bukkit.inventory';
 import { CustomItem } from '../../../common/items/CustomItem';
 import { VkItem } from '../../../common/items/VkItem';
 import { LOCK_DATA } from '../lock-items';
 import { BlockLock, BlockLockProps } from './BlockLock';
-import { Player } from 'org.bukkit.entity';
-import { LecternInventory } from 'org.bukkit.inventory';
-import { Rotation, Material } from 'org.bukkit';
 
 const customItems = {
   default: new CustomItem({

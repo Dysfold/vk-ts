@@ -1,11 +1,11 @@
-import { CustomItem } from '../common/items/CustomItem';
-import { Material } from 'org.bukkit';
-import { CustomBlock } from '../common/blocks/CustomBlock';
-import { VkItem } from '../common/items/VkItem';
 import { translate } from 'craftjs-plugin/chat';
+import { CustomBlock } from '../common/blocks/CustomBlock';
+import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
+import { VkMaterial } from '../common/items/VkMaterial';
 
 const CoconutBlock = new CustomBlock({
-  type: Material.DEAD_BUBBLE_CORAL_WALL_FAN,
+  type: VkMaterial.COCONUT_BLOCK,
 });
 
 const CoconutItem = new CustomItem({

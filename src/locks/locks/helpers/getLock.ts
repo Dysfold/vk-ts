@@ -5,8 +5,8 @@ import { getItemFrame } from '../../../common/entities/item-frame';
 import { CustomItem, CUSTOM_DATA_KEY } from '../../../common/items/CustomItem';
 import { VkItem } from '../../../common/items/VkItem';
 import {
-  isLockableMaterial,
   getLockClass,
+  isLockableMaterial,
 } from '../blocklocks/block-lock-list';
 import { BlockLock, BlockLockProps } from '../blocklocks/BlockLock';
 import { LOCK_DATA } from '../lock-items';

@@ -5,6 +5,7 @@ import { Door } from 'org.bukkit.block.data.type';
 import { Hinge } from 'org.bukkit.block.data.type.Door';
 import { CustomItem } from '../../../common/items/CustomItem';
 import { VkItem } from '../../../common/items/VkItem';
+import { VkMaterial } from '../../../common/items/VkMaterial';
 import { LOCK_DATA } from '../lock-items';
 import { BlockLock, BlockLockProps } from './BlockLock';
 
@@ -42,7 +43,7 @@ export class DoorLock extends BlockLock {
     Material.SPRUCE_DOOR,
     Material.BIRCH_DOOR,
     Material.JUNGLE_DOOR,
-    Material.ACACIA_DOOR,
+    VkMaterial.WILLOW_DOOR,
     Material.DARK_OAK_DOOR,
   ];
 

@@ -1,11 +1,11 @@
+import { text } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
+import { Levelled } from 'org.bukkit.block.data';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { PlayerInventory } from 'org.bukkit.inventory';
 import { BookMeta } from 'org.bukkit.inventory.meta';
-import { Levelled } from 'org.bukkit.block.data';
 import { addTranslation, t } from '../common/localization/localization';
-import { text } from 'craftjs-plugin/chat';
 
 registerEvent(PlayerInteractEvent, (event) => {
   if (event.item?.type !== Material.FEATHER) return;

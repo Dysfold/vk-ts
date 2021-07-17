@@ -1,6 +1,6 @@
-import { DataHolder, DataHolderStorage, dataHolder, DataType } from './holder';
-import { Data } from './yup-utils';
 import { ObjectShape } from 'yup/lib/object';
+import { DataHolder, dataHolder, DataHolderStorage, DataType } from './holder';
+import { Data } from './yup-utils';
 
 /**
  * Creates a typed view into a data holder. The view contains values that were

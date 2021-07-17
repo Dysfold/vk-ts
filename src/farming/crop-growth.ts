@@ -1,6 +1,7 @@
 import { Location, Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { BlockGrowEvent } from 'org.bukkit.event.block';
+import { VkMaterial } from '../common/items/VkMaterial';
 
 const COLD_TEMP = 0.2; // Less than 0.15 will be snowy
 const COOL_TEMP = 0.5;
@@ -8,7 +9,7 @@ const WARM_TEMP = 0.89;
 const HOT_TEMP = 0.95; // Greater than 0.95 will be dry biome (savanna etc), jungles are 0.85-0.95
 
 // Yeast has its own growth rates and is not affected by location
-const YEAST_MATERIAL = Material.NETHER_WART;
+const YEAST_MATERIAL = VkMaterial.WHITE_MUSHROOM;
 const YEAST_GROWTH_RATE = 0.05;
 const YEAST_LIGHT_LEVEL = 3;
 const YEAST_WATER_RADIUS = 3;

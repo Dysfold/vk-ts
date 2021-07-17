@@ -1,11 +1,12 @@
-import { Material, Particle } from 'org.bukkit';
+import { PlayerJumpEvent } from 'com.destroystokyo.paper.event.player';
+import { Particle } from 'org.bukkit';
 import { EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { Action, BlockBreakEvent } from 'org.bukkit.event.block';
 import { EntityInteractEvent } from 'org.bukkit.event.entity';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import { CustomBlock } from '../common/blocks/CustomBlock';
-import { PlayerJumpEvent } from 'com.destroystokyo.paper.event.player';
+import { VkMaterial } from '../common/items/VkMaterial';
 
 const ESCAPE_CHANCE = 0.3;
 
@@ -14,7 +15,7 @@ const JUMP = new PotionEffect(PotionEffectType.JUMP, 36000, -7);
 const SLOW_DIGGING = new PotionEffect(PotionEffectType.SLOW_DIGGING, 36000, 1);
 
 const BearTrap = new CustomBlock({
-  type: Material.WARPED_PRESSURE_PLATE,
+  type: VkMaterial.BEAR_TRAP,
 });
 
 // Mob steps on bear trap

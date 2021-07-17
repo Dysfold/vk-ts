@@ -1,10 +1,10 @@
-import { CustomItem } from './CustomItem';
+import { test } from 'craftjs-plugin';
+import { text } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
 import { ItemStack } from 'org.bukkit.inventory';
 import * as yup from 'yup';
-import { test } from 'craftjs-plugin';
-import { text } from 'craftjs-plugin/chat';
 import { dataHolder, dataType } from '../datas/holder';
+import { CustomItem } from './CustomItem';
 
 const TestItem = new CustomItem({
   id: 0,

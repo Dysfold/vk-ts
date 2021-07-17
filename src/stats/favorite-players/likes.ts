@@ -1,13 +1,13 @@
 import { Table } from 'craftjs-plugin/database';
+import { UUID } from 'java.util';
 import { Bukkit, OfflinePlayer } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { errorMessage } from '../../chat/system';
 import { getTable } from '../../common/datas/database';
 import { isAdminAccount } from '../../common/helpers/player';
 import { getTranslator } from '../../common/localization/localization';
-import { displayLikeSuccess, displayLikeReceived } from './messages';
+import { displayLikeReceived, displayLikeSuccess } from './messages';
 import { PlayerLikes } from './PlayerLikes';
-import { UUID } from 'java.util';
 
 /*********************
  * Exported functions

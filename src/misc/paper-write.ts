@@ -1,19 +1,19 @@
+import { color, text, translate } from 'craftjs-plugin/chat';
+import { NamedTextColor } from 'net.kyori.adventure.text.format';
 import { Material, SoundCategory } from 'org.bukkit';
+import { Player } from 'org.bukkit.entity';
+import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import {
   EquipmentSlot,
   ItemStack,
   PlayerInventory,
 } from 'org.bukkit.inventory';
-import { PlayerInteractEvent } from 'org.bukkit.event.player';
-import { Player } from 'org.bukkit.entity';
-import { color, text, translate } from 'craftjs-plugin/chat';
-import { isRightClick } from '../common/helpers/click';
+import * as yup from 'yup';
 import { ChatMessage, GLOBAL_PIPELINE } from '../chat/pipeline';
+import { getPlainText } from '../chat/utils';
+import { isRightClick } from '../common/helpers/click';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
-import * as yup from 'yup';
-import { NamedTextColor } from 'net.kyori.adventure.text.format';
-import { getPlainText } from '../chat/utils';
 
 /**
  * Max length of text.

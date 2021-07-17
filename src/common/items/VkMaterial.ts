@@ -16,6 +16,7 @@ export const VkMaterial = {
   SILVER_ORE:               Material.DEAD_BRAIN_CORAL_BLOCK,
 
   ROPE:                     Material.WEEPING_VINES,
+  ROPE_STEM:                Material.WEEPING_VINES_PLANT,
 
   ANDESITE_BRICKS:          Material.POLISHED_ANDESITE,
   DIORITE_BRICKS:           Material.POLISHED_DIORITE,
@@ -43,12 +44,12 @@ export const VkMaterial = {
   WILLOW_TRAPDOOR:          Material.ACACIA_TRAPDOOR,
   WILLOW_WALL_SIGN:         Material.ACACIA_WALL_SIGN,
   WILLOW_WOOD:              Material.ACACIA_WOOD,
-  STIPPED_WILLOW_LOG:       Material.STRIPPED_ACACIA_LOG,
-  STIPPED_WILLOW_WOOD:      Material.STRIPPED_ACACIA_WOOD,
+  STRIPPED_WILLOW_LOG:       Material.STRIPPED_ACACIA_LOG,
+  STRIPPED_WILLOW_WOOD:      Material.STRIPPED_ACACIA_WOOD,
 
   WILLOW_BEAM:              Material.NETHER_BRICK_WALL,
   JUNGLE_BEAM:              Material.RED_NETHER_BRICK_WALL,
-  BIRCH_BREAM:              Material.END_STONE_BRICK_WALL,
+  BIRCH_BEAM:              Material.END_STONE_BRICK_WALL,
   SPRUCE_BEAM:              Material.MOSSY_COBBLESTONE_WALL,
   DARK_OAK_BEAM:            Material.PRISMARINE_WALL,
   OAK_BEAM:                 Material.MOSSY_STONE_BRICK_WALL,
@@ -85,9 +86,13 @@ export const VkMaterial = {
 
   SAW_BLADE:                Material.WARPED_FENCE_GATE,
 
-  BEAR_IRON:                Material.WARPED_PRESSURE_PLATE,
+  BEAR_TRAP:                Material.WARPED_PRESSURE_PLATE,
 
   STONE_SIGN:               Material.WARPED_SIGN,
+
+  WET_PEAT:                 Material.WET_SPONGE,
+  PEAT_SOIL:                Material.SOUL_SAND,
+  WHITE_MUSHROOM:           Material.NETHER_WART,
 
   SOUP_BOWL:                Material.BOWL,
   BOWL:                     Material.DEAD_TUBE_CORAL_FAN,
@@ -100,4 +105,12 @@ export const VkMaterial = {
   CACTUS_FLOWER:            Material.CHORUS_FLOWER,
   DESERT_CACTUS:            Material.CHORUS_PLANT,
   DESERT_SAND:              Material.END_STONE,
+
+  BLOOD:                    Material.DEAD_BUBBLE_CORAL_FAN,
+  COCONUT_BLOCK:            Material.DEAD_BUBBLE_CORAL_WALL_FAN,
+
+  /**
+   * Only unlit version is chair
+   */
+  CHAIR:                    Material.SOUL_CAMPFIRE,
 };

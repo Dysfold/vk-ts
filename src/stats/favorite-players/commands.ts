@@ -1,12 +1,12 @@
 import { Player } from 'org.bukkit.entity';
+import { getOnlinePlayerNames } from '../../common/helpers/player';
+import { getLikeCooldown, startLikeCooldown } from './command-cooldown';
+import { addLikeToUsername, canLike, getTopLikeList } from './likes';
 import {
-  displayTopLikeList,
   displayLikeCommandHelp,
   displayLikeCooldown,
+  displayTopLikeList,
 } from './messages';
-import { addLikeToUsername, getTopLikeList, canLike } from './likes';
-import { getLikeCooldown, startLikeCooldown } from './command-cooldown';
-import { getOnlinePlayerNames } from '../../common/helpers/player';
 
 registerCommand(
   ['suosikit', 'favourites'],

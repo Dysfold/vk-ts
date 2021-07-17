@@ -16,8 +16,9 @@ import {
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
+import { VkMaterial } from '../common/items/VkMaterial';
 
-const CHAIR = Material.SOUL_CAMPFIRE;
+const CHAIR = VkMaterial.CHAIR;
 const SHOVELS = new Set([
   Material.WOODEN_SHOVEL,
   Material.STONE_SHOVEL,

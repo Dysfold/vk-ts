@@ -1,11 +1,11 @@
 import { AnvilDamagedEvent } from 'com.destroystokyo.paper.event.block';
 import { Material } from 'org.bukkit';
+import { BlockFace } from 'org.bukkit.block';
+import { Directional } from 'org.bukkit.block.data';
 import { FallingBlock, Player } from 'org.bukkit.entity';
+import { BlockPlaceEvent } from 'org.bukkit.event.block';
 import { EntityChangeBlockEvent } from 'org.bukkit.event.entity';
 import { InventoryClickEvent, InventoryType } from 'org.bukkit.event.inventory';
-import { BlockPlaceEvent } from 'org.bukkit.event.block';
-import { Directional } from 'org.bukkit.block.data';
-import { BlockFace } from 'org.bukkit.block';
 
 /**
  * Prevent an anvil breaking in use

@@ -1,5 +1,5 @@
-import { Action } from 'org.bukkit.event.block';
 import { Material } from 'org.bukkit';
+import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 
 // Prevents farmland destroying by trampling

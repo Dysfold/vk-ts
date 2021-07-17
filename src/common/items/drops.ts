@@ -1,11 +1,11 @@
-import { CustomItem } from './CustomItem';
-import { Material, GameMode } from 'org.bukkit';
-import { ItemStack } from 'org.bukkit.inventory';
+import { GameMode, Material } from 'org.bukkit';
 import { Container } from 'org.bukkit.block';
-import { BlockPlaceEvent, BlockBreakEvent } from 'org.bukkit.event.block';
+import { BlockBreakEvent, BlockPlaceEvent } from 'org.bukkit.event.block';
+import { ItemStack } from 'org.bukkit.inventory';
+import { ObjectShape } from 'yup/lib/object';
 import { CustomBlock } from '../blocks/CustomBlock';
 import { Data, PartialData } from '../datas/yup-utils';
-import { ObjectShape } from 'yup/lib/object';
+import { CustomItem } from './CustomItem';
 
 type LootItem = Material | ItemStack;
 

@@ -6,16 +6,17 @@ import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { ItemStack, PlayerInventory } from 'org.bukkit.inventory';
 import { Vector } from 'org.bukkit.util';
 import { CustomBlock } from '../common/blocks/CustomBlock';
+import { VkMaterial } from '../common/items/VkMaterial';
 
 const TOOL_MATERIAL = Material.STICK;
-const FLOUR_ITEM = new ItemStack(Material.PHANTOM_MEMBRANE, 1);
+const FLOUR_ITEM = new ItemStack(VkMaterial.FLOUR, 1);
 const SEEDS_PER_FLOUR = 3;
 const DELAY = 1.5; // seconds
 
 const flourPlayers = new Set<Player>();
 
 const Grinder = new CustomBlock({
-  type: Material.DARK_PRISMARINE_SLAB,
+  type: VkMaterial.FLOUR_MILL_BLOCK,
 });
 
 // Click flour grinder with stick

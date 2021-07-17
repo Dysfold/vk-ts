@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import { Material, Particle } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Item, ItemFrame } from 'org.bukkit.entity';
@@ -14,28 +15,28 @@ import {
   spawnHiddenItemFrame,
 } from '../common/entities/item-frame';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
+import { VkMaterial } from '../common/items/VkMaterial';
 import { getEmptyBottle } from '../hydration/bottles';
 import { Bowl } from './Bowl';
-import { VkItem } from '../common/items/VkItem';
-import { translate } from 'craftjs-plugin/chat';
 
 const INGREDIENT_PICKUP_DELAY = 5; // Seconds
 
 // Dough models for bowl
 const DOUGH_BREAD = new CustomItem({
-  type: Material.HEART_OF_THE_SEA,
+  type: VkItem.HIDDEN,
   id: 16,
 });
 const DOUGH_BREAD_RISEN = new CustomItem({
-  type: Material.HEART_OF_THE_SEA,
+  type: VkItem.HIDDEN,
   id: 17,
 });
 const DOUGH_PUMPKIN_PIE = new CustomItem({
-  type: Material.HEART_OF_THE_SEA,
+  type: VkItem.HIDDEN,
   id: 19,
 });
 const DOUGH_COOKIE = new CustomItem({
-  type: Material.HEART_OF_THE_SEA,
+  type: VkItem.HIDDEN,
   id: 18,
 });
 
@@ -61,11 +62,7 @@ const RECIPES = [
     dough: DOUGH_BREAD,
     doughRisen: DOUGH_BREAD_RISEN,
     result: DOUGH_BREAD_ITEM.create({}),
-    ingredients: [
-      Material.PHANTOM_MEMBRANE,
-      Material.NETHER_WART,
-      Material.POTION,
-    ],
+    ingredients: [VkMaterial.FLOUR, Material.NETHER_WART, Material.POTION],
     risingTime: 5,
   },
   {
@@ -84,7 +81,7 @@ const RECIPES = [
     doughRisen: DOUGH_COOKIE,
     result: DOUGH_COOKIE_ITEM.create({}),
     ingredients: [
-      Material.PHANTOM_MEMBRANE,
+      VkMaterial.FLOUR,
       Material.SUGAR,
       Material.COCOA_BEANS,
       Material.POTION,

@@ -1,13 +1,13 @@
-import { Location, Material, SoundCategory } from 'org.bukkit';
+import { Location, SoundCategory } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
 import { EquipmentSlot } from 'org.bukkit.inventory';
 import { Directional } from 'org.bukkit.material';
 import { Vector } from 'org.bukkit.util';
+import { VkMaterial } from '../common/items/VkMaterial';
 import { Note, NoteName } from './Note';
 
-export const PIANO = Material.BROWN_GLAZED_TERRACOTTA;
 const MAX_PIANO_WIDTH = 5;
 const MAX_OCTAVE = 4;
 const NOTES_PER_BLOCK = 12;
@@ -77,7 +77,7 @@ function getPianoIndex(clickedBlock: Block, left: Vector) {
   for (let i = 0; i < MAX_PIANO_WIDTH; i++) {
     const loc = current.location;
     current = loc.subtract(left).block;
-    if (current.type !== PIANO) {
+    if (current.type !== VkMaterial.PIANO) {
       return i;
     }
   }
@@ -89,7 +89,7 @@ registerEvent(PlayerInteractEvent, (event) => {
   const action = event.action;
   const block = event.clickedBlock;
   const face = event.blockFace;
-  if (!block || block.type !== PIANO) {
+  if (!block || block.type !== VkMaterial.PIANO) {
     return;
   }
   if (event.hand !== EquipmentSlot.HAND || face !== BlockFace.UP) {

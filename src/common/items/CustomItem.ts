@@ -1,15 +1,15 @@
+import { text } from 'craftjs-plugin/chat';
 import { isEmpty } from 'lodash';
+import { Component } from 'net.kyori.adventure.text';
+import { TextDecoration } from 'net.kyori.adventure.text.format';
 import { Material } from 'org.bukkit';
 import { Event } from 'org.bukkit.event';
 import { ItemStack } from 'org.bukkit.inventory';
 import { ObjectShape } from 'yup/lib/object';
+import { getPlainText, removeDecorations } from '../../chat/utils';
 import { dataHolder, DataType, dataType } from '../datas/holder';
 import { dataView, saveView } from '../datas/view';
 import { Data, PartialData } from '../datas/yup-utils';
-import { Component } from 'net.kyori.adventure.text';
-import { text } from 'craftjs-plugin/chat';
-import { getPlainText, removeDecorations } from '../../chat/utils';
-import { TextDecoration } from 'net.kyori.adventure.text.format';
 
 export const CUSTOM_DATA_KEY = 'cd';
 

@@ -1,10 +1,10 @@
-import { Player } from 'org.bukkit.entity';
 import { color, text } from 'craftjs-plugin/chat';
 import { OfflinePlayer } from 'org.bukkit';
-import { t, addTranslation } from '../../common/localization/localization';
-import { PlayerLikes } from './PlayerLikes';
-import { millisecondsToDuration } from '../../common/helpers/duration';
+import { Player } from 'org.bukkit.entity';
 import { sendMessages } from '../../chat/system';
+import { millisecondsToDuration } from '../../common/helpers/duration';
+import { addTranslation, t } from '../../common/localization/localization';
+import { PlayerLikes } from './PlayerLikes';
 
 const yellow = (msg: string) => color('#FFFF55', text(msg));
 const gold = (msg: string) => color('#FFAA00', text(msg));

@@ -1,4 +1,5 @@
 import { Material } from 'org.bukkit';
+import { VkMaterial } from '../../../common/items/VkMaterial';
 import { shapedRecipe } from '../../utilities/shaped-recipe';
 
 shapedRecipe({
@@ -38,12 +39,12 @@ shapedRecipe({
 });
 
 shapedRecipe({
-  key: 'acacia_planks',
+  key: 'willow_planks',
   shape: ['L'],
   ingredients: {
-    L: Material.ACACIA_LOG,
+    L: VkMaterial.WILLOW_LOG,
   },
-  result: Material.ACACIA_PLANKS,
+  result: VkMaterial.WILLOW_PLANKS,
 });
 
 shapedRecipe({
