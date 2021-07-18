@@ -1,4 +1,5 @@
 require('./food');
+require('./doughs');
 require('./misc');
 require('./hats');
 require('./bottles');

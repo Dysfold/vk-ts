@@ -1,4 +1,5 @@
 import { Material } from 'org.bukkit';
+import { Tobacco } from '../../../food/custom-foods';
 import { Dice } from '../../../games/dice';
 import { ChairItem } from '../../../misc/chairs';
 import { HandGrindstone } from '../../../misc/grindstone';
@@ -13,7 +14,7 @@ furnaceRecipe({
   input: Material.ANDESITE,
   result: HandGrindstone.create({}),
   seconds: 10,
-  furnaces: ['smelting', 'blasting'],
+  furnaces: ['furnace', 'blast_furnace'],
 });
 
 shapedRecipe({
@@ -45,10 +46,10 @@ furnaceRecipe({
 
 furnaceRecipe({
   key: 'dried_tobacco',
-  input: Material.BEETROOT,
+  input: Tobacco.create({}),
   result: DriedTobacco.create({}),
   seconds: 30,
-  furnaces: ['smelting', 'smoking'],
+  furnaces: ['furnace', 'smoker'],
 });
 
 shapelessRecipe({

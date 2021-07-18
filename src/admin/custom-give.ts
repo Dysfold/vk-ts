@@ -66,7 +66,14 @@ registerCommand(
       const customItem = NAME_TO_CUSTOM_ITEM.get(customItemName);
       if (customItem == undefined) return;
 
-      giveItem(sender, customItem.create({ source: 'custom-give' }));
+      giveItem(
+        sender,
+        customItem.create({
+          // Commented out furnace recipes need exactly same itemstack,
+          // so items with "source" data would not work
+          /* source: 'custom-give' */
+        }),
+      );
     }
   },
   {

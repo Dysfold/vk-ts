@@ -1,6 +1,6 @@
 require('./plate');
 require('./flour');
-require('./baking');
+require('./baking/index');
 require('./Bowl');
 require('./bananas');
 require('./custom-foods');
