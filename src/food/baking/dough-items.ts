@@ -3,6 +3,7 @@ import { CustomItem } from '../../common/items/CustomItem';
 import { VkItem } from '../../common/items/VkItem';
 
 // Dough items for furnace
+
 export const DoughCake = new CustomItem({
   type: VkItem.MISC,
   id: 4,

@@ -1,20 +1,22 @@
-import { Bukkit, Sound } from 'org.bukkit';
+import { Bukkit, GameMode, Sound, SoundCategory } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { ItemStack } from 'org.bukkit.inventory';
 import { isMoltenMetal } from './blacksmith';
 
-// Check if player is holding molten metal
+// Check if player is holding molten metal and then burn the hand
 setInterval(() => {
   for (const player of Bukkit.server.onlinePlayers) {
-    const inventory = player.inventory;
+    if (isImmuneToHandBurn(player)) continue;
+
+    const { itemInMainHand, itemInOffHand } = player.inventory;
 
     // Mainhand
-    if (isMoltenMetal(inventory.itemInMainHand)) {
-      playerBurnHand(player, inventory.itemInMainHand);
+    if (isMoltenMetal(itemInMainHand)) {
+      playerBurnHand(player, itemInMainHand);
     }
     // Offhand
-    else if (isMoltenMetal(inventory.itemInOffHand)) {
-      playerBurnHand(player, inventory.itemInOffHand);
+    else if (isMoltenMetal(itemInOffHand)) {
+      playerBurnHand(player, itemInOffHand);
     }
   }
 }, 2000);
@@ -35,7 +37,17 @@ function playerBurnHand(player: Player, item: ItemStack) {
   player.world.playSound(
     player.location,
     Sound.ENTITY_PLAYER_HURT_ON_FIRE,
+    SoundCategory.PLAYERS,
     0.6,
     1,
   );
+}
+
+/**
+ * Check if player is immune to burning his hand (creative)
+ * @param player Player to be checked
+ * @returns True or false
+ */
+function isImmuneToHandBurn(player: Player) {
+  return player.gameMode == GameMode.CREATIVE;
 }
