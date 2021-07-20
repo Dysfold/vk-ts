@@ -1,20 +1,22 @@
 import { Material } from 'org.bukkit';
 import {
-  HotIronBlade,
-  HotIronNugget,
   Hammer,
   HotIronBar,
-  HotIronIngot,
+  HotIronBlade,
+  HotIronNugget,
   HotIronPlate,
   HotIronStick,
 } from '../../../blacksmith/blacksmith';
 import { makeDamaged } from '../../../blacksmith/damaged-tools';
 import {
-  IronSwordPart,
   GladiusPart,
   GlaivePart,
   HammerPart,
   HandSawPart,
+  IronAxePart,
+  IronHoePart,
+  IronPickaxePart,
+  IronSwordPart,
   JungleKnifePart,
   KatanaPart,
   KnifePart,
@@ -25,13 +27,7 @@ import {
   SicklePart,
   SpearPart,
   WarAxePart,
-  IronAxePart,
-  IronHoePart,
-  IronPickaxePart,
 } from '../../../blacksmith/metal-parts';
-import { VkItem } from '../../../common/items/VkItem';
-import { shapedRecipe } from '../../utilities/shaped-recipe';
-import { shapelessRecipe } from '../../utilities/shapeless-recipes';
 import {
   Gladius,
   Glaive,
@@ -42,15 +38,17 @@ import {
   Rapier,
   Saber,
 } from '../../../blacksmith/swords';
+import { Spear, WarAxe } from '../../../blacksmith/tools';
+import { Scythe, Sickle } from '../../../farming/harvesting';
 import { HandSaw } from '../../../misc/saw';
 import { PLANKS } from '../../utilities/choices';
-import { Scythe, Sickle } from '../../../farming/harvesting';
-import { Spear, WarAxe } from '../../../blacksmith/tools';
+import { shapedRecipe } from '../../utilities/shaped-recipe';
+import { shapelessRecipe } from '../../utilities/shapeless-recipes';
 
 const HOT_IRON_BAR = HotIronBar.create({});
 const HOT_IRON_BLADE = HotIronBlade.create({});
 const HOT_IRON_NUGGET = HotIronNugget.create({});
-const HOT_IRON_INGOT = HotIronIngot.create({});
+// const HOT_IRON_INGOT = HotIronIngot.create({});
 const HOT_IRON_PLATE = HotIronPlate.create({});
 const HOT_IRON_STICK = HotIronStick.create({});
 
