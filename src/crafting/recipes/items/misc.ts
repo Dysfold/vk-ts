@@ -26,16 +26,6 @@ shapedRecipe({
   result: ChairItem.create({}, 4),
 });
 
-shapedRecipe({
-  key: 'lock',
-  shape: ['PPP', 'P P', 'PPP'],
-  ingredients: {
-    P: Material.GOLD_INGOT,
-  },
-  // TODO: Add Lock Item Here
-  result: ChairItem.create({}, 4),
-});
-
 furnaceRecipe({
   key: 'sealing_wax',
   input: Material.JUNGLE_LEAVES,

@@ -109,6 +109,7 @@ export const VkMaterial = {
   BLOOD:                    Material.DEAD_BUBBLE_CORAL_FAN,
   COCONUT_BLOCK:            Material.DEAD_BUBBLE_CORAL_WALL_FAN,
 
+  WALL_LANTERN:             Material.END_ROD,
   /**
    * Only unlit version is chair
    */

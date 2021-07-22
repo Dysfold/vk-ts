@@ -15,3 +15,9 @@ export const Spear = new CustomItem({
   type: VkItem.TOOL,
   name: translate('vk.spear'),
 });
+
+export const WarHammer = new CustomItem({
+  id: 18,
+  type: VkItem.TOOL,
+  name: translate('vk.war_hammer'),
+});

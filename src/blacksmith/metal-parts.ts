@@ -115,3 +115,9 @@ export const IronSwordPart = new CustomItem({
   type: VkItem.SMITHING,
   name: translate('vk.iron_sword_part'),
 });
+
+export const WarHammerPart = new CustomItem({
+  id: 20,
+  type: VkItem.SMITHING,
+  name: translate('vk.war_hammer_part'),
+});

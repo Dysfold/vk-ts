@@ -1,16 +1,8 @@
-import { translate } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { EntityType, Item } from 'org.bukkit.entity';
 import { BlockPistonExtendEvent } from 'org.bukkit.event.block';
-import { CustomItem } from '../common/items/CustomItem';
-import { VkItem } from '../common/items/VkItem';
-
-const MashedPotatoes = new CustomItem({
-  id: 4,
-  type: VkItem.FOOD,
-  name: translate('vk.mashed_potatoes'),
-});
+import { MashedPotatoes } from './custom-foods';
 
 registerEvent(BlockPistonExtendEvent, (event) => {
   if (event.direction !== BlockFace.DOWN) return;

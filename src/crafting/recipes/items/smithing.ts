@@ -6,6 +6,8 @@ import {
   HotIronNugget,
   HotIronPlate,
   HotIronStick,
+  HotIronIngot,
+  Pliers,
 } from '../../../blacksmith/blacksmith';
 import { makeDamaged } from '../../../blacksmith/damaged-tools';
 import {
@@ -27,6 +29,8 @@ import {
   SicklePart,
   SpearPart,
   WarAxePart,
+  IronShovelPart,
+  WarHammerPart,
 } from '../../../blacksmith/metal-parts';
 import {
   Gladius,
@@ -37,18 +41,28 @@ import {
   Longsword,
   Rapier,
   Saber,
+  WalkingStickSword,
 } from '../../../blacksmith/swords';
-import { Spear, WarAxe } from '../../../blacksmith/tools';
+import { Spear, WarAxe, WarHammer } from '../../../blacksmith/tools';
 import { Scythe, Sickle } from '../../../farming/harvesting';
 import { HandSaw } from '../../../misc/saw';
 import { PLANKS } from '../../utilities/choices';
 import { shapedRecipe } from '../../utilities/shaped-recipe';
 import { shapelessRecipe } from '../../utilities/shapeless-recipes';
+import { Key } from '../../../locks/keys/key';
+import { Picklock } from '../../../locks/picking/Lockpick';
+import { Handcuffs } from '../../../combat/handcuffs';
+import { Shuriken } from '../../../combat/shuriken';
+import { GuillotineBlade } from '../../../misc/guillotine';
+import { LockItem, createLockItem } from '../../../locks/locks/lock-items';
+import { HeaterShield, RoundShield } from '../../../blacksmith/shields';
+import { VkMaterial } from '../../../common/items/VkMaterial';
+import { ItemStack } from 'org.bukkit.inventory';
 
 const HOT_IRON_BAR = HotIronBar.create({});
 const HOT_IRON_BLADE = HotIronBlade.create({});
 const HOT_IRON_NUGGET = HotIronNugget.create({});
-// const HOT_IRON_INGOT = HotIronIngot.create({});
+const HOT_IRON_INGOT = HotIronIngot.create({});
 const HOT_IRON_PLATE = HotIronPlate.create({});
 const HOT_IRON_STICK = HotIronStick.create({});
 
@@ -314,6 +328,21 @@ shapelessRecipe({
   result: makeDamaged(Material.IRON_PICKAXE),
 });
 
+// IronShovel
+shapedRecipe({
+  key: 'iron_shovel_part',
+  shape: ['BBB'],
+  ingredients: {
+    B: HOT_IRON_BAR,
+  },
+  result: IronShovelPart.create({}),
+});
+shapelessRecipe({
+  key: 'iron_shovel',
+  ingredients: [IronShovelPart.create({}), Material.STICK],
+  result: makeDamaged(Material.IRON_SHOVEL),
+});
+
 // IronSword
 shapedRecipe({
   key: 'iron_sword_part',
@@ -328,3 +357,287 @@ shapelessRecipe({
   ingredients: [IronSwordPart.create({}), Material.STICK],
   result: makeDamaged(Material.IRON_SWORD),
 });
+
+// WarHammer
+shapedRecipe({
+  key: 'war_hammer_part',
+  shape: [' B ', 'III', 'I  '],
+  ingredients: {
+    B: HOT_IRON_BLADE,
+    I: HOT_IRON_INGOT,
+  },
+  result: WarHammerPart.create({}),
+});
+shapelessRecipe({
+  key: 'war_hammer',
+  ingredients: [WarHammerPart.create({}), Material.STICK],
+  result: makeDamaged(WarHammer.create({})),
+});
+
+/**
+ * Shields
+ */
+
+// Shield
+shapedRecipe({
+  key: 'shield',
+  shape: ['IPI', 'PPP', 'IPI'],
+  ingredients: {
+    I: HOT_IRON_STICK,
+    P: PLANKS,
+  },
+  result: Material.SHIELD,
+});
+
+// HeaterShield
+shapedRecipe({
+  key: 'heater_shield',
+  shape: ['III', 'PPP', ' I '],
+  ingredients: {
+    I: HOT_IRON_STICK,
+    P: PLANKS,
+  },
+  result: HeaterShield.create({}),
+});
+
+// RoundShield
+shapedRecipe({
+  key: 'round_shield',
+  shape: [' I ', 'IPI', ' I '],
+  ingredients: {
+    I: HOT_IRON_STICK,
+    P: PLANKS,
+  },
+  result: RoundShield.create({}),
+});
+
+/**
+ * Other
+ */
+// WarlkingStickSword
+shapedRecipe({
+  key: 'walking_stick_sword',
+  shape: ['B', 'B', 'G'],
+  ingredients: {
+    B: HOT_IRON_STICK,
+    G: Material.GOLD_NUGGET,
+  },
+  result: makeDamaged(WalkingStickSword.create({})),
+});
+
+// Pliers
+shapedRecipe({
+  key: 'pliers',
+  shape: [' N ', 'BBN', ' B '],
+  ingredients: {
+    B: HOT_IRON_STICK,
+    N: HOT_IRON_NUGGET,
+  },
+  result: Pliers.create({}),
+});
+
+// Key
+shapedRecipe({
+  key: 'key',
+  shape: ['NB', 'NB', ' P'],
+  ingredients: {
+    B: HOT_IRON_STICK,
+    N: HOT_IRON_NUGGET,
+    P: HOT_IRON_PLATE,
+  },
+  result: Key.create({}, 3),
+});
+
+// Picklock
+shapedRecipe({
+  key: 'picklock',
+  shape: ['N', 'S', 'S'],
+  ingredients: {
+    N: HOT_IRON_NUGGET,
+    S: HOT_IRON_STICK,
+  },
+  result: Picklock.create({}),
+});
+
+// Handcuffs
+shapedRecipe({
+  key: 'handcuffs',
+  shape: ['PSP'],
+  ingredients: {
+    P: HOT_IRON_PLATE,
+    S: HOT_IRON_STICK,
+  },
+  result: Handcuffs.create({}),
+});
+
+// Shuriken
+shapedRecipe({
+  key: 'shuriken',
+  shape: [' N ', 'NPN', ' N '],
+  ingredients: {
+    P: HOT_IRON_PLATE,
+    N: HOT_IRON_NUGGET,
+  },
+  result: Shuriken.create({}),
+});
+
+// GuillotineBlade
+shapedRecipe({
+  key: 'guillotine_blade',
+  shape: ['PPP', 'NNN', 'NNN'],
+  ingredients: {
+    P: PLANKS,
+    N: HOT_IRON_PLATE,
+  },
+  result: GuillotineBlade.create({}),
+});
+
+// Lock
+shapedRecipe({
+  key: 'lock',
+  shape: ['NNN', 'NPN', 'NNN'],
+  ingredients: {
+    N: Material.GOLD_NUGGET,
+    P: HOT_IRON_PLATE,
+  },
+  result: createLockItem(),
+});
+
+// WallLantern
+shapedRecipe({
+  key: 'wall_lantern',
+  shape: ['LI'],
+  ingredients: {
+    I: HOT_IRON_INGOT,
+    L: Material.LANTERN,
+  },
+  result: VkMaterial.WALL_LANTERN,
+});
+
+/**
+ * Vanilla
+ */
+
+// Chain
+shapedRecipe({
+  key: 'chain',
+  shape: ['N', 'I', 'N'],
+  ingredients: {
+    N: HOT_IRON_NUGGET,
+    I: HOT_IRON_INGOT,
+  },
+  result: Material.CHAIN,
+});
+
+// IronBars
+shapedRecipe({
+  key: 'iron_bars',
+  shape: ['III', 'III'],
+  ingredients: {
+    I: HOT_IRON_BAR,
+  },
+  result: Material.IRON_BARS,
+});
+
+// IronHelmet
+shapedRecipe({
+  key: 'iron_helmet',
+  shape: ['III', 'I I'],
+  ingredients: {
+    I: HOT_IRON_PLATE,
+  },
+  result: Material.IRON_HELMET,
+});
+
+// IronChestplate
+shapedRecipe({
+  key: 'iron_chestplate',
+  shape: ['I I', 'III', 'III'],
+  ingredients: {
+    I: HOT_IRON_PLATE,
+  },
+  result: Material.IRON_CHESTPLATE,
+});
+
+// IronLeggings
+shapedRecipe({
+  key: 'iron_leggings',
+  shape: ['III', 'I I', 'I I'],
+  ingredients: {
+    I: HOT_IRON_PLATE,
+  },
+  result: Material.IRON_LEGGINGS,
+});
+
+// IronBoots
+shapedRecipe({
+  key: 'iron_boots',
+  shape: ['I I', 'I I'],
+  ingredients: {
+    I: HOT_IRON_PLATE,
+  },
+  result: Material.IRON_BOOTS,
+});
+
+// Anvil
+shapedRecipe({
+  key: 'anvil',
+  shape: ['BBB', ' I ', 'III'],
+  ingredients: {
+    B: Material.IRON_BLOCK,
+    I: HOT_IRON_INGOT,
+  },
+  result: Material.ANVIL,
+});
+
+// Bucket
+shapedRecipe({
+  key: 'bucket',
+  shape: ['I I', ' I '],
+  ingredients: {
+    I: HOT_IRON_PLATE,
+  },
+  result: Material.BUCKET,
+});
+
+// Compass
+shapedRecipe({
+  key: 'compass',
+  shape: [' I ', 'IRI', ' I '],
+  ingredients: {
+    I: HOT_IRON_PLATE,
+    R: Material.REDSTONE,
+  },
+  result: Material.IRON_BOOTS,
+});
+
+// Lantern
+shapedRecipe({
+  key: 'lantern',
+  shape: [' I ', 'ITI', ' I '],
+  ingredients: {
+    I: HOT_IRON_NUGGET,
+    T: Material.TORCH,
+  },
+  result: new ItemStack(Material.LANTERN, 4),
+});
+
+// Probably not needed
+// // IronBlock
+// shapedRecipe({
+//   key: 'iron_block',
+//   shape: ['III', 'III', 'III'],
+//   ingredients: {
+//     I: HOT_IRON_INGOT,
+//   },
+//   result: Material.IRON_BLOCK,
+// });
+// // HotIronIngot
+// shapedRecipe({
+//   key: 'hot_iron_ingot',
+//   shape: ['III', 'III', 'III'],
+//   ingredients: {
+//     I: HOT_IRON_NUGGET,
+//   },
+//   result: HOT_IRON_INGOT,
+// });
