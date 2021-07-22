@@ -10,6 +10,7 @@ import { getPlainText, removeDecorations } from '../../chat/utils';
 import { dataHolder, DataType, dataType } from '../datas/holder';
 import { dataView, saveView } from '../datas/view';
 import { Data, PartialData } from '../datas/yup-utils';
+import { getLastPart } from '../../crafting/recipe-helper';
 
 export const CUSTOM_DATA_KEY = 'cd';
 
@@ -96,7 +97,8 @@ function addCustomItemToMap(
 ) {
   if (name === undefined) return;
   if (name instanceof Component) {
-    NAME_TO_CUSTOM_ITEM.set(getPlainText(name), item);
+    const key = getLastPart(getPlainText(name));
+    NAME_TO_CUSTOM_ITEM.set(key, item);
   } else {
     NAME_TO_CUSTOM_ITEM.set(name, item);
   }

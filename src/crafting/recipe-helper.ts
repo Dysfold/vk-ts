@@ -24,7 +24,7 @@ const RECIPES = new Map<string, Recipe[]>();
  * @param str Translation key for the item. For example block.minecraft.oak_sign
  * @returns Last string after "." for example "oak_sign"
  */
-function getLastPart(str: string) {
+export function getLastPart(str: string) {
   return str.split('.').pop() ?? str;
 }
 

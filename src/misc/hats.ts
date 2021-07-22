@@ -602,3 +602,9 @@ export const Bowtie = new CustomItem({
   id: 75,
   name: translate('vk.bowtie'),
 });
+
+export const Frog = new CustomItem({
+  type: VkItem.HAT,
+  id: 76,
+  name: translate('vk.frog'),
+});

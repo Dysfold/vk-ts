@@ -642,7 +642,7 @@ shapedRecipe({
   ingredients: {
     I: HOT_IRON_INGOT,
     F: Material.FURNACE,
-    C: COBBLESTONE_LIKE,
+    C: Material.SMOOTH_STONE,
   },
   result: Material.BLAST_FURNACE,
 });
