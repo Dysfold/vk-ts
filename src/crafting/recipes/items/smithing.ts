@@ -1,12 +1,13 @@
 import { Material } from 'org.bukkit';
+import { ItemStack } from 'org.bukkit.inventory';
 import {
   Hammer,
   HotIronBar,
   HotIronBlade,
+  HotIronIngot,
   HotIronNugget,
   HotIronPlate,
   HotIronStick,
-  HotIronIngot,
   Pliers,
 } from '../../../blacksmith/blacksmith';
 import { makeDamaged } from '../../../blacksmith/damaged-tools';
@@ -18,6 +19,7 @@ import {
   IronAxePart,
   IronHoePart,
   IronPickaxePart,
+  IronShovelPart,
   IronSwordPart,
   JungleKnifePart,
   KatanaPart,
@@ -29,9 +31,9 @@ import {
   SicklePart,
   SpearPart,
   WarAxePart,
-  IronShovelPart,
   WarHammerPart,
 } from '../../../blacksmith/metal-parts';
+import { HeaterShield, RoundShield } from '../../../blacksmith/shields';
 import {
   Gladius,
   Glaive,
@@ -44,20 +46,18 @@ import {
   WalkingStickSword,
 } from '../../../blacksmith/swords';
 import { Spear, WarAxe, WarHammer } from '../../../blacksmith/tools';
-import { Scythe, Sickle } from '../../../farming/harvesting';
-import { HandSaw } from '../../../misc/saw';
-import { PLANKS } from '../../utilities/choices';
-import { shapedRecipe } from '../../utilities/shaped-recipe';
-import { shapelessRecipe } from '../../utilities/shapeless-recipes';
-import { Key } from '../../../locks/keys/key';
-import { Picklock } from '../../../locks/picking/Lockpick';
 import { Handcuffs } from '../../../combat/handcuffs';
 import { Shuriken } from '../../../combat/shuriken';
-import { GuillotineBlade } from '../../../misc/guillotine';
-import { LockItem, createLockItem } from '../../../locks/locks/lock-items';
-import { HeaterShield, RoundShield } from '../../../blacksmith/shields';
 import { VkMaterial } from '../../../common/items/VkMaterial';
-import { ItemStack } from 'org.bukkit.inventory';
+import { Scythe, Sickle } from '../../../farming/harvesting';
+import { Key } from '../../../locks/keys/key';
+import { createLockItem } from '../../../locks/locks/lock-items';
+import { Picklock } from '../../../locks/picking/Lockpick';
+import { GuillotineBlade } from '../../../misc/guillotine';
+import { HandSaw } from '../../../misc/saw';
+import { PLANKS, COBBLESTONE_LIKE } from '../../utilities/choices';
+import { shapedRecipe } from '../../utilities/shaped-recipe';
+import { shapelessRecipe } from '../../utilities/shapeless-recipes';
 
 const HOT_IRON_BAR = HotIronBar.create({});
 const HOT_IRON_BLADE = HotIronBlade.create({});
@@ -620,6 +620,31 @@ shapedRecipe({
     T: Material.TORCH,
   },
   result: new ItemStack(Material.LANTERN, 4),
+});
+
+// Piston
+shapedRecipe({
+  key: 'piston',
+  shape: ['PPP', 'CIC', 'CRC'],
+  ingredients: {
+    P: PLANKS,
+    I: HOT_IRON_INGOT,
+    C: COBBLESTONE_LIKE,
+    R: Material.REDSTONE,
+  },
+  result: Material.PISTON,
+});
+
+// BlastFurnace
+shapedRecipe({
+  key: 'hot_iron_ingot',
+  shape: ['III', 'IFI', 'CCC'],
+  ingredients: {
+    I: HOT_IRON_INGOT,
+    F: Material.FURNACE,
+    C: COBBLESTONE_LIKE,
+  },
+  result: Material.BLAST_FURNACE,
 });
 
 // Probably not needed

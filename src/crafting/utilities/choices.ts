@@ -28,3 +28,9 @@ export const WOODS = new MaterialChoice(
   Material.JUNGLE_WOOD,
   VkMaterial.WILLOW_WOOD,
 );
+
+export const COBBLESTONE_LIKE = new MaterialChoice(
+  Material.COBBLESTONE,
+  Material.DEEPSLATE,
+  Material.BLACKSTONE,
+);
