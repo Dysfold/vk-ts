@@ -591,20 +591,26 @@ export const SilverCrown = new CustomItem({
   name: translate('vk.silver_crowm'),
 });
 
-export const GoldenDwarfCrown = new CustomItem({
+export const SilverDwarfCrown = new CustomItem({
   type: VkItem.HAT,
   id: 74,
+  name: translate('vk.silver_dwarf_crown'),
+});
+
+export const GoldenDwarfCrown = new CustomItem({
+  type: VkItem.HAT,
+  id: 75,
   name: translate('vk.golden_dwarf_crown'),
 });
 
 export const Bowtie = new CustomItem({
   type: VkItem.HAT,
-  id: 75,
+  id: 76,
   name: translate('vk.bowtie'),
 });
 
 export const Frog = new CustomItem({
   type: VkItem.HAT,
-  id: 76,
+  id: 77,
   name: translate('vk.frog'),
 });
