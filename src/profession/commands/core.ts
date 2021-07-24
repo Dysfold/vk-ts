@@ -1,9 +1,18 @@
+import { clickEvent, color } from 'craftjs-plugin/chat';
+import { UUID } from 'java.util';
+import { Audience } from 'net.kyori.adventure.audience';
+import { Component } from 'net.kyori.adventure.text';
+import { Action } from 'net.kyori.adventure.text.event.ClickEvent';
+import { Bukkit } from 'org.bukkit';
 import { CommandSender } from 'org.bukkit.command';
 import { Player } from 'org.bukkit.entity';
-import { errorMessage } from '../../chat/system';
-import { addTranslation } from '../../common/localization/localization';
-import { getProfession } from '../data/profession';
+import { errorMessage, sendMessages } from '../../chat/system';
+import { addTranslation, t } from '../../common/localization/localization';
+import { getPractitioners } from '../data/player';
+import { getProfession, professionInNation } from '../data/profession';
 import { Nation, nationById } from '../nation';
+import { Profession } from '../profession';
+import { isSubordinateProfession, iteratePractitioners } from '../tools';
 
 /**
  * Gets the nation that a command should be operating on.
@@ -50,6 +59,65 @@ export function guessNation(sender: CommandSender): Nation | undefined {
   return nationById(profession.nation);
 }
 
+export function listPractitioners(
+  receiver: Audience,
+  name: string,
+  nation?: Nation,
+): void {
+  const receiverProf =
+    receiver instanceof Player ? getProfession(receiver) : undefined;
+
+  const parts: (Component | string)[] = [];
+  if (nation) {
+    const prof = professionInNation(nation, name);
+    if (!prof) {
+      // TODO msg
+      return;
+    }
+    const edit =
+      receiverProf !== undefined && isSubordinateProfession(receiverProf, prof);
+    parts.push(
+      ...getPractitioners(prof).flatMap((uuid) =>
+        practitionerLine(receiver, uuid, prof, edit),
+      ),
+    );
+    return;
+  }
+  iteratePractitioners(name, (profession, uuid) => {
+    const edit =
+      receiverProf !== undefined &&
+      isSubordinateProfession(receiverProf, profession);
+    parts.push(...practitionerLine(receiver, uuid, profession, edit));
+  });
+  sendMessages(receiver, ...parts);
+}
+
+function practitionerLine(
+  receiver: Audience,
+  uuid: UUID,
+  profession: Profession,
+  edit: boolean,
+) {
+  const player = Bukkit.getOfflinePlayer(uuid);
+  if (!player.name) {
+    log.warn('Omitting player without name, UUID ' + uuid);
+    return [];
+  }
+  const parts: (Component | string)[] = [player.name];
+  if (edit) {
+    parts.push(
+      ' ',
+      clickEvent(
+        Action.RUN_COMMAND,
+        `/erota ${player.name}`,
+        color('#ff7a7e', t(receiver, 'prof.fire')),
+      ),
+    );
+  }
+  parts.push('\n');
+  return parts;
+}
+
 addTranslation('prof.nation_not_found', {
   fi_fi: 'Valtiota %s ei ole olemassa!',
   en_us: 'No nation named %s exists!',
@@ -57,4 +125,8 @@ addTranslation('prof.nation_not_found', {
 addTranslation('prof.not_admin', {
   fi_fi: 'Sinulla ei ole oikeutta ammattien ylläpitokomentoihin!',
   en_us: 'You are not administrator!',
+});
+addTranslation('prof.fire', {
+  en_us: '✘ Remove',
+  fi_fi: '✘ Erota',
 });

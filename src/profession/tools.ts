@@ -7,6 +7,13 @@ export function isSubordinateProfession(
   leader: Profession,
   subordinate: Profession,
 ): boolean {
+  // Fast path: player professions may not have subordinates in other nations
+  if (leader.type == 'player') {
+    if (subordinate.type != 'player' || subordinate.nation != leader.nation) {
+      return false;
+    }
+  }
+
   if (leader.subordinates.includes(subordinate.name)) {
     return true; // Direct subordinate
   } else if (leader.subordinates.length == 0) {

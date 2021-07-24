@@ -19,6 +19,7 @@ import {
   PlayerProfession,
   professionId,
 } from '../profession';
+import { listPractitioners } from './core';
 
 export function createProfession(
   sender: CommandSender,
@@ -179,7 +180,7 @@ export function showRulerOverview(
       ),
     );
   } else if (tab == 'players') {
-    // TODO
+    listPractitioners(ruler, profession.name);
   }
 }
 

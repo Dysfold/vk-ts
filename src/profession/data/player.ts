@@ -4,7 +4,6 @@ import { Bukkit, OfflinePlayer } from 'org.bukkit';
 import { getTable } from '../../common/datas/database';
 import { updatePermissions } from '../permissions';
 import { Profession, professionId } from '../profession';
-import { getProfession } from './profession';
 
 /**
  * Players mapped to their professions.
@@ -31,10 +30,10 @@ export function getProfessionId(player: OfflinePlayer): string | null {
   return playerProfessions.get(player.uniqueId);
 }
 
-function clearPractitioner(profession: Profession, player: OfflinePlayer) {
-  const uuids = getPractitioners(profession);
+function clearPractitioner(professionId: string, player: OfflinePlayer) {
+  const uuids = practitioners.get(professionId) ?? [];
   practitioners.set(
-    professionId(profession),
+    professionId,
     uuids.filter((uuid) => uuid != player.uniqueId),
   );
 }
@@ -48,7 +47,7 @@ export function setProfession(
   player: OfflinePlayer,
   profession: Profession,
 ): void {
-  const oldProf = getProfession(player);
+  const oldProf = getProfessionId(player);
   playerProfessions.set(player.uniqueId, professionId(profession));
   appointTimes.set(player.uniqueId, Date.now());
 
@@ -72,7 +71,7 @@ export function setProfession(
  * @param player Player.
  */
 export function clearProfession(player: OfflinePlayer): void {
-  const oldProf = getProfession(player);
+  const oldProf = getProfessionId(player);
   playerProfessions.delete(player.uniqueId);
 
   // If the player had profession, update practitioners lookup table

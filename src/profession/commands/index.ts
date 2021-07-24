@@ -1,7 +1,7 @@
 import { Bukkit } from 'org.bukkit';
 import { CommandSender } from 'org.bukkit.command';
 import { errorMessage, statusMessage } from '../../chat/system';
-import { getContextNation, guessNation } from './core';
+import { getContextNation, guessNation, listPractitioners } from './core';
 import { Nation } from '../nation';
 import {
   createProfession,
@@ -125,11 +125,13 @@ function viewOrManage(
       const profession = professionInNation(nation, name);
       if (profession) {
         showRulerOverview(sender, profession, tab);
+        return;
       } else {
         // Not an error, just let the ruler know that why they will see regular player UI
         statusMessage(sender, tr('prof.nation_no_prof', name));
       }
     }
+    listPractitioners(sender, name);
     return;
   }
 
