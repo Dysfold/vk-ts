@@ -3,6 +3,7 @@ import { Player } from 'org.bukkit.entity';
 import { t } from '../common/localization/localization';
 import { Collection } from 'java.util';
 
+// TODO rename and translate these
 const MESSAGES = [
   'Valtakaudessa voit myös käydä saunomassa! Saunakiuas rakentuu mukulakivilaatasta ja uunista, jossa on tulet. Kiukaalle pystyt heittämään vettä kauhalla tai vaikkapa vesipullolla.',
   'Kuinka monta hattua omistat? Valtakaudesta löytyy kymmenittäin hattuja, joista suurimman osan voit värjätä.',

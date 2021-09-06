@@ -3,9 +3,9 @@ import { Player } from 'org.bukkit.entity';
 import { dataHolder } from '../../common/datas/holder';
 
 /**
- * Chat themes contain most colors used by Valtakausi for chat messages.
+ * Chat themes contain most colors used by Dysfold for chat messages.
  * In addition to giving players the choice about color themes, they help
- * ensure consistency of colors used by Valtakausi chat systems.
+ * ensure consistency of colors used by Dysfold chat systems.
  *
  * All colors are defined in web-style RGB format, i.e. #RRGGBB.
  * Color strings are then 'compiled' to ChatColors for performance reasons,
@@ -120,9 +120,9 @@ function compileThemes(record: Record<string, Record<string, any> | string>) {
 }
 
 /**
- * Chat themes contain most colors used by Valtakausi for chat messages.
+ * Chat themes contain most colors used by Dysfold for chat messages.
  * In addition to giving players the choice about color themes, they help
- * ensure consistency of colors used by Valtakausi chat systems.
+ * ensure consistency of colors used by Dysfold chat systems.
  *
  * This type represents chat themes that have been compiled to use ChatColors
  * instead of hex strings.

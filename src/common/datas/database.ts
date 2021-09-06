@@ -1,10 +1,10 @@
 import { Database, Table } from 'craftjs-plugin';
 
 /**
- * Main Valtakausi database. In future, there might be other databases so we
+ * Main server database. In future, there might be other databases so we
  * don't export this but use getTable() instead.
  */
-const mainDb = new Database('valtakausi');
+const mainDb = new Database('dysfold');
 
 /**
  * Tables that someone has asked for, cached.

@@ -19,4 +19,4 @@ require('./death/index');
 require('./locks/index');
 require('./stats/index');
 
-log.info('Valtakausi systems loaded');
+log.info('Dysfold systems loaded');

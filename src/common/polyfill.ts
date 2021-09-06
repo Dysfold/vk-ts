@@ -1,4 +1,4 @@
-// Polyfills that will be loaded before any other Valtakausi code
+// Polyfills that will be loaded before any other code
 
 Array.prototype.remove = function (this, index: number) {
   this.splice(index, 1);
