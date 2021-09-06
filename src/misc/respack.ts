@@ -7,17 +7,17 @@ import { Status } from 'org.bukkit.event.player.PlayerResourcePackStatusEvent';
 import { addTranslation, t } from '../common/localization/localization';
 import { announce as announceMessage } from './announcements';
 
-const DOWNLOAD_URL = 'http://valtakausi.fi:5001/respack/download';
-const HASH_URL = 'http://valtakausi.fi:5001/respack/hash';
+const URL =
+  'https://github.com/Laetta/respack/releases/download/latest/vk-respack.zip';
 
 let hash: string;
 
 async function updateHash(announce = false) {
-  const res = await fetch(HASH_URL);
+  const res = await fetch(
+    'https://api.github.com/repos/Laetta/respack/releases/latest',
+  );
   const data = await res.json();
-  const newHash = data?.hash as string;
-
-  if (newHash == undefined) return;
+  const newHash = data.body as string;
 
   if (announce) {
     // Check if the hash has changed, and then announce the new resource pack
@@ -52,7 +52,6 @@ registerEvent(PlayerResourcePackStatusEvent, async (event) => {
         console.warn(`${player.name} failed to download the resource pack`);
         sendWarning(player);
         failedDownloads.delete(player);
-        return;
       }
       // Try to download once more
       // For some reason, when the resource pack (repo / hash) is updated, the first download fails
@@ -69,11 +68,11 @@ registerEvent(PlayerResourcePackStatusEvent, async (event) => {
 
 function downloadResourcePack(player: Player) {
   if (hash) {
-    player.setResourcePack(DOWNLOAD_URL, hash);
+    player.setResourcePack(URL, hash);
   } else {
     // This might happen if the API breaks
     console.error('Resource pack hash missing');
-    player.resourcePack = DOWNLOAD_URL;
+    player.resourcePack = URL;
   }
 }
 
@@ -99,11 +98,12 @@ registerCommand(
   },
 );
 
-// Try to get new hash every x seconds
-const INTERVAL_SECONDS = 10;
+// Try to get new hash every x minutes.
+// Github API will only allow 60 requests per hour
+const INTERVAL_MINUTES = 1.5;
 setInterval(() => {
   updateHash(true);
-}, INTERVAL_SECONDS * 1000);
+}, INTERVAL_MINUTES * 60 * 1000);
 
 /***************
  * Translations
