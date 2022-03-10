@@ -8,13 +8,13 @@ import {
 import { EquipmentSlot } from 'org.bukkit.inventory';
 import { LockedHandcuffs } from '../combat/handcuffs';
 import { isRightClick } from '../common/helpers/click';
+import { checkCauldronEvent } from './bottles';
 import {
   getPotionQuality,
   getQualityName,
   getWaterQuality,
   WaterQuality,
 } from './water-quality';
-import { checkCauldronEvent } from './bottles';
 
 const Hydration = {
   MAX: 0.99,

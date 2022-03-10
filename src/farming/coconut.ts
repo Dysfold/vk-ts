@@ -1,24 +1,16 @@
-import { CustomItem } from '../common/items/CustomItem';
-import { Material } from 'org.bukkit';
 import { CustomBlock } from '../common/blocks/CustomBlock';
-import { VkItem } from '../common/items/VkItem';
-import { translate } from 'craftjs-plugin/chat';
+import { VkMaterial } from '../common/items/VkMaterial';
+import { Coconut } from '../food/custom-foods';
 
 const CoconutBlock = new CustomBlock({
-  type: Material.DEAD_BUBBLE_CORAL_WALL_FAN,
-});
-
-const CoconutItem = new CustomItem({
-  id: 22,
-  name: translate('vk.coconut'),
-  type: VkItem.FOOD,
+  type: VkMaterial.COCONUT_BLOCK,
 });
 
 /**
  * Drop 2 coconut items
  */
 CoconutBlock.onBreak(async (event) => {
-  const drop = CoconutItem.create({});
+  const drop = Coconut.create({});
   drop.amount = 2;
   event.block.world.dropItem(event.block.location.add(0.5, 0.5, 0.5), drop);
   return true;

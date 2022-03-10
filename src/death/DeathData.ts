@@ -1,5 +1,5 @@
-import { dataType } from '../common/datas/holder';
 import * as yup from 'yup';
+import { dataType } from '../common/datas/holder';
 
 export const DeathData = dataType('playerDeathData', {
   isPrisoner: yup.boolean().notRequired(),

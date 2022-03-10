@@ -1,7 +1,7 @@
+import { Collection } from 'java.util';
 import { Bukkit, ChatColor } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { t } from '../common/localization/localization';
-import { Collection } from 'java.util';
 
 // TODO rename and translate these
 const MESSAGES = [

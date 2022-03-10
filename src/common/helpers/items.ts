@@ -1,6 +1,6 @@
 import { translate } from 'craftjs-plugin/chat';
 import { Component } from 'net.kyori.adventure.text';
-import { Sound, SoundCategory } from 'org.bukkit';
+import { Material, Sound, SoundCategory } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
 import { ItemStack } from 'org.bukkit.inventory';
 import { Damageable, ItemMeta } from 'org.bukkit.inventory.meta';
@@ -35,6 +35,9 @@ export function useFlintAndSteel(player: Player, item: ItemStack) {
  */
 export function getItemNameAsComponent(item: ItemStack): Component {
   const meta = item.itemMeta;
+  if (meta == null) {
+    return translate(Material.AIR.translationKey);
+  }
   if (!meta.hasDisplayName()) {
     const key = item.type.translationKey;
     // For some reason

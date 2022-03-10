@@ -15,11 +15,12 @@ import {
 } from '../common/entities/item-frame';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
+import { VkMaterial } from '../common/items/VkMaterial';
 
 const BREED_WATER_LEVEL = 1; // Max 3
 const BREED_COMPOST_LEVEL = 4; // Max 8
 const BOWL_SEED_AMOUNT = 4;
-const SEED_BOWL = Material.DEAD_TUBE_CORAL_FAN;
+const SEED_BOWL = VkMaterial.BOWL;
 
 const Seeds = new CustomItem({
   id: 35,

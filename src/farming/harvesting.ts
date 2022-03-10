@@ -1,5 +1,5 @@
 import { translate } from 'craftjs-plugin/chat';
-import { Material, GameMode } from 'org.bukkit';
+import { GameMode, Material } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { CustomItem } from '../common/items/CustomItem';
@@ -14,13 +14,13 @@ export const CROPS = new Map<Material, { hasDrops: boolean }>([
 
 const CHANCE_WITHOUT_TOOL = 0.02;
 
-const Sickle = new CustomItem({
+export const Sickle = new CustomItem({
   id: 1,
   name: translate('vk.sickle'),
   type: VkItem.TOOL,
 });
 
-const Scythe = new CustomItem({
+export const Scythe = new CustomItem({
   id: 2,
   name: translate('vk.scythe'),
   type: VkItem.TOOL,

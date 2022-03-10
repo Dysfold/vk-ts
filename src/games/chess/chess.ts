@@ -1,17 +1,18 @@
 import { Chess, ChessInstance, Move, Square } from 'chess.js';
 import { text } from 'craftjs-plugin/chat';
-import { Location, Material, World } from 'org.bukkit';
+import { Location, World } from 'org.bukkit';
 import { Block } from 'org.bukkit.block';
 import { Directional } from 'org.bukkit.block.data';
 import { ArmorStand, EntityType, Player } from 'org.bukkit.entity';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { RayTraceResult, Vector } from 'org.bukkit.util';
 import { getPlainText } from '../../chat/utils';
+import { VkItem } from '../../common/items/VkItem';
+import { VkMaterial } from '../../common/items/VkMaterial';
 
 const DEFAULT_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
-const BOARD_MATERIAL = Material.GRAY_GLAZED_TERRACOTTA;
-const PIECE_MATERIAL = Material.HEART_OF_THE_SEA;
+const PIECE_MATERIAL = VkItem.HIDDEN;
 const BOARD_MODEL_DIRECTION = { x: -1, z: 0 };
 const LETTERS = 'abcdefgh'.split('');
 const CENTERING_VECTOR = new Vector(0.5, 1, 0.5);
@@ -56,7 +57,7 @@ function getToken(char: string, color: 'w' | 'b') {
 export function clickBoard(raytrace: RayTraceResult, player: Player) {
   const block = raytrace.hitBlock;
   if (!block) return;
-  if (block.type !== BOARD_MATERIAL) return;
+  if (block.type !== VkMaterial.CHESSBOARD) return;
   const world = block.world;
 
   let chess = games.get(block.location.toString());

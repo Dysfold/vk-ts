@@ -1,11 +1,12 @@
+import { Material, Rotation } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
+import { Half } from 'org.bukkit.block.data.Bisected';
 import { TrapDoor } from 'org.bukkit.block.data.type';
 import { CustomItem } from '../../../common/items/CustomItem';
 import { VkItem } from '../../../common/items/VkItem';
+import { VkMaterial } from '../../../common/items/VkMaterial';
 import { LOCK_DATA } from '../lock-items';
 import { BlockLock, BlockLockProps } from './BlockLock';
-import { Rotation, Material } from 'org.bukkit';
-import { Half } from 'org.bukkit.block.data.Bisected';
 
 const customItems = {
   closed: new CustomItem({
@@ -27,7 +28,7 @@ export class TrapDoorLock extends BlockLock {
     Material.SPRUCE_TRAPDOOR,
     Material.BIRCH_TRAPDOOR,
     Material.JUNGLE_TRAPDOOR,
-    Material.ACACIA_TRAPDOOR,
+    VkMaterial.WILLOW_TRAPDOOR,
     Material.DARK_OAK_TRAPDOOR,
   ];
 

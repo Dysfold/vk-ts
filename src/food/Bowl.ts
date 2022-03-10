@@ -4,14 +4,15 @@ import { BlockPlaceEvent } from 'org.bukkit.event.block';
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { isHiddenEntity } from '../common/entities/hidden-entity';
 import { CustomItem } from '../common/items/CustomItem';
+import { VkMaterial } from '../common/items/VkMaterial';
 
 export const Bowl = new CustomBlock({
-  type: Material.DEAD_TUBE_CORAL_FAN,
+  type: VkMaterial.BOWL,
 });
 
 const BowlItem = new CustomItem({
   id: 0,
-  type: Material.DEAD_TUBE_CORAL_FAN,
+  type: VkMaterial.BOWL,
 });
 
 Bowl.onBreak(async (event) => {

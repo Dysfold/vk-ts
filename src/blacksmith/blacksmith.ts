@@ -1,3 +1,4 @@
+import { translate } from 'craftjs-plugin/chat';
 import {
   Location,
   Material,
@@ -16,13 +17,12 @@ import {
   PlayerInteractEvent,
 } from 'org.bukkit.event.player';
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
-import { isRightClick } from '../common/helpers/click';
-import { spawnHiddenItemFrame } from '../common/entities/item-frame';
-import { CustomItem } from '../common/items/CustomItem';
 import { Damageable } from 'org.bukkit.inventory.meta';
-import { VkItem } from '../common/items/VkItem';
+import { spawnHiddenItemFrame } from '../common/entities/item-frame';
+import { isRightClick } from '../common/helpers/click';
 import { equippedItem } from '../common/helpers/inventory';
-import { translate } from 'craftjs-plugin/chat';
+import { CustomItem } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 import { addTranslation, t } from '../common/localization/localization';
 
 export const Pliers = new CustomItem({

@@ -1,9 +1,10 @@
 import { text, translate } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
 import { Player } from 'org.bukkit.entity';
-import { CustomItem } from '../common/items/CustomItem';
-import { VkItem } from '../common/items/VkItem';
 import * as yup from 'yup';
+import { giveItem } from '../common/helpers/inventory';
+import { CustomItem, NAME_TO_CUSTOM_ITEM } from '../common/items/CustomItem';
+import { VkItem } from '../common/items/VkItem';
 
 const CUSTOM_ITEM_TYPES = new Map(Object.entries(VkItem));
 const ALIASES = Object.keys(VkItem).map((key) => key.toLowerCase());
@@ -52,5 +53,34 @@ registerCommand(
     },
     executableBy: 'players',
     description: '/customitem <type> <id> <name?>',
+  },
+);
+
+registerCommand(
+  'vkitem',
+  (sender, _label, args) => {
+    if (args.length < 1) return;
+
+    if (sender instanceof Player) {
+      const customItemName = args[0];
+      const customItem = NAME_TO_CUSTOM_ITEM.get(customItemName);
+      if (customItem == undefined) return;
+
+      giveItem(
+        sender,
+        customItem.create({
+          // Commented out furnace recipes need exactly same itemstack,
+          // so items with "source" data would not work
+          /* source: 'custom-give' */
+        }),
+      );
+    }
+  },
+  {
+    completer: () => {
+      return Array.from(NAME_TO_CUSTOM_ITEM.keys());
+    },
+    executableBy: 'players',
+    description: '/vkitem <name>',
   },
 );

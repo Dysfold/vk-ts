@@ -1,14 +1,6 @@
-import { translate } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
 import { LeavesDecayEvent } from 'org.bukkit.event.block';
-import { CustomItem } from '../common/items/CustomItem';
-import { VkItem } from '../common/items/VkItem';
-
-export const Banana = new CustomItem({
-  id: 5,
-  type: VkItem.FOOD,
-  name: translate('vk.banana'),
-});
+import { Banana } from './custom-foods';
 
 const BANANA_CHANCE = 0.005;
 

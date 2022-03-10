@@ -1,5 +1,5 @@
 import { text } from 'craftjs-plugin/chat';
-import { Material, Sound, Location, Particle } from 'org.bukkit';
+import { Location, Material, Particle, Sound } from 'org.bukkit';
 import { EntityType, LivingEntity, Player } from 'org.bukkit.entity';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import {
@@ -14,7 +14,7 @@ import { PotionEffect, PotionEffectType } from 'org.bukkit.potion';
 import { Vector } from 'org.bukkit.util';
 import { getPlainText } from '../chat/utils';
 import { CustomItem } from '../common/items/CustomItem';
-import { LootDrop, generateLoot } from '../common/items/drops';
+import { generateLoot, LootDrop } from '../common/items/drops';
 import { VkItem } from '../common/items/VkItem';
 
 const MIN_BODY_HITS = 3;
@@ -28,7 +28,7 @@ const slaugtherSound = Sound.BLOCK_SLIME_BLOCK_STEP;
 const Namehider = new CustomItem({
   id: 15,
   name: text('Namehider'),
-  type: Material.HEART_OF_THE_SEA,
+  type: VkItem.HIDDEN,
 });
 
 const nameHiderItem = Namehider.create({});

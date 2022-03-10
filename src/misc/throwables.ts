@@ -5,7 +5,7 @@ import { PlayerDropItemEvent } from 'org.bukkit.event.player';
 import { Vector } from 'org.bukkit.util';
 import { LockedHandcuffs } from '../combat/handcuffs';
 import { Whip } from '../combat/whip';
-
+import { VkItem } from '../common/items/VkItem';
 import { canBreak } from '../hydration/bottles';
 
 const VELOCITY_MULTIPLIER = 0.8;
@@ -21,7 +21,7 @@ const NOT_THROWABLE = new Set([
   Material.SNOWBALL,
   Material.EGG,
   Material.SPLASH_POTION,
-  Material.HEART_OF_THE_SEA,
+  VkItem.HIDDEN,
 ]);
 
 const NOT_THROWABLE_CUSTOMITEMS = [LockedHandcuffs, Whip];

@@ -1,16 +1,16 @@
-import { NamespacedKey, OfflinePlayer, Location } from 'org.bukkit';
-import {
-  PersistentDataType,
-  PersistentDataContainer,
-  PersistentDataHolder,
-} from 'org.bukkit.persistence';
-import * as yup from 'yup';
+import { Table } from 'craftjs-plugin';
+import { Location, NamespacedKey, OfflinePlayer } from 'org.bukkit';
+import { Block } from 'org.bukkit.block';
 import { ItemStack } from 'org.bukkit.inventory';
 import { ItemMeta } from 'org.bukkit.inventory.meta';
-import { DatabaseEntry, getTable } from './database';
-import { Block } from 'org.bukkit.block';
-import { Table } from 'craftjs-plugin';
+import {
+  PersistentDataContainer,
+  PersistentDataHolder,
+  PersistentDataType,
+} from 'org.bukkit.persistence';
+import * as yup from 'yup';
 import { ObjectShape } from 'yup/lib/object';
+import { DatabaseEntry, getTable } from './database';
 import { Data, PartialData } from './yup-utils';
 
 /**

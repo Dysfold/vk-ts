@@ -5,6 +5,7 @@ import * as yup from 'yup';
 import { DatabaseEntry } from '../common/datas/database';
 import { dataType } from '../common/datas/holder';
 import { dataView } from '../common/datas/view';
+import { VkMaterial } from '../common/items/VkMaterial';
 import { addTranslation, t } from '../common/localization/localization';
 import { locationToObj, objToLocation } from './helpers';
 
@@ -25,10 +26,8 @@ const spawnBlockData = dataType('spawnBlockData', {
 const view = dataView(spawnBlockData, spawnBlockDatabaseEntry);
 log.info('[Spawnblocks] Spawnblocks found ' + (view.blocks?.length || 0));
 
-const SPAWN_BLOCK_TYPE = Material.END_PORTAL_FRAME;
-
 registerEvent(BlockPlaceEvent, (event) => {
-  if (event.block.type !== SPAWN_BLOCK_TYPE) return;
+  if (event.block.type !== VkMaterial.SPAWN_BLOCK) return;
   const locObj = locationToObj(event.block.location);
   if (!view.blocks) {
     view.blocks = [locObj];
@@ -40,7 +39,7 @@ registerEvent(BlockPlaceEvent, (event) => {
 });
 
 registerEvent(BlockBreakEvent, (event) => {
-  if (event.block.type !== SPAWN_BLOCK_TYPE) return;
+  if (event.block.type !== VkMaterial.SPAWN_BLOCK) return;
   if (event.isCancelled()) return;
   if (!deleteSpawnBlockAt(event.block.location)) return;
 
@@ -65,7 +64,7 @@ export function getNearestSpawnBlock(from: Location) {
   }
 
   for (const location of nearest) {
-    if (location.block.type === SPAWN_BLOCK_TYPE) return location.block;
+    if (location.block.type === VkMaterial.SPAWN_BLOCK) return location.block;
   }
 }
 
@@ -88,7 +87,7 @@ function deleteSpawnBlockAt(location: Location) {
 
 // Prevent placing of the ender eyes
 registerEvent(PlayerInteractEvent, (event) => {
-  if (event.clickedBlock?.type !== SPAWN_BLOCK_TYPE) return;
+  if (event.clickedBlock?.type !== VkMaterial.SPAWN_BLOCK) return;
   if (event.item?.type === Material.ENDER_EYE) event.setCancelled(true);
 });
 

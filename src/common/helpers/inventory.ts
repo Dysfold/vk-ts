@@ -1,12 +1,12 @@
+import { Material, SoundCategory } from 'org.bukkit';
 import { Entity, Player } from 'org.bukkit.entity';
 import {
-  ItemStack,
-  EquipmentSlot,
-  PlayerInventory,
-  Inventory,
   BlockInventoryHolder,
+  EquipmentSlot,
+  Inventory,
+  ItemStack,
+  PlayerInventory,
 } from 'org.bukkit.inventory';
-import { Material, SoundCategory } from 'org.bukkit';
 import { Vector } from 'org.bukkit.util';
 
 /**

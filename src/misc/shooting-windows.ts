@@ -1,4 +1,4 @@
-import { Material, Particle, Sound, Bukkit } from 'org.bukkit';
+import { Bukkit, Material, Particle, Sound } from 'org.bukkit';
 import { Arrow, EntityType, Player } from 'org.bukkit.entity';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { ProjectileHitEvent } from 'org.bukkit.event.entity';

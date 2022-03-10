@@ -6,11 +6,11 @@ import {
   InventoryCloseEvent,
 } from 'org.bukkit.event.inventory';
 import { PlayerSwapHandItemsEvent } from 'org.bukkit.event.player';
+import { t } from '../../common/localization/localization';
+import { Currency, getCurrencyTranslation } from '../currency';
 import { findItemsFromInventory, getBlockBehind, getShopItem } from './helpers';
 import { getShop } from './ShopData';
 import { getTaxes } from './taxes';
-import { getCurrencyTranslation, Currency } from '../currency';
-import { t } from '../../common/localization/localization';
 
 const GUI_ICON = '\uE009';
 

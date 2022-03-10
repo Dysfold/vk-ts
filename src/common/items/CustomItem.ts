@@ -1,15 +1,16 @@
+import { text } from 'craftjs-plugin/chat';
 import { isEmpty } from 'lodash';
+import { Component } from 'net.kyori.adventure.text';
+import { TextDecoration } from 'net.kyori.adventure.text.format';
 import { Material } from 'org.bukkit';
 import { Event } from 'org.bukkit.event';
 import { ItemStack } from 'org.bukkit.inventory';
 import { ObjectShape } from 'yup/lib/object';
+import { getPlainText, removeDecorations } from '../../chat/utils';
 import { dataHolder, DataType, dataType } from '../datas/holder';
 import { dataView, saveView } from '../datas/view';
 import { Data, PartialData } from '../datas/yup-utils';
-import { Component } from 'net.kyori.adventure.text';
-import { text } from 'craftjs-plugin/chat';
-import { removeDecorations } from '../../chat/utils';
-import { TextDecoration } from 'net.kyori.adventure.text.format';
+import { getLastPart } from '../../crafting/recipe-helper';
 
 export const CUSTOM_DATA_KEY = 'cd';
 
@@ -86,6 +87,23 @@ function getOrdinal(type: Material, id: number) {
   return ordinal;
 }
 
+/**
+ * Store custom items to map, so those can be searched by name
+ */
+export const NAME_TO_CUSTOM_ITEM = new Map<string, CustomItem<any>>();
+function addCustomItemToMap(
+  item: CustomItem<any>,
+  name: string | Component | undefined,
+) {
+  if (name === undefined) return;
+  if (name instanceof Component) {
+    const key = getLastPart(getPlainText(name));
+    NAME_TO_CUSTOM_ITEM.set(key, item);
+  } else {
+    NAME_TO_CUSTOM_ITEM.set(name, item);
+  }
+}
+
 export class CustomItem<T extends ObjectShape> {
   /**
    * Options of this item.
@@ -115,6 +133,8 @@ export class CustomItem<T extends ObjectShape> {
     checkItemId(options.type, options.id);
     this.dataType = dataType(CUSTOM_DATA_KEY, this.options.data);
     this.ordinal = getOrdinal(options.type, options.id);
+
+    addCustomItemToMap(this, options.name);
   }
 
   /**

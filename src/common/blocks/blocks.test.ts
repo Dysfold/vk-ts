@@ -1,11 +1,11 @@
-import { CustomBlock } from './CustomBlock';
-import { Material, Bukkit } from 'org.bukkit';
-import { setBlock } from './blocks';
-import { dataHolder } from '../datas/holder';
-import * as yup from 'yup';
-import { Directional } from 'org.bukkit.material';
-import { BlockFace } from 'org.bukkit.block';
 import { test } from 'craftjs-plugin';
+import { Bukkit, Material } from 'org.bukkit';
+import { BlockFace } from 'org.bukkit.block';
+import { Directional } from 'org.bukkit.material';
+import * as yup from 'yup';
+import { dataHolder } from '../datas/holder';
+import { setBlock } from './blocks';
+import { CustomBlock } from './CustomBlock';
 
 const TestBlock1 = new CustomBlock({
   type: Material.STRUCTURE_BLOCK,

@@ -1,10 +1,10 @@
 import { BlockSpreadEvent } from 'org.bukkit.event.block';
-import { Material } from 'org.bukkit';
+import { VkMaterial } from '../common/items/VkMaterial';
 
 registerEvent(BlockSpreadEvent, async (event) => {
   if (
-    event.source.type == Material.WEEPING_VINES ||
-    event.source.type == Material.WEEPING_VINES_PLANT
+    event.source.type == VkMaterial.ROPE ||
+    event.source.type == VkMaterial.ROPE_STEM
   ) {
     event.setCancelled(true);
   }

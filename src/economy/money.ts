@@ -1,9 +1,9 @@
+import { Player } from 'org.bukkit.entity';
 import { Inventory, ItemStack } from 'org.bukkit.inventory';
 import { addItemTo } from '../common/helpers/inventory';
+import { addTranslation, t } from '../common/localization/localization';
 import { Currency, getCurrency, getMoneyValue } from './currency';
 import { CURRENCY_ITEMS, getCoinDisplayName } from './money-mold';
-import { addTranslation, t } from '../common/localization/localization';
-import { Player } from 'org.bukkit.entity';
 
 /**
  * Calculate total value of given currency in an inventory

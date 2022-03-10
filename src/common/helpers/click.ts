@@ -1,6 +1,6 @@
+import { Block } from 'org.bukkit.block';
 import { Action } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
-import { Block } from 'org.bukkit.block';
 
 /**
  * @param action Action of the click event.

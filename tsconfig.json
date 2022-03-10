@@ -15,6 +15,7 @@
     "typeRoots": ["node_modules/@craftjs-types"],
     "inlineSourceMap": true
   },
+  "no-unused-variable": true,
   "include": [
     "src/**/*"
   ]

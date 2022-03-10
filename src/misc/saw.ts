@@ -14,9 +14,10 @@ import { ItemStack } from 'org.bukkit.inventory';
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { CustomItem } from '../common/items/CustomItem';
 import { VkItem } from '../common/items/VkItem';
+import { VkMaterial } from '../common/items/VkMaterial';
 
 export const Saw = new CustomBlock({
-  type: Material.WARPED_FENCE_GATE,
+  type: VkMaterial.SAW_BLADE,
 });
 
 export const HandSaw = new CustomItem({
@@ -61,11 +62,11 @@ const DROPS = new Map<Material, Material>([
   [Material.BIRCH_WOOD ,                Material.BIRCH_PLANKS],
   [Material.STRIPPED_BIRCH_WOOD,        Material.BIRCH_PLANKS],
 
-  // ACACIA
-  [Material.ACACIA_LOG ,                Material.ACACIA_PLANKS],
-  [Material.STRIPPED_ACACIA_LOG,        Material.ACACIA_PLANKS],
-  [Material.ACACIA_WOOD,                Material.ACACIA_PLANKS],
-  [Material.STRIPPED_ACACIA_WOOD ,      Material.ACACIA_PLANKS],
+  // WILLOW
+  [VkMaterial.WILLOW_LOG ,                VkMaterial.WILLOW_PLANKS],
+  [VkMaterial.STRIPPED_WILLOW_LOG,        VkMaterial.WILLOW_PLANKS],
+  [VkMaterial.WILLOW_WOOD,                VkMaterial.WILLOW_PLANKS],
+  [VkMaterial.STRIPPED_WILLOW_WOOD ,      VkMaterial.WILLOW_PLANKS],
 ]);
 
 function isWood(type: Material) {

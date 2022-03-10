@@ -1,6 +1,6 @@
 import { PlayerPostRespawnEvent } from 'com.destroystokyo.paper.event.player';
-import { PlayerExpChangeEvent, PlayerJoinEvent } from 'org.bukkit.event.player';
 import { Player } from 'org.bukkit.entity';
+import { PlayerExpChangeEvent, PlayerJoinEvent } from 'org.bukkit.event.player';
 
 const HYDRATION_ON_FIRST_JOIN = 0.5;
 const HYDRATION_ON_RESPAWN = 0.5;

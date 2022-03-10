@@ -10,6 +10,7 @@ import * as yup from 'yup';
 import { purgeCustomData } from '../common/blocks/blocks';
 import { CustomBlock } from '../common/blocks/CustomBlock';
 import { chanceOf } from '../common/helpers/math';
+import { VkMaterial } from '../common/items/VkMaterial';
 
 const DOOR_REVEAL_CHANCE = 0.9;
 const DOOR_HIDE_CHANCE = 0.9;
@@ -30,13 +31,13 @@ const StoneBrickDoor = new CustomBlock({
 });
 
 const DOORS = new Map([
-  [Material.WARPED_DOOR, StoneBrickDoor],
-  [Material.CRIMSON_DOOR, CobblestoneDoor],
+  [VkMaterial.STONEBRICK_DOOR, StoneBrickDoor],
+  [VkMaterial.COBBLESTONE_DOOR, CobblestoneDoor],
 ]);
 
 const DOOR_TYPES = new Map([
-  [Material.STONE_BRICKS, Material.WARPED_DOOR],
-  [Material.COBBLESTONE, Material.CRIMSON_DOOR],
+  [Material.STONE_BRICKS, VkMaterial.STONEBRICK_DOOR],
+  [Material.COBBLESTONE, VkMaterial.COBBLESTONE_DOOR],
 ]);
 
 const doorCooldowns = new Set<Player>();

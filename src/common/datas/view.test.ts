@@ -1,9 +1,9 @@
-import { ItemStack } from 'org.bukkit.inventory';
-import { Material } from 'org.bukkit';
-import { dataView, saveView, deleteView } from './view';
-import { dataHolder, dataType } from './holder';
-import * as yup from 'yup';
 import { test } from 'craftjs-plugin';
+import { Material } from 'org.bukkit';
+import { ItemStack } from 'org.bukkit.inventory';
+import * as yup from 'yup';
+import { dataHolder, dataType } from './holder';
+import { dataView, deleteView, saveView } from './view';
 
 const TestA = dataType('test_a', {
   bool: yup.boolean().default(true).required(),

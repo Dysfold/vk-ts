@@ -1,8 +1,8 @@
 import { Material } from 'org.bukkit';
+import { Action, BlockBreakEvent } from 'org.bukkit.event.block';
 import { PlayerInteractEvent } from 'org.bukkit.event.player';
-import { BlockBreakEvent, Action } from 'org.bukkit.event.block';
-import { HandSaw } from './saw';
 import { VkItem } from '../common/items/VkItem';
+import { HandSaw } from './saw';
 
 const DIRT_LIKE = new Set([
   Material.DIRT,

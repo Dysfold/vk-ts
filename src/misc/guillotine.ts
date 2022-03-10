@@ -30,7 +30,7 @@ const LAND_SOUND = 'minecraft:block.anvil.land';
 
 const cooldowns = new Set<Entity>();
 
-const Blade = new CustomItem({
+export const GuillotineBlade = new CustomItem({
   id: 5,
   name: translate('vk.guillotine_blade'),
   type: VkItem.UNSTACKABLE,
@@ -134,7 +134,7 @@ function isBlade(entity: Entity): entity is ArmorStand {
   if (!(entity instanceof ArmorStand)) return false;
   const helmet = entity.equipment?.getItem(EquipmentSlot.HEAD);
   if (!helmet) return false;
-  return Blade.check(helmet);
+  return GuillotineBlade.check(helmet);
 }
 
 // Drop blade on piston retract
@@ -171,7 +171,7 @@ registerEvent(PlayerInteractEvent, (event) => {
   if (event.hand !== EquipmentSlot.HAND) return;
 
   const item = event.player.inventory.itemInMainHand;
-  if (!Blade.check(item)) return;
+  if (!GuillotineBlade.check(item)) return;
 
   const player = event.player;
   const block = event.clickedBlock.getRelative(event.blockFace);

@@ -1,15 +1,16 @@
-import { Material, SoundCategory } from 'org.bukkit';
+import { translate } from 'craftjs-plugin/chat';
+import { SoundCategory } from 'org.bukkit';
 import { EntityType, Player } from 'org.bukkit.entity';
 import { PlayerInteractEntityEvent } from 'org.bukkit.event.player';
+import { EquipmentSlot } from 'org.bukkit.inventory';
 import { Pliers } from '../blacksmith/blacksmith';
 import { isHandcuffed } from '../combat/handcuffs';
 import { CustomItem } from '../common/items/CustomItem';
-import { EquipmentSlot } from 'org.bukkit.inventory';
-import { translate } from 'craftjs-plugin/chat';
+import { VkItem } from '../common/items/VkItem';
 
 const Tooth = new CustomItem({
   id: 18,
-  type: Material.SHULKER_SHELL,
+  type: VkItem.MISC,
   name: translate('vk.tooth'),
 });
 

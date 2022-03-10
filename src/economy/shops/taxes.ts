@@ -21,8 +21,8 @@ import { giveMoney } from '../money';
 import { getBlockBehind } from './helpers';
 import {
   shopGold as gold,
-  shopYellow as yellow,
   shopGreen as green,
+  shopYellow as yellow,
 } from './messages';
 
 /**

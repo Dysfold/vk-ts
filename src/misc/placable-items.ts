@@ -9,6 +9,7 @@ import {
 import { EquipmentSlot, ItemStack } from 'org.bukkit.inventory';
 import { spawnHolderArmorStand } from '../common/entities/armor-stand';
 import { giveItem } from '../common/helpers/inventory';
+import { VkMaterial } from '../common/items/VkMaterial';
 
 /**
  * Allow specific items to be placed on the table as decorations.
@@ -34,14 +35,14 @@ const TABLES = new Set([
   Material.SPRUCE_PLANKS,
   Material.BIRCH_PLANKS,
   Material.JUNGLE_PLANKS,
-  Material.ACACIA_PLANKS,
+  VkMaterial.WILLOW_PLANKS,
   Material.DARK_OAK_PLANKS,
 
   Material.OAK_SLAB,
   Material.SPRUCE_SLAB,
   Material.BIRCH_SLAB,
   Material.JUNGLE_SLAB,
-  Material.ACACIA_SLAB,
+  VkMaterial.WILLOW_SLAB,
   Material.DARK_OAK_SLAB,
 
   Material.WARPED_SLAB,
@@ -50,7 +51,7 @@ const TABLES = new Set([
   Material.SPRUCE_STAIRS,
   Material.BIRCH_STAIRS,
   Material.JUNGLE_STAIRS,
-  Material.ACACIA_STAIRS,
+  VkMaterial.WILLOW_STAIRS,
   Material.DARK_OAK_STAIRS,
 ]);
 

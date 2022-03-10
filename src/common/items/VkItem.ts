@@ -1,6 +1,9 @@
 import { Material } from 'org.bukkit';
 
 // prettier-ignore
+/**
+ * Item category for custom items
+ */
 export const VkItem = {
   MISC:         Material.SHULKER_SHELL,
   TOOL:         Material.IRON_HOE,

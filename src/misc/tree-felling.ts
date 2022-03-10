@@ -2,21 +2,14 @@ import { GameMode, Material, TreeSpecies } from 'org.bukkit';
 import { Block, BlockFace } from 'org.bukkit.block';
 import { BlockBreakEvent } from 'org.bukkit.event.block';
 import { Vector } from 'org.bukkit.util';
-import {
-  OAK_BEAM,
-  SPRUCE_BEAM,
-  BIRCH_BEAM,
-  JUNGLE_BEAM,
-  DARK_OAK_BEAM,
-  ACACIA_BEAM,
-} from './wooden_beams';
+import { VkMaterial } from '../common/items/VkMaterial';
 
 // All blocks that can be part of specific tree (leaves not included)
 const TREE_MATERIALS = new Map([
   [
     TreeSpecies.GENERIC,
     {
-      logs: new Set([Material.OAK_LOG, Material.OAK_WOOD, OAK_BEAM]),
+      logs: new Set([Material.OAK_LOG, Material.OAK_WOOD, VkMaterial.OAK_BEAM]),
       leaves: Material.OAK_LEAVES,
     },
   ],
@@ -24,7 +17,11 @@ const TREE_MATERIALS = new Map([
   [
     TreeSpecies.REDWOOD,
     {
-      logs: new Set([Material.SPRUCE_LOG, Material.SPRUCE_WOOD, SPRUCE_BEAM]),
+      logs: new Set([
+        Material.SPRUCE_LOG,
+        Material.SPRUCE_WOOD,
+        VkMaterial.SPRUCE_BEAM,
+      ]),
       leaves: Material.SPRUCE_LEAVES,
     },
   ],
@@ -32,7 +29,11 @@ const TREE_MATERIALS = new Map([
   [
     TreeSpecies.BIRCH,
     {
-      logs: new Set([Material.BIRCH_LOG, Material.BIRCH_WOOD, BIRCH_BEAM]),
+      logs: new Set([
+        Material.BIRCH_LOG,
+        Material.BIRCH_WOOD,
+        VkMaterial.BIRCH_BEAM,
+      ]),
       leaves: Material.BIRCH_LEAVES,
     },
   ],
@@ -44,7 +45,7 @@ const TREE_MATERIALS = new Map([
         Material.JUNGLE_LOG,
         Material.JUNGLE_WOOD,
         Material.COCOA_BEANS,
-        JUNGLE_BEAM,
+        VkMaterial.JUNGLE_BEAM,
       ]),
       leaves: Material.JUNGLE_LEAVES,
     },
@@ -56,7 +57,7 @@ const TREE_MATERIALS = new Map([
       logs: new Set([
         Material.DARK_OAK_LOG,
         Material.DARK_OAK_WOOD,
-        DARK_OAK_BEAM,
+        VkMaterial.DARK_OAK_BEAM,
       ]),
       leaves: Material.DARK_OAK_LEAVES,
     },
@@ -65,7 +66,11 @@ const TREE_MATERIALS = new Map([
   [
     TreeSpecies.ACACIA,
     {
-      logs: new Set([Material.ACACIA_LOG, Material.ACACIA_WOOD, ACACIA_BEAM]),
+      logs: new Set([
+        Material.ACACIA_LOG,
+        Material.ACACIA_WOOD,
+        VkMaterial.WILLOW_BEAM,
+      ]),
       leaves: Material.ACACIA_LEAVES,
     },
   ],

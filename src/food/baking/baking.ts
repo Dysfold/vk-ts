@@ -12,95 +12,55 @@ import { Vector } from 'org.bukkit.util';
 import {
   getItemFrame,
   spawnHiddenItemFrame,
-} from '../common/entities/item-frame';
-import { CustomItem } from '../common/items/CustomItem';
-import { getEmptyBottle } from '../hydration/bottles';
-import { Bowl } from './Bowl';
-import { VkItem } from '../common/items/VkItem';
-import { translate } from 'craftjs-plugin/chat';
+} from '../../common/entities/item-frame';
+import { CustomItem } from '../../common/items/CustomItem';
+import { getEmptyBottle } from '../../hydration/bottles';
+import { Bowl } from '../Bowl';
 
 const INGREDIENT_PICKUP_DELAY = 5; // Seconds
 
-// Dough models for bowl
-const DOUGH_BREAD = new CustomItem({
-  type: Material.HEART_OF_THE_SEA,
-  id: 16,
-});
-const DOUGH_BREAD_RISEN = new CustomItem({
-  type: Material.HEART_OF_THE_SEA,
-  id: 17,
-});
-const DOUGH_PUMPKIN_PIE = new CustomItem({
-  type: Material.HEART_OF_THE_SEA,
-  id: 19,
-});
-const DOUGH_COOKIE = new CustomItem({
-  type: Material.HEART_OF_THE_SEA,
-  id: 18,
-});
+const BAKING_RECIPES: BackingRecipe[] = [];
 
-// Dough items for furnace
-const DOUGH_BREAD_ITEM = new CustomItem({
-  type: VkItem.MISC,
-  id: 6,
-  name: translate('vk.dough_bread'),
-});
-const DOUGH_COOKIE_ITEM = new CustomItem({
-  type: VkItem.MISC,
-  id: 7,
-  name: translate('vk.dough_cookie'),
-});
-const DOUGH_PUMPKIN_PIE_ITEM = new CustomItem({
-  type: VkItem.MISC,
-  id: 8,
-  name: translate('vk.dough_pumpkin_pie'),
-});
+interface BackingRecipe {
+  /**
+   * Custom item to be displayed when unrisen dough is in a bowl
+   */
+  dough: CustomItem<any>;
 
-const RECIPES = [
-  {
-    dough: DOUGH_BREAD,
-    doughRisen: DOUGH_BREAD_RISEN,
-    result: DOUGH_BREAD_ITEM.create({}),
-    ingredients: [
-      Material.PHANTOM_MEMBRANE,
-      Material.NETHER_WART,
-      Material.POTION,
-    ],
-    risingTime: 5,
-  },
-  {
-    dough: DOUGH_PUMPKIN_PIE,
-    doughRisen: DOUGH_PUMPKIN_PIE,
-    result: DOUGH_PUMPKIN_PIE_ITEM.create({}),
-    ingredients: [
-      Material.PUMPKIN,
-      Material.SUGAR,
-      Material.POTION,
-      Material.EGG,
-    ],
-  },
-  {
-    dough: DOUGH_COOKIE,
-    doughRisen: DOUGH_COOKIE,
-    result: DOUGH_COOKIE_ITEM.create({}),
-    ingredients: [
-      Material.PHANTOM_MEMBRANE,
-      Material.SUGAR,
-      Material.COCOA_BEANS,
-      Material.POTION,
-    ],
-  },
-];
+  /**
+   * Custom item to be displayed when risen dough is in a bowl.
+   * If the dough does not the be risen, this can be same as dough
+   */
+  doughRisen: CustomItem<any>;
+
+  /**
+   * Dough item (baking result)
+   */
+  result: ItemStack;
+
+  /**
+   * List of items to be used in the baking recipe
+   */
+  ingredients: Material[];
+
+  /**
+   * How many seconds the dough needs to rise
+   */
+  risingTime?: number;
+}
 
 const risingDoughs = new Map<ItemFrame, { seconds: number; risen: ItemStack }>(
   [],
 );
 
 // List all possible ingredients
-const INGREDIENTS = new Set<number>();
-for (const recipe of RECIPES) {
-  for (const ingredient of recipe.ingredients)
-    INGREDIENTS.add(ingredient.ordinal());
+const INGREDIENTS = new Set<Material>();
+
+export function bakingRecipe(recipe: BackingRecipe) {
+  BAKING_RECIPES.push(recipe);
+  recipe.ingredients.forEach((item) => {
+    INGREDIENTS.add(item);
+  });
 }
 
 // Rise doughs
@@ -124,13 +84,13 @@ Bowl.event(
     const itemFrame = getItemFrame(event.block, BlockFace.UP);
     if (itemFrame) {
       const item = itemFrame.item;
-      const doughRisen = RECIPES.find((r) => r.doughRisen.check(item));
+      const doughRisen = BAKING_RECIPES.find((r) => r.doughRisen.check(item));
 
       if (doughRisen) {
         // Delete the item frame and drop a dough
         dropItem(event.block, doughRisen.result);
         itemFrame.remove();
-      } else if (RECIPES.some((r) => r.dough.check(item))) {
+      } else if (BAKING_RECIPES.some((r) => r.dough.check(item))) {
         // Delete the item frame, but without a drop
         itemFrame.remove();
       }
@@ -162,7 +122,7 @@ Bowl.event(
       const frameItem = frame.item;
       if (!(frameItem instanceof ItemStack)) return;
 
-      for (const recipe of RECIPES) {
+      for (const recipe of BAKING_RECIPES) {
         if (recipe.doughRisen.check(frameItem)) {
           // Dough has risen and can be picked
           dropItem(bowl, recipe.result);
@@ -177,7 +137,8 @@ Bowl.event(
       bake(bowl);
       return;
     }
-    if (!INGREDIENTS.has(item.type.ordinal())) return;
+
+    if (!INGREDIENTS.has(item.type)) return;
     // Clicked with ingredient item
     event.setCancelled(true);
 
@@ -209,12 +170,12 @@ function bake(block: Block) {
   for (const entity of entities) {
     if (!(entity instanceof Item)) continue;
     const itemStack = entity.itemStack;
-    if (!INGREDIENTS.has(itemStack.type.ordinal())) continue;
+    if (!INGREDIENTS.has(itemStack.type)) continue;
     drops.push(entity.itemStack);
     types.push(entity.itemStack.type);
   }
   if (!drops.length) return;
-  for (const recipe of RECIPES) {
+  for (const recipe of BAKING_RECIPES) {
     // Check if the recipe contains the incredients
     if (types.every((i) => recipe.ingredients.includes(i))) {
       drops.forEach((drop) => {

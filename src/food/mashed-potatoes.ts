@@ -1,15 +1,8 @@
-import { translate } from 'craftjs-plugin/chat';
 import { Material } from 'org.bukkit';
 import { BlockFace } from 'org.bukkit.block';
 import { EntityType, Item } from 'org.bukkit.entity';
 import { BlockPistonExtendEvent } from 'org.bukkit.event.block';
-import { CustomItem } from '../common/items/CustomItem';
-
-const MashedPotatoes = new CustomItem({
-  id: 4,
-  type: Material.POISONOUS_POTATO,
-  name: translate('vk.mashed_potatoes'),
-});
+import { MashedPotatoes } from './custom-foods';
 
 registerEvent(BlockPistonExtendEvent, (event) => {
   if (event.direction !== BlockFace.DOWN) return;
@@ -23,7 +16,7 @@ registerEvent(BlockPistonExtendEvent, (event) => {
       const itemStack = item.itemStack;
 
       // Replace potato with mashed potato
-      if (itemStack.type === Material.POTATO) {
+      if (itemStack.type === Material.BAKED_POTATO) {
         const amount = itemStack.amount;
         item.itemStack = MashedPotatoes.create({});
         item.itemStack.amount = amount;
